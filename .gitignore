@@ -1,0 +1,38 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+node_modules
+dist
+dist-ssr
+coverage
+*.local
+
+# Environment variables (never commit)
+.env
+.env.*
+!.env.example
+
+# Source Word files and their conversion output stay out of the repository;
+# the transcribed content lives in src/content/conventions/*.ts
+*.doc
+*.docx
+*.htm
+*.html.bak
+tmp/
+source-docs/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.sw?
+
+# Local Claude Code session data; never committed
+.claude/
