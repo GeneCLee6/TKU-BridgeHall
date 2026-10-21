@@ -127,3 +127,20 @@ interface Convention {
   - `tests/presentation`：卡片展開、深層連結開啟路徑、全部展開／收合、待確認顯示。
 - **CI**：GitHub Actions（`.github/workflows/ci.yml`）：`npm ci` → lint → build → test。
 - **部署計畫**：任何靜態主機皆可。建議 Vercel 或 Cloudflare Pages 連接 GitHub，自動部署 `main`。因為使用 BrowserRouter，主機需設定 SPA fallback（所有路徑回傳 `index.html`）：Cloudflare Pages 預設即支援；Vercel 用專案根目錄的 `vercel.json` rewrites（已加入，部署平台選定 Vercel）。若改用 GitHub Pages，可換成 HashRouter 或加 `404.html` 轉址。
+
+## 7. CI/CD
+
+```
+push / PR ──► GitHub Actions「CI」：lint → typecheck → test → build
+          └─► Vercel Git integration：main → 正式站；PR → 預覽網址（PR 留言會附上）
+                 └─ 部署成功回報 commit status「Vercel」
+                       └─► GitHub Actions「Production smoke test」（只在 main）
+                             1. 等正式站 <meta name="app-version"> 等於這次 commit SHA
+                             2. 檢查首頁、深層連結、logo/favicon、所有 /assets 檔案回 200
+```
+
+- 正式站：https://tku-bridge-book.vercel.app/
+- `app-version` 由 `vite.config.ts` 的 `appVersion` plugin 寫入，取自 Vercel 的 `VERCEL_GIT_COMMIT_SHA`；本機 build 為 `local`。
+- 手動跑部署檢查：GitHub → Actions → Production smoke test → Run workflow。
+- Dependabot 每月開一個合併的依賴更新 PR（npm 與 GitHub Actions），CI 綠燈且預覽站正常再合併。
+- 限制：私有 repo 在 GitHub 免費方案無法設定 branch protection，所以 CI 失敗不會擋住 Vercel 部署；請以「開 PR → CI 綠燈 → 看預覽站 → 合併」的流程更新內容。

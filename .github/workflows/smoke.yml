@@ -1,0 +1,50 @@
+name: Production smoke test
+
+# Vercel reports each deployment back as a commit status named "Vercel".
+# When a commit on main deploys successfully, check that production serves that exact commit
+# and that the home page, deep links and static assets all respond.
+on:
+  status:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.context == 'Vercel' && github.event.state == 'success' &&
+       contains(github.event.branches.*.name, 'main'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SITE_URL: https://tku-bridge-book.vercel.app
+      EXPECTED_SHA: ${{ github.event.sha || github.sha }}
+    steps:
+      - name: Wait for production to serve this commit
+        run: |
+          for i in $(seq 1 20); do
+            live=$(curl -fsS "$SITE_URL/" | grep -o 'name="app-version" content="[^"]*"' | cut -d'"' -f4 || true)
+            echo "attempt $i: live=$live expected=$EXPECTED_SHA"
+            [ "$live" = "$EXPECTED_SHA" ] && exit 0
+            sleep 15
+          done
+          echo "::error::Production is not serving $EXPECTED_SHA"
+          exit 1
+
+      - name: Check pages, deep links and assets
+        run: |
+          fail=0
+          check() {
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$SITE_URL$1")
+            echo "$code $1"
+            [ "$code" = "200" ] || fail=1
+          }
+          check /
+          check /c/lebensohl
+          check /c/defense-vs-unusual-2nt
+          check /c/lebensohl/natural-rules
+          check /favicon.svg
+          check /logo.svg
+          html=$(curl -fsS "$SITE_URL/")
+          echo "$html" | grep -q '<title>TKU BridgeBook 淡江橋譜</title>' || { echo "::error::title missing"; fail=1; }
+          for asset in $(echo "$html" | grep -o '/assets/[^"]*'); do check "$asset"; done
+          exit $fail
