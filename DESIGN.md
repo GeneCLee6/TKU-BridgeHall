@@ -69,7 +69,7 @@
 | Tag | `components/Tag.tsx` | 膠囊形標籤。 |
 | PendingNote | `components/PendingNote.tsx` | 「待確認」標記與說明。 |
 | SearchBar | `components/SearchBar.tsx` | 頁首搜尋框，下拉結果為深層連結；Esc 清除。 |
-| Sidebar（TOC） | `components/Sidebar.tsx` | 樹狀目錄，箭頭一律在左側、每層往內縮並有引導線。兩層下拉：分類（預設展開，顯示特約數量）→ 特約（點箭頭展開第一層段落，預設收合；網址所在的特約自動展開）。目前位置高亮。行動版為抽屜。 |
+| Sidebar（TOC） | `components/Sidebar.tsx` | 樹狀目錄，箭頭一律在左側、每層往內縮並有引導線。兩層下拉：分類（預設展開，顯示特約數量）→ 特約（點特約名稱展開，再點一次收起；箭頭只是狀態圖示、不能單獨點；預設收合，網址所在的特約自動展開）。目前位置高亮。行動版為抽屜。 |
 | AppHeader | `components/AppHeader.tsx` | 桌機：Logo、搜尋、ViewActions。手機：只有選單按鈕、Logo 圖示、搜尋，不超出螢幕寬度。 |
 | ViewActions | `components/ViewActions.tsx` | 全部展開／收合、主題、列印。桌機放頁首（圖示按鈕），手機放進選單抽屜頂端（含文字的列）。 |
 
