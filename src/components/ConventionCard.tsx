@@ -1,0 +1,181 @@
+import * as Accordion from '@radix-ui/react-accordion'
+import { ChevronRight } from 'lucide-react'
+import styled from 'styled-components'
+import {
+  allKeys,
+  conventionDomId,
+  conventionKey,
+  conventionPath,
+  pendingNotes,
+} from '../lib/sections.ts'
+import { useExpansion } from '../state/ExpansionContext.tsx'
+import { strings } from '../strings.ts'
+import type { Convention } from '../types/convention.ts'
+import { CopyLinkButton } from './CopyLinkButton.tsx'
+import { Badge } from './PendingNote.tsx'
+import { SectionAccordion } from './SectionAccordion.tsx'
+import { RichText } from './Suit.tsx'
+import { Tag, TagList } from './Tag.tsx'
+
+/** A Swagger-style operation block: one convention, collapsed to its name, tags and summary */
+export function ConventionCard({ convention }: { convention: Convention }) {
+  const { openAmong, setLevel, open, close } = useExpansion()
+  const key = conventionKey(convention.slug)
+  const pendingCount = pendingNotes(convention).length
+
+  return (
+    <Accordion.Root type="multiple" value={openAmong([key])} onValueChange={(v) => setLevel([key], v)}>
+      <Card value={key} id={conventionDomId(convention.slug)} data-print="card">
+        <Accordion.Header asChild>
+          <Header>
+            <Trigger>
+              <Chevron size={22} aria-hidden />
+              <Names>
+                <NameZh>{convention.nameZh}</NameZh>
+                <NameEn lang="en">{convention.nameEn}</NameEn>
+              </Names>
+            </Trigger>
+            <CopyLinkButton path={conventionPath(convention.slug)} label={convention.nameZh} />
+          </Header>
+        </Accordion.Header>
+        <Meta>
+          <Summary>
+            <RichText text={convention.summary} />
+          </Summary>
+          <MetaRow>
+            <TagList aria-label="標籤">
+              {convention.tags.map((t) => (
+                <Tag key={t} label={t} />
+              ))}
+            </TagList>
+            {pendingCount > 0 && <Badge>{strings.pendingCount(pendingCount)}</Badge>}
+          </MetaRow>
+        </Meta>
+        <Body forceMount data-accordion-content>
+          <Toolbar data-print="hide">
+            <TextButton type="button" onClick={() => open(allKeys(convention))}>
+              {strings.expandConvention}
+            </TextButton>
+            <TextButton type="button" onClick={() => close(allKeys(convention).slice(1))}>
+              {strings.collapseConvention}
+            </TextButton>
+          </Toolbar>
+          <SectionAccordion slug={convention.slug} sections={convention.sections} />
+          <Source>
+            {strings.source}：{convention.source.title}
+            {convention.source.note && `（${convention.source.note}）`}・{strings.updated}：
+            {convention.updated}
+          </Source>
+        </Body>
+      </Card>
+    </Accordion.Root>
+  )
+}
+
+const Card = styled(Accordion.Item)`
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radius.lg};
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: ${({ theme }) => theme.shadow};
+  scroll-margin-top: calc(${({ theme }) => theme.layout.headerHeight} + 16px);
+  overflow: hidden;
+`
+
+const Header = styled.h2`
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding-right: ${({ theme }) => theme.space(3)};
+  background: ${({ theme }) => theme.colors.primarySoft};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+`
+
+const Chevron = styled(ChevronRight)`
+  flex: none;
+  color: ${({ theme }) => theme.colors.primary};
+  transition: transform 150ms ease;
+`
+
+const Trigger = styled(Accordion.Trigger)`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(3)};
+  min-height: 56px;
+  padding: ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(4)};
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+
+  &[data-state='open'] ${Chevron} {
+    transform: rotate(90deg);
+  }
+`
+
+const Names = styled.span`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: ${({ theme }) => theme.space(3)};
+`
+
+const NameZh = styled.span`
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primaryStrong};
+`
+
+const NameEn = styled.span`
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.textMuted};
+`
+
+const Meta = styled.div`
+  padding: ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(4)};
+`
+
+const Summary = styled.p`
+  margin: 0 0 ${({ theme }) => theme.space(2)};
+`
+
+const MetaRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(2)};
+`
+
+const Body = styled(Accordion.Content)`
+  padding: 0 ${({ theme }) => theme.space(4)} ${({ theme }) => theme.space(4)};
+`
+
+const Toolbar = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.space(2)};
+  justify-content: flex-end;
+  margin-bottom: ${({ theme }) => theme.space(2)};
+`
+
+export const TextButton = styled.button`
+  min-height: 36px;
+  padding: 0 ${({ theme }) => theme.space(3)};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radius.sm};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+const Source = styled.p`
+  margin: ${({ theme }) => theme.space(4)} 0 0;
+  font-size: 0.8125rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+`
