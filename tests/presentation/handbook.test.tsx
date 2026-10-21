@@ -106,4 +106,28 @@ describe('handbook page', () => {
     await userEvent.click(within(menu).getByRole('button', { name: /^無王開叫後續/ }))
     expect(within(menu).queryByRole('link', { name: /^1NT的答叫/ })).toBeNull()
   })
+  it('lists every 待確認 note in the catalogue and jumps straight to it', async () => {
+    renderAt('/')
+    const menu = screen.getByRole('navigation', { name: '特約目錄' })
+    const group = within(menu).getByRole('button', { name: /^待確認/ })
+    expect(group).toHaveAttribute('aria-expanded', 'false')
+    await userEvent.click(group)
+
+    // The Lebensohl…: no notes; the 1NT doc has one, under 嘗試滿貫
+    const link = within(menu).getByRole('link', { name: /^嘗試滿貫/ })
+    expect(link).toHaveAttribute('href', '/c/notrump-responses/slam-try?pending=0')
+    await userEvent.click(link)
+    expect(trigger(/^1NT的答叫/)).toHaveAttribute('aria-expanded', 'true')
+    expect(trigger(/^合約選擇方式/)).toHaveAttribute('aria-expanded', 'true')
+    expect(trigger(/^嘗試滿貫/)).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('links each card’s 待確認 count to its first note', () => {
+    renderAt('/')
+    const main = within(screen.getByRole('main'))
+    expect(main.getByRole('link', { name: '1 項待確認' })).toHaveAttribute(
+      'href',
+      '/c/notrump-responses/slam-try?pending=0',
+    )
+  })
 })

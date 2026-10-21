@@ -1,5 +1,6 @@
 import * as Accordion from '@radix-ui/react-accordion'
 import { ChevronRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import {
   allKeys,
@@ -7,6 +8,7 @@ import {
   conventionKey,
   conventionPath,
   pendingNotes,
+  pendingPath,
 } from '../lib/sections.ts'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
@@ -21,10 +23,14 @@ import { Tag, TagList } from './Tag.tsx'
 export function ConventionCard({ convention }: { convention: Convention }) {
   const { openAmong, setLevel, open, close } = useExpansion()
   const key = conventionKey(convention.slug)
-  const pendingCount = pendingNotes(convention).length
+  const pending = pendingNotes(convention)
 
   return (
-    <Accordion.Root type="multiple" value={openAmong([key])} onValueChange={(v) => setLevel([key], v)}>
+    <Accordion.Root
+      type="multiple"
+      value={openAmong([key])}
+      onValueChange={(v) => setLevel([key], v)}
+    >
       <Card value={key} id={conventionDomId(convention.slug)} data-print="card">
         <Accordion.Header asChild>
           <Header>
@@ -48,7 +54,14 @@ export function ConventionCard({ convention }: { convention: Convention }) {
                 <Tag key={t} label={t} />
               ))}
             </TagList>
-            {pendingCount > 0 && <Badge>{strings.pendingCount(pendingCount)}</Badge>}
+            {pending.length > 0 && (
+              <PendingLink
+                to={pendingPath(convention.slug, pending[0].sectionId, pending[0].index)}
+                title={strings.pendingJump}
+              >
+                {strings.pendingCount(pending.length)}
+              </PendingLink>
+            )}
           </MetaRow>
         </Meta>
         <Body forceMount data-accordion-content>
@@ -171,6 +184,17 @@ export const TextButton = styled.button`
   &:hover {
     border-color: ${({ theme }) => theme.colors.primary};
     color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+const PendingLink = styled(Badge).attrs({ as: Link })`
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    filter: brightness(0.92);
+    text-decoration: underline;
   }
 `
 
