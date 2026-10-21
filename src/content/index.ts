@@ -1,5 +1,7 @@
 import type { Convention } from '../types/convention.ts'
+import { bergenRaises } from './conventions/bergen-raises.ts'
 import { defenseVsUnusual2nt } from './conventions/defense-vs-unusual-2nt.ts'
+import { jacoby2nt } from './conventions/jacoby-2nt.ts'
 import { lebensohl } from './conventions/lebensohl.ts'
 import { notrumpResponses } from './conventions/notrump-responses.ts'
 import { singleRaiseMajor } from './conventions/single-raise-major.ts'
@@ -12,6 +14,8 @@ export const conventions: Convention[] = [
   notrumpResponses,
   lebensohl,
   singleRaiseMajor,
+  jacoby2nt,
+  bergenRaises,
   defenseVsUnusual2nt,
 ]
 

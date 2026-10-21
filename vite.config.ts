@@ -22,6 +22,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup.ts'],
+    // 'Expand all' renders every convention at once, which is slow in jsdom as the handbook grows
+    testTimeout: 15_000,
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
   },
 })

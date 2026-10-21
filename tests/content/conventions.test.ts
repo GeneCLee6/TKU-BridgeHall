@@ -58,8 +58,9 @@ describe('convention content', () => {
   })
 
   it('writes suits as ♠ ♥ ♦ ♣ in meanings, not as letters', () => {
-    // A bid like "3H", or a suit letter right before Chinese text, means a missed conversion
-    const missed = /\d[CDHS](?![a-z])|[CDHS](?=[一-鿿])/
+    // A bid like "3H", or a lone suit letter right before Chinese text, means a missed conversion
+    // (letters inside English words such as VOID do not count)
+    const missed = /\d[CDHS](?![a-z])|(?<![A-Za-z])[CDHS](?=[一-鿿])/
     for (const c of conventions) {
       walkSections(c.sections, (s) => {
         for (const block of s.blocks ?? []) {
@@ -76,5 +77,7 @@ describe('convention content', () => {
     expect(count('defense-vs-unusual-2nt')).toBe(3)
     expect(count('notrump-responses')).toBe(1)
     expect(count('single-raise-major')).toBe(0)
+    expect(count('jacoby-2nt')).toBe(11)
+    expect(count('bergen-raises')).toBe(5)
   })
 })
