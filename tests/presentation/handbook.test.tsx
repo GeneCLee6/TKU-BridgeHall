@@ -80,7 +80,7 @@ describe('handbook page', () => {
       window.matchMedia = original
     }
   })
-  it('folds the catalogue: categories open, sections shown only for the opened convention', async () => {
+  it('folds the catalogue: clicking a convention title opens and closes its sections', async () => {
     renderAt('/c/lebensohl')
     const menu = screen.getByRole('navigation', { name: '特約目錄' })
     expect(within(menu).getByRole('button', { name: /^無王開叫後續/ })).toHaveAttribute(
@@ -91,10 +91,17 @@ describe('handbook page', () => {
     expect(within(menu).getByRole('link', { name: '遭自然牌組插叫' })).toBeInTheDocument()
     expect(within(menu).queryByRole('link', { name: '合約選擇方式' })).toBeNull()
 
-    await userEvent.click(
-      within(menu).getByRole('button', { name: '展開／收合「1NT的答叫」的小節' }),
-    )
+    // The chevrons are only indicators, not separate controls
+    expect(within(menu).queryByRole('button', { name: /小節/ })).toBeNull()
+
+    const title = () => within(menu).getByRole('link', { name: /^1NT的答叫/ })
+    await userEvent.click(title())
+    expect(title()).toHaveAttribute('aria-expanded', 'true')
     expect(within(menu).getByRole('link', { name: '合約選擇方式' })).toBeInTheDocument()
+
+    await userEvent.click(title())
+    expect(title()).toHaveAttribute('aria-expanded', 'false')
+    expect(within(menu).queryByRole('link', { name: '合約選擇方式' })).toBeNull()
 
     await userEvent.click(within(menu).getByRole('button', { name: /^無王開叫後續/ }))
     expect(within(menu).queryByRole('link', { name: /^1NT的答叫/ })).toBeNull()

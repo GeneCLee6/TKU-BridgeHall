@@ -45,6 +45,15 @@ export function Sidebar({
     }
   }
 
+  // Clicking a convention's title folds and unfolds its sections. Moving to another convention
+  // always unfolds it (the link also navigates there); clicking the current one toggles it.
+  const toggleItem = (target: string) =>
+    setOpenItems((i) =>
+      target !== slug || !i.includes(target)
+        ? [...new Set([...i, target])]
+        : i.filter((x) => x !== target),
+    )
+
   return (
     <Nav id="catalogue" aria-label={strings.catalogue} $open={open} data-print="hide">
       {actions}
@@ -66,45 +75,41 @@ export function Sidebar({
                 </h2>
               </Accordion.Header>
               <Accordion.Content>
-                <Accordion.Root
-                  type="multiple"
-                  value={openItems}
-                  onValueChange={setOpenItems}
-                  asChild
-                >
-                  <Branch>
-                    {items.map((c) => (
-                      <Accordion.Item key={c.slug} value={c.slug} asChild>
-                        <li>
-                          <Row>
-                            <Accordion.Header asChild>
-                              <div>
-                                <ItemTrigger aria-label={strings.toggleSections(c.nameZh)}>
-                                  <Chevron size={14} aria-hidden />
-                                </ItemTrigger>
-                              </div>
-                            </Accordion.Header>
-                            <ConventionLink to={conventionPath(c.slug)} onClick={onNavigate} end>
-                              {c.nameZh}
-                              <small lang="en">{c.nameEn}</small>
-                            </ConventionLink>
-                          </Row>
-                          <Accordion.Content>
-                            <Branch>
-                              {c.sections.map((s) => (
-                                <li key={s.id}>
-                                  <SectionLink to={sectionPath(c.slug, s.id)} onClick={onNavigate}>
-                                    <RichText text={s.title} />
-                                  </SectionLink>
-                                </li>
-                              ))}
-                            </Branch>
-                          </Accordion.Content>
-                        </li>
-                      </Accordion.Item>
-                    ))}
-                  </Branch>
-                </Accordion.Root>
+                <Branch>
+                  {items.map((c) => {
+                    const isOpen = openItems.includes(c.slug)
+                    return (
+                      <li key={c.slug}>
+                        <ConventionLink
+                          to={conventionPath(c.slug)}
+                          end
+                          aria-expanded={isOpen}
+                          data-state={isOpen ? 'open' : 'closed'}
+                          onClick={() => toggleItem(c.slug)}
+                        >
+                          <ChevronBox aria-hidden>
+                            <Chevron size={14} />
+                          </ChevronBox>
+                          <Name>
+                            {c.nameZh}
+                            <small lang="en">{c.nameEn}</small>
+                          </Name>
+                        </ConventionLink>
+                        {isOpen && (
+                          <Branch>
+                            {c.sections.map((s) => (
+                              <li key={s.id}>
+                                <SectionLink to={sectionPath(c.slug, s.id)} onClick={onNavigate}>
+                                  <RichText text={s.title} />
+                                </SectionLink>
+                              </li>
+                            ))}
+                          </Branch>
+                        )}
+                      </li>
+                    )
+                  })}
+                </Branch>
               </Accordion.Content>
             </Group>
           )
@@ -213,55 +218,41 @@ const Count = styled.span`
   letter-spacing: 0;
 `
 
-const Row = styled.div`
+/** The whole row is the toggle: chevron (shown, not a separate control) plus the names */
+const ConventionLink = styled(NavLink)`
   display: flex;
   align-items: flex-start;
-`
-
-const ItemTrigger = styled(Accordion.Trigger)`
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: ${CHEVRON}px;
-  height: ${CHEVRON}px;
-  margin-top: 6px;
-  padding: 0;
-  border: none;
-  border-radius: ${({ theme }) => theme.radius.sm};
-  background: transparent;
-  color: ${({ theme }) => theme.colors.textMuted};
-  cursor: pointer;
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.surfaceAlt};
-    color: ${({ theme }) => theme.colors.primary};
-  }
-  &[data-state='open'] ${Chevron} {
-    transform: rotate(90deg);
-  }
-`
-
-const ConventionLink = styled(NavLink)`
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  padding: ${({ theme }) => theme.space(1.5)} ${({ theme }) => theme.space(2)};
+  padding: ${({ theme }) => theme.space(1.5)} ${({ theme }) => theme.space(2)}
+    ${({ theme }) => theme.space(1.5)} 0;
   border-radius: ${({ theme }) => theme.radius.sm};
   color: ${({ theme }) => theme.colors.text};
   font-weight: 700;
   text-decoration: none;
   line-height: 1.4;
 
-  small {
-    font-weight: 400;
+  ${ChevronBox} {
+    height: 1.4em;
     color: ${({ theme }) => theme.colors.textMuted};
+  }
+  &[data-state='open'] ${Chevron} {
+    transform: rotate(90deg);
   }
   &:hover,
   &.active {
     background: ${({ theme }) => theme.colors.primarySoft};
     color: ${({ theme }) => theme.colors.primaryStrong};
+  }
+`
+
+const Name = styled.span`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  small {
+    font-weight: 400;
+    color: ${({ theme }) => theme.colors.textMuted};
   }
 `
 
