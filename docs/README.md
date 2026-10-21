@@ -11,7 +11,12 @@
 | `Bergen.doc` | Bergen加叫（松濤版） | `bergen-raises` |
 | `如何對抗弱跳叫2NT兩低.doc` | 對抗不尋常2NT | `defense-vs-unusual-2nt` |
 | `橋牌防守信號.doc` | 橋牌防守信號 | `defensive-signals` |
-| `2D開叫(一高弱二).doc` | 2D 開叫（一高弱二） | `two-diamond-opening` |
+| `2D open(ppq20131029).doc` | 2D 開叫 | `two-diamond-opening` |
+| `2D開叫(一高弱二).doc` | 2D 開叫的較早版本，已由上一份取代 | — |
+| `開叫2NT答叫(ppq終極版20130511).doc` | 開叫2NT及答叫 | `two-notrump-opening` |
+| `NMF.doc` | 新低花迫叫 | `new-minor-forcing` |
+| `好壞2NT的約定叫品(松濤20160226).doc` | 好壞2NT（松濤版） | `good-bad-2nt` |
+| `1S 2NT舊版(doblue 20110719).doc` | 開叫高花之滿貫詢問叫（舊版） | `major-slam-ask-2011` |
 | `回答性賭倍(Responsive dbl).doc` | 回答性賭倍 | `responsive-double` |
 
 新增特約時，把原始 Word 檔也放進這個資料夾，並在上表加一列。
