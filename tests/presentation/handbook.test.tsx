@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from '../../src/App.tsx'
@@ -50,5 +50,30 @@ describe('handbook page', () => {
   it('shows 待確認 notes in the page', () => {
     renderAt('/c/defense-vs-unusual-2nt')
     expect(screen.getAllByText('待確認').length).toBeGreaterThan(0)
+  })
+  it('keeps the phone header to menu, logo and search, with view actions inside the menu', async () => {
+    const original = window.matchMedia
+    window.matchMedia = ((query: string) => ({
+      matches: true,
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof window.matchMedia
+    try {
+      renderAt('/')
+      const header = screen.getByRole('banner')
+      expect(within(header).queryByRole('button', { name: '全部展開' })).toBeNull()
+      expect(within(header).queryByRole('button', { name: /深色模式|淺色模式/ })).toBeNull()
+      expect(screen.queryByText('♦♣')).toBeNull()
+
+      await userEvent.click(within(header).getByLabelText('開啟目錄'))
+      const menu = screen.getByRole('navigation', { name: '特約目錄' })
+      expect(within(menu).getByRole('button', { name: /深色模式|淺色模式/ })).toBeInTheDocument()
+      await userEvent.click(within(menu).getByRole('button', { name: '全部展開' }))
+      expect(trigger(/^雷本索特約/)).toHaveAttribute('aria-expanded', 'true')
+      expect(within(header).getByLabelText('開啟目錄')).toHaveAttribute('aria-expanded', 'false')
+    } finally {
+      window.matchMedia = original
+    }
   })
 })

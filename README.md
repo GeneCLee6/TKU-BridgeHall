@@ -33,7 +33,7 @@
 ## 技術
 
 - React 19 + TypeScript（strict）+ Vite
-- styled-components 6（主題、淺色/深色、四色牌）
+- styled-components 6（主題、淺色/深色，花色固定四色牌）
 - `@radix-ui/react-accordion`：無樣式、符合 WAI-ARIA 的收合元件
 - `fuse.js`：特約名稱、標籤、叫品與內文的模糊搜尋
 - `react-router-dom`：每個特約與段落的深層連結

@@ -25,7 +25,7 @@ TKU-BridgeBook/
 │  │  └─ index.ts           特約登記表
 │  ├─ types/convention.ts   內容模型（唯一的 schema）
 │  ├─ lib/                  純函式：calls（叫品解析）、sections（走訪、key、深層連結）、search
-│  ├─ state/                ExpansionContext（展開狀態）、PreferencesContext（主題、四色牌）
+│  ├─ state/                ExpansionContext（展開狀態）、PreferencesContext（主題）
 │  ├─ components/           展示元件
 │  ├─ pages/HandbookPage.tsx
 │  ├─ styles/               tokens、GlobalStyle、styled-components 型別
@@ -95,7 +95,8 @@ interface Convention {
 **狀態**
 
 - `ExpansionContext`：一個 `Set<string>` 記錄所有打開的項目（特約 key 為 `slug`，段落為 `slug/sectionId`）。每一層 Radix Accordion 以 `openAmong(keys)` 取得 value、以 `setLevel(keys, open)` 回寫。全部展開／收合與深層連結因此能控制不屬於它們的收合元件。
-- `PreferencesContext`：主題（淺／深）與四色牌，存在 localStorage（失敗時忽略）。
+- `PreferencesContext`：主題（淺／深），存在 localStorage（失敗時忽略）。花色固定四色牌。
+- `useMediaQuery(mobileQuery)`：決定 ViewActions 放在頁首（桌機）或選單抽屜（手機），同一時間只渲染一組。
 - 不使用狀態管理函式庫；兩個 Context 就夠了。
 
 **內容載入**：所有特約在 `content/index.ts` 靜態 import，打包進 bundle。內容量很小（兩個特約約 15 kB 原始碼），不需要分割或動態載入。特約數量成長到數十個時，可改成 `import.meta.glob` 自動登記並依特約 lazy load。
@@ -108,7 +109,7 @@ interface Convention {
 
 | 函式庫 | 理由 |
 | --- | --- |
-| styled-components | 專案要求；與作者其他專案（CareerMate-FE）一致；theme 讓淺／深色與四色牌只是換一組 token。 |
+| styled-components | 專案要求；與作者其他專案（CareerMate-FE）一致；theme 讓淺／深色只是換一組 token。 |
 | @radix-ui/react-accordion | 無樣式（headless），完全用 styled-components 上樣式；內建 WAI-ARIA Accordion 鍵盤行為與 `aria-expanded`/`aria-controls`；支援受控模式與 `forceMount`（列印需要）。 |
 | fuse.js | 小型、無相依的模糊搜尋，適合靜態內容；支援加權欄位。 |
 | react-router-dom | 深層連結；與作者其他專案一致。 |

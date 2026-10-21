@@ -4,8 +4,10 @@ import styled from 'styled-components'
 import { AppHeader } from '../components/AppHeader.tsx'
 import { ConventionCard } from '../components/ConventionCard.tsx'
 import { Sidebar } from '../components/Sidebar.tsx'
+import { ViewActions } from '../components/ViewActions.tsx'
 import { categories, conventionBySlug, conventions } from '../content/index.ts'
 import { createSearch } from '../lib/search.ts'
+import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import {
   allKeys,
   conventionDomId,
@@ -16,7 +18,7 @@ import {
 } from '../lib/sections.ts'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
-import { mobile } from '../styles/tokens.ts'
+import { mobile, mobileQuery } from '../styles/tokens.ts'
 
 /**
  * The whole handbook on one page, Swagger style. The route only decides what to open and scroll
@@ -27,6 +29,7 @@ export function HandbookPage() {
   const { open, closeAll } = useExpansion()
   const [menuOpen, setMenuOpen] = useState(false)
   const search = useMemo(() => createSearch(conventions), [])
+  const isMobile = useMediaQuery(mobileQuery)
 
   const convention = slug ? conventionBySlug(slug) : undefined
   const path = convention && sectionId ? findSectionPath(convention, sectionId) : []
@@ -38,7 +41,9 @@ export function HandbookPage() {
     const trail = sectionId ? findSectionPath(target, sectionId) : []
     open([conventionKey(target.slug), ...trail.map((s) => sectionKey(target.slug, s.id))])
     const domId =
-      sectionId && trail.length ? sectionDomId(target.slug, sectionId) : conventionDomId(target.slug)
+      sectionId && trail.length
+        ? sectionDomId(target.slug, sectionId)
+        : conventionDomId(target.slug)
     // Wait one frame so the newly opened content has its height before scrolling
     const frame = window.requestAnimationFrame(() => {
       const el = document.getElementById(domId)
@@ -55,8 +60,15 @@ export function HandbookPage() {
         search={search}
         menuOpen={menuOpen}
         onToggleMenu={() => setMenuOpen((o) => !o)}
-        onExpandAll={() => open(conventions.flatMap(allKeys))}
-        onCollapseAll={closeAll}
+        actions={
+          !isMobile && (
+            <ViewActions
+              variant="bar"
+              onExpandAll={() => open(conventions.flatMap(allKeys))}
+              onCollapseAll={closeAll}
+            />
+          )
+        }
       />
       <Layout>
         <Sidebar
@@ -64,6 +76,21 @@ export function HandbookPage() {
           conventions={conventions}
           open={menuOpen}
           onNavigate={() => setMenuOpen(false)}
+          actions={
+            isMobile && (
+              <ViewActions
+                variant="menu"
+                onExpandAll={() => {
+                  open(conventions.flatMap(allKeys))
+                  setMenuOpen(false)
+                }}
+                onCollapseAll={() => {
+                  closeAll()
+                  setMenuOpen(false)
+                }}
+              />
+            )
+          }
         />
         {menuOpen && <Scrim aria-hidden onClick={() => setMenuOpen(false)} data-print="hide" />}
         <Main id="main" tabIndex={-1}>
@@ -127,11 +154,13 @@ const Main = styled.main`
   flex: 1;
   min-width: 0;
   max-width: ${({ theme }) => theme.layout.contentMax};
-  padding: ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(16)};
+  padding: ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(6)}
+    ${({ theme }) => theme.space(16)};
   outline: none;
 
   ${mobile} {
-    padding: ${({ theme }) => theme.space(4)} ${({ theme }) => theme.space(4)} ${({ theme }) => theme.space(12)};
+    padding: ${({ theme }) => theme.space(4)} ${({ theme }) => theme.space(4)}
+      ${({ theme }) => theme.space(12)};
   }
 `
 
