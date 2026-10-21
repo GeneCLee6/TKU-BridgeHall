@@ -80,5 +80,6 @@ describe('convention content', () => {
     expect(count('jacoby-2nt')).toBe(11)
     expect(count('bergen-raises')).toBe(5)
     expect(count('defensive-signals')).toBe(0)
+    expect(count('two-diamond-opening')).toBe(0)
   })
 })

@@ -6,6 +6,7 @@ import { jacoby2nt } from './conventions/jacoby-2nt.ts'
 import { lebensohl } from './conventions/lebensohl.ts'
 import { notrumpResponses } from './conventions/notrump-responses.ts'
 import { singleRaiseMajor } from './conventions/single-raise-major.ts'
+import { twoDiamondOpening } from './conventions/two-diamond-opening.ts'
 
 /**
  * The registry. To add a convention: create src/content/conventions/<slug>.ts exporting a
@@ -17,6 +18,7 @@ export const conventions: Convention[] = [
   singleRaiseMajor,
   jacoby2nt,
   bergenRaises,
+  twoDiamondOpening,
   defenseVsUnusual2nt,
   defensiveSignals,
 ]
