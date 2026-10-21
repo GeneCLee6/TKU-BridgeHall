@@ -19,7 +19,11 @@
 | 開叫高花之滿貫詢問叫 | Jacoby 2NT | J2N |
 | Bergen加叫（松濤版） | Bergen Raises | Bergen |
 | 橋牌防守信號 | Defensive Signals | 橋牌防守信號 |
-| 2D 開叫（一高弱二） | 2♦ Opening (Weak Two in One Major) | 2D開叫(一高弱二) |
+| 2D 開叫 | 2♦ Opening | 2D open(ppq20131029) |
+| 開叫2NT及答叫 | 2NT Opening and Responses | 開叫2NT答叫(ppq終極版20130511) |
+| 新低花迫叫 | New Minor Forcing | NMF |
+| 好壞2NT（松濤版） | Good/Bad 2NT | 好壞2NT的約定叫品(松濤20160226) |
+| 開叫高花之滿貫詢問叫（舊版） | Major Slam Ask (2011 version) | 1S 2NT舊版(doblue 20110719) |
 | 回答性賭倍 | Responsive Double | Responsive dbl 回答性賭倍 |
 
 原始 Word 檔都放在 [`docs/`](docs/README.md)。

@@ -125,7 +125,7 @@ describe('handbook page', () => {
   it('links each card’s 待確認 count to its first note', () => {
     renderAt('/')
     const main = within(screen.getByRole('main'))
-    expect(main.getByRole('link', { name: '1 項待確認' })).toHaveAttribute(
+    expect(main.getAllByRole('link', { name: '1 項待確認' })[0]).toHaveAttribute(
       'href',
       '/c/notrump-responses/slam-try?pending=0',
     )
