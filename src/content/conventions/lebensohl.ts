@@ -21,7 +21,7 @@ export const lebensohl: Convention = {
     title: '雷本所特約（文件標題：1NT遭插叫的答叫原則）',
     note: '社內統一譯名為「雷本索」（舊檔名寫作「雷本所」）。',
   },
-  updated: '2026-10-22',
+  updated: '2026-10-21',
   sections: [
     {
       id: 'natural',

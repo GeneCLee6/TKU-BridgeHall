@@ -14,6 +14,8 @@
 | --- | --- | --- |
 | 雷本索特約 | Lebensohl | 雷本所特約（1NT遭插叫的答叫原則） |
 | 對抗不尋常2NT | Defense vs. Unusual 2NT | 如何對抗弱跳叫2NT兩低 |
+| 1NT的答叫 | Responses to 1NT | 1NT的答叫 |
+| 1H 2H（淡江用） | After a Single Raise of Responder’s Major | 1H 2H(淡江用) |
 
 內容逐字轉錄自原始文件；原文有疑義之處在網站上以「待確認」標示，清單見 [`CONTENT_GUIDE.md`](CONTENT_GUIDE.md#目前的待確認清單)。
 
