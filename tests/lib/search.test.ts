@@ -20,6 +20,8 @@ describe('search', () => {
     ['Smith Echo', 'defensive-signals'],
     ['奇正偶轉', 'defensive-signals'],
     ['一高弱二', 'two-diamond-opening'],
+    ['回答性賭倍', 'responsive-double'],
+    ['Responsive dbl', 'responsive-double'],
     ['Unusual 2NT', 'defense-vs-unusual-2nt'],
     ['兩低', 'defense-vs-unusual-2nt'],
     ['mini splinter', 'defense-vs-unusual-2nt'],

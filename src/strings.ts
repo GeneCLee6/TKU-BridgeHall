@@ -35,4 +35,7 @@ export const strings = {
   auction: '叫牌過程',
   notFound: '找不到這個特約或段落，可能網址有誤或內容已調整。',
   skipToContent: '跳到主要內容',
+  references: '外部參考',
+  referencesHint: '其他網站的橋牌參考資料',
+  opensInNewTab: '（在新分頁開啟）',
 } as const

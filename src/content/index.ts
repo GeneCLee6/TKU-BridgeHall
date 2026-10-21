@@ -5,6 +5,7 @@ import { defensiveSignals } from './conventions/defensive-signals.ts'
 import { jacoby2nt } from './conventions/jacoby-2nt.ts'
 import { lebensohl } from './conventions/lebensohl.ts'
 import { notrumpResponses } from './conventions/notrump-responses.ts'
+import { responsiveDouble } from './conventions/responsive-double.ts'
 import { singleRaiseMajor } from './conventions/single-raise-major.ts'
 import { twoDiamondOpening } from './conventions/two-diamond-opening.ts'
 
@@ -20,6 +21,7 @@ export const conventions: Convention[] = [
   bergenRaises,
   twoDiamondOpening,
   defenseVsUnusual2nt,
+  responsiveDouble,
   defensiveSignals,
 ]
 
@@ -27,3 +29,4 @@ export const conventionBySlug = (slug: string): Convention | undefined =>
   conventions.find((c) => c.slug === slug)
 
 export { categories } from './categories.ts'
+export { references } from './references.ts'

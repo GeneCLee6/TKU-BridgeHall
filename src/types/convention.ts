@@ -79,6 +79,13 @@ export interface Category {
   description: string
 }
 
+/** An outside website worth keeping at hand, listed under 外部參考 in the catalogue */
+export interface Reference {
+  title: string
+  description: string
+  url: string
+}
+
 export interface Convention {
   /** URL-safe and unique: /c/:slug */
   slug: string

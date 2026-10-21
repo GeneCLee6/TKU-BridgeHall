@@ -1,9 +1,9 @@
 import * as Accordion from '@radix-ui/react-accordion'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, ExternalLink } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, NavLink, useParams } from 'react-router-dom'
 import styled from 'styled-components'
-import type { Category, Convention } from '../types/convention.ts'
+import type { Category, Convention, Reference } from '../types/convention.ts'
 import { conventionPath, pendingNotes, pendingPath, sectionPath } from '../lib/sections.ts'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
@@ -18,12 +18,15 @@ import { RichText } from './Suit.tsx'
 export function Sidebar({
   categories,
   conventions,
+  references,
   open,
   onNavigate,
   actions,
 }: {
   categories: Category[]
   conventions: Convention[]
+  /** Outside websites, listed after the categories */
+  references: Reference[]
   open: boolean
   onNavigate: () => void
   /** View actions shown at the top of the drawer on phones */
@@ -34,7 +37,10 @@ export function Sidebar({
     .map((c) => ({ convention: c, notes: pendingNotes(c) }))
     .filter((p) => p.notes.length > 0)
   const pendingTotal = pending.reduce((n, p) => n + p.notes.length, 0)
-  const [openGroups, setOpenGroups] = useState<string[]>(() => categories.map((c) => c.id))
+  const [openGroups, setOpenGroups] = useState<string[]>(() => [
+    ...categories.map((c) => c.id),
+    REFERENCES_GROUP,
+  ])
   const [openItems, setOpenItems] = useState<string[]>(() => (slug ? [slug] : []))
 
   // When the URL moves to another convention, unfold it (adjusting state during render,
@@ -159,6 +165,37 @@ export function Sidebar({
             </Group>
           )
         })}
+        {references.length > 0 && (
+          <Group value={REFERENCES_GROUP}>
+            <Accordion.Header asChild>
+              <h2>
+                <GroupTrigger title={strings.referencesHint}>
+                  <ChevronBox>
+                    <Chevron size={14} aria-hidden />
+                  </ChevronBox>
+                  {strings.references}
+                  <Count>{references.length}</Count>
+                </GroupTrigger>
+              </h2>
+            </Accordion.Header>
+            <Accordion.Content>
+              <Branch>
+                {references.map((r) => (
+                  <li key={r.url}>
+                    <ReferenceLink href={r.url} target="_blank" rel="noopener noreferrer">
+                      <Name>
+                        {r.title}
+                        <small>{r.description}</small>
+                      </Name>
+                      <ExternalLink size={14} aria-hidden />
+                      <span className="visually-hidden">{strings.opensInNewTab}</span>
+                    </ReferenceLink>
+                  </li>
+                ))}
+              </Branch>
+            </Accordion.Content>
+          </Group>
+        )}
       </Accordion.Root>
     </Nav>
   )
@@ -169,6 +206,9 @@ const CHEVRON = 24
 
 /** Accordion value of the 待確認 group (closed by default; categories start open) */
 const PENDING_GROUP = '__pending'
+
+/** Accordion value of the 外部參考 group (open by default, like the categories) */
+const REFERENCES_GROUP = '__references'
 
 const Nav = styled.nav<{ $open: boolean }>`
   position: sticky;
@@ -359,5 +399,29 @@ const SectionLink = styled(NavLink)`
   &.active {
     color: ${({ theme }) => theme.colors.primary};
     font-weight: 700;
+  }
+`
+
+/** An outside link: same row shape as a section link, with a new-tab icon at the end */
+const ReferenceLink = styled.a`
+  display: flex;
+  align-items: flex-start;
+  gap: ${({ theme }) => theme.space(2)};
+  padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(2)};
+  border-radius: ${({ theme }) => theme.radius.sm};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+
+  svg {
+    flex: none;
+    margin-top: 0.3em;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+    background: ${({ theme }) => theme.colors.surfaceAlt};
   }
 `
