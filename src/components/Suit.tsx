@@ -1,6 +1,12 @@
-import { Fragment, type ReactNode } from 'react'
+import { Fragment, memo, type ReactNode } from 'react'
 import styled from 'styled-components'
-import { SUIT_NAME, SUIT_SYMBOL, SYMBOL_TO_LETTER, parseCall, type SuitLetter } from '../lib/calls.ts'
+import {
+  SUIT_NAME,
+  SUIT_SYMBOL,
+  SYMBOL_TO_LETTER,
+  parseCall,
+  type SuitLetter,
+} from '../lib/calls.ts'
 
 /**
  * A suit symbol. The glyph shape already tells suits apart, so colour is never the only cue;
@@ -41,7 +47,7 @@ const CallText = styled.span`
 `
 
 /** Text with suit symbols coloured and **bold** honoured; nothing else is interpreted */
-export function RichText({ text }: { text: string }) {
+export const RichText = memo(function RichText({ text }: { text: string }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g)
   return (
     <>
@@ -54,7 +60,7 @@ export function RichText({ text }: { text: string }) {
       )}
     </>
   )
-}
+})
 
 function withSuits(text: string): ReactNode[] {
   return text

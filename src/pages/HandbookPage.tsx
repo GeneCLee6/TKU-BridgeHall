@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { startTransition, useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { AppHeader } from '../components/AppHeader.tsx'
@@ -29,6 +29,10 @@ export function HandbookPage() {
   const [searchParams] = useSearchParams()
   const pendingIndex = searchParams.get('pending')
   const { open, closeAll } = useExpansion()
+  // Opening everything is the heaviest update on the page: as a transition the button
+  // responds at once and the page stays usable while React renders.
+  const expandAll = () => startTransition(() => open(conventions.flatMap(allKeys)))
+  const collapseAll = () => startTransition(closeAll)
   const [menuOpen, setMenuOpen] = useState(false)
   const search = useMemo(() => createSearch(conventions), [])
   const isMobile = useMediaQuery(mobileQuery)
@@ -79,11 +83,7 @@ export function HandbookPage() {
         onToggleMenu={() => setMenuOpen((o) => !o)}
         actions={
           !isMobile && (
-            <ViewActions
-              variant="bar"
-              onExpandAll={() => open(conventions.flatMap(allKeys))}
-              onCollapseAll={closeAll}
-            />
+            <ViewActions variant="bar" onExpandAll={expandAll} onCollapseAll={collapseAll} />
           )
         }
       />
@@ -98,11 +98,11 @@ export function HandbookPage() {
               <ViewActions
                 variant="menu"
                 onExpandAll={() => {
-                  open(conventions.flatMap(allKeys))
+                  expandAll()
                   setMenuOpen(false)
                 }}
                 onCollapseAll={() => {
-                  closeAll()
+                  collapseAll()
                   setMenuOpen(false)
                 }}
               />

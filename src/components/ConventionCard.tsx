@@ -92,6 +92,9 @@ const Card = styled(Accordion.Item)`
   box-shadow: ${({ theme }) => theme.shadow};
   scroll-margin-top: calc(${({ theme }) => theme.layout.headerHeight} + 16px);
   overflow: hidden;
+  /* Cards off screen skip layout and paint until scrolled to, which keeps expand-all fast */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 160px;
 `
 
 const Header = styled.h2`

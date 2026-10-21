@@ -4,9 +4,7 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import type { SearchFn } from '../lib/search.ts'
 import { conventionPath, sectionPath } from '../lib/sections.ts'
-import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { strings } from '../strings.ts'
-import { mobileQuery } from '../styles/tokens.ts'
 import { RichText } from './Suit.tsx'
 
 /** Searches convention names, aliases, tags, bids and meanings; results are deep links */
@@ -16,7 +14,6 @@ export function SearchBar({ search }: { search: SearchFn }) {
   const inputId = useId()
   const listId = useId()
   const showResults = query.trim().length > 0
-  const isMobile = useMediaQuery(mobileQuery)
 
   return (
     <Wrap role="search" data-print="hide" onSubmit={(e) => e.preventDefault()}>
@@ -29,7 +26,7 @@ export function SearchBar({ search }: { search: SearchFn }) {
           id={inputId}
           type="search"
           value={query}
-          placeholder={isMobile ? strings.searchPlaceholderShort : strings.searchPlaceholder}
+          placeholder={strings.searchPlaceholder}
           autoComplete="off"
           aria-controls={showResults ? listId : undefined}
           onChange={(e) => setQuery(e.target.value)}

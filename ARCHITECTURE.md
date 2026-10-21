@@ -129,6 +129,16 @@ interface Convention {
 - **CI**：GitHub Actions（`.github/workflows/ci.yml`）：`npm ci` → lint → build → test。
 - **部署計畫**：任何靜態主機皆可。建議 Vercel 或 Cloudflare Pages 連接 GitHub，自動部署 `main`。因為使用 BrowserRouter，主機需設定 SPA fallback（所有路徑回傳 `index.html`）：Cloudflare Pages 預設即支援；Vercel 用專案根目錄的 `vercel.json` rewrites（已加入，部署平台選定 Vercel）。若改用 GitHub Pages，可換成 HashRouter 或加 `404.html` 轉址。
 
+## 6.5 效能
+
+內容全部預先渲染（forceMount，收合時用 CSS 隱藏），所以展開／收合只是改狀態，不需要重新載入內容。為了讓「全部展開」在特約變多時仍然很快：
+
+- `BlockView`、`RichText` 用 `React.memo`：內容是靜態資料，展開／收合時不會重新渲染段落與表格，只更新折疊狀態。
+- 特約卡片使用 `content-visibility: auto`：畫面外的卡片延後排版與繪製，捲到時才處理。
+- 全部展開／收合包在 `startTransition`：按鈕立刻有反應，畫面不會卡住。
+
+2026-10-21 實測（7 個特約、約 130 個小節）：第一次全部展開從 0.5～2.1 秒降到 0.1～0.23 秒。
+
 ## 7. CI/CD
 
 ```
