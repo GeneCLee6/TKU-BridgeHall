@@ -18,6 +18,8 @@ export const strings = {
   openMenu: '開啟目錄',
   closeMenu: '關閉目錄',
   catalogue: '特約目錄',
+  conventionCount: (n: number) => `${n} 個特約`,
+  toggleSections: (name: string) => `展開／收合「${name}」的小節`,
   copyLink: '複製連結',
   copied: '已複製連結',
   copyFailed: '無法複製，請手動複製網址',

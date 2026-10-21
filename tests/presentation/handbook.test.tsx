@@ -35,7 +35,9 @@ describe('handbook page', () => {
     renderAt('/c/defense-vs-unusual-2nt/vs-1s-after-3c-3d')
     expect(trigger(/^對抗不尋常2NT/)).toHaveAttribute('aria-expanded', 'true')
     expect(trigger(/^如何對抗敵方Unusual 2NT/)).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getAllByRole('button', { expanded: true }).length).toBe(4)
+    expect(within(screen.getByRole('main')).getAllByRole('button', { expanded: true }).length).toBe(
+      4,
+    )
   })
 
   it('expands and collapses everything from the header', async () => {
@@ -44,7 +46,9 @@ describe('handbook page', () => {
     expect(trigger(/^雷本索特約/)).toHaveAttribute('aria-expanded', 'true')
     expect(trigger(/^遭非自然牌組插叫/)).toHaveAttribute('aria-expanded', 'true')
     await userEvent.click(screen.getByRole('button', { name: '全部收合' }))
-    expect(screen.queryAllByRole('button', { expanded: true })).toHaveLength(0)
+    expect(
+      within(screen.getByRole('main')).queryAllByRole('button', { expanded: true }),
+    ).toHaveLength(0)
   })
 
   it('shows 待確認 notes in the page', () => {
@@ -75,5 +79,24 @@ describe('handbook page', () => {
     } finally {
       window.matchMedia = original
     }
+  })
+  it('folds the catalogue: categories open, sections shown only for the opened convention', async () => {
+    renderAt('/c/lebensohl')
+    const menu = screen.getByRole('navigation', { name: '特約目錄' })
+    expect(within(menu).getByRole('button', { name: /^無王開叫後續/ })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+    // The convention in the URL shows its sections; the others stay folded
+    expect(within(menu).getByRole('link', { name: '遭自然牌組插叫' })).toBeInTheDocument()
+    expect(within(menu).queryByRole('link', { name: '合約選擇方式' })).toBeNull()
+
+    await userEvent.click(
+      within(menu).getByRole('button', { name: '展開／收合「1NT的答叫」的小節' }),
+    )
+    expect(within(menu).getByRole('link', { name: '合約選擇方式' })).toBeInTheDocument()
+
+    await userEvent.click(within(menu).getByRole('button', { name: /^無王開叫後續/ }))
+    expect(within(menu).queryByRole('link', { name: /^1NT的答叫/ })).toBeNull()
   })
 })
