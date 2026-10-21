@@ -20,6 +20,7 @@
 | Bergen加叫（松濤版） | Bergen Raises | Bergen |
 | 橋牌防守信號 | Defensive Signals | 橋牌防守信號 |
 | 2D 開叫（一高弱二） | 2♦ Opening (Weak Two in One Major) | 2D開叫(一高弱二) |
+| 回答性賭倍 | Responsive Double | Responsive dbl 回答性賭倍 |
 
 原始 Word 檔都放在 [`docs/`](docs/README.md)。
 

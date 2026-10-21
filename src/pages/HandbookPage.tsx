@@ -5,7 +5,7 @@ import { AppHeader } from '../components/AppHeader.tsx'
 import { ConventionCard } from '../components/ConventionCard.tsx'
 import { Sidebar } from '../components/Sidebar.tsx'
 import { ViewActions } from '../components/ViewActions.tsx'
-import { categories, conventionBySlug, conventions } from '../content/index.ts'
+import { categories, conventionBySlug, conventions, references } from '../content/index.ts'
 import { createSearch } from '../lib/search.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import {
@@ -91,6 +91,7 @@ export function HandbookPage() {
         <Sidebar
           categories={categories}
           conventions={conventions}
+          references={references}
           open={menuOpen}
           onNavigate={() => setMenuOpen(false)}
           actions={
