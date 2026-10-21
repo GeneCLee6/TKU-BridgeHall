@@ -1,29 +1,29 @@
-import { ChevronsDownUp, ChevronsUpDown, Menu, Moon, Printer, Sun, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import type { SearchFn } from '../lib/search.ts'
-import { usePreferences } from '../state/PreferencesContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 import { IconButton } from './CopyLinkButton.tsx'
 import { LogoMark } from './Logo.tsx'
 import { SearchBar } from './SearchBar.tsx'
 
+/**
+ * Desktop: brand, search and the view actions. Mobile: menu button, logo mark and search only;
+ * the view actions move into the menu drawer (HandbookPage passes `actions` only on desktop).
+ */
 export function AppHeader({
   search,
   menuOpen,
   onToggleMenu,
-  onExpandAll,
-  onCollapseAll,
+  actions,
 }: {
   search: SearchFn
   menuOpen: boolean
   onToggleMenu: () => void
-  onExpandAll: () => void
-  onCollapseAll: () => void
+  actions?: ReactNode
 }) {
-  const { mode, fourColour, toggleMode, toggleFourColour } = usePreferences()
-
   return (
     <Bar data-print="hide">
       <MenuButton
@@ -46,41 +46,7 @@ export function AppHeader({
         </BrandText>
       </Brand>
       <SearchBar search={search} />
-      <Actions>
-        <IconButton type="button" onClick={onExpandAll} aria-label={strings.expandAll} title={strings.expandAll}>
-          <ChevronsUpDown size={18} aria-hidden />
-        </IconButton>
-        <IconButton
-          type="button"
-          onClick={onCollapseAll}
-          aria-label={strings.collapseAll}
-          title={strings.collapseAll}
-        >
-          <ChevronsDownUp size={18} aria-hidden />
-        </IconButton>
-        <SuitToggle
-          type="button"
-          onClick={toggleFourColour}
-          aria-pressed={fourColour}
-          title={fourColour ? strings.fourColourOn : strings.fourColourOff}
-        >
-          <span aria-hidden>♦♣</span>
-          <span className="visually-hidden">四色牌</span>
-        </SuitToggle>
-        <IconButton
-          type="button"
-          onClick={toggleMode}
-          aria-label={mode === 'light' ? strings.themeToDark : strings.themeToLight}
-          title={mode === 'light' ? strings.themeToDark : strings.themeToLight}
-        >
-          {mode === 'light' ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}
-        </IconButton>
-        <HideOnMobile>
-          <IconButton type="button" onClick={() => window.print()} aria-label={strings.print} title={strings.print}>
-            <Printer size={18} aria-hidden />
-          </IconButton>
-        </HideOnMobile>
-      </Actions>
+      {actions}
     </Bar>
   )
 }
@@ -99,7 +65,7 @@ const Bar = styled.header`
 
   ${mobile} {
     gap: ${({ theme }) => theme.space(2)};
-    padding: 0 ${({ theme }) => theme.space(2)};
+    padding: 0 ${({ theme }) => theme.space(3)};
   }
 `
 
@@ -143,31 +109,5 @@ const Tagline = styled.span`
   color: ${({ theme }) => theme.colors.textMuted} !important;
   @media (max-width: 1200px) {
     display: none;
-  }
-`
-
-const Actions = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.space(1)};
-  margin-left: auto;
-`
-
-const HideOnMobile = styled.span`
-  ${mobile} {
-    display: none;
-  }
-`
-
-const SuitToggle = styled(IconButton)`
-  font-size: 0.875rem;
-  &[aria-pressed='true'] {
-    border-color: ${({ theme }) => theme.colors.border};
-    background: ${({ theme }) => theme.colors.primarySoft};
-  }
-  span:first-child {
-    background: linear-gradient(90deg, ${({ theme }) => theme.suits.D} 50%, ${({ theme }) => theme.suits.C} 50%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
   }
 `

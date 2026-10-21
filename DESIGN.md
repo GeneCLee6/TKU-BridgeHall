@@ -32,14 +32,16 @@
 
 ### 2.2 花色
 
-| 花色 | 雙色牌（預設，淺／深） | 四色牌（淺／深） |
-| --- | --- | --- |
-| ♠ | `#1a2233` / `#e6ebf3` | 同左 |
-| ♥ | `#c8102e` / `#ff6b6b` | 同左 |
-| ♦ | `#c8102e` / `#ff6b6b` | `#b34700` / `#ffa04d`（橘） |
-| ♣ | `#1a2233` / `#e6ebf3` | `#1b7a33` / `#5fd27a`（綠） |
+固定使用四色牌，不提供切換。
 
-四色牌由頁首「♦♣」按鈕切換。列印時固定為紅（♥♦）與黑（♠♣）。
+| 花色 | 淺色 | 深色 |
+| --- | --- | --- |
+| ♠ | `#1a2233` | `#e6ebf3` |
+| ♥ | `#c8102e` | `#ff6b6b` |
+| ♦ | `#b34700`（橘） | `#ffa04d`（橘） |
+| ♣ | `#1b7a33`（綠） | `#5fd27a`（綠） |
+
+列印時固定為紅（♥♦）與黑（♠♣）。
 
 ## 3. 字體
 
@@ -68,7 +70,8 @@
 | PendingNote | `components/PendingNote.tsx` | 「待確認」標記與說明。 |
 | SearchBar | `components/SearchBar.tsx` | 頁首搜尋框，下拉結果為深層連結；Esc 清除。 |
 | Sidebar（TOC） | `components/Sidebar.tsx` | 分類 → 特約 → 第一層段落；目前位置高亮。行動版為抽屜。 |
-| AppHeader | `components/AppHeader.tsx` | Logo、搜尋、全部展開／收合、四色牌、主題、列印。 |
+| AppHeader | `components/AppHeader.tsx` | 桌機：Logo、搜尋、ViewActions。手機：只有選單按鈕、Logo 圖示、搜尋，不超出螢幕寬度。 |
+| ViewActions | `components/ViewActions.tsx` | 全部展開／收合、主題、列印。桌機放頁首（圖示按鈕），手機放進選單抽屜頂端（含文字的列）。 |
 
 ## 6. 版面（Swagger 式）
 

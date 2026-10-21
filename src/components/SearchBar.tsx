@@ -57,6 +57,7 @@ export function SearchBar({ search }: { search: SearchFn }) {
 const Wrap = styled.form`
   position: relative;
   flex: 1;
+  min-width: 0;
   max-width: 440px;
 `
 

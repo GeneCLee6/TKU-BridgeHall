@@ -50,16 +50,10 @@ const palette = {
   },
 } as const
 
-/** Two-colour deck: red hearts/diamonds, dark spades/clubs. Four-colour: ♦ orange, ♣ green. */
+/** Four-colour deck: ♠ dark, ♥ red, ♦ orange, ♣ green */
 const suits = {
-  light: {
-    two: { S: '#1a2233', H: '#c8102e', D: '#c8102e', C: '#1a2233' },
-    four: { S: '#1a2233', H: '#c8102e', D: '#b34700', C: '#1b7a33' },
-  },
-  dark: {
-    two: { S: '#e6ebf3', H: '#ff6b6b', D: '#ff6b6b', C: '#e6ebf3' },
-    four: { S: '#e6ebf3', H: '#ff6b6b', D: '#ffa04d', C: '#5fd27a' },
-  },
+  light: { S: '#1a2233', H: '#c8102e', D: '#b34700', C: '#1b7a33' },
+  dark: { S: '#e6ebf3', H: '#ff6b6b', D: '#ffa04d', C: '#5fd27a' },
 } as const
 
 export const fonts = {
@@ -77,11 +71,11 @@ export const layout = {
 /** 4px spacing scale: space(2) === '8px' */
 export const space = (n: number) => `${n * 4}px`
 
-export function createTheme(mode: ThemeMode, fourColour: boolean) {
+export function createTheme(mode: ThemeMode) {
   return {
     mode,
     colors: palette[mode],
-    suits: fourColour ? suits[mode].four : suits[mode].two,
+    suits: suits[mode],
     fonts,
     layout,
     space,
@@ -95,5 +89,8 @@ export function createTheme(mode: ThemeMode, fourColour: boolean) {
 
 export type AppTheme = ReturnType<typeof createTheme>
 
+/** The phone layout breakpoint, for useMediaQuery */
+export const mobileQuery = `(max-width: ${layout.mobileBreakpoint})`
+
 /** Media query helper: `${mobile} { ... }` */
-export const mobile = `@media (max-width: ${layout.mobileBreakpoint})`
+export const mobile = `@media ${mobileQuery}`

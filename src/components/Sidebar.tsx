@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 import type { Category, Convention } from '../types/convention.ts'
@@ -12,14 +13,18 @@ export function Sidebar({
   conventions,
   open,
   onNavigate,
+  actions,
 }: {
   categories: Category[]
   conventions: Convention[]
   open: boolean
   onNavigate: () => void
+  /** View actions shown at the top of the drawer on phones */
+  actions?: ReactNode
 }) {
   return (
     <Nav id="catalogue" aria-label={strings.catalogue} $open={open} data-print="hide">
+      {actions}
       {categories.map((category) => {
         const items = conventions.filter((c) => c.category === category.id)
         if (!items.length) return null
