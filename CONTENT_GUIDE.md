@@ -109,6 +109,8 @@ export const jacobyTransfer: Convention = {
 
 ## 5. 解決「待確認」
 
+網站左側目錄最上方的「待確認」群組列出所有待確認項目，點一下就會打開並捲到該則；特約卡片上的「N 項待確認」也可以點，會跳到該特約的第一則。連結格式為 `/c/<slug>/<sectionId>?pending=<n>`（n 是該小節裡第幾則，從 0 起算）。
+
 確認後：修改 `meaning`（或 `text`）為正確內容、刪除 `pending`、更新 `updated` 日期，並從下方清單移除該項，在 PR 說明中記下是誰確認的。
 
 

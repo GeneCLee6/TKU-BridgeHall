@@ -1,10 +1,10 @@
 import * as Accordion from '@radix-ui/react-accordion'
 import { ChevronRight } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { NavLink, useParams } from 'react-router-dom'
+import { Link, NavLink, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import type { Category, Convention } from '../types/convention.ts'
-import { conventionPath, sectionPath } from '../lib/sections.ts'
+import { conventionPath, pendingNotes, pendingPath, sectionPath } from '../lib/sections.ts'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 import { RichText } from './Suit.tsx'
@@ -30,6 +30,10 @@ export function Sidebar({
   actions?: ReactNode
 }) {
   const { slug } = useParams()
+  const pending = conventions
+    .map((c) => ({ convention: c, notes: pendingNotes(c) }))
+    .filter((p) => p.notes.length > 0)
+  const pendingTotal = pending.reduce((n, p) => n + p.notes.length, 0)
   const [openGroups, setOpenGroups] = useState<string[]>(() => categories.map((c) => c.id))
   const [openItems, setOpenItems] = useState<string[]>(() => (slug ? [slug] : []))
 
@@ -58,6 +62,47 @@ export function Sidebar({
     <Nav id="catalogue" aria-label={strings.catalogue} $open={open} data-print="hide">
       {actions}
       <Accordion.Root type="multiple" value={openGroups} onValueChange={setOpenGroups}>
+        {pendingTotal > 0 && (
+          <Group value={PENDING_GROUP}>
+            <Accordion.Header asChild>
+              <h2>
+                <GroupTrigger title={strings.pendingAllHint}>
+                  <ChevronBox>
+                    <Chevron size={14} aria-hidden />
+                  </ChevronBox>
+                  {strings.pendingAll}
+                  <PendingCount aria-label={strings.pendingCount(pendingTotal)}>
+                    {pendingTotal}
+                  </PendingCount>
+                </GroupTrigger>
+              </h2>
+            </Accordion.Header>
+            <Accordion.Content>
+              <Branch>
+                {pending.map(({ convention, notes }) => (
+                  <li key={convention.slug}>
+                    <PendingConvention>{convention.nameZh}</PendingConvention>
+                    <Branch>
+                      {notes.map((n, i) => (
+                        <li key={i}>
+                          <PendingItem
+                            to={pendingPath(convention.slug, n.sectionId, n.index)}
+                            onClick={onNavigate}
+                          >
+                            <strong>
+                              <RichText text={n.trail[n.trail.length - 1]} />
+                            </strong>
+                            <span>{n.text}</span>
+                          </PendingItem>
+                        </li>
+                      ))}
+                    </Branch>
+                  </li>
+                ))}
+              </Branch>
+            </Accordion.Content>
+          </Group>
+        )}
         {categories.map((category) => {
           const items = conventions.filter((c) => c.category === category.id)
           if (!items.length) return null
@@ -121,6 +166,9 @@ export function Sidebar({
 
 /** Width of the chevron column; child levels hang from its centre */
 const CHEVRON = 24
+
+/** Accordion value of the 待確認 group (closed by default; categories start open) */
+const PENDING_GROUP = '__pending'
 
 const Nav = styled.nav<{ $open: boolean }>`
   position: sticky;
@@ -253,6 +301,45 @@ const Name = styled.span`
   small {
     font-weight: 400;
     color: ${({ theme }) => theme.colors.textMuted};
+  }
+`
+
+const PendingCount = styled(Count)`
+  background: ${({ theme }) => theme.colors.pendingBorder};
+  color: ${({ theme }) => (theme.mode === 'light' ? '#ffffff' : '#1a1200')};
+`
+
+const PendingConvention = styled.p`
+  margin: ${({ theme }) => theme.space(1)} 0 0;
+  padding: 0 ${({ theme }) => theme.space(2)};
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+`
+
+/** One note: the section it is in, then the note itself cut to two lines */
+const PendingItem = styled(Link)`
+  display: flex;
+  flex-direction: column;
+  padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(2)};
+  border-radius: ${({ theme }) => theme.radius.sm};
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  text-decoration: none;
+
+  strong {
+    color: ${({ theme }) => theme.colors.pendingText};
+    font-weight: 600;
+  }
+  > span {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  &:hover {
+    background: ${({ theme }) => theme.colors.pendingBg};
   }
 `
 

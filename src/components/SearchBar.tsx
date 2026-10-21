@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import type { SearchFn } from '../lib/search.ts'
 import { conventionPath, sectionPath } from '../lib/sections.ts'
+import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { strings } from '../strings.ts'
+import { mobileQuery } from '../styles/tokens.ts'
 import { RichText } from './Suit.tsx'
 
 /** Searches convention names, aliases, tags, bids and meanings; results are deep links */
@@ -14,6 +16,7 @@ export function SearchBar({ search }: { search: SearchFn }) {
   const inputId = useId()
   const listId = useId()
   const showResults = query.trim().length > 0
+  const isMobile = useMediaQuery(mobileQuery)
 
   return (
     <Wrap role="search" data-print="hide" onSubmit={(e) => e.preventDefault()}>
@@ -26,7 +29,7 @@ export function SearchBar({ search }: { search: SearchFn }) {
           id={inputId}
           type="search"
           value={query}
-          placeholder={strings.searchPlaceholder}
+          placeholder={isMobile ? strings.searchPlaceholderShort : strings.searchPlaceholder}
           autoComplete="off"
           aria-controls={showResults ? listId : undefined}
           onChange={(e) => setQuery(e.target.value)}
@@ -35,7 +38,9 @@ export function SearchBar({ search }: { search: SearchFn }) {
       </Field>
       {showResults && (
         <Results id={listId} aria-live="polite">
-          <Count>{results.length ? strings.searchResults(results.length) : strings.searchEmpty}</Count>
+          <Count>
+            {results.length ? strings.searchResults(results.length) : strings.searchEmpty}
+          </Count>
           <ul>
             {results.map((r) => (
               <li key={`${r.slug}/${r.sectionId ?? ''}`}>
@@ -85,6 +90,10 @@ const Field = styled.div`
     color: ${({ theme }) => theme.colors.text};
     font: inherit;
     font-size: 0.9375rem;
+    text-overflow: ellipsis;
+  }
+  input::placeholder {
+    text-overflow: ellipsis;
   }
 `
 

@@ -10,6 +10,9 @@ export const sectionDomId = (slug: string, sectionId: string) => `c-${slug}--${s
 
 export const conventionPath = (slug: string) => `/c/${slug}`
 export const sectionPath = (slug: string, sectionId: string) => `/c/${slug}/${sectionId}`
+/** Deep link to the index-th 待確認 note that belongs directly to a section */
+export const pendingPath = (slug: string, sectionId: string, index: number) =>
+  `${sectionPath(slug, sectionId)}?pending=${index}`
 
 /** Depth-first walk over every section, with its ancestors */
 export function walkSections(
@@ -62,14 +65,21 @@ export function blockText(block: Block): string {
 
 export interface PendingNote {
   sectionId: string
+  /** Position among the notes that belong directly to this section, in page order */
+  index: number
+  /** Section titles from the top level down to this section */
+  trail: string[]
   text: string
 }
 
-/** Every 待確認 note in a convention */
+/** Every 待確認 note in a convention, in page order */
 export function pendingNotes(convention: Convention): PendingNote[] {
   const notes: PendingNote[] = []
-  walkSections(convention.sections, (section) => {
-    const add = (text?: string) => text && notes.push({ sectionId: section.id, text })
+  walkSections(convention.sections, (section, ancestors) => {
+    let index = 0
+    const trail = [...ancestors, section].map((s) => s.title)
+    const add = (text?: string) =>
+      text && notes.push({ sectionId: section.id, index: index++, trail, text })
     add(section.pending)
     for (const block of section.blocks ?? []) {
       if (block.kind === 'paragraph') add(block.pending)

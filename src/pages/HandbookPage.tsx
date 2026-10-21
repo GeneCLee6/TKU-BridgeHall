@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { AppHeader } from '../components/AppHeader.tsx'
 import { ConventionCard } from '../components/ConventionCard.tsx'
@@ -26,6 +26,8 @@ import { mobile, mobileQuery } from '../styles/tokens.ts'
  */
 export function HandbookPage() {
   const { slug, sectionId } = useParams()
+  const [searchParams] = useSearchParams()
+  const pendingIndex = searchParams.get('pending')
   const { open, closeAll } = useExpansion()
   const [menuOpen, setMenuOpen] = useState(false)
   const search = useMemo(() => createSearch(conventions), [])
@@ -47,11 +49,26 @@ export function HandbookPage() {
     // Wait one frame so the newly opened content has its height before scrolling
     const frame = window.requestAnimationFrame(() => {
       const el = document.getElementById(domId)
-      el?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
+      // ?pending=k points at the k-th 待確認 note that belongs directly to the section
+      // (notes inside its child sections belong to those children)
+      const note =
+        el && pendingIndex !== null
+          ? [...el.querySelectorAll<HTMLElement>('[data-pending]')].filter(
+              (n) => n.parentElement?.closest('[data-section]') === el,
+            )[Number(pendingIndex)]
+          : undefined
+      ;(note ?? el)?.scrollIntoView?.({ block: note ? 'center' : 'start', behavior: 'smooth' })
       el?.querySelector<HTMLElement>('button')?.focus({ preventScroll: true })
+      note?.animate?.(
+        [
+          { outline: '3px solid currentColor', outlineOffset: '2px' },
+          { outline: '3px solid transparent' },
+        ],
+        { duration: 1800, easing: 'ease-out' },
+      )
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [slug, sectionId, open])
+  }, [slug, sectionId, pendingIndex, open])
 
   return (
     <>

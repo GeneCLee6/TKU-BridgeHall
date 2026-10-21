@@ -36,6 +36,7 @@ export function SectionAccordion({
           key={section.id}
           value={sectionKey(slug, section.id)}
           id={sectionDomId(slug, section.id)}
+          data-section
           $depth={depth}
         >
           <Accordion.Header asChild>
@@ -63,7 +64,9 @@ export function SectionAccordion({
               </Original>
             )}
             {section.pending && <PendingNote text={section.pending} />}
-            {section.blocks?.map((block, i) => <BlockView key={i} block={block} />)}
+            {section.blocks?.map((block, i) => (
+              <BlockView key={i} block={block} />
+            ))}
             {section.children && (
               <SectionAccordion slug={slug} sections={section.children} depth={depth + 1} />
             )}

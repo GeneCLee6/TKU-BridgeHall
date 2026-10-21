@@ -4,7 +4,7 @@ import { strings } from '../strings.ts'
 /** A visible 「待確認」 note: the source text is ambiguous and an officer should confirm it */
 export function PendingNote({ text }: { text: string }) {
   return (
-    <Note role="note" data-print="keep">
+    <Note role="note" data-print="keep" data-pending>
       <Badge>{strings.pending}</Badge>
       <span>{text}</span>
     </Note>
