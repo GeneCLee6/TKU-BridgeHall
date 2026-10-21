@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import styled from 'styled-components'
 import type { Block, RuleItem } from '../types/convention.ts'
 import { AuctionTable } from './AuctionTable.tsx'
@@ -6,8 +7,11 @@ import { PendingNote } from './PendingNote.tsx'
 import { ResponseTable } from './ResponseTable.tsx'
 import { RichText } from './Suit.tsx'
 
-/** Renders one content block. A new block kind means a new case here and in the type. */
-export function BlockView({ block }: { block: Block }) {
+/**
+ * Renders one content block. A new block kind means a new case here and in the type.
+ * Memoised: content is static, so expanding or collapsing accordions never re-renders blocks.
+ */
+export const BlockView = memo(function BlockView({ block }: { block: Block }) {
   switch (block.kind) {
     case 'paragraph':
       return (
@@ -37,7 +41,7 @@ export function BlockView({ block }: { block: Block }) {
     case 'hand':
       return <Hand hand={block.hand} label={block.label} />
   }
-}
+})
 
 function RuleList({ items, ordered }: { items: RuleItem[]; ordered?: boolean }) {
   const List = ordered ? Ordered : Unordered
