@@ -11,5 +11,6 @@
 | `Bergen.doc` | Bergen加叫（松濤版） | `bergen-raises` |
 | `如何對抗弱跳叫2NT兩低.doc` | 對抗不尋常2NT | `defense-vs-unusual-2nt` |
 | `橋牌防守信號.doc` | 橋牌防守信號 | `defensive-signals` |
+| `2D開叫(一高弱二).doc` | 2D 開叫（一高弱二） | `two-diamond-opening` |
 
 新增特約時，把原始 Word 檔也放進這個資料夾，並在上表加一列。
