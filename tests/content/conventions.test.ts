@@ -79,5 +79,6 @@ describe('convention content', () => {
     expect(count('single-raise-major')).toBe(0)
     expect(count('jacoby-2nt')).toBe(11)
     expect(count('bergen-raises')).toBe(5)
+    expect(count('defensive-signals')).toBe(0)
   })
 })

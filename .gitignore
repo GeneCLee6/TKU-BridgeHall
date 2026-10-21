@@ -17,10 +17,12 @@ coverage
 .env.*
 !.env.example
 
-# Source Word files and their conversion output stay out of the repository;
-# the transcribed content lives in src/content/conventions/*.ts
+# Word files and their conversion output stay out of the repository, except the club's
+# original source files kept in docs/ (the transcribed content lives in src/content/conventions)
 *.doc
 *.docx
+!docs/*.doc
+!docs/*.docx
 *.htm
 *.html.bak
 tmp/

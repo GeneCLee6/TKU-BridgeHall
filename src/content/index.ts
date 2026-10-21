@@ -1,6 +1,7 @@
 import type { Convention } from '../types/convention.ts'
 import { bergenRaises } from './conventions/bergen-raises.ts'
 import { defenseVsUnusual2nt } from './conventions/defense-vs-unusual-2nt.ts'
+import { defensiveSignals } from './conventions/defensive-signals.ts'
 import { jacoby2nt } from './conventions/jacoby-2nt.ts'
 import { lebensohl } from './conventions/lebensohl.ts'
 import { notrumpResponses } from './conventions/notrump-responses.ts'
@@ -17,6 +18,7 @@ export const conventions: Convention[] = [
   jacoby2nt,
   bergenRaises,
   defenseVsUnusual2nt,
+  defensiveSignals,
 ]
 
 export const conventionBySlug = (slug: string): Convention | undefined =>
