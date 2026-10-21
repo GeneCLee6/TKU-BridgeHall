@@ -34,7 +34,7 @@ describe('handbook page', () => {
   it('opens the whole path down to a deep-linked section', () => {
     renderAt('/c/defense-vs-unusual-2nt/vs-1s-after-3c-3d')
     expect(trigger(/^對抗不尋常2NT/)).toHaveAttribute('aria-expanded', 'true')
-    expect(trigger(/^如何對抗敵方Unusually 2NT/)).toHaveAttribute('aria-expanded', 'true')
+    expect(trigger(/^如何對抗敵方Unusual 2NT/)).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getAllByRole('button', { expanded: true }).length).toBe(4)
   })
 

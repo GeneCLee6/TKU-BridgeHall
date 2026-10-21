@@ -19,9 +19,9 @@ export const lebensohl: Convention = {
   summary: '同伴開叫 1NT 遭敵方插叫時的答叫原則：二線不迫叫、三線 GF、2NT 迫叫 3♣ 後續。',
   source: {
     title: '雷本所特約（文件標題：1NT遭插叫的答叫原則）',
-    note: '原文寫作「雷本索」；檔名寫作「雷本所」。',
+    note: '社內統一譯名為「雷本索」（舊檔名寫作「雷本所」）。',
   },
-  updated: '2026-10-21',
+  updated: '2026-10-22',
   sections: [
     {
       id: 'natural',
@@ -36,8 +36,6 @@ export const lebensohl: Convention = {
             {
               kind: 'paragraph',
               text: '以下為同伴開叫1NT遭自然牌組插叫的答叫原則：(即Lebensohl雷本索特約)',
-              pending:
-                '特約中文譯名：原文寫作「雷本索」，社內檔名寫作「雷本所」。網站暫以原文「雷本索」為準，請幹部確認統一譯名。',
             },
             {
               kind: 'rules',
@@ -169,7 +167,6 @@ export const lebensohl: Convention = {
       title: '其他運用',
       originalTitle: '※ Lebensohl特約的其他運用：',
       summary: '敵方弱二開叫後、開叫者二線倒叫後。',
-      pending: '原文僅列出適用情境，未說明各情境下的叫品意義，請幹部補充。',
       blocks: [
         {
           kind: 'rules',

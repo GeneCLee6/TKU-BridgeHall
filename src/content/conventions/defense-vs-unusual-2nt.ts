@@ -22,33 +22,30 @@ export const defenseVsUnusual2nt: Convention = {
   aliases: ['如何對抗弱跳叫2NT兩低', 'Unusually 2NT', 'Unusual 2NT', '兩低', '不尋常2NT'],
   category: 'competitive',
   tags: ['高花開叫', '2NT 插叫', '兩低', 'mini splinter', '短門', 'slam try'],
-  summary: '我方開 1♥／1♠ 遭敵方 2NT（兩低）插叫時的答叫與後續；附我方使用 Unusually 2NT 的條件。',
+  summary: '我方開 1♥／1♠ 遭敵方 2NT（兩低）插叫時的答叫與後續；附我方使用 Unusual 2NT 的條件。',
   source: { title: '如何對抗弱跳叫2NT兩低' },
-  updated: '2026-10-21',
+  updated: '2026-10-22',
   sections: [
     {
       id: 'our-overcall',
-      title: '我方使用：Unusually 2NT',
+      title: '我方使用：Unusual 2NT',
       originalTitle: 'Unusually 2NT對抗特約',
       summary: '兩門低花 5-5↑，直接蓋叫 2NT。',
       blocks: [
         {
           kind: 'paragraph',
           text: '對抗敵方一線高花開叫時，手持兩門低花5-5↑，直接蓋叫 2NT，有身價為8~10 HCP，無身價為6~8 HCP。',
-          pending:
-            '原文寫作「Unusually 2NT」，與一般寫法「Unusual 2NT」不同；網站英文名暫用 Unusual 2NT，原文照錄。',
         },
       ],
     },
     {
       id: 'defense',
-      title: '如何對抗敵方Unusually 2NT',
+      title: '如何對抗敵方Unusual 2NT',
       summary: '開高花遭 2NT（兩低）插叫時，答叫者與開叫者的叫法。',
       blocks: [
         {
           kind: 'paragraph',
-          text: '開高花（1♥、1♠）被差叫2NT（兩低）時，答叫人答叫方式如下：',
-          pending: '原文「差叫」疑為「插叫」之誤，請確認。',
+          text: '開高花（1♥、1♠）被插叫2NT（兩低）時，答叫人答叫方式如下：',
         },
       ],
       children: [
@@ -176,9 +173,7 @@ export const defenseVsUnusual2nt: Convention = {
                   rows: [
                     {
                       call: 'X',
-                      meaning: '平均牌型，♥不fit，至少有邀請點↑，建議處罰敵方的合約。',
-                      pending:
-                        '開叫為1♠，原文此處寫「H不fit」，與開叫1♥時的同一句相同，疑應為「♠不fit」，請確認。',
+                      meaning: '平均牌型，♠不fit，至少有邀請點↑，建議處罰敵方的合約。',
                     },
                     { call: '3C', meaning: '5張♥↑，至少有成局點（♠通常不fit）。' },
                     { call: '3D', meaning: '♠ fit，至少有邀請點↑，迫叫至3♠。' },
@@ -244,8 +239,7 @@ export const defenseVsUnusual2nt: Convention = {
                     { call: '4C', meaning: '♥ fit，♣短，好牌' },
                     {
                       call: '4D',
-                      meaning: '♥ fit，♣短，好牌',
-                      pending: '原文4D與4C同樣寫「C短」，疑應為「♦短」，請確認。',
+                      meaning: '♥ fit，♦短，好牌',
                     },
                     { call: '4H', meaning: '6張束叫。' },
                   ],
