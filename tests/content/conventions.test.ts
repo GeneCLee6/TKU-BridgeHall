@@ -72,7 +72,7 @@ describe('convention content', () => {
 
   it('records the known 待確認 items', () => {
     const count = (slug: string) => pendingNotes(conventions.find((c) => c.slug === slug)!).length
-    expect(count('lebensohl')).toBe(2)
-    expect(count('defense-vs-unusual-2nt')).toBe(7)
+    expect(count('lebensohl')).toBe(0)
+    expect(count('defense-vs-unusual-2nt')).toBe(3)
   })
 })
