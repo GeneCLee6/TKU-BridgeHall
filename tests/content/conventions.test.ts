@@ -74,5 +74,7 @@ describe('convention content', () => {
     const count = (slug: string) => pendingNotes(conventions.find((c) => c.slug === slug)!).length
     expect(count('lebensohl')).toBe(0)
     expect(count('defense-vs-unusual-2nt')).toBe(3)
+    expect(count('notrump-responses')).toBe(1)
+    expect(count('single-raise-major')).toBe(0)
   })
 })
