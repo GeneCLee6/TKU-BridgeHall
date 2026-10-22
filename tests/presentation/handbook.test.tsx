@@ -51,6 +51,15 @@ describe('handbook page', () => {
     ).toHaveLength(0)
   })
 
+  it('explains how to install the app when the browser makes no offer', async () => {
+    renderAt('/')
+    await userEvent.click(screen.getByRole('button', { name: '安裝 App' }))
+    expect(
+      screen.getByRole('heading', { name: '安裝成手機 App', hidden: true }),
+    ).toBeInTheDocument()
+    expect(screen.getAllByText(/加入主畫面/, { selector: 'li' }).length).toBeGreaterThan(0)
+  })
+
   it('shows 待確認 notes in the page', () => {
     renderAt('/c/defense-vs-unusual-2nt')
     expect(screen.getAllByText('待確認').length).toBeGreaterThan(0)

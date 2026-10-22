@@ -8,7 +8,7 @@
 
 社團的叫牌制度與各項橋牌特約，過去散落在一份份 Word 檔裡，常常找不到、版本也對不上。淡江橋譜把它們整理成一個網站：介面參考 Swagger UI，每個特約是一張可展開的卡片，裡面再分層收合各個段落與叫牌表，社員可以自己找到需要的特約、展開來複習，也能把某一段的連結直接貼給隊友。
 
-目前收錄兩個特約：
+目前收錄的特約：
 
 | 特約 | 英文 | 來源文件 |
 | --- | --- | --- |
@@ -78,12 +78,23 @@ npm run dev        # http://localhost:5173
 
 完整步驟、欄位說明與範本見 [`CONTENT_GUIDE.md`](CONTENT_GUIDE.md)。不需要修改任何元件。
 
+## 手機 App
+
+網站可以安裝成手機 App（PWA），之後從主畫面圖示全螢幕開啟，沒有網路也能看已讀過的內容：
+
+- **iPhone／iPad**：用 Safari 開啟網站 → 下方「分享」→「加入主畫面」。
+- **Android**：用 Chrome 開啟網站 → 右上角「⋮」→「安裝應用程式」或「加到主畫面」。
+- 網站頁首（手機版在選單裡）也有「安裝 App」按鈕：瀏覽器支援時直接安裝，否則顯示上面的步驟。
+
 ## Logo
 
 | 檔案 | 用途 |
 | --- | --- |
-| `public/logo.svg` | 完整標誌：宮燈＋TKU 字標＋「TKU BridgeBook · 淡江橋譜」 |
-| `public/logo-mark.svg` | 只有宮燈圖形 |
-| `public/favicon.svg` | 網站圖示（深藍底、簡化宮燈與黑桃） |
+| `public/logo.svg` | 完整標誌：翻開的橋譜＋TKU 字標＋「TKU BridgeBook · 淡江橋譜」 |
+| `public/logo-mark.svg` | 只有書本圖形 |
+| `public/favicon.svg` | 網站圖示（深藍圓角底＋書本） |
+| `public/icon-192.png`、`icon-512.png`、`icon-maskable-512.png`、`apple-touch-icon.png` | 手機 App 圖示 |
+
+淡江橋譜用「書本」，姊妹站淡江牌桌（TKU BridgeTable）用「宮燈」，兩個 App 在手機主畫面上一眼就能分辨。
 
 設計概念與使用規範見 `DESIGN.md` §8。標誌為原創圖形，未使用淡江大學校徽或任何註冊商標。

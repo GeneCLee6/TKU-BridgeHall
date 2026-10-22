@@ -1,11 +1,14 @@
-import { ChevronsDownUp, ChevronsUpDown, Moon, Printer, Sun } from 'lucide-react'
+import { ChevronsDownUp, ChevronsUpDown, Moon, Printer, Smartphone, Sun } from 'lucide-react'
+import { useState } from 'react'
 import styled from 'styled-components'
+import { isStandalone, useInstallOffer } from '../lib/pwa.ts'
 import { usePreferences } from '../state/PreferencesContext.tsx'
 import { strings } from '../strings.ts'
 import { IconButton } from './CopyLinkButton.tsx'
+import { InstallHelp } from './InstallHelp.tsx'
 
 /**
- * Expand all / collapse all / theme (and print on desktop).
+ * Expand all / collapse all / theme / install as an app (and print on desktop).
  * 'bar' renders icon buttons for the desktop header; 'menu' renders labelled rows for the
  * mobile drawer, so the phone header stays down to menu, logo and search.
  */
@@ -22,6 +25,14 @@ export function ViewActions({
   const themeLabel = mode === 'light' ? strings.themeToDark : strings.themeToLight
   const ThemeIcon = mode === 'light' ? Moon : Sun
 
+  // Install: the browser's own dialog when it offers one, otherwise the home-screen steps.
+  // Hidden inside the installed app.
+  const offer = useInstallOffer()
+  const [helpOpen, setHelpOpen] = useState(false)
+  const showInstall = !isStandalone()
+  const install = () => (offer.available ? void offer.install() : setHelpOpen(true))
+  const help = <InstallHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
+
   if (variant === 'menu') {
     return (
       <MenuGroup role="group" aria-label={strings.viewOptions}>
@@ -37,6 +48,13 @@ export function ViewActions({
           <ThemeIcon size={18} aria-hidden />
           {themeLabel}
         </MenuItem>
+        {showInstall && (
+          <MenuItem type="button" onClick={install}>
+            <Smartphone size={18} aria-hidden />
+            {strings.installApp}
+          </MenuItem>
+        )}
+        {help}
       </MenuGroup>
     )
   }
@@ -70,6 +88,17 @@ export function ViewActions({
       >
         <Printer size={18} aria-hidden />
       </IconButton>
+      {showInstall && (
+        <IconButton
+          type="button"
+          onClick={install}
+          aria-label={strings.installApp}
+          title={strings.installApp}
+        >
+          <Smartphone size={18} aria-hidden />
+        </IconButton>
+      )}
+      {help}
     </Bar>
   )
 }

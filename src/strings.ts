@@ -38,4 +38,11 @@ export const strings = {
   references: '外部參考',
   referencesHint: '其他網站的橋牌參考資料',
   opensInNewTab: '（在新分頁開啟）',
+  installApp: '安裝 App',
+  installTitle: '安裝成手機 App',
+  installIntro: '把淡江橋譜放到手機主畫面，之後點圖示就能全螢幕開啟，沒有網路也能看。',
+  installIos: 'iPhone／iPad：用 Safari 開啟本站，按下方的「分享」按鈕，再選「加入主畫面」。',
+  installAndroid:
+    'Android：用 Chrome 開啟本站，按右上角「⋮」，再選「安裝應用程式」或「加到主畫面」。',
+  installClose: '關閉',
 } as const

@@ -126,6 +126,7 @@ interface Convention {
   - `tests/content`：內容 schema——slug 與段落 id 唯一且 URL 安全、必填欄位、叫品可解析、意義欄沒有殘留花色字母、待確認數量。
   - `tests/lib`：叫品格式化、搜尋結果。
   - `tests/presentation`：卡片展開、深層連結開啟路徑、全部展開／收合、待確認顯示。
+- **手機 App（PWA）**：`public/manifest.webmanifest`（名稱「淡江橋譜」、全螢幕、圖示）、`public/sw.js`（service worker：頁面優先走網路、離線時用快取；`/assets/` 檔名含雜湊，走快取）、`src/lib/pwa.ts`（只在正式版註冊 service worker，保留瀏覽器的安裝邀請給「安裝 App」按鈕）。`vercel.json` 讓 `sw.js` 不被快取，新版本會立刻生效。改 `sw.js` 的快取策略時，記得把 `CACHE` 名稱加版號。
 - **CI**：GitHub Actions（`.github/workflows/ci.yml`）：`npm ci` → lint → build → test。
 - **部署計畫**：任何靜態主機皆可。建議 Vercel 或 Cloudflare Pages 連接 GitHub，自動部署 `main`。因為使用 BrowserRouter，主機需設定 SPA fallback（所有路徑回傳 `index.html`）：Cloudflare Pages 預設即支援；Vercel 用專案根目錄的 `vercel.json` rewrites（已加入，部署平台選定 Vercel）。若改用 GitHub Pages，可換成 HashRouter 或加 `404.html` 轉址。
 
