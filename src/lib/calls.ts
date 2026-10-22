@@ -34,10 +34,29 @@ export function parseCall(call: string): CallParts {
   return { text: trimmed, label: trimmed }
 }
 
-/** 2D -> 2♦, 1NT -> 1NT: a plain-text form for titles and search */
+/**
+ * Several calls that share one meaning, as the club's handouts write them: "1H/S" is 1♥ or 1♠,
+ * "3S/4C/D" is 3♠, 4♣ or 4♦. A strain written without a level keeps the level before it and is
+ * shown as the bare suit (text ''), so "1H/S" reads 1♥/♠. A single call returns one part.
+ */
+export function splitCall(call: string): CallParts[] {
+  let level = ''
+  return call.split('/').map((segment) => {
+    const s = segment.trim()
+    if (level && /^(C|D|H|S|NT)$/i.test(s)) {
+      const parts = parseCall(level + s)
+      return parts.suit ? { ...parts, text: '' } : { ...parts, text: 'NT' }
+    }
+    level = /^([1-7])/.exec(s)?.[1] ?? level
+    return parseCall(s)
+  })
+}
+
+/** 2D -> 2♦, 1NT -> 1NT, 1H/S -> 1♥/♠: a plain-text form for titles and search */
 export function formatCall(call: string): string {
-  const parts = parseCall(call)
-  return parts.suit ? `${parts.text}${SUIT_SYMBOL[parts.suit]}` : parts.text
+  return splitCall(call)
+    .map((parts) => (parts.suit ? `${parts.text}${SUIT_SYMBOL[parts.suit]}` : parts.text))
+    .join('/')
 }
 
 /** Replace suit symbols with letters so "2♦" and "2D" match the same text */

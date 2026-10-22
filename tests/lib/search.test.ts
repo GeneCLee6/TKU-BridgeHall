@@ -25,6 +25,8 @@ describe('search', () => {
     ['puppet', 'two-notrump-opening'],
     ['1S 2NT舊版', 'major-slam-ask-2011'],
     ['回答性賭倍', 'responsive-double'],
+    ['自然制', 'system-overview'],
+    ['技光', 'system-competition'],
     ['Responsive dbl', 'responsive-double'],
     ['Unusual 2NT', 'defense-vs-unusual-2nt'],
     ['兩低', 'defense-vs-unusual-2nt'],
@@ -42,7 +44,13 @@ describe('search', () => {
 
   it('returns sections as deep-linkable results', () => {
     const hit = search('問A').find((r) => r.sectionId)
-    expect(hit?.slug).toBe('lebensohl')
+    expect(hit?.slug).toBeTruthy()
+    expect(hit?.label).toContain('›')
+  })
+
+  it('ranks a convention ahead of the old handbook on the same subject', () => {
+    expect(search('雷本索')[0].slug).toBe('lebensohl')
+    expect(search('Stayman')[0].slug).toBe('notrump-responses')
   })
 
   it('returns nothing for an empty query', () => {

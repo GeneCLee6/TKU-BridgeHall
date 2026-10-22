@@ -17,6 +17,7 @@
 | `NMF.doc` | 新低花迫叫 | `new-minor-forcing` |
 | `好壞2NT的約定叫品(松濤20160226).doc` | 好壞2NT（松濤版） | `good-bad-2nt` |
 | `1S 2NT舊版(doblue 20110719).doc` | 開叫高花之滿貫詢問叫（舊版） | `major-slam-ask-2011` |
+| `淡江大學-我們的制度(修訂版).doc` | 制度總覽（舊講義，2010）：9 張卡片 | `system-*` |
 | `回答性賭倍(Responsive dbl).doc` | 回答性賭倍 | `responsive-double` |
 
 新增特約時，把原始 Word 檔也放進這個資料夾，並在上表加一列。

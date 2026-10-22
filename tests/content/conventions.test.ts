@@ -1,5 +1,5 @@
 import { categories, conventions } from '../../src/content/index.ts'
-import { parseCall } from '../../src/lib/calls.ts'
+import { splitCall } from '../../src/lib/calls.ts'
 import { pendingNotes, walkSections } from '../../src/lib/sections.ts'
 
 /** The content schema: what every convention file must satisfy before it ships */
@@ -37,8 +37,9 @@ describe('convention content', () => {
 
   it('uses only calls the renderer understands, and never an empty meaning', () => {
     const known = (call: string) => {
-      const p = parseCall(call)
-      return Boolean(p.suit) || /^(\dNT|Pass|X|XX|\?|—)$/.test(p.text)
+      return splitCall(call).every(
+        (p) => Boolean(p.suit) || /^(\dNT|NT|Pass|X|XX|\?|—)$/.test(p.text),
+      )
     }
     for (const c of conventions) {
       walkSections(c.sections, (s) => {
@@ -85,6 +86,15 @@ describe('convention content', () => {
     expect(count('new-minor-forcing')).toBe(0)
     expect(count('major-slam-ask-2011')).toBe(4)
     expect(count('good-bad-2nt')).toBe(3)
+    expect(count('system-overview')).toBe(4)
+    expect(count('system-one-club')).toBe(1)
+    expect(count('system-one-diamond')).toBe(4)
+    expect(count('system-one-major')).toBe(3)
+    expect(count('system-notrump')).toBe(0)
+    expect(count('system-strong-and-preempts')).toBe(2)
+    expect(count('system-doubles')).toBe(1)
+    expect(count('system-competition')).toBe(3)
+    expect(count('system-concepts')).toBe(0)
     expect(count('responsive-double')).toBe(2)
   })
 })

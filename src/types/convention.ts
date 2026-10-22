@@ -71,7 +71,7 @@ export interface Section {
   children?: Section[]
 }
 
-export type CategoryId = 'notrump' | 'suit-openings' | 'competitive' | 'signals'
+export type CategoryId = 'notrump' | 'suit-openings' | 'competitive' | 'signals' | 'system'
 
 export interface Category {
   id: CategoryId
