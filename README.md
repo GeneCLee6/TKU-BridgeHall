@@ -25,6 +25,9 @@
 | 好壞2NT（松濤版） | Good/Bad 2NT | 好壞2NT的約定叫品(松濤20160226) |
 | 開叫高花之滿貫詢問叫（舊版） | Major Slam Ask (2011 version) | 1S 2NT舊版(doblue 20110719) |
 | 回答性賭倍 | Responsive Double | Responsive dbl 回答性賭倍 |
+| 制度總覽（舊講義）：總覽、1♣、1♦、1♥/1♠、1NT/2NT、2♣與阻塞叫、賭倍、競叫與技光、觀念與防禦 | TKU Natural System (2010 handbook) | 淡江大學-我們的制度(修訂版) |
+
+舊講義是 2010 年 13 點開叫的版本；現行為 12 點開叫、1NT 15-17、2NT 20-21、2♣ 22+、1NT forcing、2/1 迫叫成局。網站上以「現行制度」標出差異，與特約衝突時以特約為準。
 
 原始 Word 檔都放在 [`docs/`](docs/README.md)。
 

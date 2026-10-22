@@ -4,7 +4,7 @@ import {
   SUIT_NAME,
   SUIT_SYMBOL,
   SYMBOL_TO_LETTER,
-  parseCall,
+  splitCall,
   type SuitLetter,
 } from '../lib/calls.ts'
 
@@ -31,11 +31,16 @@ const SuitGlyph = styled.span<{ $suit: SuitLetter }>`
 
 /** A call such as 2♦, 1NT, X or Pass */
 export function CallLabel({ call }: { call: string }) {
-  const parts = parseCall(call)
+  const calls = splitCall(call)
   return (
-    <CallText title={parts.label}>
-      {parts.text}
-      {parts.suit && <Suit suit={parts.suit} />}
+    <CallText title={calls.map((parts) => parts.label).join('、')}>
+      {calls.map((parts, i) => (
+        <Fragment key={i}>
+          {i > 0 && '/'}
+          {parts.text}
+          {parts.suit && <Suit suit={parts.suit} />}
+        </Fragment>
+      ))}
     </CallText>
   )
 }

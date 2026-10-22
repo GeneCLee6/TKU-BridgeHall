@@ -13,6 +13,8 @@ export interface SearchRecord {
   tags: string
   bids: string
   text: string
+  /** From the old handbook (category 'system'): ranked after the conventions, which override it */
+  legacy?: boolean
 }
 
 /**
@@ -22,7 +24,9 @@ export interface SearchRecord {
 export function buildRecords(conventions: Convention[]): SearchRecord[] {
   const records: SearchRecord[] = []
   for (const c of conventions) {
+    const legacy = c.category === 'system' || undefined
     records.push({
+      legacy,
       slug: c.slug,
       label: `${c.nameZh}（${c.nameEn}）`,
       name: toAsciiSuits([c.nameZh, c.nameEn, ...(c.aliases ?? [])].join(' ')),
@@ -37,17 +41,23 @@ export function buildRecords(conventions: Convention[]): SearchRecord[] {
       }
       records.push({
         slug: c.slug,
+        legacy,
         sectionId: section.id,
         label: [c.nameZh, ...ancestors.map((a) => a.title), section.title].join(' › '),
         name: toAsciiSuits(`${section.title} ${section.originalTitle ?? ''}`),
         tags: '',
         bids: toAsciiSuits(bids.join(' ')),
-        text: toAsciiSuits([section.summary ?? '', ...(section.blocks ?? []).map(blockText)].join(' ')),
+        text: toAsciiSuits(
+          [section.summary ?? '', ...(section.blocks ?? []).map(blockText)].join(' '),
+        ),
       })
     })
   }
   return records
 }
+
+/** Added to an old-handbook match's score (Fuse scores run 0 = exact … 1 = no match) */
+const LEGACY_PENALTY = 0.2
 
 export type SearchFn = (query: string, limit?: number) => SearchRecord[]
 
@@ -60,11 +70,19 @@ export function createSearch(conventions: Convention[]): SearchFn {
       { name: 'text', weight: 1 },
     ],
     ignoreLocation: true,
+    includeScore: true,
     threshold: 0.3,
   })
   return (query, limit = 12) => {
     const q = toAsciiSuits(query.trim())
     if (!q) return []
-    return fuse.search(q, { limit }).map((r) => r.item)
+    // Lower is better; the old handbook gives way to an equally good match in a convention
+    const rank = (r: { item: SearchRecord; score?: number }) =>
+      (r.score ?? 0) + (r.item.legacy ? LEGACY_PENALTY : 0)
+    return fuse
+      .search(q)
+      .sort((a, b) => rank(a) - rank(b))
+      .slice(0, limit)
+      .map((r) => r.item)
   }
 }

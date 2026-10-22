@@ -10,6 +10,15 @@ import { newMinorForcing } from './conventions/new-minor-forcing.ts'
 import { notrumpResponses } from './conventions/notrump-responses.ts'
 import { responsiveDouble } from './conventions/responsive-double.ts'
 import { singleRaiseMajor } from './conventions/single-raise-major.ts'
+import { systemOverview } from './conventions/system-overview.ts'
+import { systemOneClub } from './conventions/system-one-club.ts'
+import { systemOneDiamond } from './conventions/system-one-diamond.ts'
+import { systemOneMajor } from './conventions/system-one-major.ts'
+import { systemNotrump } from './conventions/system-notrump.ts'
+import { systemStrongAndPreempts } from './conventions/system-strong-and-preempts.ts'
+import { systemDoubles } from './conventions/system-doubles.ts'
+import { systemCompetition } from './conventions/system-competition.ts'
+import { systemConcepts } from './conventions/system-concepts.ts'
 import { twoDiamondOpening } from './conventions/two-diamond-opening.ts'
 import { twoNotrumpOpening } from './conventions/two-notrump-opening.ts'
 
@@ -31,6 +40,15 @@ export const conventions: Convention[] = [
   goodBad2nt,
   responsiveDouble,
   defensiveSignals,
+  systemOverview,
+  systemOneClub,
+  systemOneDiamond,
+  systemOneMajor,
+  systemNotrump,
+  systemStrongAndPreempts,
+  systemDoubles,
+  systemCompetition,
+  systemConcepts,
 ]
 
 export const conventionBySlug = (slug: string): Convention | undefined =>
