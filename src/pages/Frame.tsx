@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AccountMenu } from '../components/AccountMenu.tsx'
 import { AppHeader } from '../components/AppHeader.tsx'
+import { TextSizeControl } from '../components/TextSizeControl.tsx'
 import { ErrorText, Muted, PageMain } from '../components/ui.tsx'
 import type { Permission } from '../lib/api.ts'
 import { useAuth } from '../state/AuthContext.tsx'
@@ -22,7 +23,7 @@ export function Frame({ title, children, wide }: { title?: string; children: Rea
   usePageTitle(title)
   return (
     <>
-      <AppHeader account={<AccountCorner />} />
+      <AppHeader actions={<TextSizeControl />} account={<AccountCorner />} />
       {wide ? children : <PageMain id="main">{children}</PageMain>}
     </>
   )

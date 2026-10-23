@@ -13,6 +13,7 @@ import {
   removeSection,
   rulesToText,
   sectionIds,
+  splitList,
   suitSymbols,
   textToRules,
 } from '../../src/lib/editing.ts'
@@ -109,5 +110,9 @@ describe('text forms of content', () => {
 
   it('turns suit letters into symbols, leaving words and card letters alone', () => {
     expect(suitSymbols('迫叫至3H，H不fit，問A，S VOID，HCP 2NT')).toBe('迫叫至3♥，♥不fit，問A，S VOID，HCP 2NT')
+  })
+
+  it('splits tags and aliases on 、, commas and line breaks', () => {
+    expect(splitList('1NT、stayman, transfer，Texas transfer\n gerber\n\n')).toEqual(['1NT', 'stayman', 'transfer', 'Texas transfer', 'gerber'])
   })
 })

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { allKeys, sectionDomId } from '../../lib/sections.ts'
 import { ExpansionProvider, useExpansion } from '../../state/ExpansionContext.tsx'
+import { mobile } from '../../styles/tokens.ts'
 import type { Convention } from '../../types/convention.ts'
 import { ConventionCard } from '../ConventionCard.tsx'
 
@@ -41,13 +42,28 @@ function Opened({ convention, focusId }: { convention: Convention; focusId: stri
   )
 }
 
+/**
+ * Fills its column and scrolls inside it (on phones it grows with the page instead). Positioned,
+ * so the visually-hidden labels inside stay in the scroll box: unpositioned, they escaped it and
+ * stretched the page far below the editor.
+ */
 const Box = styled.div`
+  position: relative;
   overflow: auto;
-  max-height: calc(100vh - ${({ theme }) => theme.layout.headerHeight} - 120px);
-  padding: 2px;
+  min-height: 0;
 
-  /* The preview shows everything at once; cards elsewhere skip work while off screen */
+  ${mobile} {
+    overflow: visible;
+  }
+
+  /*
+   * The preview shows everything at once; cards elsewhere skip work while off screen. The column
+   * around it is the frame, so the card drops its own.
+   */
   & [data-print='card'] {
     content-visibility: visible;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 `

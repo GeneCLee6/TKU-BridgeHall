@@ -15,6 +15,7 @@ import {
 import { formatDateTime } from '../lib/format.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { strings } from '../strings.ts'
+import { mobile } from '../styles/tokens.ts'
 import { Frame, Gate } from './Frame.tsx'
 
 /**
@@ -229,21 +230,23 @@ function AdminBody() {
       <Panel aria-labelledby="settings">
         <PanelTitle id="settings">{t.settings}</PanelTitle>
         <SettingsForm onSubmit={saveSettings} aria-label={t.settings}>
-          <Field>
-            {t.maxUsers}
-            <Input
-              type="number"
-              min={2}
-              max={100}
-              value={draft.maxUsers}
-              onChange={(e) => setDraft({ ...draft, maxUsers: e.target.value })}
-            />
-          </Field>
-          <Field>
-            {strings.auth.inviteCode}
-            <Input value={draft.inviteCode} onChange={(e) => setDraft({ ...draft, inviteCode: e.target.value })} />
-            <small>{t.inviteCodeHint}</small>
-          </Field>
+          <SettingsFields>
+            <Field>
+              {t.maxUsers}
+              <Input
+                type="number"
+                min={2}
+                max={100}
+                value={draft.maxUsers}
+                onChange={(e) => setDraft({ ...draft, maxUsers: e.target.value })}
+              />
+            </Field>
+            <Field>
+              {strings.auth.inviteCode}
+              <Input value={draft.inviteCode} onChange={(e) => setDraft({ ...draft, inviteCode: e.target.value })} />
+              <small>{t.inviteCodeHint}</small>
+            </Field>
+          </SettingsFields>
           <div>
             <Button type="submit" $variant="primary">
               {strings.save}
@@ -290,8 +293,12 @@ const NoWrap = styled.td`
   white-space: nowrap;
 `
 
+/** As tall as the small buttons beside it */
 const NarrowInput = styled(Input)`
-  width: 160px;
+  width: 10rem;
+  min-height: 2rem;
+  padding-top: 0;
+  padding-bottom: 0;
 `
 
 const Small = styled.small`
@@ -310,7 +317,16 @@ const Check = styled.label`
 
 const SettingsForm = styled.form`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: ${({ theme }) => theme.space(3)};
-  align-items: end;
+  gap: ${({ theme }) => theme.space(4)};
+`
+
+/** Each field as wide as what it holds: a two-digit number, then a short code with its hint */
+const SettingsFields = styled.div`
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 22rem);
+  gap: ${({ theme }) => theme.space(4)};
+
+  ${mobile} {
+    grid-template-columns: minmax(0, 1fr);
+  }
 `

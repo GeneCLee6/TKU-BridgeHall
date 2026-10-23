@@ -47,14 +47,17 @@
 
 - 內文：**Noto Sans TC**（`@fontsource-variable/noto-sans-tc`，可變字重，依 unicode-range 分片載入），備援 PingFang TC、Microsoft JhengHei。
 - 花色符號：優先使用 Segoe UI Symbol／Apple Symbols，避免部分 CJK 字型把 ♠♥ 畫成 emoji 或寬度不一。
-- 字級：內文 16px、行高 1.7（中文需要較寬鬆的行距）；表格 15px；次要說明 13–14px；特約名稱 20px／700。
+- 字級：內文 16px、行高 1.7（中文需要較寬鬆的行距）；表格 15px；次要說明 13–14px；特約名稱 20px／700。以上是「中」字級的大小。
+- 使用者可選字級「小／中／大」（頁首的切換鈕，手機在目錄抽屜）：根字級 87.5%／100%／112.5%，用 rem 的文字、表單元件與側邊欄寬度一起縮放。用百分比是為了保留瀏覽器本身的字級設定。
+- 表單元件：桌機高 36px、字 15px，標籤 13px、提示 12px；手機至少 40px、字至少 16px（小於 16px 時 iOS 會在點進輸入框時放大畫面）。
 - 叫品使用 `tabular-nums`，讓數字對齊。
 
 ## 4. 間距與形狀
 
 - 4px 基準：`space(n) = n × 4px`。卡片內距 16px，段落間距 8px，分類間距 40px。
 - 圓角：`sm 6px`（按鈕、表格）、`md 10px`（段落）、`lg 14px`（卡片）、`pill`（標籤、搜尋框）。
-- 版面：頁首 60px、側邊欄 280px、內容最寬 960px；900px 以下切換為行動版。
+- 版面：頁首 60px、側邊欄 19rem（「中」字級為 304px，放得下最長的特約名稱）、內容最寬 60rem（960px）；900px 以下切換為行動版。
+- 表單：短欄位兩兩並排（名稱、網址代稱與分類），長文字（摘要、標籤、別名、段落摘要）獨佔一列並自動換行。欄位一律靠上對齊，旁邊有提示文字的欄位不會把同列的輸入框撐高。
 
 ## 5. 元件
 
@@ -74,7 +77,7 @@
 | ViewActions | `components/ViewActions.tsx` | 全部展開／收合、主題、列印。桌機放頁首（圖示按鈕），手機放進選單抽屜頂端（含文字的列）。 |
 | AccountMenu | `components/AccountMenu.tsx` | 頁首右端：未登入時是「登入」膠囊按鈕；登入後是名字＋選單（新增特約、匯入檔案、社團管理、我的帳號、登出，依權限顯示），有待審核申請時顯示朱紅數字。 |
 | 表單元件 | `components/ui.tsx` | Button（一般／主要／危險／ghost）、Input、TextArea、Select、Field（標籤＋提示）、Panel、PasswordInput（右側眼睛按鈕切換顯示密碼）、ErrorText、Notice。 |
-| 編輯器 | `components/editor/` | Outline（段落樹，手機為下拉選單）、MetaForm、SectionForm、BlockEditor（各區塊表單，左框宮燈金）、Preview（完整展開的卡片）、RevisionsPanel、SuitPalette（插入 ♠♥♦♣，不搶走輸入框焦點）。 |
+| 編輯器 | `components/editor/` | Outline（段落樹，手機為下拉選單）、MetaForm、SectionForm、BlockEditor（各區塊表單，左框宮燈金）、Preview（完整展開的卡片）、RevisionsPanel、SuitPalette（插入 ♠♥♦♣，不搶走輸入框焦點）。桌機版是剛好填滿視窗的工作區：段落樹、表單、預覽三欄上下緣對齊、各自捲動，整頁不捲動；手機版單欄隨頁面捲動。 |
 
 ## 6. 版面（Swagger 式）
 
@@ -96,7 +99,7 @@
 
 ## 7. 淺色／深色、無障礙、列印
 
-- **主題**：預設跟隨系統 `prefers-color-scheme`，可手動切換並記在 localStorage（無法存取時照常運作）。
+- **主題與字級**：主題預設跟隨系統 `prefers-color-scheme`，可手動切換；字級預設「中」。兩者都記在 localStorage（無法存取時照常運作）。
 - **鍵盤**：Radix Accordion 提供 Enter／Space 切換、上下鍵在同層標題間移動、Home／End。所有按鈕有可見焦點框（3px）。另有「跳到主要內容」連結。
 - **ARIA**：觸發器有 `aria-expanded`／`aria-controls`；標題層級 h1（頁面）→ h2（分類、特約）→ h3–h6（段落）。搜尋框有 `role="search"` 與隱藏標籤；複製連結結果以 `role="status"` 告知。
 - **花色**：符號形狀本身即可區分；`Suit` 以 `role="img"` 與中文 `aria-label`（黑桃、紅心、方塊、梅花）讓螢幕閱讀器念出。

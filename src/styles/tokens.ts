@@ -5,6 +5,15 @@
 
 export type ThemeMode = 'light' | 'dark'
 
+/** The reader's 字級 choice */
+export type TextSize = 'small' | 'medium' | 'large'
+
+/**
+ * Root font size for each 字級. Percentages keep the browser's own text-size setting; everything
+ * sized in rem (text, form controls, the sidebar's width) follows the choice.
+ */
+export const textSizes: Record<TextSize, string> = { small: '87.5%', medium: '100%', large: '112.5%' }
+
 const palette = {
   light: {
     bg: '#f4f6fa',
@@ -63,17 +72,19 @@ export const fonts = {
 
 export const layout = {
   headerHeight: '60px',
-  sidebarWidth: '280px',
-  contentMax: '960px',
+  /** In rem so a larger 字級 widens the catalogue instead of wrapping more names */
+  sidebarWidth: '19rem',
+  contentMax: '60rem',
   mobileBreakpoint: '900px',
 }
 
 /** 4px spacing scale: space(2) === '8px' */
 export const space = (n: number) => `${n * 4}px`
 
-export function createTheme(mode: ThemeMode) {
+export function createTheme(mode: ThemeMode, textSize: TextSize = 'medium') {
   return {
     mode,
+    textSize,
     colors: palette[mode],
     suits: suits[mode],
     fonts,

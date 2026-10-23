@@ -34,6 +34,7 @@
 - **花色在無障礙名稱中是中文**（`Suit` 的 `aria-label`），例如「開叫1♠時」的名稱是「開叫1黑桃時」。
 - **「待確認」數量寫在測試裡**（`tests/content/conventions.test.ts`），新增或解決時要同步更新。
 - **`cfb` 是 CommonJS**：Node 只給 default export，打包工具給具名 export，用 `docText.ts` 開頭的寫法取得。
+- **捲動框裡的 `.visually-hidden` 要有定位的祖先。** 它是 `position: absolute`；沒有定位祖先時會跑出 `overflow: auto` 的框，把整頁撐長（編輯器的預覽曾因此在下方多出幾千 px 空白）。捲動框加 `position: relative`。
 - **元件測試裡 fetch 會失敗**：`AuthContext`、`ContentContext` 抓不到 API 時退回「未登入、內建內容」；要測登入或線上內容，用 `vi.stubGlobal('fetch', …)`（見 `tests/presentation/accounts.test.tsx`）。
 
 ## 指令
