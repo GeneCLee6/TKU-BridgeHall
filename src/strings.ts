@@ -156,6 +156,7 @@ export const strings = {
     saveNote: '修改說明（選填）',
     saveNoteHint: '例如：依社團 10/23 決議修正 1NT 點力',
     save: '儲存並發布',
+    saveShort: '儲存',
     saving: '儲存中…',
     savedVersion: (n: number) => `已儲存並發布（第 ${n} 版）。`,
     conflict: '儲存失敗：有人剛剛修改了這個特約。',

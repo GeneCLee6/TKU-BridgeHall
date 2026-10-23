@@ -461,6 +461,16 @@ const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: ${({ theme }) => theme.space(1)};
+
+  /* Four cells across a phone leave little room: keep the text, not the padding */
+  @media (max-width: 560px) {
+    & input {
+      padding-left: 2px;
+      padding-right: 2px;
+      text-align: center;
+      font-size: 0.9375rem;
+    }
+  }
 `
 
 const SeatInput = styled(Input)`
