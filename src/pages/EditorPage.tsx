@@ -323,24 +323,27 @@ function EditorBody({
       />
     )
   const preview = <Preview convention={draft} focusId={selected} />
+  const noteInput = (
+    <NoteInput value={note} onChange={(e) => setNote(e.target.value)} placeholder={t.saveNote} aria-label={t.saveNote} title={t.saveNoteHint} />
+  )
 
   return (
     <Page>
       <Bar>
-        <Row>
-          <Button as={Link} to={slug ? conventionPath(slug) : '/'} $small $variant="ghost">
+        <Heading>
+          <Button as={Link} to={slug ? conventionPath(slug) : '/'} $small $variant="ghost" aria-label={t.back} title={t.back}>
             <ArrowLeft size={16} aria-hidden />
-            {t.back}
+            <Wide>{t.back}</Wide>
           </Button>
           <Title>{title}</Title>
           <State role="status">{dirty ? t.unsaved : t.allSaved}</State>
-        </Row>
-        <Row>
+        </Heading>
+        <Tools>
           <SuitPalette />
           {slug && (
-            <Button type="button" $small onClick={() => setShowHistory((s) => !s)} aria-expanded={showHistory}>
+            <Button type="button" $small onClick={() => setShowHistory((s) => !s)} aria-expanded={showHistory} aria-label={t.history} title={t.history}>
               <History size={16} aria-hidden />
-              {t.history}
+              <Wide>{t.history}</Wide>
             </Button>
           )}
           {!wide && (
@@ -349,12 +352,14 @@ function EditorBody({
               {tab === 'form' ? t.preview : t.form}
             </Button>
           )}
-          <NoteInput value={note} onChange={(e) => setNote(e.target.value)} placeholder={t.saveNote} aria-label={t.saveNote} title={t.saveNoteHint} />
-          <Button type="button" $variant="primary" onClick={() => void save()} disabled={busy || (!dirty && !source)}>
-            {busy ? t.saving : t.save}
+          {!phone && noteInput}
+          <Button type="button" $variant="primary" $small={phone} onClick={() => void save()} disabled={busy || (!dirty && !source)}>
+            {busy ? t.saving : phone ? t.saveShort : t.save}
           </Button>
-        </Row>
+        </Tools>
       </Bar>
+      {/* On phones the note stays out of the bar that follows the page, so the bar is short */}
+      {phone && noteInput}
 
       <Notices>
         {restore && (
@@ -528,10 +533,47 @@ const Bar = styled.div`
   box-shadow: ${({ theme }) => theme.shadow};
 `
 
+const Heading = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(2)};
+  min-width: 0;
+`
+
+const Tools = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(2)};
+
+  ${mobile} {
+    gap: ${({ theme }) => theme.space(1)};
+    width: 100%;
+    & > :last-child {
+      margin-left: auto;
+    }
+  }
+`
+
+/** Button text that phones leave out (the button keeps its icon and its aria-label) */
+const Wide = styled.span`
+  ${mobile} {
+    display: none;
+  }
+`
+
 const Title = styled.h1`
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
   font-size: 1.125rem;
   color: ${({ theme }) => theme.colors.primaryStrong};
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  ${mobile} {
+    font-size: 1rem;
+  }
 `
 
 const State = styled.span`
@@ -544,6 +586,7 @@ const NoteInput = styled(Input)`
   min-height: 36px;
   ${mobile} {
     width: 100%;
+    min-height: 40px;
   }
 `
 

@@ -138,6 +138,8 @@ export const PageMain = styled.main`
   margin: 0 auto;
   padding: ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(16)};
   display: grid;
+  /* minmax(0, …) so a wide table scrolls inside its panel instead of widening the page */
+  grid-template-columns: minmax(0, 1fr);
   gap: ${({ theme }) => theme.space(5)};
   align-content: start;
 

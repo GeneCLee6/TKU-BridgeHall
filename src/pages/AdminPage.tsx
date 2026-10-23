@@ -178,7 +178,7 @@ function AdminBody() {
                     {u.username}
                     {u.passwordResetAt && <Small>{t.selfReset(formatDateTime(u.passwordResetAt))}</Small>}
                   </td>
-                  <td>{u.admin ? t.adminRole : t.memberRole}</td>
+                  <NoWrap>{u.admin ? t.adminRole : t.memberRole}</NoWrap>
                   <td title={u.admin ? t.adminHasAll : undefined}>
                     {PERMISSIONS.map((p) => (
                       <Check key={p}>
@@ -284,6 +284,10 @@ const Table = styled.table`
     font-size: 0.8125rem;
     white-space: nowrap;
   }
+`
+
+const NoWrap = styled.td`
+  white-space: nowrap;
 `
 
 const NarrowInput = styled(Input)`

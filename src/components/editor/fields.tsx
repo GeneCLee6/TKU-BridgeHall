@@ -1,6 +1,7 @@
 import type { TextareaHTMLAttributes } from 'react'
 import styled from 'styled-components'
 import { strings } from '../../strings.ts'
+import { mobile } from '../../styles/tokens.ts'
 import { TextArea } from '../ui.tsx'
 
 /** A textarea that grows with its text (rows by line count; field-sizing where supported) */
@@ -58,6 +59,12 @@ const Palette = styled.div`
   gap: ${({ theme }) => theme.space(1)};
   font-size: 0.8125rem;
   color: ${({ theme }) => theme.colors.textMuted};
+
+  ${mobile} {
+    & > span {
+      display: none;
+    }
+  }
 `
 
 const SuitKey = styled.button<{ $red: boolean }>`
@@ -69,6 +76,11 @@ const SuitKey = styled.button<{ $red: boolean }>`
   color: ${({ theme, $red }) => ($red ? theme.suits.H : theme.suits.S)};
   font-size: 1.05rem;
   cursor: pointer;
+
+  ${mobile} {
+    width: 30px;
+    height: 30px;
+  }
 
   &:hover {
     border-color: ${({ theme }) => theme.colors.primary};
