@@ -229,9 +229,9 @@ export function suitSymbols(text: string): string {
     .replace(/(?<![A-Za-z])([CDHS])(?=[一-鿿])/g, (_, suit: string) => symbol[suit])
 }
 
-/** Splits 「a、b, c」 into ['a', 'b', 'c'] for tags and aliases */
+/** Splits 「a、b, c」 (or one per line) into ['a', 'b', 'c'] for tags and aliases */
 export const splitList = (text: string) =>
   text
-    .split(/[,，、]/)
+    .split(/[,，、\n]/)
     .map((s) => s.trim())
     .filter(Boolean)

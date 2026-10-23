@@ -314,6 +314,7 @@ const ConventionLink = styled(NavLink)`
     ${({ theme }) => theme.space(1.5)} 0;
   border-radius: ${({ theme }) => theme.radius.sm};
   color: ${({ theme }) => theme.colors.text};
+  font-size: 0.9375rem;
   font-weight: 700;
   text-decoration: none;
   line-height: 1.4;
@@ -339,6 +340,7 @@ const Name = styled.span`
   flex-direction: column;
 
   small {
+    font-size: 0.75rem;
     font-weight: 400;
     color: ${({ theme }) => theme.colors.textMuted};
   }
@@ -388,7 +390,7 @@ const SectionLink = styled(NavLink)`
   padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(2)};
   border-radius: ${({ theme }) => theme.radius.sm};
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   text-decoration: none;
   line-height: 1.5;
 

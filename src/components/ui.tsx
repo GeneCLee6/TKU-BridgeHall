@@ -4,14 +4,18 @@ import styled, { css } from 'styled-components'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 
-/** Form controls and page frames for the account, admin, editor and import pages */
+/**
+ * Form controls and page frames for the account, admin, editor and import pages. Controls are
+ * sized in rem so they follow the 字級; on phones they stay at least 40px tall with 16px text
+ * (smaller text makes iOS zoom into the field).
+ */
 
 export const Button = styled.button<{ $variant?: 'primary' | 'danger' | 'ghost'; $small?: boolean }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: ${({ theme }) => theme.space(2)};
-  min-height: ${({ $small }) => ($small ? '32px' : '40px')};
+  min-height: ${({ $small }) => ($small ? '2rem' : '2.25rem')};
   padding: 0 ${({ theme, $small }) => theme.space($small ? 3 : 4)};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.sm};
@@ -30,6 +34,10 @@ export const Button = styled.button<{ $variant?: 'primary' | 'danger' | 'ghost';
   &:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+  }
+
+  ${mobile} {
+    min-height: ${({ $small }) => ($small ? '32px' : '40px')};
   }
 
   ${({ $variant, theme }) =>
@@ -70,18 +78,24 @@ export const Button = styled.button<{ $variant?: 'primary' | 'danger' | 'ghost';
 
 const control = css`
   width: 100%;
-  min-height: 40px;
-  padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
+  min-height: 2.25rem;
+  padding: 0.3125rem 0.625rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.sm};
   background: ${({ theme }) => theme.colors.bg};
   color: ${({ theme }) => theme.colors.text};
   font: inherit;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 400;
+  line-height: 1.5;
 
   &:focus {
     border-color: ${({ theme }) => theme.colors.primary};
+  }
+
+  ${mobile} {
+    min-height: 40px;
+    font-size: max(1rem, 16px);
   }
 `
 
@@ -91,26 +105,33 @@ export const Input = styled.input`
 
 export const TextArea = styled.textarea`
   ${control}
-  min-height: 72px;
+  min-height: 4.5rem;
   line-height: 1.6;
   resize: vertical;
 `
 
 export const Select = styled.select`
   ${control}
+  padding-top: 0;
+  padding-bottom: 0;
 `
 
-/** A label around a control, with an optional <small> hint under it */
+/**
+ * A label around a control, with an optional <small> hint under it. Rows start at the top, so a
+ * field beside one with a hint keeps its control level with the other's instead of stretching.
+ */
 export const Field = styled.label`
   display: grid;
+  align-content: start;
   gap: ${({ theme }) => theme.space(1)};
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
+  line-height: 1.5;
 
   & > small {
     color: ${({ theme }) => theme.colors.textMuted};
+    font-size: 0.75rem;
     font-weight: 400;
-    line-height: 1.5;
   }
 `
 

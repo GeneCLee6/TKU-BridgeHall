@@ -7,7 +7,7 @@ import { strings } from '../../strings.ts'
 import type { Block, Section } from '../../types/convention.ts'
 import { Button, Field, Input, Row } from '../ui.tsx'
 import { BlockEditor, PendingField } from './BlockEditor.tsx'
-import { MiniButton } from './fields.tsx'
+import { AutoTextArea, MiniButton } from './fields.tsx'
 
 export type SectionAction = 'up' | 'down' | 'indent' | 'outdent' | 'addAfter' | 'addChild' | 'delete'
 
@@ -87,21 +87,21 @@ export function SectionForm({
         </Row>
       </Toolbar>
 
-      <Field>
-        {t.sectionTitle}
-        <Input value={section.title} onChange={(e) => onChange({ ...section, title: e.target.value })} />
-      </Field>
       <Columns>
+        <Field>
+          {t.sectionTitle}
+          <Input value={section.title} onChange={(e) => onChange({ ...section, title: e.target.value })} />
+        </Field>
         <Field>
           {t.originalTitle}
           <Input value={section.originalTitle ?? ''} onChange={(e) => onChange({ ...section, originalTitle: e.target.value })} />
           <small>{t.originalTitleHint}</small>
         </Field>
-        <Field>
-          {t.sectionSummary}
-          <Input value={section.summary ?? ''} onChange={(e) => onChange({ ...section, summary: e.target.value })} />
-        </Field>
       </Columns>
+      <Field>
+        {t.sectionSummary}
+        <AutoTextArea minRows={1} value={section.summary ?? ''} onChange={(e) => onChange({ ...section, summary: e.target.value })} />
+      </Field>
       <PendingField value={section.pending ?? ''} onChange={(pending) => onChange({ ...section, pending })} />
       <Advanced>
         <summary>{t.sectionId}</summary>

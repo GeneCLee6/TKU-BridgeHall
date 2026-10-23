@@ -64,6 +64,18 @@ describe('handbook page', () => {
     renderAt('/c/defense-vs-unusual-2nt')
     expect(screen.getAllByText('待確認').length).toBeGreaterThan(0)
   })
+
+  it('switches the 字級 from the header and remembers it on this device', async () => {
+    renderAt('/')
+    const header = screen.getByRole('banner')
+    expect(within(header).getByRole('button', { name: '字級：中' })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(within(header).getByRole('button', { name: '字級：大' }))
+    expect(within(header).getByRole('button', { name: '字級：大' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(header).getByRole('button', { name: '字級：中' })).toHaveAttribute('aria-pressed', 'false')
+    expect(JSON.parse(window.localStorage.getItem('tku-bridgebook:prefs') ?? '{}')).toMatchObject({ textSize: 'large' })
+    // Back to the default for the tests that follow
+    await userEvent.click(within(header).getByRole('button', { name: '字級：中' }))
+  })
   it('keeps the phone header to menu, logo and search, with view actions inside the menu', async () => {
     const original = window.matchMedia
     window.matchMedia = ((query: string) => ({
@@ -82,6 +94,7 @@ describe('handbook page', () => {
       await userEvent.click(within(header).getByLabelText('開啟目錄'))
       const menu = screen.getByRole('navigation', { name: '特約目錄' })
       expect(within(menu).getByRole('button', { name: /深色模式|淺色模式/ })).toBeInTheDocument()
+      expect(within(menu).getByRole('group', { name: '字級' })).toBeInTheDocument()
       await userEvent.click(within(menu).getByRole('button', { name: '全部展開' }))
       expect(trigger(/^雷本索特約/)).toHaveAttribute('aria-expanded', 'true')
       expect(within(header).getByLabelText('開啟目錄')).toHaveAttribute('aria-expanded', 'false')

@@ -1,4 +1,4 @@
-import { ChevronsDownUp, ChevronsUpDown, Moon, Printer, Smartphone, Sun } from 'lucide-react'
+import { ALargeSmall, ChevronsDownUp, ChevronsUpDown, Moon, Printer, Smartphone, Sun } from 'lucide-react'
 import { useState } from 'react'
 import styled from 'styled-components'
 import { isStandalone, useInstallOffer } from '../lib/pwa.ts'
@@ -6,9 +6,10 @@ import { usePreferences } from '../state/PreferencesContext.tsx'
 import { strings } from '../strings.ts'
 import { IconButton } from './CopyLinkButton.tsx'
 import { InstallHelp } from './InstallHelp.tsx'
+import { TextSizeControl } from './TextSizeControl.tsx'
 
 /**
- * Expand all / collapse all / theme / install as an app (and print on desktop).
+ * 字級, expand all / collapse all / theme / install as an app (and print on desktop).
  * 'bar' renders icon buttons for the desktop header; 'menu' renders labelled rows for the
  * mobile drawer, so the phone header stays down to menu, logo and search.
  */
@@ -36,6 +37,11 @@ export function ViewActions({
   if (variant === 'menu') {
     return (
       <MenuGroup role="group" aria-label={strings.viewOptions}>
+        <SizeRow>
+          <ALargeSmall size={18} aria-hidden />
+          {strings.textSize}
+          <TextSizeControl />
+        </SizeRow>
         <MenuItem type="button" onClick={onExpandAll}>
           <ChevronsUpDown size={18} aria-hidden />
           {strings.expandAll}
@@ -61,6 +67,7 @@ export function ViewActions({
 
   return (
     <Bar>
+      <TextSizeControl />
       <IconButton
         type="button"
         onClick={onExpandAll}
@@ -105,6 +112,7 @@ export function ViewActions({
 
 const Bar = styled.div`
   display: flex;
+  align-items: center;
   gap: ${({ theme }) => theme.space(1)};
   margin-left: auto;
 `
@@ -142,5 +150,23 @@ const MenuItem = styled.button`
   &:hover {
     background: ${({ theme }) => theme.colors.surfaceAlt};
     color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+/** The 字級 switch as a drawer row: icon and label like the buttons, the switch at the end */
+const SizeRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(3)};
+  min-height: 44px;
+  padding: 0 ${({ theme }) => theme.space(3)};
+  font-size: 0.9375rem;
+
+  & > svg {
+    flex: none;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+  & > [role='group'] {
+    margin-left: auto;
   }
 `

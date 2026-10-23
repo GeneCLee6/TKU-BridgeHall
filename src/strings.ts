@@ -15,6 +15,8 @@ export const strings = {
   themeToLight: '切換為淺色模式',
   themeToDark: '切換為深色模式',
   viewOptions: '顯示選項',
+  textSize: '字級',
+  textSizeNames: { small: '小', medium: '中', large: '大' },
   openMenu: '開啟目錄',
   closeMenu: '關閉目錄',
   catalogue: '特約目錄',

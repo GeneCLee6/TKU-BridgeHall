@@ -1,16 +1,20 @@
 import { createGlobalStyle } from 'styled-components'
+import { textSizes } from './tokens.ts'
 
 export const GlobalStyle = createGlobalStyle`
   *, *::before, *::after { box-sizing: border-box; }
 
-  html { color-scheme: ${({ theme }) => theme.mode}; }
+  html {
+    color-scheme: ${({ theme }) => theme.mode};
+    font-size: ${({ theme }) => textSizes[theme.textSize]};
+  }
 
   body {
     margin: 0;
     background: ${({ theme }) => theme.colors.bg};
     color: ${({ theme }) => theme.colors.text};
     font-family: ${({ theme }) => theme.fonts.body};
-    font-size: 16px;
+    font-size: 1rem;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
   }

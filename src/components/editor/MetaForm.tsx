@@ -63,35 +63,36 @@ export function MetaForm({
           </Select>
         </Field>
       </Columns>
+      {/* Long text gets a whole row and wraps, instead of scrolling inside half a row */}
       <Field>
         {t.summary}
-        <AutoTextArea value={convention.summary} onChange={(e) => set({ summary: e.target.value })} />
+        <AutoTextArea minRows={1} value={convention.summary} onChange={(e) => set({ summary: e.target.value })} />
         <small>{t.summaryHint}</small>
       </Field>
-      <Columns>
-        <Field>
-          {t.tags}
-          <Input
-            value={tags}
-            onChange={(e) => {
-              setTags(e.target.value)
-              set({ tags: splitList(e.target.value) })
-            }}
-          />
-          <small>{t.tagsHint}</small>
-        </Field>
-        <Field>
-          {t.aliases}
-          <Input
-            value={aliases}
-            onChange={(e) => {
-              setAliases(e.target.value)
-              set({ aliases: splitList(e.target.value) })
-            }}
-          />
-          <small>{t.aliasesHint}</small>
-        </Field>
-      </Columns>
+      <Field>
+        {t.tags}
+        <AutoTextArea
+          minRows={1}
+          value={tags}
+          onChange={(e) => {
+            setTags(e.target.value)
+            set({ tags: splitList(e.target.value) })
+          }}
+        />
+        <small>{t.tagsHint}</small>
+      </Field>
+      <Field>
+        {t.aliases}
+        <AutoTextArea
+          minRows={1}
+          value={aliases}
+          onChange={(e) => {
+            setAliases(e.target.value)
+            set({ aliases: splitList(e.target.value) })
+          }}
+        />
+        <small>{t.aliasesHint}</small>
+      </Field>
       <Columns>
         <Field>
           {t.sourceTitle}

@@ -81,7 +81,7 @@ export function OutlineSelect({
 }
 
 const Nav = styled.nav`
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
 `
 
 const List = styled.ul`
@@ -93,7 +93,7 @@ const List = styled.ul`
 const Item = styled.button<{ $depth: number }>`
   display: block;
   width: 100%;
-  min-height: 34px;
+  min-height: 2rem;
   padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(2)};
   padding-left: ${({ theme, $depth }) => theme.space(2 + $depth * 4)};
   border: 0;

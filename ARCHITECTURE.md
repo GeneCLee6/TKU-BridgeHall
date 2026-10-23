@@ -109,7 +109,7 @@ interface Convention {
 **狀態**
 
 - `ExpansionContext`：一個 `Set<string>` 記錄所有打開的項目（特約 key 為 `slug`，段落為 `slug/sectionId`）。每一層 Radix Accordion 以 `openAmong(keys)` 取得 value、以 `setLevel(keys, open)` 回寫。全部展開／收合與深層連結因此能控制不屬於它們的收合元件。
-- `PreferencesContext`：主題（淺／深），存在 localStorage（失敗時忽略）。花色固定四色牌。
+- `PreferencesContext`：主題（淺／深）與字級（小／中／大，`GlobalStyle` 依此設定根字級），存在 localStorage（失敗時忽略）。花色固定四色牌。
 - `useMediaQuery(mobileQuery)`：決定 ViewActions 放在頁首（桌機）或選單抽屜（手機），同一時間只渲染一組。
 - 不使用狀態管理函式庫；兩個 Context 就夠了。
 

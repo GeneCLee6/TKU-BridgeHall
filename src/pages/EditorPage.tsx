@@ -353,7 +353,7 @@ function EditorBody({
             </Button>
           )}
           {!phone && noteInput}
-          <Button type="button" $variant="primary" $small={phone} onClick={() => void save()} disabled={busy || (!dirty && !source)}>
+          <Button type="button" $variant="primary" $small onClick={() => void save()} disabled={busy || (!dirty && !source)}>
             {busy ? t.saving : phone ? t.saveShort : t.save}
           </Button>
         </Tools>
@@ -472,7 +472,7 @@ function EditorBody({
         )}
         <MainCol>
           {phone && <OutlineSelect sections={draft.sections} selected={selected} onSelect={select} />}
-          {wide || tab === 'form' ? <FormBox>{form}</FormBox> : preview}
+          {wide || tab === 'form' ? <FormBox>{form}</FormBox> : <PreviewCol aria-label={t.preview}>{preview}</PreviewCol>}
         </MainCol>
         {wide && <PreviewCol aria-label={t.preview}>{preview}</PreviewCol>}
         {showHistory && slug && (
@@ -507,12 +507,24 @@ function EditorBody({
   )
 }
 
+/**
+ * Desktop: a workspace exactly as tall as the window under the header. The columns share their top
+ * and bottom edges and each scrolls on its own, so the page itself never scrolls. Phones: one
+ * column that scrolls with the page.
+ */
 const Page = styled.main`
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: ${({ theme }) => theme.space(3)};
-  padding: ${({ theme }) => theme.space(4)} ${({ theme }) => theme.space(5)} ${({ theme }) => theme.space(12)};
+  height: calc(100vh - ${({ theme }) => theme.layout.headerHeight});
+  /* A very short window scrolls the page rather than squeezing the columns to nothing */
+  min-height: 480px;
+  padding: ${({ theme }) => theme.space(4)} ${({ theme }) => theme.space(5)};
 
   ${mobile} {
+    display: grid;
+    height: auto;
+    min-height: 0;
     padding: ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(10)};
   }
 `
@@ -581,12 +593,15 @@ const State = styled.span`
   color: ${({ theme }) => theme.colors.textMuted};
 `
 
+/** As tall as the small buttons beside it */
 const NoteInput = styled(Input)`
-  width: 220px;
-  min-height: 36px;
+  width: 14rem;
+  min-height: 2rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 0.875rem;
   ${mobile} {
     width: 100%;
-    min-height: 40px;
   }
 `
 
@@ -616,49 +631,76 @@ const Warnings = styled.details`
 `
 
 const Columns = styled.div<{ $wide: boolean; $history: boolean }>`
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: ${({ $wide, $history }) =>
-    $wide ? `240px minmax(0, 1fr) minmax(0, 1fr)${$history ? ' 320px' : ''}` : `220px minmax(0, 1fr)${$history ? ' 300px' : ''}`};
+    $wide ? `15rem minmax(0, 1fr) minmax(0, 1fr)${$history ? ' 20rem' : ''}` : `14rem minmax(0, 1fr)${$history ? ' 18rem' : ''}`};
+  /* One row the height of the workspace: every column is stretched to it */
+  grid-template-rows: minmax(0, 1fr);
   gap: ${({ theme }) => theme.space(4)};
-  align-items: start;
+
+  & > aside {
+    overflow: auto;
+  }
 
   ${mobile} {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    align-items: start;
   }
 `
 
+/** The outline scrolls; the add button stays at the bottom of the column */
 const Side = styled.div`
-  position: sticky;
-  top: calc(${({ theme }) => theme.layout.headerHeight} + 72px);
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: ${({ theme }) => theme.space(2)};
-  max-height: calc(100vh - ${({ theme }) => theme.layout.headerHeight} - 96px);
-  overflow: auto;
   padding: ${({ theme }) => theme.space(2)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.md};
+  border-radius: ${({ theme }) => theme.radius.lg};
   background: ${({ theme }) => theme.colors.surface};
+
+  & > nav {
+    overflow: auto;
+  }
 `
 
 const MainCol = styled.div`
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
   gap: ${({ theme }) => theme.space(3)};
   min-width: 0;
+
+  ${mobile} {
+    grid-template-rows: none;
+  }
 `
 
 const FormBox = styled.div`
+  overflow: auto;
   padding: ${({ theme }) => theme.space(4)};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.lg};
   background: ${({ theme }) => theme.colors.surface};
 
   ${mobile} {
+    overflow: visible;
     padding: ${({ theme }) => theme.space(3)};
   }
 `
 
+/** Framed like the outline and the form, so the three columns read as one set */
 const PreviewCol = styled.section`
-  position: sticky;
-  top: calc(${({ theme }) => theme.layout.headerHeight} + 72px);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
   min-width: 0;
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radius.lg};
+  background: ${({ theme }) => theme.colors.surface};
+
+  ${mobile} {
+    grid-template-rows: none;
+  }
 `
