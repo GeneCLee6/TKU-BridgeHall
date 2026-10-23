@@ -5,14 +5,15 @@
 | 位置 | 職責 | 禁止 |
 | --- | --- | --- |
 | `src/content/` | 只有資料，符合 `types/convention.ts` | 任何 React 或 import 元件 |
-| `src/lib/` | 純函式（叫品解析、走訪、搜尋） | React、DOM、狀態 |
-| `src/state/` | 展開狀態與偏好設定 | 繪製內容 |
-| `src/components/` | 展示與互動 | 直接 import 內容檔（內容由 props 傳入） |
+| `src/lib/` | 純函式（叫品解析、走訪、搜尋、內容檢查、編輯器轉換、讀 Word 檔）；`api.ts` 是唯一呼叫網路的地方 | React、狀態 |
+| `src/state/` | 展開狀態、偏好設定、帳號、線上內容 | 繪製內容 |
+| `src/components/` | 展示與互動 | 直接 import 內容檔或呼叫 API（內容與動作由 props 傳入） |
 | `src/pages/` | 組合：取內容、接路由、接狀態 | 樣式細節 |
 
 - **開放封閉**：新增特約只改 `content/`；新增區塊種類才需要改 `types` 與 `BlockView`。
 - **DRY**：顏色與間距只在 `styles/tokens.ts`；叫品與花色只透過 `CallLabel`／`Suit`／`RichText` 繪製；介面文字只在 `strings.ts`。
-- **KISS**：不用狀態管理函式庫、不用 Markdown 解析器、不做執行期載入內容。
+- **KISS**：不用狀態管理函式庫、不用 Markdown 解析器。執行期只載入一份「線上修改」疊在打包的內容上（ARCHITECTURE.md §4.1），不另做內容系統。
+- **線上內容不可信**：伺服器只檢查形狀；任何從 API 來的特約都先經過 `conventionProblems` 才顯示。
 
 ## 2. 程式風格
 

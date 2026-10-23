@@ -33,6 +33,15 @@
 
 內容逐字轉錄自原始文件；原文有疑義之處在網站上以「待確認」標示，清單見 [`CONTENT_GUIDE.md`](CONTENT_GUIDE.md#目前的待確認清單)。
 
+## 帳號、線上編輯與匯入
+
+- **帳號與淡江牌桌共用**：在任一邊註冊（需要邀請碼，管理員核准後才能登入），兩個網站都用同一組帳號登入。登入頁可以顯示／隱藏密碼，也能用「忘記密碼」以帳號＋邀請碼重設。閱讀橋譜不需要登入。
+- **權限**：管理員在「社團管理」核准申請，並開給社員「線上編輯」或「匯入檔案」權限。
+- **線上編輯**：有權限的人在卡片上按鉛筆就能修改，或新增特約；有即時預覽、版本紀錄、還原與衝突提醒。
+- **匯入檔案**：把 .doc／.docx／.pdf 交給 AI（Claude），照網站格式整理出標題、子標題與各段內容並歸到合適的分類，在編輯器確認後發布。
+
+使用說明見 [`CONTENT_GUIDE.md`](CONTENT_GUIDE.md) 第 6 節，架構見 `ARCHITECTURE.md` §4.1–4.4。
+
 ## 文件
 
 | 文件 | 內容 |
@@ -61,12 +70,14 @@
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5174
 ```
+
+登入、編輯、匯入要有後端：在 `TKU-BridgeTable` 執行 `npm run dev`（http://localhost:5173），本站的 `/api` 會自動轉過去；後端在別的網址時設 `TABLE_URL`（例如 `TABLE_URL=http://localhost:5377 npm run dev`）。只看內容不需要後端。
 
 | 指令 | 說明 |
 | --- | --- |
-| `npm run dev` | 開發伺服器（熱更新），預設 http://localhost:5173 |
+| `npm run dev` | 開發伺服器（熱更新），預設 http://localhost:5174 |
 | `npm run build` | 型別檢查並建置到 `dist/` |
 | `npm run preview` | 預覽建置結果，預設 http://localhost:4173 |
 | `npm run typecheck` | 只做型別檢查 |

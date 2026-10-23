@@ -10,31 +10,36 @@ import { LogoMark } from './Logo.tsx'
 import { SearchBar } from './SearchBar.tsx'
 
 /**
- * Desktop: brand, search and the view actions. Mobile: menu button, logo mark and search only;
- * the view actions move into the menu drawer (HandbookPage passes `actions` only on desktop).
+ * Desktop: brand, search, the view actions and the account menu. Mobile: menu button, logo mark,
+ * search and the account menu; the view actions move into the menu drawer (HandbookPage passes
+ * `actions` only on desktop). Pages other than the handbook leave out the search and the menu.
  */
 export function AppHeader({
   search,
-  menuOpen,
+  menuOpen = false,
   onToggleMenu,
   actions,
+  account,
 }: {
-  search: SearchFn
-  menuOpen: boolean
-  onToggleMenu: () => void
+  search?: SearchFn
+  menuOpen?: boolean
+  onToggleMenu?: () => void
   actions?: ReactNode
+  account?: ReactNode
 }) {
   return (
     <Bar data-print="hide">
-      <MenuButton
-        type="button"
-        onClick={onToggleMenu}
-        aria-expanded={menuOpen}
-        aria-controls="catalogue"
-        aria-label={menuOpen ? strings.closeMenu : strings.openMenu}
-      >
-        {menuOpen ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
-      </MenuButton>
+      {onToggleMenu && (
+        <MenuButton
+          type="button"
+          onClick={onToggleMenu}
+          aria-expanded={menuOpen}
+          aria-controls="catalogue"
+          aria-label={menuOpen ? strings.closeMenu : strings.openMenu}
+        >
+          {menuOpen ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
+        </MenuButton>
+      )}
       <Brand to="/" aria-label={`${strings.appNameEn} ${strings.appNameZh} 首頁`}>
         <LogoMark size={40} />
         <BrandText>
@@ -45,11 +50,16 @@ export function AppHeader({
           </span>
         </BrandText>
       </Brand>
-      <SearchBar search={search} />
+      {search ? <SearchBar search={search} /> : <Spacer />}
       {actions}
+      {account}
     </Bar>
   )
 }
+
+const Spacer = styled.span`
+  flex: 1;
+`
 
 const Bar = styled.header`
   position: sticky;
