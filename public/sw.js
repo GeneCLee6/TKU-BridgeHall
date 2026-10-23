@@ -1,8 +1,10 @@
 // TKU BridgeBook service worker: lets phones install the handbook as an app and read it offline.
 // Pages come from the network when it is there (so new content shows at once) and from the cache
-// when it is not; built files, whose names change with every build, come from the cache.
+// when it is not; built files, whose names change with every build, come from the cache. The
+// content edited online (/api/book/content) is kept the same way as pages; no other /api call is
+// ever cached, since those belong to a signed-in member.
 
-const CACHE = 'tku-bridge-book-v1'
+const CACHE = 'tku-bridge-book-v2'
 const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/favicon.svg']
 
 self.addEventListener('install', (event) => {
@@ -42,6 +44,14 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then((response) => keep('/', response))
         .catch(() => caches.match('/')),
+    )
+    return
+  }
+  if (url.pathname === '/api/book/content') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => keep(request, response))
+        .catch(() => caches.match(request).then((hit) => hit || Response.error())),
     )
     return
   }

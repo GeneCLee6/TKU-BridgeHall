@@ -2,7 +2,12 @@
 
 ## 1. 總覽
 
-純前端的靜態網站。內容是 TypeScript 資料檔，建置時打包進 bundle；沒有後端、資料庫或 API。
+靜態網站（Vercel）。內容是 TypeScript 資料檔，建置時打包進 bundle；社員在網站上的修改存在姊妹站**淡江牌桌**的 Worker，開頁面時疊在打包的內容上（§4.1）。帳號也是淡江牌桌的：`vercel.json` 把 `/api/*` 轉給它，所以 cookie 屬於本站（§4.2）。
+
+```
+瀏覽器 ──/api/*──► Vercel rewrite ──► 淡江牌桌 Worker（帳號、線上內容、版本、匯入）
+   └──── 匯入上傳（一次性憑證，直接連 Worker）────┘
+```
 
 ```
 content/*.ts ──► content/index.ts（登記）──► HandbookPage
@@ -19,15 +24,17 @@ content/*.ts ──► content/index.ts（登記）──► HandbookPage
 TKU-BridgeBook/
 ├─ public/                  logo.svg、logo-mark.svg、favicon.svg
 ├─ src/
+│  ├─ components/editor/    線上編輯器的段落樹、表單、各種區塊、預覽、版本紀錄
 │  ├─ content/
 │  │  ├─ conventions/       每個特約一個檔案（lebensohl.ts、defense-vs-unusual-2nt.ts）
 │  │  ├─ categories.ts      分類與顯示順序
 │  │  └─ index.ts           特約登記表
 │  ├─ types/convention.ts   內容模型（唯一的 schema）
-│  ├─ lib/                  純函式：calls（叫品解析）、sections（走訪、key、深層連結）、search
-│  ├─ state/                ExpansionContext（展開狀態）、PreferencesContext（主題）
+│  ├─ lib/                  calls（叫品解析）、sections（走訪、key、深層連結）、search、content（線上內容合併與檢查）、
+│  │                        editing（編輯器的樹與文字轉換）、docText（讀 .doc/.docx）、importResult、sse、api（唯一有網路的模組）
+│  ├─ state/                ExpansionContext（展開狀態）、PreferencesContext（主題）、AuthContext（帳號）、ContentContext（線上內容）
 │  ├─ components/           展示元件
-│  ├─ pages/HandbookPage.tsx
+│  ├─ pages/                HandbookPage、LoginPage、AccountPage、AdminPage、EditorPage、ImportPage、Frame（頁首與權限閘門）
 │  ├─ styles/               tokens、GlobalStyle、styled-components 型別
 │  ├─ strings.ts            所有介面文字
 │  ├─ App.tsx、main.tsx
@@ -88,7 +95,14 @@ interface Convention {
 | `/` | 全部特約，皆收合 |
 | `/c/:slug` | 展開該特約並捲動到卡片 |
 | `/c/:slug/:sectionId` | 展開特約與該段落的所有祖先段落，捲動並聚焦到段落標題 |
+| `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
+| `/account` | 我的帳號：權限、修改密碼 |
+| `/admin` | 社團管理（管理員）：待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限 |
+| `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約 |
+| `/import` | 匯入檔案（bookImport） |
 | 其他 | 顯示首頁；找不到的 slug／段落顯示提示 |
+
+管理、編輯、匯入三頁用 `React.lazy` 分開打包，讀者不會下載。
 
 整本手冊永遠在同一頁（Swagger 式），路由只決定「要打開哪裡」。
 
@@ -99,7 +113,32 @@ interface Convention {
 - `useMediaQuery(mobileQuery)`：決定 ViewActions 放在頁首（桌機）或選單抽屜（手機），同一時間只渲染一組。
 - 不使用狀態管理函式庫；兩個 Context 就夠了。
 
-**內容載入**：所有特約在 `content/index.ts` 靜態 import，打包進 bundle。內容量很小（兩個特約約 15 kB 原始碼），不需要分割或動態載入。特約數量成長到數十個時，可改成 `import.meta.glob` 自動登記並依特約 lazy load。
+**內容載入**：所有特約在 `content/index.ts` 靜態 import，打包進 bundle。線上的修改見 §4.1。
+
+### 4.1 線上修改的內容（`ContentContext`、`lib/content.ts`）
+
+- 每個特約在伺服器最多一筆「線上版本」（`BookEntry`）：取代同 slug 的內建特約、新增一個特約，或 `convention: null` 隱藏它。`mergeContent` 依內建順序替換，新增的排在後面（依建立時間）。
+- 開頁面時先顯示內建內容（或這台裝置上次看到的線上內容，存在 localStorage），再抓 `GET /api/book/content`；抓不到就維持現狀並顯示離線提示。Service worker 對這支 API 走「先網路、離線用快取」，其他 `/api` 一律不快取。
+- 線上內容在顯示前用 `conventionProblems` 檢查形狀，壞掉的略過（編輯者會看到提示），不會讓頁面掛掉。
+- **線上版本優先**：某個特約在網站上改過之後，再改它的 `.ts` 檔不會顯示出來，要在編輯器的版本紀錄按「還原為網站內建的版本」，或把線上內容寫回 `.ts` 檔後再還原。`BookEntry.bundledUpdated` 記著第一次線上修改時內建版本的 `updated` 日期。
+
+### 4.2 帳號與權限（`AuthContext`、`lib/api.ts`）
+
+帳號在淡江牌桌（`TKU-BridgeTable` ARCHITECTURE.md §5.2）：註冊送出申請、管理員核准；忘記密碼用帳號＋邀請碼重設（管理員除外）。`Me.permissions`：`bookEdit`（線上編輯）、`bookImport`（匯入檔案），管理員兩者都有。閱讀不需要登入。`api.ts` 的型別要和牌桌的 `shared/protocol.ts`、`worker/book.ts` 一致。
+
+### 4.3 線上編輯器（`pages/EditorPage.tsx`、`components/editor/`、`lib/editing.ts`）
+
+- 左邊段落樹、中間表單、右邊預覽（寬螢幕；窄螢幕用切換）。預覽用自己的 `ExpansionProvider`，全部展開。
+- 條列以縮排文字編輯（`rulesToText`／`textToRules`，行尾〔待確認：…〕），叫牌過程是四欄格子（`2C（註記）`），叫品表可整批貼上「2H=P/C」。這些轉換對所有內建特約都能來回不變（`tests/lib/editing.test.ts`）。
+- 儲存前 `tidyConvention` 去掉空欄位與空區塊，`conventionProblems` 擋下格式錯誤，`conventionWarnings` 提醒（看不懂的叫品、沒換成符號的花色字母）。
+- 儲存帶 `baseVersion`（開始編輯時的版本），別人先存了會得到 409，可以載入對方的版本或覆蓋（對方的版本留在版本紀錄）。未儲存的修改存在這台裝置的 localStorage，離開前會提醒。
+
+### 4.4 匯入檔案（`pages/ImportPage.tsx`、`lib/docText.ts`、`lib/sse.ts`、`lib/importResult.ts`）
+
+1. 在瀏覽器讀檔：`.doc` 用 `cfb` 讀 OLE 檔，再照 piece table 取出文字（粗體 `**…**`、表格 `| … |`、Symbol 字型的花色換成 ♠♥♦♣）；`.docx` 解 XML（標題 `#`、條列 `-`）；PDF 原檔上傳。
+2. 跟 `/api/book/import/ticket` 拿一次性憑證，把檔案或文字、目前的特約目錄、分類、補充說明以 multipart 直接傳給 Worker（Vercel 轉發最多等 120 秒，長文件要好幾分鐘）。
+3. Worker 原封不動回傳 Claude 的 SSE 串流；`sse.ts` 收集文字（refusal fallback 時會有第二個文字區塊，照樣接起來）。
+4. 回覆是扁平的 JSON（段落用 `parentId`、條列用 `level`），`importResult.ts` 組回 `Convention`，存成伺服器上的草稿，再到編輯器檢查、儲存。**schema 定義在牌桌的 `worker/importer.ts`，兩邊要一起改。**`tests/lib/importResult.test.ts` 把每個內建特約轉成扁平格式再還原，結果必須完全相同。
 
 **搜尋**：`lib/search.ts` 為每個特約與每個段落各建一筆紀錄（名稱、別名、標籤、叫品、內文），以 Fuse.js 搜尋（`ignoreLocation`、threshold 0.3）。所有文字與查詢都先經過 `toAsciiSuits`，因此「2♦」與「2D」結果相同。
 

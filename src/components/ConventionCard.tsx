@@ -1,5 +1,5 @@
 import * as Accordion from '@radix-ui/react-accordion'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Pencil } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import {
@@ -13,14 +13,25 @@ import {
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
 import type { Convention } from '../types/convention.ts'
-import { CopyLinkButton } from './CopyLinkButton.tsx'
+import { CopyLinkButton, IconButton } from './CopyLinkButton.tsx'
 import { Badge } from './PendingNote.tsx'
 import { SectionAccordion } from './SectionAccordion.tsx'
 import { RichText } from './Suit.tsx'
 import { Tag, TagList } from './Tag.tsx'
 
-/** A Swagger-style operation block: one convention, collapsed to its name, tags and summary */
-export function ConventionCard({ convention }: { convention: Convention }) {
+/**
+ * A Swagger-style operation block: one convention, collapsed to its name, tags and summary.
+ * `editPath` adds an edit button for members who may edit; `online` notes who changed it online.
+ */
+export function ConventionCard({
+  convention,
+  editPath,
+  online,
+}: {
+  convention: Convention
+  editPath?: string
+  online?: string
+}) {
   const { openAmong, setLevel, open, close } = useExpansion()
   const key = conventionKey(convention.slug)
   const pending = pendingNotes(convention)
@@ -41,6 +52,11 @@ export function ConventionCard({ convention }: { convention: Convention }) {
                 <NameEn lang="en">{convention.nameEn}</NameEn>
               </Names>
             </Trigger>
+            {editPath && (
+              <EditLink as={Link} to={editPath} aria-label={strings.online.edit(convention.nameZh)} title={strings.online.edit(convention.nameZh)} data-print="hide">
+                <Pencil size={16} aria-hidden />
+              </EditLink>
+            )}
             <CopyLinkButton path={conventionPath(convention.slug)} label={convention.nameZh} />
           </Header>
         </Accordion.Header>
@@ -78,6 +94,7 @@ export function ConventionCard({ convention }: { convention: Convention }) {
             {strings.source}：{convention.source.title}
             {convention.source.note && `（${convention.source.note}）`}・{strings.updated}：
             {convention.updated}
+            {online && `・${online}`}
           </Source>
         </Body>
       </Card>
@@ -104,6 +121,10 @@ const Header = styled.h2`
   padding-right: ${({ theme }) => theme.space(3)};
   background: ${({ theme }) => theme.colors.primarySoft};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+`
+
+const EditLink = styled(IconButton)`
+  text-decoration: none;
 `
 
 const Chevron = styled(ChevronRight)`

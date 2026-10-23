@@ -15,9 +15,20 @@ const appVersion = (): Plugin => ({
   ],
 })
 
+// Accounts and online content live in TKU BridgeTable's Worker. In production vercel.json
+// forwards /api there; in development this proxy does the same, to a local BridgeTable
+// (`npm run dev` in TKU-BridgeTable) unless TABLE_URL points elsewhere.
+const tableUrl = process.env.TABLE_URL ?? 'http://localhost:5173'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), appVersion()],
+  server: {
+    // 5173 is TKU BridgeTable's dev server
+    port: 5174,
+    proxy: { '/api': { target: tableUrl, changeOrigin: true } },
+  },
+  preview: { proxy: { '/api': { target: tableUrl, changeOrigin: true } } },
   test: {
     environment: 'jsdom',
     globals: true,

@@ -1,11 +1,14 @@
+import { FilePlus2, FileUp } from 'lucide-react'
 import { startTransition, useEffect, useMemo, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { AppHeader } from '../components/AppHeader.tsx'
 import { ConventionCard } from '../components/ConventionCard.tsx'
 import { Sidebar } from '../components/Sidebar.tsx'
 import { ViewActions } from '../components/ViewActions.tsx'
-import { categories, conventionBySlug, conventions, references } from '../content/index.ts'
+import { Button } from '../components/ui.tsx'
+import { categories, references } from '../content/index.ts'
+import { formatDateTime } from '../lib/format.ts'
 import { createSearch } from '../lib/search.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import {
@@ -16,15 +19,21 @@ import {
   sectionDomId,
   sectionKey,
 } from '../lib/sections.ts'
+import { useAuth } from '../state/AuthContext.tsx'
+import { useContent } from '../state/ContentContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile, mobileQuery } from '../styles/tokens.ts'
+import { AccountCorner } from './Frame.tsx'
 
 /**
  * The whole handbook on one page, Swagger style. The route only decides what to open and scroll
  * to: /c/:slug opens a convention, /c/:slug/:sectionId opens the path down to that section.
+ * The conventions are the bundled ones with the online changes laid over them (ContentContext).
  */
 export function HandbookPage() {
+  const { conventions, bySlug: conventionBySlug, online, status, skipped } = useContent()
+  const { can } = useAuth()
   const { slug, sectionId } = useParams()
   const [searchParams] = useSearchParams()
   const pendingIndex = searchParams.get('pending')
@@ -34,7 +43,13 @@ export function HandbookPage() {
   const expandAll = () => startTransition(() => open(conventions.flatMap(allKeys)))
   const collapseAll = () => startTransition(closeAll)
   const [menuOpen, setMenuOpen] = useState(false)
-  const search = useMemo(() => createSearch(conventions), [])
+  const search = useMemo(() => createSearch(conventions), [conventions])
+  const canEdit = can('bookEdit')
+  const onlineNote = (s: string) => {
+    const info = online.get(s)
+    if (!info || info.hidden) return undefined
+    return (info.added ? strings.online.added : strings.online.edited)(info.updatedBy, formatDateTime(info.updatedAt))
+  }
   const isMobile = useMediaQuery(mobileQuery)
 
   const convention = slug ? conventionBySlug(slug) : undefined
@@ -72,7 +87,7 @@ export function HandbookPage() {
       )
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [slug, sectionId, pendingIndex, open])
+  }, [slug, sectionId, pendingIndex, open, conventionBySlug])
 
   return (
     <>
@@ -86,6 +101,7 @@ export function HandbookPage() {
             <ViewActions variant="bar" onExpandAll={expandAll} onCollapseAll={collapseAll} />
           )
         }
+        account={<AccountCorner />}
       />
       <Layout>
         <Sidebar
@@ -117,7 +133,25 @@ export function HandbookPage() {
               {strings.appNameZh} <span lang="en">{strings.appNameEn}</span>
             </h1>
             <p>{strings.tagline}。點開特約查看答叫原則與叫牌範例，每個段落都有可分享的連結。</p>
+            {(canEdit || can('bookImport')) && (
+              <EditorBar data-print="hide">
+                {canEdit && (
+                  <Button as={Link} to="/new" $small>
+                    <FilePlus2 size={16} aria-hidden />
+                    {strings.account.newConvention}
+                  </Button>
+                )}
+                {can('bookImport') && (
+                  <Button as={Link} to="/import" $small>
+                    <FileUp size={16} aria-hidden />
+                    {strings.account.importFiles}
+                  </Button>
+                )}
+              </EditorBar>
+            )}
           </Intro>
+          {status === 'offline' && <Status role="status">{strings.online.offline}</Status>}
+          {canEdit && skipped.length > 0 && <Status role="status">{strings.online.skipped(skipped.length)}</Status>}
           {notFound && <NotFound role="alert">{strings.notFound}</NotFound>}
           {categories.map((category) => {
             const items = conventions.filter((c) => c.category === category.id)
@@ -129,7 +163,12 @@ export function HandbookPage() {
                   <small>{category.description}</small>
                 </GroupHeading>
                 {items.map((c) => (
-                  <ConventionCard key={c.slug} convention={c} />
+                  <ConventionCard
+                    key={c.slug}
+                    convention={c}
+                    editPath={canEdit ? `/edit/${c.slug}` : undefined}
+                    online={onlineNote(c.slug)}
+                  />
                 ))}
               </Group>
             )
@@ -198,6 +237,21 @@ const Intro = styled.div`
     margin: ${({ theme }) => theme.space(1)} 0 0;
     color: ${({ theme }) => theme.colors.textMuted};
   }
+`
+
+const EditorBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.space(2)};
+  margin-top: ${({ theme }) => theme.space(3)};
+`
+
+const Status = styled.p`
+  margin: 0 0 ${({ theme }) => theme.space(4)};
+  padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
+  border-radius: ${({ theme }) => theme.radius.sm};
+  background: ${({ theme }) => theme.colors.pendingBg};
+  color: ${({ theme }) => theme.colors.pendingText};
 `
 
 const NotFound = styled.p`
