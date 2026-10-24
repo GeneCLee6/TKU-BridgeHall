@@ -13,7 +13,8 @@
 | 新增或修改特約內容 | `CONTENT_GUIDE.md` |
 | 改介面、顏色、元件 | `DESIGN.md` |
 | 改資料模型、路由、搜尋、線上內容、帳號、編輯器、匯入 | `ARCHITECTURE.md` |
-| 產品範圍與 Roadmap | `PRD.md` |
+| 產品範圍與 Roadmap | `docs/PRD/00-prd.md`（總 PRD）、`docs/PRD/e*.md`（epic 與 task）、`docs/ROADMAP.md`（批次順序）、`docs/NEXT.md`（現在的位置與開工規則） |
+| 介面 v2（E9）| `docs/DESIGN-V2.md` 與視覺稿 `docs/design/mockup-v2.html`；核准前 `DESIGN.md` 仍是現行樣式 |
 
 ## 硬性規則
 
@@ -40,7 +41,7 @@
 ## 指令
 
 ```bash
-npm run dev        # http://localhost:5174；/api 轉給 TABLE_URL（預設 http://localhost:5173，也就是本機的淡江牌桌）
+npm run dev        # http://localhost:5174（牌桌是 5173）；/api 轉給 TABLE_URL（預設 http://localhost:5173，也就是本機的淡江牌桌）
 npm run build      # tsc -b + vite build
 npm run lint       # oxlint
 npm test           # vitest run

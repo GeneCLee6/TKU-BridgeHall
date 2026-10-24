@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>淡江橋館 設計提案</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: a neutral review shell around one live demo. Six styles (token sets), four layouts (page shells),
+   desktop/phone, light/dark; the same choices the real site will expose in 個人設定. */
+:root {
+  --pg-bg: #f2f1ee; --pg-fg: #1d1c1a; --pg-muted: #6b6762; --pg-line: #d9d6d0; --pg-card: #fbfaf8;
+  --pg-accent: #2b2f6b; --pg-accent-soft: #e6e7f3; --pg-on-accent: #fff;
+  --sans: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
+  --serif: 'Noto Serif TC', 'Songti TC', 'PMingLiU', serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --pg-bg: #15151a; --pg-fg: #e7e5e0; --pg-muted: #a39f98; --pg-line: #33323a; --pg-card: #1e1e25;
+  --pg-accent: #aab0ff; --pg-accent-soft: #272a4a; --pg-on-accent: #15151a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --pg-bg: #15151a; --pg-fg: #e7e5e0; --pg-muted: #a39f98; --pg-line: #33323a; --pg-card: #1e1e25;
+  --pg-accent: #aab0ff; --pg-accent-soft: #272a4a; --pg-on-accent: #15151a; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { margin: 0; background: var(--pg-bg); color: var(--pg-fg); font-family: var(--sans); font-size: 16px; line-height: 1.7;
+  padding-block: 0 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--pg-bg) }
+.wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: 48px }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.25 }
+h1 { font-size: 2.25rem; font-weight: 700 }
+h2 { font-size: 1.5rem; font-weight: 700 }
+h3 { font-size: 1.0625rem; font-weight: 700 }
+p { margin: 0 }
+a { color: var(--pg-accent) }
+:focus-visible { outline: 3px solid var(--pg-accent); outline-offset: 2px }
+.eyebrow { font-size: .8125rem; letter-spacing: .06em; text-transform: uppercase; color: var(--pg-muted) }
+.lede { max-width: 66ch; color: var(--pg-muted); font-size: 1.0625rem }
+.hero { padding-top: 48px; display: grid; gap: 14px }
+.section { display: grid; gap: 18px }
+.note { color: var(--pg-muted); font-size: .9375rem; max-width: 72ch }
+code { font-size: .875em }
+
+/* Control bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--pg-card); border: 1px solid var(--pg-line); border-radius: 12px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center }
+.grp { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.grp > span.lbl { font-size: .8125rem; color: var(--pg-muted); font-weight: 500 }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--pg-line); border-radius: 999px; padding: 2px; background: var(--pg-bg) }
+.seg button { border: 0; background: transparent; color: var(--pg-fg); font: inherit; font-size: .875rem; padding: 4px 12px; border-radius: 999px; cursor: pointer }
+.seg button[aria-pressed="true"] { background: var(--pg-accent); color: var(--pg-on-accent) }
+
+/* ===== Demo styles (token sets) ===== */
+.demo {
+  /* 一般: today's tokens, radius unchanged */
+  --d-bg: #f4f6fa; --d-surface: #ffffff; --d-alt: #eef2f8; --d-line: #d5dce8; --d-ink: #1a2233; --d-muted: #4f5a70;
+  --d-primary: #0f3d7a; --d-primary-strong: #0a2b57; --d-soft: #e3ecf8; --d-on-primary: #fff; --d-accent: #d9a330; --d-seal: #b8321f; --d-struct: #0f3d7a;
+  --d-sS: #1a2233; --d-sH: #c8102e; --d-sD: #b34700; --d-sC: #1b7a33;
+  --d-head: var(--sans); --d-body: var(--sans); --d-head-weight: 700;
+  --d-radius: 14px; --d-radius-sm: 6px; --d-line-w: 1px; --d-line-style: solid; --d-shadow: 0 1px 2px rgba(15,40,80,.06), 0 2px 8px rgba(15,40,80,.06);
+  --d-card-head: var(--d-soft); --d-sec-rail: var(--d-primary); --d-sec-rail-w: 3px; --d-tag-bg: transparent; --d-tag-line: var(--d-line); --d-pill: 999px;
+  --d-blur: none; --d-table-line: var(--d-line); --d-table-head: var(--d-alt); --d-body-size: 1rem; --d-lh: 1.7;
+}
+.demo[data-style="normal"][data-mode="dark"] {
+  --d-bg: #0d1320; --d-surface: #151d2c; --d-alt: #1c2637; --d-line: #2c3850; --d-ink: #e6ebf3; --d-muted: #a3afc4;
+  --d-primary: #8db8ff; --d-primary-strong: #b5d0ff; --d-soft: #1b2c4a; --d-on-primary: #0d1320; --d-accent: #e7b850; --d-seal: #ff8a70; --d-struct: #8db8ff;
+  --d-sS: #e6ebf3; --d-sH: #ff6b6b; --d-sD: #ffa04d; --d-sC: #5fd27a; --d-shadow: 0 1px 2px rgba(0,0,0,.4) }
+
+/* 中國風: 宣紙、墨、朱紅、青花、金；雙線框、中文數字章節 */
+.demo[data-style="chinese"] {
+  --d-bg: #efe4cc; --d-surface: #f9f1dd; --d-alt: #ecdfc2; --d-line: #c9b282; --d-ink: #241e19; --d-muted: #6d5e4a;
+  --d-primary: #b5261e; --d-primary-strong: #241e19; --d-soft: #f4dccb; --d-on-primary: #fff6e6; --d-accent: #c9a227; --d-seal: #a0251a; --d-struct: #1f4e8c;
+  --d-sS: #241e19; --d-sH: #c8102e; --d-sD: #b34700; --d-sC: #1b6b3a;
+  --d-head: var(--serif); --d-head-weight: 700; --d-radius: 2px; --d-radius-sm: 2px; --d-line-w: 1px; --d-shadow: none;
+  --d-card-head: transparent; --d-sec-rail: #1f4e8c; --d-sec-rail-w: 2px; --d-tag-bg: transparent; --d-tag-line: #b5261e; --d-pill: 2px; --d-table-head: #ecdfc2 }
+.demo[data-style="chinese"][data-mode="dark"] {
+  --d-bg: #1a1512; --d-surface: #241d18; --d-alt: #2e261f; --d-line: #5a4a33; --d-ink: #efe3c9; --d-muted: #b8a68a;
+  --d-primary: #e2574a; --d-primary-strong: #efe3c9; --d-soft: #3d231d; --d-on-primary: #1a1512; --d-accent: #d8b64a; --d-seal: #ff8f7a; --d-struct: #8fb0e8;
+  --d-sS: #efe3c9; --d-sH: #ff6b6b; --d-sD: #ffa04d; --d-sC: #5fd27a; --d-sec-rail: #8fb0e8 }
+
+/* 圓潤: 湖水青、芒果、奶油；大圓角、無框、浮起 */
+.demo[data-style="soft"] {
+  --d-bg: #f3f7f6; --d-surface: #ffffff; --d-alt: #e7f2f0; --d-line: #dfe8e6; --d-ink: #1e2a28; --d-muted: #5f716d;
+  --d-primary: #1f8a8a; --d-primary-strong: #176868; --d-soft: #dcf1ee; --d-on-primary: #fff; --d-accent: #f4a259; --d-seal: #e0663f; --d-struct: #1f8a8a;
+  --d-sS: #1e2a28; --d-sH: #e5484d; --d-sD: #f08c2a; --d-sC: #2f9e62;
+  --d-radius: 22px; --d-radius-sm: 12px; --d-line-w: 0px; --d-shadow: 0 2px 6px rgba(30,42,40,.05), 0 14px 36px rgba(30,42,40,.09);
+  --d-card-head: transparent; --d-sec-rail: transparent; --d-sec-rail-w: 0px; --d-tag-bg: var(--d-alt); --d-tag-line: transparent; --d-table-line: var(--d-alt); --d-table-head: var(--d-alt) }
+.demo[data-style="soft"][data-mode="dark"] {
+  --d-bg: #121a19; --d-surface: #1a2524; --d-alt: #223130; --d-line: #2f403e; --d-ink: #e6f0ee; --d-muted: #9fb4b0;
+  --d-primary: #5fc9c4; --d-primary-strong: #8fe0dc; --d-soft: #1f3b39; --d-on-primary: #121a19; --d-accent: #f6b26b; --d-seal: #ff8f6e;
+  --d-sS: #e6f0ee; --d-sH: #ff7b80; --d-sD: #ffa65a; --d-sC: #5fd27a; --d-shadow: 0 2px 6px rgba(0,0,0,.3), 0 14px 36px rgba(0,0,0,.4) }
+
+/* 夜讀: 石墨與琥珀、玻璃面板，深色優先 */
+.demo[data-style="night"] {
+  --d-bg: #e6e8ec; --d-surface: #f4f5f7; --d-alt: #dcdfe5; --d-line: #c6cad3; --d-ink: #15171c; --d-muted: #5a6070;
+  --d-primary: #a66a12; --d-primary-strong: #15171c; --d-soft: #f3e4c6; --d-on-primary: #fff; --d-accent: #a66a12; --d-seal: #b7322c; --d-struct: #a66a12;
+  --d-sS: #15171c; --d-sH: #d62839; --d-sD: #e07a1f; --d-sC: #2e8b57;
+  --d-radius: 12px; --d-radius-sm: 8px; --d-line-w: 1px; --d-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 8px 24px rgba(0,0,0,.08);
+  --d-card-head: transparent; --d-sec-rail: var(--d-primary); --d-sec-rail-w: 2px; --d-tag-bg: var(--d-alt); --d-tag-line: transparent; --d-blur: blur(12px); --d-table-head: var(--d-alt) }
+.demo[data-style="night"][data-mode="dark"] {
+  --d-bg: #0e1014; --d-surface: rgba(28,31,38,.85); --d-alt: rgba(255,255,255,.05); --d-line: rgba(255,255,255,.1); --d-ink: #e8e6e1; --d-muted: #9a9ca6;
+  --d-primary: #f2b35c; --d-primary-strong: #ffd38a; --d-soft: rgba(242,179,92,.14); --d-on-primary: #0e1014; --d-accent: #f2b35c; --d-seal: #ff7b6b; --d-struct: #f2b35c;
+  --d-sS: #e8e6e1; --d-sH: #ff6b6b; --d-sD: #ffa04d; --d-sC: #5fd27a; --d-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 12px 32px rgba(0,0,0,.5) }
+
+/* 四色: 純白墨黑，四個花色當點綴；粗線、粗體、膠囊 */
+.demo[data-style="suits"] {
+  --d-bg: #ffffff; --d-surface: #ffffff; --d-alt: #f4f4f6; --d-line: #141416; --d-ink: #141416; --d-muted: #66666e;
+  --d-primary: #141416; --d-primary-strong: #141416; --d-soft: #ffe9eb; --d-on-primary: #fff; --d-accent: #e63946; --d-seal: #e63946; --d-struct: #e63946;
+  --d-sS: #141416; --d-sH: #e63946; --d-sD: #f4a261; --d-sC: #2a9d8f;
+  --d-head-weight: 800; --d-radius: 10px; --d-radius-sm: 8px; --d-line-w: 2px; --d-shadow: 4px 4px 0 #141416;
+  --d-card-head: transparent; --d-sec-rail: var(--d-accent); --d-sec-rail-w: 4px; --d-tag-bg: var(--d-alt); --d-tag-line: transparent; --d-table-line: #141416; --d-table-head: #fff3f4 }
+.demo[data-style="suits"][data-mode="dark"] {
+  --d-bg: #121214; --d-surface: #121214; --d-alt: #222226; --d-line: #f2f2f4; --d-ink: #f2f2f4; --d-muted: #a3a3ac;
+  --d-primary: #f2f2f4; --d-primary-strong: #fff; --d-soft: #3a2024; --d-on-primary: #121214; --d-accent: #ff6b76; --d-seal: #ff6b76; --d-struct: #ff6b76;
+  --d-sS: #f2f2f4; --d-sH: #ff6b76; --d-sD: #ffb070; --d-sC: #5ad1c2; --d-shadow: 4px 4px 0 #f2f2f4; --d-table-line: #f2f2f4; --d-table-head: #2a1e20 }
+
+/* 極簡: 黑白灰、細線、底線連結、密度高 */
+.demo[data-style="plain"] {
+  --d-bg: #ffffff; --d-surface: #ffffff; --d-alt: #f6f6f6; --d-line: #e2e2e2; --d-ink: #111111; --d-muted: #6f6f6f;
+  --d-primary: #111111; --d-primary-strong: #111111; --d-soft: #efefef; --d-on-primary: #fff; --d-accent: #111111; --d-seal: #c62828; --d-struct: #111111;
+  --d-sS: #111111; --d-sH: #c62828; --d-sD: #c62828; --d-sC: #111111;
+  --d-radius: 0px; --d-radius-sm: 0px; --d-line-w: 1px; --d-shadow: none; --d-head-weight: 600;
+  --d-card-head: transparent; --d-sec-rail: #111; --d-sec-rail-w: 1px; --d-tag-bg: transparent; --d-tag-line: #bbb; --d-pill: 0px; --d-table-line: #ccc; --d-table-head: #f6f6f6; --d-body-size: .9375rem; --d-lh: 1.55 }
+.demo[data-style="plain"][data-mode="dark"] {
+  --d-bg: #0c0c0c; --d-surface: #0c0c0c; --d-alt: #171717; --d-line: #2a2a2a; --d-ink: #ededed; --d-muted: #9a9a9a;
+  --d-primary: #ededed; --d-primary-strong: #fff; --d-soft: #202020; --d-on-primary: #0c0c0c; --d-accent: #ededed; --d-seal: #ff7b7b; --d-struct: #ededed;
+  --d-sS: #ededed; --d-sH: #ff7b7b; --d-sD: #ff7b7b; --d-sC: #ededed; --d-sec-rail: #ededed; --d-table-line: #333; --d-table-head: #171717 }
+
+.demo[data-radius-override] { --d-radius: var(--ov-radius); --d-radius-sm: calc(var(--ov-radius) * .5) }
+.demo[data-font="serif"] { --d-head: var(--serif); --d-head-weight: 600 }
+.demo[data-font="sans"] { --d-head: var(--sans); --d-head-weight: 700 }
+.demo[data-font="system"] { --d-head: system-ui, sans-serif; --d-body: system-ui, sans-serif }
+.demo[data-size="s"] { --d-body-size: .875rem } .demo[data-size="l"] { --d-body-size: 1.125rem } .demo[data-size="xl"] { --d-body-size: 1.25rem }
+.demo[data-suitcolors="two"] { --d-sD: var(--d-sH); --d-sC: var(--d-sS) }
+
+/* ===== Demo structure ===== */
+.demo { background: var(--d-bg); color: var(--d-ink); font-family: var(--d-body); font-size: var(--d-body-size); line-height: var(--d-lh); border: 1px solid var(--pg-line); border-radius: 14px; overflow: hidden; transition: background .25s, color .25s }
+.S { color: var(--d-sS) } .H { color: var(--d-sH) } .D { color: var(--d-sD) } .C { color: var(--d-sC) }
+.hd { font-family: var(--d-head); font-weight: var(--d-head-weight) }
+
+.d-header { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 18px; background: var(--d-surface); border-bottom: var(--d-line-w) solid var(--d-line); backdrop-filter: var(--d-blur) }
+.demo[data-style="soft"] .d-header { border-bottom: 1px solid var(--d-line) }
+.demo[data-style="chinese"] .d-header { border-bottom: 3px double var(--d-line) }
+.d-brand { display: flex; align-items: center; gap: 8px; font-family: var(--d-head); font-weight: var(--d-head-weight); font-size: 1.0625rem; color: var(--d-primary-strong) }
+.d-brand small { font-family: var(--d-body); font-weight: 500; font-size: .75rem; color: var(--d-muted) }
+.d-pill { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--d-line); border-radius: var(--d-pill); background: var(--d-surface); font-size: .8125rem; font-weight: 500; white-space: nowrap }
+.demo[data-style="chinese"] .d-pill { border-color: var(--d-primary); color: var(--d-primary) }
+.d-pill svg { width: 15px; height: 15px }
+.d-search { flex: 1; max-width: 20rem; height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: var(--d-radius-sm); background: var(--d-alt); color: var(--d-muted); font-size: .8125rem }
+.d-search svg { width: 15px; height: 15px }
+.d-icons { display: flex; gap: 4px; margin-left: auto }
+.d-icons span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--d-radius-sm); color: var(--d-muted) }
+.d-icons svg { width: 17px; height: 17px }
+.d-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--d-soft); color: var(--d-primary); display: grid; place-items: center; font-size: .75rem; font-weight: 700; margin-left: 4px }
+.demo:not([data-layout="whole"]) .d-icons { display: none }
+.demo[data-layout="whole"] .d-pill.profile { display: none }
+.demo:not([data-layout="whole"]) .d-avatar { margin-left: auto }
+.demo[data-layout="focus"] .d-search { display: none }
+.d-tabs { display: none; gap: 2px; padding: 0 18px; background: var(--d-surface); border-bottom: var(--d-line-w) solid var(--d-line); overflow-x: auto }
+.d-tabs span { padding: 10px 12px; font-size: .875rem; color: var(--d-muted); white-space: nowrap; border-bottom: 2px solid transparent }
+.d-tabs span.cur { color: var(--d-primary); border-bottom-color: var(--d-primary); font-weight: 600 }
+.demo[data-layout="grid"] .d-tabs { display: flex }
+
+.d-body { display: grid; min-height: 540px }
+.demo[data-layout="whole"] .d-body { grid-template-columns: 17rem minmax(0, 1fr) }
+.demo[data-layout="three"] .d-body { grid-template-columns: 17rem minmax(0, 1fr) 13rem }
+.demo[data-layout="focus"] .d-body { grid-template-columns: minmax(0, 1fr) }
+.demo[data-layout="grid"] .d-body { grid-template-columns: minmax(0, 1fr) 24rem }
+.d-toc { border-right: var(--d-line-w) solid var(--d-line); padding: 18px 14px; font-size: .875rem; display: grid; gap: 3px; align-content: start; background: var(--d-surface) }
+.demo[data-style="soft"] .d-toc { background: transparent; border-right: 0 }
+.demo[data-style="chinese"] .d-toc { border-right: 3px double var(--d-line) }
+.demo[data-style="night"] .d-toc, .demo[data-style="night"] .d-rail { backdrop-filter: var(--d-blur) }
+.demo[data-layout="focus"] .d-toc, .demo[data-layout="grid"] .d-toc { display: none }
+.d-toc h3 { font-size: .875rem; margin-bottom: 6px }
+.d-toc .cat { display: flex; align-items: center; gap: 6px; font-weight: 500; margin-top: 6px }
+.d-toc .cat svg { width: 14px; height: 14px; color: var(--d-muted) }
+.d-toc .item { padding: 3px 6px 3px 20px; color: var(--d-muted); border-radius: var(--d-radius-sm) }
+.d-toc .item.cur { color: var(--d-primary); background: var(--d-soft); font-weight: 500 }
+.d-toc .cnt { margin-left: auto; font-size: .75rem; color: var(--d-muted) }
+
+.d-main { padding: 24px 32px 32px; min-width: 0; display: grid; gap: 16px; align-content: start }
+.demo[data-layout="focus"] .d-main { max-width: 42rem; margin: 0 auto; width: 100%; --d-body-size: calc(var(--d-body-size) * 1.08); font-size: var(--d-body-size); line-height: calc(var(--d-lh) + .15); padding-top: 40px }
+.demo[data-layout="grid"] .d-main { padding: 20px 22px }
+.d-crumbs { font-size: .8125rem; color: var(--d-muted) }
+.d-crumbs span + span::before { content: ' › ' }
+.d-title { display: grid; gap: 4px; padding-bottom: 12px; border-bottom: var(--d-line-w) solid var(--d-line) }
+.demo[data-style="chinese"] .d-title { border-bottom: 1px solid var(--d-accent); position: relative }
+.demo[data-style="chinese"] .d-title::after { content: ''; position: absolute; left: 0; bottom: -4px; width: 100%; border-bottom: 1px solid var(--d-accent) }
+.demo[data-style="soft"] .d-title { border-bottom: 0 }
+.demo[data-layout="focus"] .d-title { text-align: center; border-bottom: 0 }
+.demo[data-layout="focus"] .d-title .d-meta { justify-content: center }
+.d-title h1 { font-family: var(--d-head); font-weight: var(--d-head-weight); font-size: 1.875rem; color: var(--d-primary-strong); line-height: 1.25 }
+.demo[data-layout="focus"] .d-title h1 { font-size: 2.25rem }
+.d-title .en { font-size: .9375rem; color: var(--d-muted); font-weight: 500 }
+.d-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .8125rem; color: var(--d-muted) }
+.d-tag { display: inline-block; padding: 0 8px; border: 1px solid var(--d-tag-line); background: var(--d-tag-bg); border-radius: var(--d-pill); color: var(--d-muted); font-size: .75rem; line-height: 1.7 }
+.demo[data-style="chinese"] .d-tag { color: var(--d-primary) }
+.d-level { display: inline-block; padding: 0 8px; border-radius: var(--d-pill); background: var(--d-soft); color: var(--d-primary); font-size: .75rem; font-weight: 600; line-height: 1.7 }
+.d-lede { color: var(--d-muted) }
+.d-sec { display: grid; gap: 8px; padding: 0 0 0 14px; border-left: var(--d-sec-rail-w) solid var(--d-sec-rail) }
+.demo[data-style="soft"] .d-sec { padding: 16px 18px; background: var(--d-surface); border-radius: var(--d-radius); box-shadow: var(--d-shadow) }
+.demo[data-style="night"] .d-sec { padding: 14px 16px; background: var(--d-surface); border: 1px solid var(--d-line); border-radius: var(--d-radius); border-left-width: 1px; box-shadow: var(--d-shadow) }
+.demo[data-style="chinese"] .d-sec { border-left: 0; padding: 12px 14px; border: 3px double var(--d-line); background: var(--d-surface) }
+.demo[data-style="suits"] .d-sec { border: 2px solid var(--d-line); border-left-width: 2px; padding: 12px 14px; border-radius: var(--d-radius); background: var(--d-surface); box-shadow: var(--d-shadow) }
+.demo[data-layout="focus"] .d-sec { border-left: 0; padding-left: 0 }
+.demo[data-layout="focus"][data-style="chinese"] .d-sec, .demo[data-layout="focus"][data-style="suits"] .d-sec { padding: 12px 14px }
+.d-sec h3 { font-family: var(--d-head); font-weight: var(--d-head-weight); font-size: 1.0625rem; display: flex; align-items: center; gap: 8px }
+.d-sec h3 .no { color: var(--d-struct); font-size: .875rem }
+.d-sec h3 .no .cn { display: none }
+.demo[data-style="chinese"] .d-sec h3 .no .ar { display: none } .demo[data-style="chinese"] .d-sec h3 .no .cn { display: inline; letter-spacing: .1em }
+.demo[data-style="chinese"] .d-sec h3 .no { color: var(--d-primary); border: 1px solid var(--d-primary); padding: 0 6px; font-size: .8125rem; line-height: 1.6 }
+.d-sec h3 .chev { margin-left: auto; width: 14px; height: 14px; color: var(--d-muted) }
+.d-sub { padding-left: 10px; border-left: 1px solid var(--d-line); display: grid; gap: 8px }
+.demo[data-layout="focus"] .d-sub { border-left: 0; padding-left: 0 }
+.d-sub h4 { margin: 0; font-size: .9375rem; font-weight: 600 }
+.d-auction { display: inline-grid; grid-template-columns: repeat(4, 3.6rem); background: var(--d-table-head); padding: 6px 10px; border-radius: var(--d-radius-sm); font-variant-numeric: tabular-nums; font-size: .875rem; text-align: center }
+.d-auction .seat { font-size: .6875rem; color: var(--d-muted) }
+.d-auction .q { color: var(--d-primary); font-weight: 700 }
+table.d-resp { border-collapse: collapse; width: 100%; font-size: .875rem; border-top: 1px solid var(--d-table-line); border-bottom: 1px solid var(--d-table-line) }
+.demo[data-style="soft"] table.d-resp { border-top: 0; border-bottom: 0 }
+table.d-resp td { padding: 5px 8px; vertical-align: top; border-top: 1px solid var(--d-table-line) }
+table.d-resp tr:first-child td { border-top: 0 }
+.demo[data-style="soft"] table.d-resp tr:nth-child(odd) td, .demo[data-style="plain"] table.d-resp tr:nth-child(odd) td { background: var(--d-alt) }
+.demo[data-style="soft"] table.d-resp td:first-child { border-radius: var(--d-radius-sm) 0 0 var(--d-radius-sm) }
+.demo[data-style="soft"] table.d-resp td:last-child { border-radius: 0 var(--d-radius-sm) var(--d-radius-sm) 0 }
+.demo[data-style="chinese"] table.d-resp { border-top: 2px solid var(--d-ink); border-bottom: 2px solid var(--d-ink) }
+.demo[data-style="suits"] table.d-resp td { border-top-width: 2px }
+table.d-resp td.call { width: 5rem; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap }
+table.d-resp td.ov { box-shadow: inset 2px 0 0 var(--d-primary) }
+table.d-resp td.ov small { color: var(--d-primary) }
+.d-seal { display: inline-block; padding: 0 6px; border: 1.5px solid var(--d-seal); border-radius: var(--d-radius-sm); color: var(--d-seal); font-size: .6875rem; font-weight: 700; line-height: 1.6 }
+.demo[data-style="chinese"] .d-seal { font-family: var(--serif); transform: rotate(-3deg); border-width: 2px; border-radius: 3px; background: rgba(160,37,26,.06) }
+.d-memo { background: var(--d-soft); padding: 8px 12px; border-radius: var(--d-radius-sm); font-size: .875rem }
+.d-memo b { display: block; font-size: .6875rem; color: var(--d-primary); font-weight: 600 }
+.d-rail { border-left: var(--d-line-w) solid var(--d-line); padding: 18px 14px; font-size: .8125rem; display: grid; gap: 12px; align-content: start; background: var(--d-surface) }
+.demo[data-style="soft"] .d-rail { background: transparent; border-left: 0 }
+.demo[data-style="chinese"] .d-rail { border-left: 3px double var(--d-line) }
+.demo:not([data-layout="three"]) .d-rail { display: none }
+.d-rail h3 { font-size: .875rem }
+.d-rail ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; color: var(--d-muted) }
+.d-rail li.cur { color: var(--d-ink); background: var(--d-soft); margin: 0 -6px; padding: 2px 6px; border-radius: var(--d-radius-sm) }
+.d-rail .links { display: grid; gap: 6px; padding-top: 8px; border-top: 1px solid var(--d-line) }
+.d-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: var(--d-radius-sm); border: 1px solid var(--d-line); background: var(--d-surface); color: var(--d-ink); font: inherit; font-size: .8125rem; font-weight: 500 }
+.d-btn.primary { background: var(--d-primary); border-color: var(--d-primary); color: var(--d-on-primary) }
+.demo[data-style="soft"] .d-btn, .demo[data-style="suits"] .d-btn { border-radius: var(--d-pill) }
+.d-btn svg { width: 15px; height: 15px }
+.d-chips { display: none; gap: 6px; flex-wrap: wrap; justify-content: center }
+.demo[data-layout="focus"] .d-chips { display: flex }
+.d-chips span { font-size: .75rem; padding: 2px 10px; border-radius: var(--d-pill); background: var(--d-alt); color: var(--d-muted) }
+.d-chips span.cur { background: var(--d-soft); color: var(--d-primary) }
+.d-float { display: none; position: absolute; right: 18px; bottom: 18px; gap: 6px }
+.demo[data-layout="focus"] .d-float { display: flex }
+.d-wrap { position: relative; min-width: 0 }
+
+/* whole-book cards */
+.d-cards { display: none; gap: 12px }
+.demo[data-layout="whole"] .d-article, .demo[data-layout="grid"] .d-article { display: none }
+.demo[data-layout="whole"] .d-cards { display: grid }
+.d-card { background: var(--d-surface); border: var(--d-line-w) solid var(--d-line); border-radius: var(--d-radius); box-shadow: var(--d-shadow); overflow: hidden }
+.demo[data-style="chinese"] .d-card { border: 3px double var(--d-line) }
+.d-card .ch { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--d-card-head); border-bottom: var(--d-line-w) solid var(--d-line) }
+.demo[data-style="soft"] .d-card .ch, .demo[data-style="suits"] .d-card .ch, .demo[data-style="night"] .d-card .ch, .demo[data-style="chinese"] .d-card .ch, .demo[data-style="plain"] .d-card .ch { border-bottom: 0; padding-bottom: 4px }
+.d-card .ch svg { width: 18px; height: 18px; color: var(--d-primary) }
+.d-card .ch .zh { font-family: var(--d-head); font-weight: var(--d-head-weight); font-size: 1.125rem; color: var(--d-primary-strong) }
+.d-card .ch .en { font-size: .8125rem; color: var(--d-muted) }
+.d-card .cb { padding: 10px 14px 14px; display: grid; gap: 8px; font-size: .9375rem }
+.d-card .cb .tags { display: flex; gap: 6px; flex-wrap: wrap }
+.d-group { font-family: var(--d-head); font-weight: var(--d-head-weight); font-size: 1.0625rem; display: flex; gap: 10px; align-items: baseline }
+.d-group small { font-family: var(--d-body); font-weight: 400; font-size: .8125rem; color: var(--d-muted) }
+
+/* grid layout: tiles + side drawer */
+.d-tiles { display: none; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px }
+.demo[data-layout="grid"] .d-tiles { display: grid }
+.demo[data-layout="grid"] .d-cards { display: none }
+.d-tile { background: var(--d-surface); border: var(--d-line-w) solid var(--d-line); border-radius: var(--d-radius); box-shadow: var(--d-shadow); padding: 14px; display: grid; gap: 6px; min-height: 120px; align-content: start }
+.demo[data-style="chinese"] .d-tile { border: 3px double var(--d-line) }
+.d-tile.cur { outline: 2px solid var(--d-primary); outline-offset: -2px }
+.d-tile .zh { font-family: var(--d-head); font-weight: var(--d-head-weight); font-size: 1rem; color: var(--d-primary-strong) }
+.d-tile .en { font-size: .75rem; color: var(--d-muted) }
+.d-tile .sm { font-size: .8125rem; color: var(--d-muted); line-height: 1.5 }
+.d-tile .row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto }
+.d-drawer { display: none; border-left: var(--d-line-w) solid var(--d-line); background: var(--d-surface); padding: 20px 18px; font-size: .875rem; gap: 12px; align-content: start; min-width: 0 }
+.demo[data-layout="grid"] .d-drawer { display: grid }
+.demo[data-style="chinese"] .d-drawer { border-left: 3px double var(--d-line) }
+.d-drawer h2 { font-family: var(--d-head); font-weight: var(--d-head-weight); font-size: 1.375rem; margin: 0; color: var(--d-primary-strong) }
+
+/* Phone */
+.phone-wrap { display: none; justify-content: center; padding: 28px 16px; background: var(--d-bg) }
+.demo[data-device="phone"] .phone-wrap { display: flex }
+.demo[data-device="phone"] .d-header, .demo[data-device="phone"] .d-body, .demo[data-device="phone"] .d-tabs { display: none }
+.phone { width: 100%; max-width: 330px; aspect-ratio: 9 / 18.5; border: 8px solid #1b1b1f; border-radius: 34px; background: var(--d-bg); display: grid; grid-template-rows: 48px 1fr 60px; overflow: hidden; font-size: .8125rem; box-shadow: 0 20px 50px rgba(0,0,0,.25) }
+.phone .top { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: var(--d-line-w) solid var(--d-line); background: var(--d-surface) }
+.phone .top .d-pill { height: 28px; font-size: .75rem }
+.phone .top svg.i { width: 18px; height: 18px; color: var(--d-muted); margin-left: auto }
+.phone .pbody { padding: 14px 16px; display: grid; gap: 10px; align-content: start; overflow: hidden }
+.phone .pbody h1 { font-family: var(--d-head); font-weight: var(--d-head-weight); font-size: 1.375rem; color: var(--d-primary-strong); line-height: 1.25 }
+.phone .bottom { display: grid; grid-template-columns: repeat(4, 1fr); border-top: var(--d-line-w) solid var(--d-line); background: var(--d-surface); padding: 6px 6px 8px; gap: 2px }
+.phone .bottom a { display: grid; justify-items: center; gap: 2px; text-decoration: none; color: var(--d-muted); font-size: .6875rem; padding: 4px 2px; border-radius: var(--d-radius-sm) }
+.phone .bottom a svg { width: 22px; height: 22px }
+.phone .bottom a.cur { color: var(--d-primary) }
+.demo[data-style="soft"] .phone .bottom a.cur, .demo[data-style="suits"] .phone .bottom a.cur, .demo[data-style="normal"] .phone .bottom a.cur { background: var(--d-soft); border-radius: var(--d-pill) }
+.demo[data-style="chinese"] .phone .bottom a.cur, .demo[data-style="plain"] .phone .bottom a.cur { box-shadow: inset 0 2px 0 var(--d-primary) }
+.demo[data-style="night"] .phone .bottom a.cur svg { filter: drop-shadow(0 0 6px var(--d-primary)) }
+.phone .ptiles { display: none; grid-template-columns: 1fr 1fr; gap: 8px }
+.demo[data-layout="grid"] .phone .ptiles { display: grid }
+.demo[data-layout="grid"] .phone .particle { display: none }
+.phone .ptile { background: var(--d-surface); border: var(--d-line-w) solid var(--d-line); border-radius: var(--d-radius); padding: 10px; display: grid; gap: 2px; box-shadow: var(--d-shadow) }
+.phone .ptile .zh { font-family: var(--d-head); font-weight: var(--d-head-weight); color: var(--d-primary-strong) }
+.phone .ptile .en { font-size: .6875rem; color: var(--d-muted) }
+
+/* Home + forum frame */
+.home2 { display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: 20px; padding: 22px 24px 28px; align-items: start }
+.home2-main { display: grid; gap: 14px; min-width: 0 }
+.home2-side { display: grid; gap: 12px }
+.home2-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px }
+.home2 .d-card .cb b { font-size: .9375rem }
+.post { background: var(--d-surface); border: var(--d-line-w) solid var(--d-line); border-radius: var(--d-radius); box-shadow: var(--d-shadow); padding: 14px 16px; display: grid; gap: 10px; font-size: .9375rem }
+.demo[data-style="chinese"] .post { border: 3px double var(--d-line) }
+.post .ph { display: flex; align-items: center; gap: 10px; font-size: .875rem }
+.av { width: 34px; height: 34px; border-radius: 50%; display: inline-grid; place-items: center; font-weight: 700; font-size: .8125rem; flex: none }
+.av.sm { width: 26px; height: 26px; font-size: .6875rem }
+.deal { display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: auto auto auto; gap: 2px 12px; justify-content: center; font-size: .8125rem; font-variant-numeric: tabular-nums; background: var(--d-table-head); border-radius: var(--d-radius-sm); padding: 10px 14px; max-width: 30rem; justify-self: center; width: 100% }
+.deal .hand { display: grid; gap: 0; line-height: 1.35 }
+.deal .hand b { font-size: .6875rem; color: var(--d-muted); font-weight: 600 }
+.deal .hand i { font-style: normal; display: inline-block; width: 1.1em }
+.deal .n { grid-column: 2; grid-row: 1 } .deal .w { grid-column: 1; grid-row: 2; justify-self: end } .deal .e { grid-column: 3; grid-row: 2 } .deal .s { grid-column: 2; grid-row: 3 }
+.deal .mid { grid-column: 2; grid-row: 2; display: grid; place-items: center; gap: 0; font-size: .6875rem; color: var(--d-muted); border: 1px solid var(--d-line); border-radius: var(--d-radius-sm); padding: 4px 10px; min-width: 4.5rem; background: var(--d-surface) }
+.refq { display: flex; align-items: center; gap: 6px; font-size: .8125rem; color: var(--d-primary); padding: 6px 10px; border-left: 2px solid var(--d-primary); background: var(--d-soft); border-radius: 0 var(--d-radius-sm) var(--d-radius-sm) 0 }
+.refq svg { width: 14px; height: 14px; flex: none }
+.react { display: flex; gap: 6px; align-items: center; font-size: .8125rem; color: var(--d-muted); padding-top: 6px; border-top: 1px solid var(--d-line) }
+.react span { padding: 2px 8px; border-radius: var(--d-pill); border: 1px solid var(--d-line) }
+.react span.on { background: var(--d-soft); color: var(--d-primary); border-color: transparent }
+.react i { font-style: normal }
+.cmt { display: flex; gap: 8px; font-size: .875rem; padding-left: 4px }
+.cmt > div { min-width: 0 }
+.cmt .box { flex: 1; background: var(--d-alt); border-radius: var(--d-radius-sm); padding: 5px 10px; color: var(--d-muted); display: flex; align-items: center }
+.cmt .tools { margin-left: auto; display: flex; gap: 8px; font-size: .75rem }
+.cmt .tools i { font-style: normal }
+.post.composer .box { flex: 1; background: var(--d-alt); border-radius: var(--d-pill); padding: 8px 14px; color: var(--d-muted) }
+.tools2 { display: flex; flex-wrap: wrap; gap: 6px; font-size: .8125rem; color: var(--d-muted); padding-top: 8px; border-top: 1px solid var(--d-line) }
+.tools2 span { padding: 2px 10px; border-radius: var(--d-pill); background: var(--d-alt) }
+.tools2 i { font-style: normal }
+.news { display: flex; gap: 8px; font-size: .8125rem; padding: 6px 0; border-top: 1px solid var(--d-line) }
+.news:first-of-type { border-top: 0 }
+.news .pin { width: 1.2em; flex: none }
+.news b { display: block; font-weight: 600; color: var(--d-ink) }
+.news span { display: block; color: var(--d-muted) }
+.news em { display: block; font-style: normal; font-size: .75rem; color: var(--d-muted) }
+.upd { display: grid; font-size: .8125rem; padding: 4px 0 }
+.upd b { font-weight: 600 } .upd span { color: var(--d-muted) }
+.avs { display: flex; gap: -4px }
+.avs .av { margin-right: -6px; border: 2px solid var(--d-surface) }
+@media (max-width: 900px) { .home2 { grid-template-columns: 1fr; padding: 16px } .home2-steps { grid-template-columns: 1fr } .deal { grid-template-columns: 1fr; grid-template-rows: auto } .deal .n, .deal .w, .deal .e, .deal .s, .deal .mid { grid-column: 1; grid-row: auto; justify-self: start } }
+
+
+/* Brand */
+.brand-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px }
+.brand-box { border: 1px solid var(--pg-line); border-radius: 14px; padding: 18px; display: grid; gap: 10px; align-content: start }
+.brand-box.light { background: #ffffff; color: #1a2233 } .brand-box.light .note { color: #4f5a70 }
+.brand-box.dark { background: #0d1320; color: #e6ebf3 } .brand-box.dark .note { color: #a3afc4 }
+.brand-box.tiles { background: var(--pg-card) }
+.brand-row { display: flex; align-items: center; gap: 14px }
+.wm { font-size: 1.625rem; font-weight: 700; letter-spacing: .06em; color: #0f3d7a; line-height: 1.2 }
+.brand-box.dark .wm { color: #b5d0ff }
+.wm2 { font-size: .9375rem; font-weight: 600; letter-spacing: .02em }
+.wm3 { font-size: .75rem; opacity: .8 }
+.tile-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap }
+.tile { display: inline-grid; place-items: center; background: #0f3d7a; border-radius: 22%; overflow: hidden }
+.tile svg { width: 86%; height: 86% }
+.tile.t64 { width: 64px; height: 64px } .tile.t40 { width: 40px; height: 40px } .tile.t24 { width: 24px; height: 24px }
+.tile.round { width: 64px; height: 64px; border-radius: 50% } .tile.round svg { width: 64%; height: 64% }
+
+/* ===== Cards (style / layout) ===== */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px }
+.card { background: var(--pg-card); border: 1px solid var(--pg-line); border-radius: 14px; padding: 18px; display: grid; gap: 10px; align-content: start }
+.card .sw { display: flex; gap: 4px }
+.card .sw i { flex: 1; height: 28px; border-radius: 6px; border: 1px solid rgba(0,0,0,.08) }
+.card .who { font-size: .875rem; color: var(--pg-muted) }
+.card ul { margin: 0; padding-left: 18px; font-size: .875rem; color: var(--pg-muted) }
+.card .pick { justify-self: start; border: 1px solid var(--pg-line); background: var(--pg-bg); color: var(--pg-fg); font: inherit; font-size: .8125rem; padding: 4px 12px; border-radius: 999px; cursor: pointer }
+.layouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px }
+.lay { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--pg-line); border-radius: 14px; background: var(--pg-card) }
+.lay .mini { height: 90px; border: 1px solid var(--pg-line); border-radius: 8px; display: grid; gap: 4px; padding: 6px; background: var(--pg-bg) }
+.lay .mini i { background: var(--pg-line); border-radius: 3px; display: block }
+.lay .mini.whole { grid-template-columns: 26% 1fr } .lay .mini .stack { display: grid; gap: 4px; align-content: start } .lay .mini .stack i { height: 18px }
+.lay .mini.three { grid-template-columns: 24% 1fr 20% }
+.lay .mini.focus { grid-template-columns: 1fr; padding: 6px 22% }
+.lay .mini.grid { grid-template-columns: 1fr 1fr 1fr 34%; grid-template-rows: 1fr 1fr } .lay .mini.grid i:last-child { grid-row: 1 / 3; grid-column: 4 }
+.lay .pick { justify-self: start; border: 1px solid var(--pg-line); background: var(--pg-bg); color: var(--pg-fg); font: inherit; font-size: .8125rem; padding: 4px 12px; border-radius: 999px; cursor: pointer }
+
+/* Settings panel mock */
+.settings { background: var(--pg-card); border: 1px solid var(--pg-line); border-radius: 14px; padding: 20px 22px; display: grid; gap: 14px; max-width: 720px }
+.settings .row { display: grid; grid-template-columns: 7rem 1fr; gap: 10px; align-items: start; font-size: .9375rem; border-top: 1px solid var(--pg-line); padding-top: 12px }
+.settings .row:first-of-type { border-top: 0; padding-top: 0 }
+.settings .row b { font-weight: 600; font-size: .875rem; padding-top: 4px }
+.settings .opts { display: flex; flex-wrap: wrap; gap: 6px }
+.settings .opts span { padding: 3px 11px; border: 1px solid var(--pg-line); border-radius: 999px; font-size: .8125rem; color: var(--pg-muted) }
+.settings .opts span.on { background: var(--pg-accent); color: var(--pg-on-accent); border-color: var(--pg-accent) }
+.settings .hint { grid-column: 2; font-size: .8125rem; color: var(--pg-muted) }
+
+/* WBF card preview */
+.wbf { background: #fff; color: #111; border: 1px solid #888; padding: 10px; font-size: .6rem; line-height: 1.35; font-family: Arial, 'Noto Sans TC', sans-serif; overflow-x: auto }
+.wbf .pg { min-width: 760px; display: grid; gap: 6px }
+.wbf .pg1 { grid-template-columns: 1fr 1fr 1fr }
+.wbf .col { display: grid; gap: 0; align-content: start; border: 1px solid #444 }
+.wbf .sh { background: #d8d8d8; font-weight: 700; padding: 2px 4px; border-bottom: 1px solid #444; font-size: .62rem }
+.wbf .ssh { background: #eee; font-weight: 700; padding: 1px 4px; border-bottom: 1px solid #444 }
+.wbf .ln { padding: 1px 4px; border-bottom: 1px solid #bbb; min-height: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.wbf .ln.ov { background: #fdeceb }
+.wbf .ln.blank { color: #999 }
+.wbf .hdr { display: grid; grid-template-columns: 5rem 1fr; border-bottom: 1px solid #444 }
+.wbf .hdr span { padding: 1px 4px; border-right: 1px solid #bbb }
+.wbf .ttl { font-size: .9rem; font-weight: 700; text-align: right; padding: 4px 6px; border-bottom: 1px solid #444 }
+.wbf table { border-collapse: collapse; width: 100%; font-size: .58rem }
+.wbf th, .wbf td { border: 1px solid #777; padding: 1px 3px; text-align: left; font-weight: 400; vertical-align: top; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 14rem }
+.wbf th { background: #eee; font-weight: 700 }
+.wbf .pglabel { font-size: .75rem; font-weight: 700; color: #333; padding: 4px 0 }
+.files { display: grid; gap: 0; border: 1px solid var(--pg-line); border-radius: 12px; overflow: hidden; background: var(--pg-card) }
+.files .fr { display: grid; grid-template-columns: 1.4fr 1fr 2fr; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--pg-line); font-size: .9rem; align-items: start }
+.files .fr:first-child { border-top: 0; background: var(--pg-bg); font-weight: 600; font-size: .8125rem; color: var(--pg-muted) }
+.files .fr .st { font-weight: 600 }
+.files .fr .st.gen { color: #1f7a3a } .files .fr .st.ref { color: var(--pg-muted) }
+:root[data-theme="dark"] .files .fr .st.gen { color: #6fd08c }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .files .fr .st.gen { color: #6fd08c } }
+
+/* Feedback */
+.form { display: grid; gap: 12px; background: var(--pg-card); border: 1px solid var(--pg-line); border-radius: 14px; padding: 20px; max-width: 720px }
+.form label { font-size: .875rem; font-weight: 500 }
+.form textarea, .form input[type=text] { width: 100%; font: inherit; font-size: .9375rem; padding: 8px 10px; border: 1px solid var(--pg-line); border-radius: 8px; background: var(--pg-bg); color: var(--pg-fg) }
+.form textarea { min-height: 90px; resize: vertical }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--pg-accent); background: var(--pg-accent); color: var(--pg-on-accent); font: inherit; font-size: .9375rem; font-weight: 500; cursor: pointer; justify-self: start }
+.status { font-size: .875rem; color: var(--pg-muted) }
+
+@media (max-width: 900px) {
+  .demo[data-layout] .d-body { grid-template-columns: 1fr !important }
+  .d-toc, .d-rail, .d-drawer { display: none !important }
+  .d-main { padding: 18px 16px }
+  .d-search, .d-icons { display: none !important }
+  .files .fr { grid-template-columns: 1fr; gap: 4px }
+  .settings .row { grid-template-columns: 1fr } .settings .hint { grid-column: 1 }
+}
+@media (prefers-reduced-motion: reduce) { .demo { transition: none } .demo[data-style="chinese"] .d-seal { transform: none } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">TKU BridgeHall（原 BridgeBook）· 淡江橋藝社 · 設計提案 第 3 版 · 2026-10-24</p>
+    <h1>淡江橋館要長什麼樣？</h1>
+    <p class="lede">同一頁內容（雷本索特約）用六種風格、四種版面排出來，可以即時切換、看桌機也看手機；下面還有首頁（含社團新聞）與討論區。已拍板：預設「一般」（現在的配色與圓角），風格、版面、字體、字級、明暗、花色顏色全部放進每個人的「個人設定」自己選。</p>
+  </header>
+
+  <div class="bar" role="group" aria-label="切換">
+    <div class="grp"><span class="lbl">風格</span>
+      <div class="seg" id="segStyle">
+        <button type="button" data-v="normal" aria-pressed="true">一般</button>
+        <button type="button" data-v="chinese" aria-pressed="false">中國風</button>
+        <button type="button" data-v="soft" aria-pressed="false">圓潤</button>
+        <button type="button" data-v="night" aria-pressed="false">夜讀</button>
+        <button type="button" data-v="suits" aria-pressed="false">四色</button>
+        <button type="button" data-v="plain" aria-pressed="false">極簡</button>
+      </div>
+    </div>
+    <div class="grp"><span class="lbl">版面</span>
+      <div class="seg" id="segLayout">
+        <button type="button" data-v="whole" aria-pressed="true">整本一頁</button>
+        <button type="button" data-v="three" aria-pressed="false">三欄閱讀</button>
+        <button type="button" data-v="focus" aria-pressed="false">專注單欄</button>
+        <button type="button" data-v="grid" aria-pressed="false">卡片總覽</button>
+      </div>
+    </div>
+    <div class="grp"><span class="lbl">裝置</span>
+      <div class="seg" id="segDevice"><button type="button" data-v="desktop" aria-pressed="true">桌機</button><button type="button" data-v="phone" aria-pressed="false">手機</button></div>
+    </div>
+    <div class="grp"><span class="lbl">明暗</span>
+      <div class="seg" id="segMode"><button type="button" data-v="light" aria-pressed="true">淺</button><button type="button" data-v="dark" aria-pressed="false">深</button></div>
+    </div>
+    <div class="grp"><span class="lbl">字體</span>
+      <div class="seg" id="segFont"><button type="button" data-v="auto" aria-pressed="true">跟隨風格</button><button type="button" data-v="serif" aria-pressed="false">襯線標題</button><button type="button" data-v="sans" aria-pressed="false">無襯線</button><button type="button" data-v="system" aria-pressed="false">系統字型</button></div>
+    </div>
+    <div class="grp"><span class="lbl">字級</span>
+      <div class="seg" id="segSize"><button type="button" data-v="s" aria-pressed="false">小</button><button type="button" data-v="m" aria-pressed="true">中</button><button type="button" data-v="l" aria-pressed="false">大</button><button type="button" data-v="xl" aria-pressed="false">特大</button></div>
+    </div>
+    <div class="grp"><span class="lbl">花色</span>
+      <div class="seg" id="segSuit"><button type="button" data-v="four" aria-pressed="true">四色</button><button type="button" data-v="two" aria-pressed="false">雙色</button></div>
+    </div>
+  </div>
+
+  <!-- Demo -->
+  <section class="section" id="demo-section">
+    <div class="demo" id="demo" data-style="normal" data-layout="whole" data-device="desktop" data-mode="light" data-font="auto" data-size="m" data-suitcolors="four">
+      <div class="d-header">
+        <span class="d-brand"><svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="var(--d-accent)" stroke-width="4.5" stroke-linecap="round"/><path d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="var(--d-primary)" stroke-width="4.5" stroke-linecap="round"/><path d="M7 55h50" fill="none" stroke="var(--d-primary)" stroke-width="4.5" stroke-linecap="round"/><g transform="translate(19.5 28.5) scale(.5)"><path fill="var(--d-sS)" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g><g transform="translate(33 28.5) scale(.5)"><path fill="var(--d-sH)" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g><g transform="translate(19.5 41) scale(.5)"><path fill="var(--d-sD)" d="M12 2l7.5 10L12 22 4.5 12z"/></g><g transform="translate(33 41) scale(.5)"><path fill="var(--d-sC)" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g></svg>淡江橋館 <small>TKU BridgeHall</small></span>
+        <span class="d-pill profile"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5.5" cy="6" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="10.5" cy="6" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 13c.5-2.5 2-3.5 4-3.5s3.5 1 4 3.5M7.5 13c.4-1.8 1.6-3 3-3s2.6 1 3 3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>小明＋小華 ▾</span>
+        <div class="d-search"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5 14 14" stroke="currentColor" stroke-width="1.5"/></svg>搜尋特約、叫品，如 2♦</div>
+        <div class="d-icons" aria-hidden="true">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5-5 5 5M7 14l5 5 5-5"/></svg></span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4l5 5 5-5M7 20l5-5 5 5"/></svg></span>
+          <span style="font-size:.7rem;font-weight:600">小</span><span style="font-size:.85rem;font-weight:600">中</span><span style="font-size:1rem;font-weight:600">大</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/></svg></span>
+        </div>
+        <span class="d-avatar">明</span>
+      </div>
+      <div class="d-tabs" aria-hidden="true"><span>全部</span><span class="cur">無王開叫後續</span><span>花色開叫後續</span><span>防守信號</span><span>競叫與防守</span><span>制度總覽</span><span style="margin-left:auto">入門 · 進階 · 高階</span></div>
+      <div class="d-body">
+        <nav class="d-toc" aria-label="目錄">
+          <h3 class="hd">全書目錄</h3>
+          <div class="cat"><svg viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>無王開叫後續 <span class="cnt">3</span></div>
+          <div class="item">1NT的答叫</div><div class="item">開叫2NT及答叫</div><div class="item cur">雷本索特約</div>
+          <div class="cat"><svg viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>花色開叫後續 <span class="cnt">6</span></div>
+          <div class="cat"><svg viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>防守信號 <span class="cnt">1</span></div>
+          <div class="cat"><svg viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>競叫與防守 <span class="cnt">3</span></div>
+          <div class="cat"><svg viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>制度總覽 <span class="cnt">9</span></div>
+        </nav>
+        <div class="d-wrap">
+        <main class="d-main">
+          <div class="d-cards">
+            <div class="d-group">無王開叫後續 <small>1NT、2NT 開叫之後的答叫與競叫</small></div>
+            <div class="d-card">
+              <div class="ch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg><span class="zh">1NT的答叫</span><span class="en">Responses to 1NT</span></div>
+              <div class="cb"><span>1NT 開叫後的答叫原則：Stayman、轉換、成局束叫與嘗試滿貫。</span><div class="tags"><span class="d-tag">1NT</span><span class="d-tag">Stayman</span><span class="d-tag">轉換</span><span class="d-seal">1 項待確認</span></div></div>
+            </div>
+            <div class="d-card">
+              <div class="ch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg><span class="zh">雷本索特約</span><span class="en">Lebensohl</span></div>
+              <div class="cb">
+                <span>同伴開叫 1NT 遭敵方插叫時的答叫原則：二線不迫叫、三線 GF、2NT 迫叫 3<span class="C">♣</span> 後續。</span>
+                <div class="tags"><span class="d-level">進階</span><span class="d-tag">1NT</span><span class="d-tag">插叫</span><span class="d-tag">2NT 迫叫 3♣</span></div>
+                <div class="d-sec" style="margin-top:4px">
+                  <h3><span class="no"><span class="ar">§1</span><span class="cn">一</span></span>遭自然牌組插叫<svg class="chev" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></h3>
+                  <div class="d-sub">
+                    <div class="d-auction"><span class="seat">開叫者</span><span class="seat">敵方</span><span class="seat">答叫者</span><span class="seat">敵方</span><span>1NT</span><span>2<span class="S">♠</span></span><span class="q">?</span><span></span></div>
+                    <table class="d-resp"><tr><td class="call">2NT</td><td>雷本索，迫叫 3<span class="C">♣</span></td></tr><tr><td class="call">3<span class="C">♣</span></td><td>自然，GF</td></tr><tr><td class="call">3<span class="S">♠</span></td><td>Stayman，無擋張 <span class="d-seal">待確認</span></td></tr><tr><td class="call">X</td><td>處罰性</td></tr></table>
+                  </div>
+                </div>
+                <div class="d-sec"><h3><span class="no"><span class="ar">§2</span><span class="cn">二</span></span>遭非自然牌組插叫<svg class="chev" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></h3></div>
+                <div class="d-sec"><h3><span class="no"><span class="ar">§3</span><span class="cn">三</span></span>其他運用<svg class="chev" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></h3></div>
+              </div>
+            </div>
+            <div class="d-group" style="margin-top:8px">花色開叫後續 <small>花色開叫之後的答叫與再叫</small></div>
+            <div class="d-card">
+              <div class="ch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg><span class="zh">1H 2H（淡江用）</span><span class="en">After a Single Raise</span></div>
+              <div class="cb"><span>開叫者單加叫答叫者的高花之後：答叫者的再叫，以及 2NT 後開叫者報牌型。</span><div class="tags"><span class="d-tag">單加叫</span><span class="d-tag">2NT 問牌型</span><span class="d-tag">splinter</span></div></div>
+            </div>
+          </div>
+          <div class="d-tiles">
+            <div class="d-tile"><span class="zh">1NT的答叫</span><span class="en">Responses to 1NT</span><span class="sm">Stayman、轉換、成局束叫與嘗試滿貫。</span><div class="row"><span class="d-level">入門</span><span class="d-seal">1</span></div></div>
+            <div class="d-tile"><span class="zh">開叫2NT及答叫</span><span class="en">2NT Opening</span><span class="sm">20-21，Stayman 與轉換、低花詢問。</span><div class="row"><span class="d-level">進階</span></div></div>
+            <div class="d-tile cur"><span class="zh">雷本索特約</span><span class="en">Lebensohl</span><span class="sm">1NT 遭插叫：二線不迫叫、三線 GF、2NT 迫叫 3♣。</span><div class="row"><span class="d-level">進階</span><span class="d-tag">搭檔覆寫 1</span></div></div>
+            <div class="d-tile"><span class="zh">1H 2H（淡江用）</span><span class="en">After a Single Raise</span><span class="sm">單加叫後答叫者的再叫與 2NT 問牌型。</span><div class="row"><span class="d-level">進階</span></div></div>
+            <div class="d-tile"><span class="zh">新低花迫叫</span><span class="en">New Minor Forcing</span><span class="sm">1NT 或 2 線低花後的迫叫。</span><div class="row"><span class="d-level">進階</span></div></div>
+            <div class="d-tile"><span class="zh">Bergen加叫</span><span class="en">Bergen Raises</span><span class="sm">3♣ 7-9、3♦ 10-12 四張支持。</span><div class="row"><span class="d-level">進階</span><span class="d-seal">5</span></div></div>
+            <div class="d-tile"><span class="zh">橋牌防守信號</span><span class="en">Defensive Signals</span><span class="sm">首攻、態度、張數、墊牌。</span><div class="row"><span class="d-level">入門</span></div></div>
+            <div class="d-tile"><span class="zh">2D 開叫</span><span class="en">2♦ Opening</span><span class="sm">一高弱二。</span><div class="row"><span class="d-level">高階</span></div></div>
+            <div class="d-tile"><span class="zh">回答性賭倍</span><span class="en">Responsive Double</span><span class="sm">敵方加叫後的賭倍。</span><div class="row"><span class="d-level">高階</span></div></div>
+          </div>
+          <div class="d-article" style="display:grid;gap:16px">
+            <p class="d-crumbs"><span>無王開叫後續</span><span>特約</span></p>
+            <div class="d-title"><h1>雷本索特約</h1><span class="en">Lebensohl</span>
+              <div class="d-meta"><span class="d-level">進階</span><span>來源：雷本所特約（1NT遭插叫的答叫原則）</span><span>最後校對 2026-10-21</span><span class="d-tag">1NT</span><span class="d-tag">插叫</span><span class="d-tag">2NT 迫叫 3♣</span></div>
+            </div>
+            <div class="d-chips"><span class="cur">一 遭自然牌組插叫</span><span>二 遭非自然牌組插叫</span><span>三 其他運用</span></div>
+            <p class="d-lede">同伴開叫 1NT 遭敵方插叫時的答叫原則：二線不迫叫、三線 GF、2NT 迫叫 3<span class="C">♣</span> 後續。</p>
+            <div class="d-sec">
+              <h3><span class="no"><span class="ar">§1</span><span class="cn">一</span></span>遭自然牌組插叫<svg class="chev" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></h3>
+              <p>二線新花不迫叫，三線新花 GF，2NT 迫叫 3<span class="C">♣</span>，X 為處罰性。</p>
+              <div class="d-sub">
+                <h4>例：1NT (2♠) ?</h4>
+                <div class="d-auction"><span class="seat">開叫者</span><span class="seat">敵方</span><span class="seat">答叫者</span><span class="seat">敵方</span><span>1NT</span><span>2<span class="S">♠</span></span><span class="q">?</span><span></span></div>
+                <table class="d-resp">
+                  <tr><td class="call">2NT</td><td>雷本索，迫叫 3<span class="C">♣</span>；之後再叫為不迫叫或邀請</td></tr>
+                  <tr><td class="call">3<span class="C">♣</span></td><td>自然，GF</td></tr>
+                  <tr><td class="call">3<span class="D">♦</span></td><td>自然，GF</td></tr>
+                  <tr><td class="call">3<span class="H">♥</span></td><td>自然，GF，5 張以上</td></tr>
+                  <tr><td class="call">3<span class="S">♠</span></td><td>Stayman，無擋張 <span class="d-seal">待確認</span></td></tr>
+                  <tr><td class="call">X</td><td>處罰性</td></tr>
+                </table>
+              </div>
+            </div>
+            <div class="d-sec">
+              <h3><span class="no"><span class="ar">§2</span><span class="cn">二</span></span>遭非自然牌組插叫<svg class="chev" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></h3>
+              <p style="font-size:.75rem;color:var(--d-primary);margin-top:-4px">搭檔覆寫 · 小明＋小華 · 2026-10-20</p>
+              <div class="d-sub">
+                <h4>例：1NT (2♣ 一門未知高花) ?</h4>
+                <table class="d-resp"><tr><td class="call">X</td><td class="ov">Stayman <small>（搭檔；社團版：處罰性）</small></td></tr><tr><td class="call">2<span class="D">♦</span></td><td>轉換 <span class="H">♥</span></td></tr><tr><td class="call">2NT</td><td>雷本索</td></tr></table>
+                <div class="d-memo"><b>備忘 · 只有我們看得到</b>敵方 2♣ 兩高時用 X 問 Stayman，不要處罰；10/20 社課後約好的。</div>
+              </div>
+            </div>
+            <div class="d-sec"><h3><span class="no"><span class="ar">§3</span><span class="cn">三</span></span>其他運用<svg class="chev" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></h3></div>
+          </div>
+        </main>
+        <div class="d-float"><span class="d-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h16"/></svg>目錄</span><span class="d-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>設定</span></div>
+        </div>
+        <aside class="d-rail" aria-label="本頁">
+          <h3 class="hd">本頁</h3>
+          <ol><li class="cur">一 遭自然牌組插叫</li><li>二 遭非自然牌組插叫</li><li>三 其他運用</li></ol>
+          <div class="links"><span class="d-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>個人設定</span><span style="color:var(--d-primary)">制度卡：VS NT · LEBENSOHL</span><span style="color:var(--d-primary)">練這個特約（12 題）</span><span style="color:var(--d-primary)">複製連結</span></div>
+        </aside>
+        <aside class="d-drawer" aria-label="預覽">
+          <p class="d-crumbs"><span>無王開叫後續</span><span>特約</span></p>
+          <h2>雷本索特約</h2>
+          <div class="d-meta"><span class="d-level">進階</span><span>Lebensohl</span></div>
+          <p class="d-lede">同伴開叫 1NT 遭敵方插叫時的答叫原則：二線不迫叫、三線 GF、2NT 迫叫 3<span class="C">♣</span>。</p>
+          <table class="d-resp"><tr><td class="call">2NT</td><td>雷本索，迫叫 3<span class="C">♣</span></td></tr><tr><td class="call">3<span class="C">♣</span></td><td>自然，GF</td></tr><tr><td class="call">3<span class="S">♠</span></td><td>Stayman，無擋張 <span class="d-seal">待確認</span></td></tr><tr><td class="call">X</td><td>處罰性</td></tr></table>
+          <span class="d-btn primary">打開全文</span>
+        </aside>
+      </div>
+      <div class="phone-wrap">
+        <div class="phone" aria-label="手機畫面">
+          <div class="top"><svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="var(--d-accent)" stroke-width="4.5" stroke-linecap="round"/><path d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="var(--d-primary)" stroke-width="4.5" stroke-linecap="round"/><path d="M7 55h50" fill="none" stroke="var(--d-primary)" stroke-width="4.5" stroke-linecap="round"/><g transform="translate(19.5 28.5) scale(.5)"><path fill="var(--d-sS)" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g><g transform="translate(33 28.5) scale(.5)"><path fill="var(--d-sH)" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g><g transform="translate(19.5 41) scale(.5)"><path fill="var(--d-sD)" d="M12 2l7.5 10L12 22 4.5 12z"/></g><g transform="translate(33 41) scale(.5)"><path fill="var(--d-sC)" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g></svg><span class="d-pill">小明＋小華 ▾</span><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+          <div class="pbody">
+            <div class="particle" style="display:grid;gap:10px">
+              <p class="d-crumbs"><span>無王開叫後續</span><span>特約</span></p>
+              <h1>雷本索特約</h1>
+              <div class="d-meta"><span class="d-level">進階</span><span>Lebensohl</span></div>
+              <p style="font-size:.8125rem;color:var(--d-muted)">同伴開叫 1NT 遭敵方插叫時的答叫原則。</p>
+              <div class="d-sec" style="gap:6px"><h3 style="font-size:.9375rem"><span class="no"><span class="ar">§1</span><span class="cn">一</span></span>遭自然牌組插叫</h3>
+                <table class="d-resp" style="font-size:.8125rem"><tr><td class="call" style="width:3.5rem">2NT</td><td>雷本索，迫叫 3<span class="C">♣</span></td></tr><tr><td class="call">3<span class="C">♣</span></td><td>自然，GF</td></tr><tr><td class="call">X</td><td>處罰性</td></tr></table>
+              </div>
+              <div class="d-sec" style="gap:6px"><h3 style="font-size:.9375rem"><span class="no"><span class="ar">§2</span><span class="cn">二</span></span>遭非自然牌組插叫</h3></div>
+            </div>
+            <div class="ptiles">
+              <div class="ptile"><span class="zh">1NT的答叫</span><span class="en">入門</span></div><div class="ptile"><span class="zh">開叫2NT</span><span class="en">進階</span></div>
+              <div class="ptile" style="outline:2px solid var(--d-primary);outline-offset:-2px"><span class="zh">雷本索特約</span><span class="en">進階 · 覆寫 1</span></div><div class="ptile"><span class="zh">1H 2H</span><span class="en">進階</span></div>
+              <div class="ptile"><span class="zh">新低花迫叫</span><span class="en">進階</span></div><div class="ptile"><span class="zh">Bergen加叫</span><span class="en">進階</span></div>
+              <div class="ptile"><span class="zh">防守信號</span><span class="en">入門</span></div><div class="ptile"><span class="zh">2D 開叫</span><span class="en">高階</span></div>
+            </div>
+          </div>
+          <div class="bottom">
+            <a href="#demo-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5V4.5A2.5 2.5 0 0 1 6.5 2H20v15M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>目錄</a>
+            <a href="#demo-section" class="cur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>本頁</a>
+            <a href="#demo-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>搜尋</a>
+            <a href="#demo-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>我的</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="note">「一般」就是今天正式站的配色與圓角，不改。其他五種是提案，任何風格都可以配任何版面；字體、字級、花色顏色、明暗也都是個人設定，上面的列就是設定項目。</p>
+  </section>
+
+  <!-- Home + Forum -->
+  <section class="section" id="home-forum">
+    <h2>首頁與討論區</h2>
+    <p class="note">第一版視覺稿的首頁保留：左邊是我的制度集、第一次來、全書分類，右邊是<b>社團新聞</b>。下面多了討論區：像 Facebook 的動態牆，但四家牌、叫牌過程、單手牌是內建區塊，不用再用空格排。頭像可上傳，兩站共用。風格跟著上面的切換走。</p>
+    <div class="demo" id="demo2" data-style="normal" data-layout="whole" data-mode="light" data-font="auto" data-size="m" data-suitcolors="four">
+      <div class="d-header">
+        <span class="d-brand"><svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="var(--d-accent)" stroke-width="4.5" stroke-linecap="round"/><path d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="var(--d-primary)" stroke-width="4.5" stroke-linecap="round"/><path d="M7 55h50" fill="none" stroke="var(--d-primary)" stroke-width="4.5" stroke-linecap="round"/><g transform="translate(19.5 28.5) scale(.5)"><path fill="var(--d-sS)" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g><g transform="translate(33 28.5) scale(.5)"><path fill="var(--d-sH)" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g><g transform="translate(19.5 41) scale(.5)"><path fill="var(--d-sD)" d="M12 2l7.5 10L12 22 4.5 12z"/></g><g transform="translate(33 41) scale(.5)"><path fill="var(--d-sC)" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g></svg>淡江橋館 <small>TKU BridgeHall</small></span>
+        <span class="d-pill" style="display:inline-flex">小明＋小華 ▾</span>
+        <div class="d-search">搜尋特約、叫品、討論</div>
+        <span class="d-avatar" style="margin-left:auto">明</span>
+      </div>
+      <div class="home2">
+        <div class="home2-main">
+          <div class="d-card">
+            <div class="cb" style="padding-top:14px">
+              <span class="eyebrow" style="color:var(--d-muted)">目前的制度集 · 搭檔</span>
+              <span class="hd" style="font-size:1.375rem;color:var(--d-primary-strong)">小明＋小華</span>
+              <span style="font-size:.875rem;color:var(--d-muted)">繼承 A 隊 ← 社團預設 · 採用 14 個特約 · 覆寫 3 條 · 最後更新 10-20 小華</span>
+              <div class="tags"><span class="d-btn primary">讀制度</span><span class="d-btn">WBF 制度卡</span><span class="d-btn">與 A 隊比較</span></div>
+            </div>
+          </div>
+          <div class="d-group">第一次來？從這裡開始</div>
+          <div class="home2-steps">
+            <div class="d-card"><div class="cb" style="padding-top:12px"><span style="font-size:.75rem;color:var(--d-struct);font-weight:600">第 1 課</span><b>社團打什麼制度</b><span class="sm" style="font-size:.8125rem;color:var(--d-muted)">12 點開叫、1NT 15-17、2/1 迫叫成局。</span></div></div>
+            <div class="d-card"><div class="cb" style="padding-top:12px"><span style="font-size:.75rem;color:var(--d-struct);font-weight:600">第 2 課</span><b>1NT 的答叫</b><span class="sm" style="font-size:.8125rem;color:var(--d-muted)">Stayman、轉換、成局束叫。</span></div></div>
+            <div class="d-card"><div class="cb" style="padding-top:12px"><span style="font-size:.75rem;color:var(--d-struct);font-weight:600">第 3 課</span><b>三個最常用的特約</b><span class="sm" style="font-size:.8125rem;color:var(--d-muted)">雷本索、Jacoby 2NT、負性賭倍。</span></div></div>
+          </div>
+          <div class="d-group">最新討論 <small>牌局討論 · 制度問答 · 閒聊</small></div>
+          <div class="post">
+            <div class="ph"><span class="av" style="background:#d9a330;color:#1a2233">華</span><div><b>小華</b> <span class="d-tag">牌局討論</span><br><span style="font-size:.75rem;color:var(--d-muted)">2 小時前</span></div><span style="margin-left:auto;color:var(--d-muted)">⋯</span></div>
+            <p>今天社課這副 4<span class="S">♠</span> 怎麼做？西家首攻 <span class="H">♥</span>K，我拔完王牌就斷了。</p>
+            <div class="deal">
+              <div class="hand n"><b>北</b><span><i class="S">♠</i>AQ32</span><span><i class="H">♥</i>7</span><span><i class="D">♦</i>KQJ5</span><span><i class="C">♣</i>A942</span></div>
+              <div class="hand w"><b>西</b><span><i class="S">♠</i>8</span><span><i class="H">♥</i>KQJ94</span><span><i class="D">♦</i>9876</span><span><i class="C">♣</i>K65</span></div>
+              <div class="mid"><span>發牌 N</span><span>雙有</span><span>4<i class="S">♠</i> S</span></div>
+              <div class="hand e"><b>東</b><span><i class="S">♠</i>J54</span><span><i class="H">♥</i>T852</span><span><i class="D">♦</i>T43</span><span><i class="C">♣</i>QJ8</span></div>
+              <div class="hand s"><b>南</b><span><i class="S">♠</i>KT976</span><span><i class="H">♥</i>A63</span><span><i class="D">♦</i>A2</span><span><i class="C">♣</i>T73</span></div>
+            </div>
+            <div class="d-auction" style="grid-template-columns:repeat(4,3rem)"><span class="seat">W</span><span class="seat">N</span><span class="seat">E</span><span class="seat">S</span><span>—</span><span>1<span class="D">♦</span></span><span>P</span><span>1<span class="S">♠</span></span><span>2<span class="H">♥</span></span><span>4<span class="S">♠</span></span><span>AP</span><span></span></div>
+            <div class="refq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5V4.5A2.5 2.5 0 0 1 6.5 2H20v15M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>引用：開叫1♦ › 答叫 1♠ 之後 · 開叫者再叫 2♥ 為反序 16+</div>
+            <div class="react"><span class="on">👍 6</span><span><i class="S">♠</i> 2</span><span><i class="H">♥</i> 1</span><span><i class="D">♦</i></span><span><i class="C">♣</i></span><span style="margin-left:auto">4 則留言</span></div>
+            <div class="cmt"><span class="av sm" style="background:#0f3d7a;color:#fff">明</span><div><b>小明</b> 先數墩：♠5 ♥1 ♦4 ♣1 = 11，第 12 墩要靠 ♣ 飛 K 或 ♥ 擠壓。叫牌我會這樣：<div class="d-auction" style="grid-template-columns:repeat(4,2.6rem);font-size:.75rem;margin-top:4px"><span class="seat">W</span><span class="seat">N</span><span class="seat">E</span><span class="seat">S</span><span>—</span><span>1<span class="D">♦</span></span><span>P</span><span>1<span class="S">♠</span></span><span>2<span class="H">♥</span></span><span>3<span class="S">♠</span></span><span>P</span><span>4<span class="S">♠</span></span></div></div></div>
+            <div class="cmt"><span class="av sm" style="background:#1b7a33;color:#fff">學</span><div><b>學長</b> 西家叫 2♥ 又首攻 ♥K，♣K 幾乎一定在西，直接飛。@小華 下次社課拿出來講。</div></div>
+            <div class="cmt compose"><span class="av sm" style="background:#0f3d7a;color:#fff">明</span><div class="box">留言…<span class="tools"><i class="S">♠</i><span>叫牌</span></span></div></div>
+          </div>
+          <div class="post composer"><div class="ph"><span class="av" style="background:#0f3d7a;color:#fff">明</span><div class="box">想分享什麼牌？</div></div><div class="tools2"><span>圖片</span><span><i class="S">♠</i> 四家牌</span><span>叫牌過程</span><span>單手牌</span><span>引用特約</span><span style="margin-left:auto">發布到 牌局討論 ▾</span></div></div>
+        </div>
+        <aside class="home2-side">
+          <div class="d-card"><div class="cb" style="padding-top:12px">
+            <div class="d-group" style="font-size:1rem">社團新聞 <small style="margin-left:auto"><span style="color:var(--d-primary)">發公告</span></small></div>
+            <div class="news"><span class="pin">📌</span><div><b>大專盃報名到 11/2</b><span>隊長請在搭檔頁產出 WBF 制度卡</span><em>10-24 · 社長</em></div></div>
+            <div class="news"><span class="pin"></span><div><b>10/28 社課：擠牌入門</b><span>E205，19:00；講義已上傳叢書</span><em>10-23 · 教學</em></div></div>
+            <div class="news"><span class="pin"></span><div><b>新生說明會照片</b><span>12 張</span><em>10-20 · 公關</em></div></div>
+            <span style="font-size:.8125rem;color:var(--d-primary)">看全部公告 →</span>
+          </div></div>
+          <div class="d-card"><div class="cb" style="padding-top:12px">
+            <div class="d-group" style="font-size:1rem">最近更新</div>
+            <div class="upd"><b>雷本索特約</b><span>修正「遭自然牌組插叫」3♣ 的說明 · 10-23</span></div>
+            <div class="upd"><b>Bergen加叫</b><span>待確認「1♥ 2NT 4♦」已確認 · 10-22</span></div>
+          </div></div>
+          <div class="d-card"><div class="cb" style="padding-top:12px">
+            <div class="d-group" style="font-size:1rem">活躍的人</div>
+            <div class="avs"><span class="av" style="background:#d9a330;color:#1a2233">華</span><span class="av" style="background:#0f3d7a;color:#fff">明</span><span class="av" style="background:#1b7a33;color:#fff">學</span><span class="av" style="background:#b34700;color:#fff">社</span><span class="av" style="background:#c8102e;color:#fff">教</span><span class="av" style="background:#4f5a70;color:#fff">+9</span></div>
+          </div></div>
+        </aside>
+      </div>
+    </div>
+    <p class="note">討論區的資料模型與後端一開始就放在牌桌的 repo（`shared/forum.ts`、`worker/forum.ts`），橋譜只是第一個前端；社內用順了再搬到牌桌開放給全台灣橋手（牌桌 E13），搬家只搬畫面。</p>
+  </section>
+
+  <!-- Name + logo -->
+  <section class="section" id="brand">
+    <h2>名稱與標誌</h2>
+    <p class="note">網站已經不只是一本譜：它收制度、收叢書，也是社團發公告、討論牌局的地方。中文裡有一個字剛好：<b>館</b>（棋院、會館、圖書館）。建議改名<b>淡江橋館 · TKU BridgeHall</b>；「橋譜」保留為館內「制度」區塊的名字，既有品牌不浪費；和姊妹站「淡江牌桌」並列成「館／桌」。</p>
+    <div class="cards">
+      <div class="card"><h3>淡江橋館（建議）</h3><p class="who">TKU BridgeHall。館裡有橋譜（制度）、叢書、討論；聚人也藏書。</p><ul><li>兩個核心都在</li><li>橋譜降為區塊名，不用重做內容</li><li>館／桌對仗</li></ul></div>
+      <div class="card"><h3>淡江橋院</h3><p class="who">TKU Bridge Academy。照「棋院」來，偏研究與教學。</p><ul><li>對分級學習、國手級內容貼</li><li>對新生偏嚴肅，討論的輕鬆感出不來</li></ul></div>
+      <div class="card"><h3>淡橋論壇</h3><p class="who">TKU Bridge Forum。只有討論。</p><ul><li>把「制度」丟了</li><li>聽起來像任何一個 BBS</li><li>不建議</li></ul></div>
+    </div>
+    <div class="brand-grid">
+      <div class="brand-box light">
+        <div class="brand-row"><svg width="96" height="96" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="#d9a330" stroke-width="4.5" stroke-linecap="round"/><path d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="#0f3d7a" stroke-width="4.5" stroke-linecap="round"/><path d="M7 55h50" fill="none" stroke="#0f3d7a" stroke-width="4.5" stroke-linecap="round"/><g transform="translate(19.5 28.5) scale(.5)"><path fill="#1a2233" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g><g transform="translate(33 28.5) scale(.5)"><path fill="#c8102e" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g><g transform="translate(19.5 41) scale(.5)"><path fill="#b34700" d="M12 2l7.5 10L12 22 4.5 12z"/></g><g transform="translate(33 41) scale(.5)"><path fill="#1b7a33" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g></svg><div><div class="wm">淡江橋館</div><div class="wm2">TKU BridgeHall</div><div class="wm3">♠♥♦♣ 橋藝社的制度與牌局</div></div></div>
+        <span class="note">淺色：屋簷宮燈金、拱門與橋淡江藍、四色花色</span>
+      </div>
+      <div class="brand-box dark">
+        <div class="brand-row"><svg width="96" height="96" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="#e7b850" stroke-width="4.5" stroke-linecap="round"/><path d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="#8db8ff" stroke-width="4.5" stroke-linecap="round"/><path d="M7 55h50" fill="none" stroke="#8db8ff" stroke-width="4.5" stroke-linecap="round"/><g transform="translate(19.5 28.5) scale(.5)"><path fill="#e6ebf3" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g><g transform="translate(33 28.5) scale(.5)"><path fill="#ff6b6b" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g><g transform="translate(19.5 41) scale(.5)"><path fill="#ffa04d" d="M12 2l7.5 10L12 22 4.5 12z"/></g><g transform="translate(33 41) scale(.5)"><path fill="#5fd27a" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g></svg><div><div class="wm">淡江橋館</div><div class="wm2">TKU BridgeHall</div><div class="wm3">♠♥♦♣ 橋藝社的制度與牌局</div></div></div>
+        <span class="note">深色：線條轉淺，花色用深色模式的四色</span>
+      </div>
+      <div class="brand-box tiles">
+        <div class="tile-row"><span class="tile t64"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="#f2b84b" stroke-width="4.5" stroke-linecap="round"/><path d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="#fff8e6" stroke-width="4.5" stroke-linecap="round"/><path d="M7 55h50" fill="none" stroke="#fff8e6" stroke-width="4.5" stroke-linecap="round"/><g transform="translate(19.5 28.5) scale(.5)"><path fill="#fff8e6" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g><g transform="translate(33 28.5) scale(.5)"><path fill="#ff6b6b" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g><g transform="translate(19.5 41) scale(.5)"><path fill="#ffa04d" d="M12 2l7.5 10L12 22 4.5 12z"/></g><g transform="translate(33 41) scale(.5)"><path fill="#5fd27a" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g></svg></span><span class="tile t40"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="#f2b84b" stroke-width="4.5" stroke-linecap="round"/><path d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="#fff8e6" stroke-width="4.5" stroke-linecap="round"/><path d="M7 55h50" fill="none" stroke="#fff8e6" stroke-width="4.5" stroke-linecap="round"/><g transform="translate(19.5 28.5) scale(.5)"><path fill="#fff8e6" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g><g transform="translate(33 28.5) scale(.5)"><path fill="#ff6b6b" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g><g transform="translate(19.5 41) scale(.5)"><path fill="#ffa04d" d="M12 2l7.5 10L12 22 4.5 12z"/></g><g transform="translate(33 41) scale(.5)"><path fill="#5fd27a" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g></svg></span><span class="tile t24"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="#f2b84b" stroke-width="4.5" stroke-linecap="round"/><path d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="#fff8e6" stroke-width="4.5" stroke-linecap="round"/><path d="M7 55h50" fill="none" stroke="#fff8e6" stroke-width="4.5" stroke-linecap="round"/><g transform="translate(19.5 28.5) scale(.5)"><path fill="#fff8e6" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g><g transform="translate(33 28.5) scale(.5)"><path fill="#ff6b6b" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g><g transform="translate(19.5 41) scale(.5)"><path fill="#ffa04d" d="M12 2l7.5 10L12 22 4.5 12z"/></g><g transform="translate(33 41) scale(.5)"><path fill="#5fd27a" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g></svg></span><span class="tile round"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="#f2b84b" stroke-width="4.5" stroke-linecap="round"/><path d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="#fff8e6" stroke-width="4.5" stroke-linecap="round"/><path d="M7 55h50" fill="none" stroke="#fff8e6" stroke-width="4.5" stroke-linecap="round"/><g transform="translate(19.5 28.5) scale(.5)"><path fill="#fff8e6" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g><g transform="translate(33 28.5) scale(.5)"><path fill="#ff6b6b" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g><g transform="translate(19.5 41) scale(.5)"><path fill="#ffa04d" d="M12 2l7.5 10L12 22 4.5 12z"/></g><g transform="translate(33 41) scale(.5)"><path fill="#5fd27a" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g></svg></span></div>
+        <span class="note">App 圖示與 favicon：淡江藍底；最右是 Android 自適應裁圓的樣子</span>
+      </div>
+    </div>
+    <p class="note">概念：一座館的屋簷（宮燈金，呼應淡江校園與牌桌的燈）、下面一道拱門、門內四個花色兩兩並排，門檻那一橫就是「橋」。書本（舊橋譜）與宮燈（牌桌）都不再用，三個圖形各自獨立。檔案在 <code>docs/design/logo/</code>（logo.svg、logo-mark.svg、favicon.svg、icon-maskable.svg）。</p>
+  </section>
+
+  <!-- Styles -->
+  <section class="section" id="styles">
+    <h2>六種風格</h2>
+    <div class="cards" id="styleCards">
+      <div class="card" data-v="normal"><h3>一般（預設）</h3><div class="sw"><i style="background:#f4f6fa"></i><i style="background:#ffffff"></i><i style="background:#e3ecf8"></i><i style="background:#0f3d7a"></i><i style="background:#d9a330"></i></div><p class="who">今天的樣子：淡江藍、白卡片、14px 圓角。新生第一次打開看到的就是它。</p><button type="button" class="pick">在上面看</button></div>
+      <div class="card" data-v="chinese"><h3>中國風</h3><div class="sw"><i style="background:#efe4cc"></i><i style="background:#f9f1dd"></i><i style="background:#b5261e"></i><i style="background:#1f4e8c"></i><i style="background:#c9a227"></i></div><p class="who">宣紙底、墨字、朱紅主色、青花藍結構、金線；雙線框、章節用「一、二、三」、印章式「待確認」、襯線標題。像線裝的譜。</p><button type="button" class="pick">在上面看</button></div>
+      <div class="card" data-v="soft"><h3>圓潤</h3><div class="sw"><i style="background:#f3f7f6"></i><i style="background:#ffffff"></i><i style="background:#dcf1ee"></i><i style="background:#1f8a8a"></i><i style="background:#f4a259"></i></div><p class="who">湖水青加芒果橘、22px 大圓角、沒有邊框、段落是浮起來的卡片、斑馬紋表格。像現代筆記 App，手機最舒服。</p><button type="button" class="pick">在上面看</button></div>
+      <div class="card" data-v="night"><h3>夜讀</h3><div class="sw"><i style="background:#0e1014"></i><i style="background:#1c1f26"></i><i style="background:#f2b35c"></i><i style="background:#e8e6e1"></i><i style="background:#e6e8ec"></i></div><p class="who">深色優先：近黑底、半透明玻璃面板、琥珀色強調、發光的目前位置。淺色版是石墨灰加琥珀。</p><button type="button" class="pick">在上面看</button></div>
+      <div class="card" data-v="suits"><h3>四色</h3><div class="sw"><i style="background:#ffffff"></i><i style="background:#141416"></i><i style="background:#e63946"></i><i style="background:#f4a261"></i><i style="background:#2a9d8f"></i></div><p class="who">純白墨黑、2px 粗線、硬陰影、四個花色的顏色當點綴、粗體標題。像牌盒上的叫牌卡，最活潑。</p><button type="button" class="pick">在上面看</button></div>
+      <div class="card" data-v="plain"><h3>極簡</h3><div class="sw"><i style="background:#ffffff"></i><i style="background:#f6f6f6"></i><i style="background:#cccccc"></i><i style="background:#111111"></i><i style="background:#c62828"></i></div><p class="who">黑白灰、直角、細線、字小一號行距緊、花色只有紅黑。給想一眼看最多內容的人，列印最像講義。</p><button type="button" class="pick">在上面看</button></div>
+    </div>
+  </section>
+
+  <!-- Layouts -->
+  <section class="section" id="layouts">
+    <h2>四種版面</h2>
+    <div class="layouts" id="layoutCards">
+      <div class="lay" data-v="whole"><div class="mini whole"><i></i><div class="stack"><i></i><i></i><i></i></div></div><h3>整本一頁</h3><p class="note">今天的版面：左邊目錄，右邊整本書的卡片，點開才展開。全部展開、Ctrl+F 最方便。</p><button type="button" class="pick">在上面看</button></div>
+      <div class="lay" data-v="three"><div class="mini three"><i></i><i></i><i></i></div><h3>三欄閱讀</h3><p class="note">一特約一頁：左目錄、中正文、右本頁導覽與入口（制度卡位置、練習、連結）。像文件網站。</p><button type="button" class="pick">在上面看</button></div>
+      <div class="lay" data-v="focus"><div class="mini focus"><i></i></div><h3>專注單欄</h3><p class="note">只有正文：置中、字大一號、行距寬、標題置中；目錄與設定是右下角浮動按鈕，段落用上方小標籤跳。像閱讀 App。</p><button type="button" class="pick">在上面看</button></div>
+      <div class="lay" data-v="grid"><div class="mini grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><h3>卡片總覽</h3><p class="note">沒有側欄：上方分類頁籤、中間一格格特約磁貼（程度、待確認、覆寫數一眼看完），點一格右側抽屜預覽，再點打開全文。像圖書館的書架。</p><button type="button" class="pick">在上面看</button></div>
+    </div>
+  </section>
+
+  <!-- Settings -->
+  <section class="section" id="settings">
+    <h2>個人設定：這些都讓使用者自己選</h2>
+    <p class="note">放在「我的帳號 › 顯示」與頁面上的「設定」按鈕，登入後記在帳號、跨裝置一致；未登入記在瀏覽器。下面的面板跟著上面的切換走。</p>
+    <div class="settings" id="settingsPanel">
+      <div class="row"><b>風格</b><div class="opts" data-key="style"><span data-v="normal">一般</span><span data-v="chinese">中國風</span><span data-v="soft">圓潤</span><span data-v="night">夜讀</span><span data-v="suits">四色</span><span data-v="plain">極簡</span></div></div>
+      <div class="row"><b>版面</b><div class="opts" data-key="layout"><span data-v="whole">整本一頁</span><span data-v="three">三欄閱讀</span><span data-v="focus">專注單欄</span><span data-v="grid">卡片總覽</span></div><p class="hint">手機一律單欄加底部工具列；卡片總覽在手機是兩欄磁貼。</p></div>
+      <div class="row"><b>明暗</b><div class="opts" data-key="mode"><span data-v="system">跟隨系統</span><span data-v="light">淺色</span><span data-v="dark">深色</span></div></div>
+      <div class="row"><b>字體</b><div class="opts" data-key="font"><span data-v="auto">跟隨風格</span><span data-v="serif">襯線標題</span><span data-v="sans">無襯線</span><span data-v="system">系統字型</span></div><p class="hint">系統字型不下載網頁字型，最省流量。</p></div>
+      <div class="row"><b>字級</b><div class="opts" data-key="size"><span data-v="s">小</span><span data-v="m">中</span><span data-v="l">大</span><span data-v="xl">特大</span></div></div>
+      <div class="row"><b>花色顏色</b><div class="opts" data-key="suitcolors"><span data-v="four">四色（♦ 橘 ♣ 綠）</span><span data-v="two">雙色（紅黑）</span></div><p class="hint">與牌桌的「牌樣式」設定同步。</p></div>
+      <div class="row"><b>閱讀模式</b><div class="opts"><span class="on">完整版</span><span>入門版（隱藏進階段落）</span></div></div>
+      <div class="row"><b>密度</b><div class="opts"><span class="on">舒適</span><span>緊湊</span></div></div>
+      <div class="row"><b>預設制度集</b><div class="opts"><span class="on">小明＋小華</span><span>A 隊</span><span>社團預設</span></div></div>
+    </div>
+  </section>
+
+  <!-- Convention cards -->
+  <section class="section" id="card">
+    <h2>制度卡：從你的制度集生成，內容寫進格子</h2>
+    <p class="note">主力是 <b>WBF 制度卡</b>（國橋下載區的「WBF版空白制度卡.doc」與「WBFCard-2.19.pdf」是同一張卡：兩頁橫式加補充說明頁）。產生器讀取你的制度集，把每一格的內容寫進去：制度摘要、開叫表、防守與競叫、首攻與信號、賭倍、特殊叫品。下面是「小明＋小華」制度集生成的第 1、2 頁縮圖；淡紅底是搭檔覆寫的內容。</p>
+    <div class="wbf" aria-label="WBF 制度卡預覽">
+      <div class="pglabel">第 1 頁 · 防守與競叫 · 首攻與信號 · 賭倍 · 制度摘要</div>
+      <div class="pg pg1">
+        <div class="col">
+          <div class="sh">DEFENSIVE AND COMPETITIVE BIDDING</div>
+          <div class="ssh">OVERCALLS (Style; Responses; 1/2 Level; Reopening)</div>
+          <div class="ln">Sound at 2-level, 8-17 HCP; new suit = F1; cue = raise</div>
+          <div class="ln">Jump raise = PRE; 2NT = limit+ raise (Good/Bad 2NT 松濤版)</div>
+          <div class="ssh">1NT OVERCALL (2nd/4th Live; Responses; Reopening)</div>
+          <div class="ln">15-18 HCP, stopper; system on (Stayman, transfers)</div>
+          <div class="ln">Reopen: 1NT = 11-14; 2NT = 19-20</div>
+          <div class="ssh">JUMP OVERCALLS (Style; Responses; Unusual NT)</div>
+          <div class="ln">Weak (6+ cards); 2NT = 2 lowest unbid suits</div>
+          <div class="ssh">DIRECT and JUMP CUE BIDS</div>
+          <div class="ln">Michaels: (1m)-2m = both M; (1M)-2M = oM + m</div>
+          <div class="ssh">VS. NT (vs Strong/Weak; Reopening; PH)</div>
+          <div class="ln ov">DONT vs strong NT; X = 1-suiter (搭檔；社團：Cappelletti)</div>
+          <div class="ln">Same vs weak NT; PH: same</div>
+          <div class="ssh">VS. PREEMPTS (Doubles; Cue-bids; Jumps; NT bids)</div>
+          <div class="ln">X = T/O thru 4S; Lebensohl after (2x)-X [Note 1]</div>
+          <div class="ln">4NT = 2-suiter; 2NT = 15-18 stopper</div>
+          <div class="ssh">VS. ARTIFICIAL STRONG OPENINGS</div>
+          <div class="ln">X = majors; NT = minors (vs strong 1C/2C)</div>
+          <div class="ssh">OVER OPPONENTS' TAKE OUT DOUBLE</div>
+          <div class="ln">XX = 10+; new suit F1 at 1-level; jump raise = PRE</div>
+          <div class="ln">2NT = limit+ raise (Jordan); jump shift = fit</div>
+        </div>
+        <div class="col">
+          <div class="sh">LEADS AND SIGNALS</div>
+          <div class="ssh">OPENING LEADS STYLE</div>
+          <div class="hdr"><span></span><span>Lead | In Partner's Suit</span></div>
+          <div class="hdr"><span>Suit</span><span>4th best; 2nd from bad | same</span></div>
+          <div class="hdr"><span>NT</span><span>4th best; top of sequence | same</span></div>
+          <div class="hdr"><span>Subseq</span><span>attitude | count</span></div>
+          <div class="ssh">LEADS</div>
+          <div class="hdr"><span>Lead</span><span>Vs. Suit | Vs. NT</span></div>
+          <div class="hdr"><span>Ace</span><span>AKx(+) | AKJ10(+), asks attitude</span></div>
+          <div class="hdr"><span>King</span><span>AK, KQx(+) | KQ109(+), asks count</span></div>
+          <div class="hdr"><span>Queen</span><span>QJ(+) | QJ10(+), KQ109</span></div>
+          <div class="hdr"><span>Jack</span><span>J10(+) | J10(+), AJ10</span></div>
+          <div class="hdr"><span>10</span><span>109(+) | 109(+), H109</span></div>
+          <div class="hdr"><span>Hi-x</span><span>xx, Hxx | xx</span></div>
+          <div class="hdr"><span>Lo-x</span><span>Hxxx(+) | Hxxx(+)</span></div>
+          <div class="ssh">SIGNALS IN ORDER OF PRIORITY</div>
+          <div class="hdr"><span></span><span>Partner's Lead | Declarer's Lead | Discarding</span></div>
+          <div class="hdr"><span>Suit 1st</span><span>Attitude (hi = enc) | Count | Attitude</span></div>
+          <div class="hdr"><span>2nd</span><span>Count (hi/lo = even) | S/P | Count</span></div>
+          <div class="hdr"><span>NT 1st</span><span>Attitude | Count | Attitude</span></div>
+          <div class="hdr"><span>2nd</span><span>Count | S/P | S/P</span></div>
+          <div class="ln">Trumps: hi/lo = odd (橋牌防守信號 §3)</div>
+          <div class="sh">DOUBLES</div>
+          <div class="ssh">TAKEOUT DOUBLES (Style; Responses; Reopening)</div>
+          <div class="ln">12+ HCP, classic shape; may be light with shape</div>
+          <div class="ln">Responsive X thru 3S (回答性賭倍); Support X/XX thru 2M</div>
+          <div class="ssh">SPECIAL, ARTIFICIAL AND COMPETITIVE DOUBLES/REDOUBLES</div>
+          <div class="ln">Negative X thru 3S; Lightner; Lead-directing X of 3NT</div>
+          <div class="ln ov">Maximal overcall X (搭檔)</div>
+        </div>
+        <div class="col">
+          <div class="ttl">WBF Convention Card 2.19</div>
+          <div class="hdr"><span>Category:</span><span>Natural - GREEN</span></div>
+          <div class="hdr"><span>NCBO:</span><span>Chinese Taipei (CTCBA)</span></div>
+          <div class="hdr"><span>Event:</span><span class="blank">（填寫）</span></div>
+          <div class="hdr"><span>Players:</span><span>小明 (Ming) · 小華 (Hua)</span></div>
+          <div class="sh">SYSTEM SUMMARY</div>
+          <div class="ssh">GENERAL APPROACH AND STYLE</div>
+          <div class="ln">淡江自然制 (TKU Natural) 5-card majors, 5542</div>
+          <div class="ln">Balanced minimum opening = 12 HCP; 1NT forcing</div>
+          <div class="ln">2 OVER 1 = game forcing; weak 2D (one major) / 2H / 2S</div>
+          <div class="ln">1NT openings: 15-17 HCP; 2NT: 20-21</div>
+          <div class="ssh">SPECIAL BIDS THAT MAY REQUIRE DEFENCE</div>
+          <div class="ln">2D = weak two in either major (2D 開叫) [Note 2]</div>
+          <div class="ln">Bergen raises: 3C = 7-9 4+M, 3D = 10-12 4+M</div>
+          <div class="ln">Jacoby 2NT = GF 4+ M raise; splinters</div>
+          <div class="ln">Good/Bad 2NT in competition (好壞 2NT)</div>
+          <div class="ln">Lebensohl over 1NT interference (slow shows)</div>
+          <div class="ln">New Minor Forcing after 1NT/2NT rebid</div>
+          <div class="ssh">SPECIAL FORCING PASS SEQUENCES</div>
+          <div class="ln">After our GF auction, pass over their sacrifice = F</div>
+          <div class="ssh">IMPORTANT NOTES THAT DON'T FIT ELSEWHERE</div>
+          <div class="ln">Defence vs Unusual 2NT: lower cue = limit+ raise ...</div>
+          <div class="ln ov">Vs 2C (unknown major): X = Stayman (搭檔備忘 10/20)</div>
+          <div class="ssh">Psychics:</div>
+          <div class="ln">None</div>
+        </div>
+      </div>
+      <div class="pglabel" style="margin-top:8px">第 2 頁 · 開叫表（Opening bid descriptions）· 高階叫牌</div>
+      <div class="pg">
+        <table>
+          <tr><th>Opening</th><th>Artif.</th><th>Min</th><th>Neg Dbl thru</th><th>Description</th><th>Responses</th><th>Subsequent auction</th><th>Passed hand</th></tr>
+          <tr><td>1C</td><td></td><td>3</td><td>3S</td><td>12-21 HCP; may be 3 cards (4432)</td><td>2C = 10+ GF (2/1); 1NT = 6-10; 2NT = 11-12 inv</td><td>NMF after 1NT rebid; 4th suit = GF</td><td>Drury not used</td></tr>
+          <tr><td>1D</td><td></td><td>3</td><td>3S</td><td>12-21 HCP; 3 cards only with 4432</td><td>2C = GF; 2D = 6-9; 3D = PRE</td><td>Reverse = F1R; 2NT = 18-19</td><td></td></tr>
+          <tr><td>1H</td><td></td><td>5</td><td>3S</td><td>12-21 HCP</td><td>1NT = F (6-12); 2/1 = GF; 2NT = Jacoby GF 4+; 3C/3D = Bergen 7-9 / 10-12; 3H = PRE</td><td>1H-2H: 2NT asks shape (1H 2H 淡江用); splinters</td><td>2C = 3-card raise</td></tr>
+          <tr><td>1S</td><td></td><td>5</td><td>3S</td><td>12-21 HCP</td><td>as 1H; 2NT = Jacoby; 3C/3D Bergen</td><td>Slam asks per 開叫高花之滿貫詢問叫</td><td></td></tr>
+          <tr><td>1NT</td><td></td><td></td><td>3S</td><td>15-17 HCP, may have 5M</td><td>2C Stayman; 2D/2H transfers; 2S = minors ask; 2NT inv; 3x = GF (1NT的答叫)</td><td>Lebensohl after interference; texas 4D/4H</td><td></td></tr>
+          <tr><td>2C</td><td>Y</td><td></td><td></td><td>22+ or 9 tricks</td><td>2D waiting; 2H = bust</td><td>2NT = 22-24; Stayman/transfers on</td><td></td></tr>
+          <tr><td class="ov">2D</td><td>Y</td><td></td><td></td><td class="ov">Weak two in either major, 5-10 HCP (2D 開叫 ppq)</td><td>2H = P/C; 2NT = ask; 3C = ask shortness</td><td>per 2D 開叫 §2-§4</td><td></td></tr>
+          <tr><td>2H/2S</td><td></td><td>6</td><td></td><td>Weak, 5-10 HCP</td><td>2NT = ask (feature); new suit = F1</td><td></td><td></td></tr>
+          <tr><td>2NT</td><td></td><td></td><td></td><td>20-21 HCP</td><td>3C Stayman (puppet); 3D/3H transfers; 3S = minors (開叫2NT及答叫)</td><td></td><td></td></tr>
+          <tr><td>3x / 4x</td><td></td><td>6-7</td><td></td><td>PRE, natural</td><td>new suit = F1; 4C over 3M = RKCB</td><td></td><td></td></tr>
+          <tr><td>3NT</td><td>Y</td><td>7</td><td></td><td class="blank">（待確認：賭博性 3NT 點力）</td><td></td><td></td><td></td></tr>
+        </table>
+        <div class="ssh" style="margin-top:4px">HIGH LEVEL BIDDING</div>
+        <div class="ln">RKCB 1430; Exclusion; DOPI/ROPI; splinters = double jump; 5NT = pick a slam</div>
+        <div class="ln">Slam asks after 1M-2NT per 開叫高花之滿貫詢問叫 (Note 3)</div>
+      </div>
+    </div>
+    <p class="note">補充說明頁（Supplementary notes）由各特約的段落自動帶出：卡上寫 [Note 1]，附頁就是橋譜裡那一段的全文。</p>
+
+    <h3 style="margin-top:8px">國橋下載區的九個檔案，橋譜怎麼對應</h3>
+    <div class="files">
+      <div class="fr"><span>檔案</span><span>是什麼</span><span>橋譜</span></div>
+      <div class="fr"><span>WBF版空白制度卡.doc</span><span>WBF 卡的 Word 空白表</span><span class="st gen">生成：填好內容輸出 .docx（照官方版面）與 PDF</span></div>
+      <div class="fr"><span>WBF版空白制度卡(gillsans字型).doc</span><span>同上，Gill Sans 字型版</span><span class="st gen">生成：同一份資料，字型選項</span></div>
+      <div class="fr"><span>WBFCard-2.19.pdf</span><span>WBF 卡 2.19 版範例（兩頁卡＋補充說明頁）</span><span class="st gen">生成：卡面與補充說明頁一起輸出 PDF</span></div>
+      <div class="fr"><span>2021-簡易制度卡(非橋士組用)-單面.pdf</span><span>國橋簡易卡，橫式勾選表，一頁</span><span class="st gen">生成：自動勾選，空格填點力與線位</span></div>
+      <div class="fr"><span>2021-簡易制度卡(非橋士組用)-雙面.pdf</span><span>同上，兩頁版</span><span class="st gen">生成：同上，雙面排版</span></div>
+      <div class="fr"><span>WBF版BSC開叫申報表.docx</span><span>棕標特約（Brown Sticker）開叫申報表</span><span class="st gen">生成：特約標記為棕標時，從該特約的段落填表（開叫、答叫、競叫、建議防禦）</span></div>
+      <div class="fr"><span>WBF版BSC蓋叫申報表.docx</span><span>棕標特約蓋叫申報表</span><span class="st gen">生成：同上，蓋叫版</span></div>
+      <div class="fr"><span>2023WBFSystemsPolicy.pdf</span><span>WBF 制度政策（哪些制度算棕標、HUM）</span><span class="st ref">參考：橋譜標記棕標時連到這份說明</span></div>
+      <div class="fr"><span>GuidetoCompletionWBFcc_2017.pdf</span><span>WBF 卡填寫指南</span><span class="st ref">參考：每格的說明文字來自這份指南，滑鼠移上去就看得到</span></div>
+    </div>
+    <p class="note">出檔格式：PDF（瀏覽器列印或 Worker 端產生）與 .docx（把內容寫進照官方版面重建的 Word 範本，裁判要 Word 檔也交得出來）。每一格都能點回橋譜段落；填不出來的格子留白讓人補，補的內容存回制度集，不另存一份。</p>
+  </section>
+
+  <!-- Feedback -->
+  <section class="section" id="feedback">
+    <h2>想法</h2>
+    <p class="note">不投票，但歡迎留想法：哪個風格或版面想當社團預設、哪裡看不順眼、想加什麼設定。寫完按複製貼到群組。</p>
+    <div class="form">
+      <label for="who">名字（可不填）</label><input type="text" id="who" placeholder="例如：小明">
+      <label for="cmt">想法</label><textarea id="cmt" placeholder="例如：預設用圓潤；中國風的紅可以再淡一點；希望有緊湊密度。"></textarea>
+      <div class="grp"><button type="button" class="btn" id="copy">複製我的想法</button><span class="status" id="status"></span></div>
+    </div>
+  </section>
+
+  <footer class="note">本頁為設計討論用的提案；內容節錄自現行橋譜（雷本索特約），制度卡內容為示意，叫品意義以正式網站為準。切換不會上傳，只有你按複製後貼出去的文字會被看到。</footer>
+</div>
+
+<script>
+(function () {
+  var demo = document.getElementById('demo');
+  var names = { normal: '一般', chinese: '中國風', soft: '圓潤', night: '夜讀', suits: '四色', plain: '極簡', whole: '整本一頁', three: '三欄閱讀', focus: '專注單欄', grid: '卡片總覽' };
+  var state = { style: 'normal', layout: 'whole', device: 'desktop', mode: 'light', font: 'auto', size: 'm', suitcolors: 'four' };
+  try { var saved = JSON.parse(localStorage.getItem('bb-pitch-v2') || '{}'); for (var k in saved) if (k in state) state[k] = saved[k]; } catch (e) {}
+  function seg(id, key) {
+    var el = document.getElementById(id); if (!el) return;
+    el.addEventListener('click', function (ev) { var b = ev.target.closest('button'); if (!b) return; state[key] = b.getAttribute('data-v'); render(); });
+  }
+  function setPressed(id, v) {
+    var el = document.getElementById(id); if (!el) return;
+    Array.prototype.forEach.call(el.querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-v') === v ? 'true' : 'false'); });
+  }
+  function render() {
+    var demo2 = document.getElementById('demo2');
+    ['style', 'layout', 'device', 'mode', 'font', 'size', 'suitcolors'].forEach(function (k) { demo.setAttribute('data-' + k, state[k]); if (demo2 && k !== 'device' && k !== 'layout') demo2.setAttribute('data-' + k, state[k]); });
+    setPressed('segStyle', state.style); setPressed('segLayout', state.layout); setPressed('segDevice', state.device); setPressed('segMode', state.mode); setPressed('segFont', state.font); setPressed('segSize', state.size); setPressed('segSuit', state.suitcolors);
+    Array.prototype.forEach.call(document.querySelectorAll('#settingsPanel .opts[data-key]'), function (o) {
+      var key = o.getAttribute('data-key'); var cur = state[key];
+      Array.prototype.forEach.call(o.querySelectorAll('span'), function (s) { s.classList.toggle('on', s.getAttribute('data-v') === cur); });
+    });
+    try { localStorage.setItem('bb-pitch-v2', JSON.stringify(state)); } catch (e) {}
+  }
+  seg('segStyle', 'style'); seg('segLayout', 'layout'); seg('segDevice', 'device'); seg('segMode', 'mode'); seg('segFont', 'font'); seg('segSize', 'size'); seg('segSuit', 'suitcolors');
+  document.getElementById('settingsPanel').addEventListener('click', function (ev) {
+    var s = ev.target.closest('span[data-v]'); if (!s) return; var key = s.parentElement.getAttribute('data-key'); var v = s.getAttribute('data-v');
+    if (key === 'mode' && v === 'system') v = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    state[key] = v; render();
+  });
+  function jump() { document.getElementById('demo-section').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  document.getElementById('styleCards').addEventListener('click', function (ev) { var b = ev.target.closest('.pick'); if (!b) return; state.style = b.closest('.card').getAttribute('data-v'); render(); jump(); });
+  document.getElementById('layoutCards').addEventListener('click', function (ev) { var b = ev.target.closest('.pick'); if (!b) return; state.layout = b.closest('.lay').getAttribute('data-v'); render(); jump(); });
+  document.getElementById('copy').addEventListener('click', function () {
+    var who = document.getElementById('who').value.trim(); var cmt = document.getElementById('cmt').value.trim(); var st = document.getElementById('status');
+    var text = '【淡江橋館設計想法】' + (who ? who + '：' : '') + (cmt || '（沒有寫內容）') + '\n（看的時候用：' + names[state.style] + ' · ' + names[state.layout] + '）';
+    function fallback() { var ta = document.getElementById('cmt'); ta.focus(); ta.select(); st.textContent = '請按 Ctrl+C／長按複製'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(function () { st.textContent = '已複製，貼到群組吧'; }, fallback); } else fallback();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

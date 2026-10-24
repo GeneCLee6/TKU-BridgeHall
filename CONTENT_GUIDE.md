@@ -6,7 +6,7 @@
 
 1. 安裝 Node.js 22 與 Git。
 2. 取得專案：`git clone https://github.com/GeneCLee6/TKU-BridgeBook.git`，進入資料夾後 `npm install`。
-3. `npm run dev`，瀏覽器打開 http://localhost:5173 ，邊改邊看。
+3. `npm run dev`，瀏覽器打開 http://localhost:5174 ，邊改邊看。
 
 ## 1. 轉錄原則（最重要）
 
