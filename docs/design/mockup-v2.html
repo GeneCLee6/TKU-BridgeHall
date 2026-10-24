@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>淡江橋譜 介面 v2 視覺稿</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: a design review page. Each "frame" is a real CSS layout of one screen of the redesign,
+   built from the v2 tokens below, so the tokens and the look are checked together. */
+:root {
+  --paper: #f3eee3; --sheet: #fbf8f1; --sheet-alt: #efe8da; --rule: #d8cfbd;
+  --ink: #1f1b17; --ink-muted: #6a6158;
+  --cinnabar: #a63d2f; --cinnabar-soft: #f3e3df;
+  --indigo: #3a4a7c; --indigo-soft: #e4e8f4;
+  --gilt: #b8923a; --seal: #8f2f23; --focus: #3a4a7c;
+  --s-spade: #1f1b17; --s-heart: #c8102e; --s-diamond: #b34700; --s-club: #1b7a33;
+  --on-cinnabar: #fff;
+  --shadow: 0 8px 24px rgba(31,27,23,.12);
+  --serif: 'Noto Serif TC', 'Songti TC', 'PMingLiU', serif;
+  --sans: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #171412; --sheet: #201c18; --sheet-alt: #2a241f; --rule: #3b332c;
+  --ink: #ece4d6; --ink-muted: #aa9f91; --cinnabar: #e38270; --cinnabar-soft: #3a221d;
+  --indigo: #9fb0e6; --indigo-soft: #262c45; --gilt: #d1ab54; --seal: #ff9a86; --focus: #9fb0e6;
+  --s-spade: #ece4d6; --s-heart: #ff6b6b; --s-diamond: #ffa04d; --s-club: #5fd27a;
+  --on-cinnabar: #1f1b17; --shadow: 0 8px 24px rgba(0,0,0,.5); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #171412; --sheet: #201c18; --sheet-alt: #2a241f; --rule: #3b332c;
+  --ink: #ece4d6; --ink-muted: #aa9f91; --cinnabar: #e38270; --cinnabar-soft: #3a221d;
+  --indigo: #9fb0e6; --indigo-soft: #262c45; --gilt: #d1ab54; --seal: #ff9a86; --focus: #9fb0e6;
+  --s-spade: #ece4d6; --s-heart: #ff6b6b; --s-diamond: #ffa04d; --s-club: #5fd27a;
+  --on-cinnabar: #1f1b17; --shadow: 0 8px 24px rgba(0,0,0,.5); color-scheme: dark }
+
+* { box-sizing: border-box }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.75;
+  padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 56px }
+h1, h2, h3, .serif { font-family: var(--serif); font-weight: 600; text-wrap: balance; margin: 0 }
+h1 { font-size: 2rem; line-height: 1.25 }
+h2 { font-size: 1.375rem; line-height: 1.3; padding-bottom: 6px; border-bottom: 1px solid var(--gilt) }
+p { margin: 0 }
+a { color: var(--cinnabar) }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px }
+.eyebrow { font-size: .8125rem; letter-spacing: .04em; color: var(--ink-muted); text-transform: uppercase }
+.lede { max-width: 68ch; color: var(--ink-muted) }
+.intro { display: grid; gap: 12px }
+.section { display: grid; gap: 16px }
+.note { font-size: .875rem; color: var(--ink-muted); max-width: 68ch }
+
+/* Frames */
+.frame { background: var(--sheet); border: 1px solid var(--rule); overflow: hidden }
+.frame-bar { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 20px; border-bottom: 1px solid var(--rule); background: var(--sheet) }
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--serif); font-weight: 600; font-size: 1.125rem; color: var(--ink); text-decoration: none }
+.brand small { font-family: var(--sans); font-weight: 500; font-size: .75rem; color: var(--ink-muted); letter-spacing: .02em }
+.mark { width: 28px; height: 28px; flex: none }
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px 0 10px; border: 1px solid var(--rule); border-radius: 999px; background: var(--sheet); font-size: .875rem; font-weight: 500; color: var(--ink); white-space: nowrap }
+.pill svg { width: 16px; height: 16px }
+.search { flex: 1; max-width: 22rem; height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 4px; background: var(--sheet-alt); color: var(--ink-muted); font-size: .875rem }
+.search svg { width: 16px; height: 16px; flex: none }
+.spacer { flex: 1 }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--indigo-soft); color: var(--indigo); display: grid; place-items: center; font-size: .8125rem; font-weight: 700 }
+
+.three { display: grid; grid-template-columns: 18rem minmax(0, 1fr) 14rem; min-height: 560px }
+.toc { border-right: 1px solid var(--rule); padding: 20px 16px; font-size: .9375rem; display: grid; gap: 4px; align-content: start }
+.toc h3 { font-size: .9375rem; margin-bottom: 8px }
+.toc .cat { display: flex; align-items: center; gap: 6px; font-weight: 500; margin-top: 8px }
+.toc .cat::before { content: ''; width: 0; height: 0; border-left: 5px solid var(--ink-muted); border-top: 4px solid transparent; border-bottom: 4px solid transparent; transform: rotate(90deg) }
+.toc .cat.closed::before { transform: none }
+.toc .item { padding: 3px 0 3px 18px; color: var(--ink-muted); display: flex; gap: 8px; align-items: baseline }
+.toc .item.cur { color: var(--cinnabar); font-weight: 500; position: relative }
+.toc .item.cur::before { content: '●'; position: absolute; left: 6px; font-size: .5rem; top: 10px }
+.toc .count { font-size: .75rem; color: var(--ink-muted); margin-left: auto }
+.main { padding: 28px 40px 40px; max-width: 48rem; min-width: 0; display: grid; gap: 20px; align-content: start }
+.crumbs { font-size: .8125rem; color: var(--ink-muted) }
+.crumbs span + span::before { content: ' › '; }
+.title-row { display: grid; gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--gilt) }
+.title-row .en { font-size: .9375rem; font-weight: 500; color: var(--ink-muted); letter-spacing: .02em }
+.meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: .8125rem; color: var(--ink-muted) }
+.level { display: inline-block; padding: 0 8px; border-radius: 2px; background: var(--indigo-soft); color: var(--indigo); font-weight: 500 }
+.tag { display: inline-block; padding: 0 6px; border: 1px solid var(--rule); border-radius: 2px; color: var(--ink-muted); font-size: .75rem; line-height: 1.6 }
+.sec { display: grid; gap: 10px; padding-left: 14px; border-left: 2px solid var(--indigo) }
+.sec.over { border-left-color: var(--cinnabar) }
+.sec h3 { font-size: 1.125rem; display: flex; align-items: baseline; gap: 10px }
+.sec h3 .no { color: var(--indigo); font-size: .9375rem }
+.sec h3 .caret { margin-left: auto; width: 0; height: 0; border-top: 6px solid var(--ink-muted); border-left: 5px solid transparent; border-right: 5px solid transparent }
+.origin { font-size: .75rem; color: var(--cinnabar); margin-top: -6px }
+.sub { padding-left: 12px; border-left: 1px solid var(--rule); display: grid; gap: 8px }
+.sub h4 { margin: 0; font-size: 1rem; font-weight: 600 }
+.auction { display: inline-grid; grid-template-columns: repeat(4, 4rem); background: var(--sheet-alt); padding: 8px 10px; font-variant-numeric: tabular-nums; font-size: .9375rem; text-align: center }
+.auction .seat { font-size: .75rem; color: var(--ink-muted) }
+.auction .q { color: var(--cinnabar); font-weight: 700 }
+table.resp { border-collapse: collapse; width: 100%; font-size: .9375rem; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule) }
+table.resp td { padding: 6px 8px; vertical-align: top; border-top: 1px solid color-mix(in srgb, var(--rule) 50%, transparent) }
+table.resp tr:first-child td { border-top: 0 }
+table.resp td.call { width: 5.5rem; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap }
+table.resp td.ov { border-left: 2px solid var(--cinnabar); padding-left: 10px }
+table.resp td.ov small { color: var(--cinnabar) }
+.S { color: var(--s-spade) } .H { color: var(--s-heart) } .D { color: var(--s-diamond) } .C { color: var(--s-club) }
+.seal { display: inline-block; padding: 0 6px; border: 1.5px solid var(--seal); border-radius: 2px; color: var(--seal); font-family: var(--serif); font-weight: 600; font-size: .75rem; line-height: 1.6; transform: rotate(-2deg) }
+@media (prefers-reduced-motion: reduce) { .seal { transform: none } }
+.memo { background: var(--cinnabar-soft); padding: 8px 12px; font-size: .9375rem }
+.memo b { font-size: .75rem; color: var(--cinnabar); font-weight: 500; display: block }
+.rail { border-left: 1px solid var(--rule); padding: 20px 16px; font-size: .875rem; display: grid; gap: 14px; align-content: start }
+.rail h3 { font-size: .9375rem }
+.rail ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; color: var(--ink-muted) }
+.rail ol li.cur { color: var(--ink); background: var(--indigo-soft); margin: 0 -8px; padding: 2px 8px }
+.rail .links { display: grid; gap: 6px; padding-top: 10px; border-top: 1px solid var(--rule) }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 14px; border-radius: 4px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); font: inherit; font-size: .875rem; font-weight: 500; text-decoration: none; cursor: pointer }
+.btn.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: var(--on-cinnabar) }
+.btn.sm { height: 30px; padding: 0 10px; font-size: .8125rem }
+.prevnext { display: flex; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--rule); font-size: .9375rem }
+
+/* Home */
+.home { padding: 28px 40px 40px; display: grid; gap: 32px }
+.home h2 { font-size: 1.25rem }
+.profile-card { display: grid; grid-template-columns: 1fr auto; gap: 16px; padding: 20px 24px; border: 1px solid var(--rule); background: var(--sheet) }
+.profile-card .name { font-family: var(--serif); font-size: 1.5rem; font-weight: 600 }
+.profile-card .facts { display: flex; flex-wrap: wrap; gap: 16px; color: var(--ink-muted); font-size: .875rem }
+.profile-card .facts b { color: var(--ink); font-weight: 600 }
+.profile-card .actions { display: flex; gap: 8px; align-items: start; flex-wrap: wrap }
+.grid5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px }
+.cat-card { padding: 14px 16px; border: 1px solid var(--rule); display: grid; gap: 4px; min-width: 0 }
+.cat-card .n { font-family: var(--serif); font-weight: 600; font-size: 1rem }
+.cat-card .d { font-size: .8125rem; color: var(--ink-muted); line-height: 1.5 }
+.cat-card .c { font-size: .75rem; color: var(--indigo); font-weight: 500 }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px }
+.step { padding: 14px 16px; background: var(--sheet-alt); display: grid; gap: 4px }
+.step .k { font-family: var(--serif); color: var(--indigo); font-size: .875rem }
+.recent { display: grid; gap: 0; border-top: 1px solid var(--rule) }
+.recent div { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: .9375rem }
+.recent small { color: var(--ink-muted) }
+
+/* Phone */
+.phones { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 300px)); gap: 24px; justify-content: start }
+.phone { width: 100%; max-width: 300px; aspect-ratio: 9 / 18.5; border: 1px solid var(--rule); border-radius: 24px; background: var(--sheet); display: grid; grid-template-rows: 48px 1fr 56px; overflow: hidden; font-size: .8125rem }
+.phone .top { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--rule) }
+.phone .top .pill { height: 28px; font-size: .75rem }
+.phone .body { padding: 14px 16px; display: grid; gap: 10px; align-content: start; overflow: hidden }
+.phone .body h1 { font-size: 1.375rem }
+.phone .bottom { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--rule); font-size: .6875rem; text-align: center; align-items: center; color: var(--ink-muted) }
+.phone .bottom span.cur { color: var(--cinnabar); font-weight: 600 }
+.phone .sheet-up { background: var(--sheet-alt); margin: 0 -16px -14px; padding: 12px 16px; display: grid; gap: 6px; box-shadow: var(--shadow) }
+.phone .drawer-title { font-family: var(--serif); font-weight: 600 }
+
+/* Convention card */
+.card-a4 { background: #fff; color: #111; border: 1px solid var(--gilt); padding: 18px 22px; display: grid; gap: 10px; font-size: .8125rem; max-width: 640px; aspect-ratio: 210 / 297; overflow: hidden }
+.card-a4 .head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #b8923a; padding-bottom: 6px }
+.card-a4 .head b { font-family: var(--serif); font-size: 1.125rem; font-weight: 600 }
+.card-a4 .head small { color: #555 }
+.card-a4 .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.card-a4 .slot { border: 1px solid #ccc; padding: 6px 8px; display: grid; gap: 2px; min-height: 64px }
+.card-a4 .slot .t { font-family: var(--serif); font-size: .6875rem; color: #555; display: flex; justify-content: space-between }
+.card-a4 .slot .t a { color: #a63d2f; text-decoration: none; font-family: var(--sans) }
+.card-a4 .slot.wide { grid-column: 1 / -1 }
+.card-a4 .slot .ov { border-left: 2px solid #a63d2f; padding-left: 6px }
+.card-a4 .foot { display: flex; justify-content: space-between; color: #555; font-size: .6875rem; border-top: 1px solid #ccc; padding-top: 6px; margin-top: auto }
+.card-a4 .H { color: #c8102e } .card-a4 .D { color: #c8102e } .card-a4 .S, .card-a4 .C { color: #111 }
+
+/* Tokens strip */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px }
+.sw { border: 1px solid var(--rule); display: grid; grid-template-rows: 56px auto; font-size: .75rem }
+.sw i { display: block }
+.sw span { padding: 6px 8px; display: grid }
+.sw code { font-size: .6875rem; color: var(--ink-muted) }
+.type { display: grid; gap: 6px; border: 1px solid var(--rule); padding: 16px 20px; background: var(--sheet) }
+.type .t1 { font-family: var(--serif); font-size: 2rem; font-weight: 600; line-height: 1.25 }
+.type .t2 { font-family: var(--serif); font-size: 1.125rem; font-weight: 600 }
+.type .t3 { font-size: 1rem }
+.type .t4 { font-size: .9375rem; font-variant-numeric: tabular-nums; font-weight: 500 }
+.type small { color: var(--ink-muted); font-size: .75rem }
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px }
+.compare div { padding: 14px 16px; border: 1px solid var(--rule) }
+.compare b { display: block; font-family: var(--serif); margin-bottom: 4px }
+.compare p { font-size: .9375rem; color: var(--ink-muted) }
+
+@media (max-width: 1100px) { .three { grid-template-columns: 16rem minmax(0, 1fr) } .rail { display: none } }
+@media (max-width: 860px) {
+  .three { grid-template-columns: 1fr } .toc { display: none } .main { padding: 20px 16px }
+  .home { padding: 20px 16px } .grid5 { grid-template-columns: repeat(2, minmax(0, 1fr)) } .steps { grid-template-columns: 1fr }
+  .profile-card { grid-template-columns: 1fr } .frame-bar .search { display: none } .frame-bar { padding: 0 12px }
+}
+@media (max-width: 480px) { .grid5 { grid-template-columns: 1fr } .card-a4 .slots { grid-template-columns: 1fr } .card-a4 { aspect-ratio: auto } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="intro">
+  <p class="eyebrow">TKU BridgeBook · 設計提案 · 2026-10-24</p>
+  <h1>淡江橋譜 介面 v2 視覺稿</h1>
+  <p class="lede">方向一句話：淡江牌桌是綠桌布加淡江藍的 App，橋譜要是米紙、墨、朱砂的一本書。下面五個畫面都是用 v2 的 token 直接排出來的，不是截圖；切換系統深色模式可以看到「夜讀」版。規格在 <code>docs/DESIGN-V2.md</code>，實作拆在 PRD 的 E9。</p>
+  <div class="compare">
+    <div><b>現況（M0）</b><p>Swagger 式卡片堆、整本一頁、頁首七個圖示鈕、淡江藍與牌桌同色、沒有入口頁。</p></div>
+    <div><b>v2</b><p>首頁是入口；一特約一頁、三欄閱讀；頁首只有 Logo、制度集、搜尋、帳號；襯線標題、細線表格、印章式「待確認」。</p></div>
+    <div><b>與牌桌的區分</b><p>牌桌：綠桌布、淡江藍、宮燈。橋譜：米紙、朱砂、靛、書。只共用 Logo 家族與四色花色。</p></div>
+  </div>
+</header>
+
+<!-- 1. Home -->
+<section class="section" id="home">
+  <h2>1 · 首頁：入口，不是整本書</h2>
+  <p class="note">登入後第一眼回答三件事：我現在看的是哪個制度集、新生從哪開始、最近改了什麼。未登入時制度集卡顯示「社團預設制度」並提示登入。</p>
+  <div class="frame">
+    <div class="frame-bar">
+      <a class="brand" href="#home" aria-label="淡江橋譜 首頁"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M4 7h10c1.5 0 2 .6 2 2v16c-1-1-2-1.5-3.5-1.5H4z" fill="#b8923a"/><path d="M28 7H18c-1.5 0-2 .6-2 2v16c1-1 2-1.5 3.5-1.5H28z" fill="#b8923a"/><path d="M6 9h7.5c.9 0 1.5.5 1.5 1.5V22c-.8-.6-1.6-.8-2.5-.8H6z" fill="#fff8e6"/><path d="M26 9h-7.5c-.9 0-1.5.5-1.5 1.5V22c.8-.6 1.6-.8 2.5-.8H26z" fill="#fff8e6"/><path d="M15.5 10v3.5h1V10z" fill="#c8102e"/></svg>淡江橋譜 <small>TKU BridgeBook</small></a>
+      <span class="pill"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5.5" cy="6" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="10.5" cy="6" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 13c.5-2.5 2-3.5 4-3.5s3.5 1 4 3.5M7.5 13c.4-1.8 1.6-3 3-3s2.6 1 3 3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>小明＋小華 ▾</span>
+      <div class="search"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5 14 14" stroke="currentColor" stroke-width="1.5"/></svg>搜尋特約、叫品、名詞，如 2♦</div>
+      <span class="spacer"></span>
+      <span class="avatar" aria-label="帳號：小明">明</span>
+    </div>
+    <div class="home">
+      <div class="profile-card">
+        <div style="display:grid;gap:8px">
+          <p class="eyebrow">目前的制度集 · 搭檔</p>
+          <p class="name">小明＋小華</p>
+          <div class="facts"><span>繼承 <b>A 隊</b> ← 社團預設</span><span>採用 <b>14</b> 個特約</span><span>覆寫 <b>3</b> 條</span><span>備忘 <b>2</b> 則</span><span>最後更新 <b>2026-10-20</b> 小華</span></div>
+        </div>
+        <div class="actions"><a class="btn primary" href="#reading">讀制度</a><a class="btn" href="#card">制度卡</a><a class="btn" href="#reading">與 A 隊比較</a></div>
+      </div>
+      <div>
+        <h2>第一次來？從這裡開始</h2>
+        <div class="steps" style="margin-top:12px">
+          <div class="step"><span class="k">第 1 課</span><b>社團打什麼制度</b><span class="note">淡江自然制總覽：12 點開叫、1NT 15-17、2/1 迫叫成局。</span></div>
+          <div class="step"><span class="k">第 2 課</span><b>1NT 的答叫</b><span class="note">Stayman、轉換、成局束叫；先會這個就能上桌。</span></div>
+          <div class="step"><span class="k">第 3 課</span><b>三個最常用的特約</b><span class="note">雷本索、Jacoby 2NT、負性賭倍。</span></div>
+        </div>
+      </div>
+      <div>
+        <h2>全書</h2>
+        <div class="grid5" style="margin-top:12px">
+          <div class="cat-card"><span class="n">無王開叫後續</span><span class="d">1NT、2NT 開叫之後的答叫與競叫</span><span class="c">3 個特約</span></div>
+          <div class="cat-card"><span class="n">花色開叫後續</span><span class="d">花色開叫之後的答叫與再叫</span><span class="c">6 個特約</span></div>
+          <div class="cat-card"><span class="n">防守信號</span><span class="d">防守時的出牌與墊牌信號</span><span class="c">1 個特約</span></div>
+          <div class="cat-card"><span class="n">競叫與防守</span><span class="d">敵方插叫或我方插叫時的約定</span><span class="c">3 個特約</span></div>
+          <div class="cat-card"><span class="n">制度總覽</span><span class="d">2010 年講義《我們的制度》，標出現行差異</span><span class="c">9 章</span></div>
+        </div>
+      </div>
+      <div>
+        <h2>最近更新</h2>
+        <div class="recent" style="margin-top:12px">
+          <div><span>雷本索特約 · 修正「遭自然牌組插叫」3♣ 的說明</span><small>IceBanana · 10-23</small></div>
+          <div><span>Bergen加叫（松濤版）· 待確認「1♥ 2NT 4♦」已由社團確認</span><small>IceBanana · 10-22</small></div>
+          <div><span>制度總覽 · 新增「現行制度與本講義的差異」</span><small>IceBanana · 10-22</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Reading page -->
+<section class="section" id="reading">
+  <h2>2 · 特約頁：一特約一頁、三欄閱讀</h2>
+  <p class="note">左欄是全書目錄（分類 → 特約，段落不列）；中欄正文 68 字寬，第一層段落有 §編號與靛色左框；右欄是本頁導覽、閱讀設定與入口。搭檔覆寫的段落左框變朱砂、叫品列有朱砂線與「（搭檔）」後綴；備忘只有成員看到。內容節錄自現行網站的雷本索特約，示意用。</p>
+  <div class="frame">
+    <div class="frame-bar">
+      <a class="brand" href="#home" aria-label="淡江橋譜 首頁"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M4 7h10c1.5 0 2 .6 2 2v16c-1-1-2-1.5-3.5-1.5H4z" fill="#b8923a"/><path d="M28 7H18c-1.5 0-2 .6-2 2v16c1-1 2-1.5 3.5-1.5H28z" fill="#b8923a"/><path d="M6 9h7.5c.9 0 1.5.5 1.5 1.5V22c-.8-.6-1.6-.8-2.5-.8H6z" fill="#fff8e6"/><path d="M26 9h-7.5c-.9 0-1.5.5-1.5 1.5V22c.8-.6 1.6-.8 2.5-.8H26z" fill="#fff8e6"/><path d="M15.5 10v3.5h1V10z" fill="#c8102e"/></svg>淡江橋譜 <small>TKU BridgeBook</small></a>
+      <span class="pill">小明＋小華 ▾</span>
+      <div class="search">搜尋特約、叫品、名詞，如 2♦</div>
+      <span class="spacer"></span>
+      <span class="avatar" aria-label="帳號：小明">明</span>
+    </div>
+    <div class="three">
+      <nav class="toc" aria-label="全書目錄">
+        <h3>全書目錄</h3>
+        <div class="cat">無王開叫後續 <span class="count">3</span></div>
+        <div class="item">1NT的答叫</div>
+        <div class="item">開叫2NT及答叫</div>
+        <div class="item cur">雷本索特約</div>
+        <div class="cat closed">花色開叫後續 <span class="count">6</span></div>
+        <div class="cat closed">防守信號 <span class="count">1</span></div>
+        <div class="cat closed">競叫與防守 <span class="count">3</span></div>
+        <div class="cat closed">制度總覽（舊講義） <span class="count">9</span></div>
+        <div class="cat closed" style="margin-top:16px">待確認 <span class="count"><span class="seal">44</span></span></div>
+        <div class="cat closed">外部參考</div>
+      </nav>
+      <article class="main">
+        <p class="crumbs"><span>無王開叫後續</span><span>特約</span></p>
+        <div class="title-row">
+          <h1>雷本索特約</h1>
+          <span class="en">Lebensohl</span>
+          <div class="meta"><span class="level">進階</span><span>來源：雷本所特約（1NT遭插叫的答叫原則）</span><span>最後校對 2026-10-21</span><span class="tag">1NT</span><span class="tag">插叫</span><span class="tag">2NT 迫叫 3♣</span><span class="tag">+2</span></div>
+        </div>
+        <p class="lede">同伴開叫 1NT 遭敵方插叫時的答叫原則：二線不迫叫、三線 GF、2NT 迫叫 3<span class="C">♣</span> 後續。</p>
+        <div class="sec">
+          <h3><span class="no">§1</span>遭自然牌組插叫<span class="caret" aria-hidden="true"></span></h3>
+          <p>二線新花不迫叫，三線新花 GF，2NT 迫叫 3<span class="C">♣</span>，X 為處罰性。</p>
+          <div class="sub">
+            <h4>例：1NT (2♠) ?</h4>
+            <div class="auction"><span class="seat">開叫者</span><span class="seat">敵方</span><span class="seat">答叫者</span><span class="seat">敵方</span><span>1NT</span><span>2<span class="S">♠</span></span><span class="q">?</span><span></span></div>
+            <table class="resp">
+              <tr><td class="call">2NT</td><td>雷本索，迫叫 3<span class="C">♣</span>；之後再叫為不迫叫或邀請</td></tr>
+              <tr><td class="call">3<span class="C">♣</span></td><td>自然，GF</td></tr>
+              <tr><td class="call">3<span class="D">♦</span></td><td>自然，GF</td></tr>
+              <tr><td class="call">3<span class="H">♥</span></td><td>自然，GF，5 張以上</td></tr>
+              <tr><td class="call">3<span class="S">♠</span></td><td>Stayman，無擋張 <span class="seal">待確認</span> <small style="color:var(--ink-muted)">原文與 3NT 的擋張說明順序疑似相反</small></td></tr>
+              <tr><td class="call">X</td><td>處罰性</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="sec over">
+          <h3><span class="no">§2</span>遭非自然牌組插叫<span class="caret" aria-hidden="true"></span></h3>
+          <p class="origin">搭檔覆寫 · 小明＋小華 · 2026-10-20</p>
+          <p>大部分照 Lebensohl，X 為處罰性。</p>
+          <div class="sub">
+            <h4>例：1NT (2♣ 一門未知高花) ?</h4>
+            <table class="resp">
+              <tr><td class="call">X</td><td class="ov">Stayman <small>（搭檔；社團版：處罰性）</small></td></tr>
+              <tr><td class="call">2<span class="D">♦</span></td><td>轉換 <span class="H">♥</span></td></tr>
+              <tr><td class="call">2NT</td><td>雷本索</td></tr>
+            </table>
+            <div class="memo"><b>備忘 · 只有我們看得到</b>敵方 2♣ 兩高時我們用 X 問 Stayman，不要處罰；10/20 社課後約好的。</div>
+          </div>
+        </div>
+        <div class="sec">
+          <h3><span class="no">§3</span>其他運用<span class="caret" aria-hidden="true"></span></h3>
+          <p class="note">敵方開二階弱叫、同伴 X 之後；同伴一線插叫、敵方加叫之後。</p>
+        </div>
+        <div class="prevnext"><a href="#reading">← 開叫2NT及答叫</a><a href="#reading">1H 2H（淡江用） →</a></div>
+      </article>
+      <aside class="rail" aria-label="本頁">
+        <h3>本頁</h3>
+        <ol><li class="cur">§1 遭自然牌組插叫</li><li>§2 遭非自然牌組插叫</li><li>§3 其他運用</li></ol>
+        <div class="links">
+          <a class="btn sm" href="#reading">閱讀設定</a>
+          <a href="#card">在制度卡的 §Over 1NT</a>
+          <a href="#reading">練這個特約（12 題）</a>
+          <a href="#reading">複製連結</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Phone -->
+<section class="section" id="phone">
+  <h2>3 · 手機：單欄、底部工具列</h2>
+  <p class="note">頂列只有 Logo、制度集、搜尋；底部四個入口（目錄、本頁、搜尋、閱讀設定），目錄與閱讀設定是上滑的抽屜。</p>
+  <div class="phones">
+    <div class="phone" aria-label="手機：特約頁">
+      <div class="top"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true" style="width:22px;height:22px"><path d="M4 7h10c1.5 0 2 .6 2 2v16c-1-1-2-1.5-3.5-1.5H4z" fill="#b8923a"/><path d="M28 7H18c-1.5 0-2 .6-2 2v16c1-1 2-1.5 3.5-1.5H28z" fill="#b8923a"/><path d="M6 9h7.5c.9 0 1.5.5 1.5 1.5V22c-.8-.6-1.6-.8-2.5-.8H6z" fill="#fff8e6"/><path d="M26 9h-7.5c-.9 0-1.5.5-1.5 1.5V22c.8-.6 1.6-.8 2.5-.8H26z" fill="#fff8e6"/></svg><span class="pill">小明＋小華 ▾</span><span class="spacer"></span><span aria-hidden="true">⌕</span></div>
+      <div class="body">
+        <p class="crumbs"><span>無王開叫後續</span><span>特約</span></p>
+        <h1 style="font-size:1.375rem">雷本索特約</h1>
+        <div class="meta"><span class="level">進階</span><span>Lebensohl</span></div>
+        <p style="font-size:.8125rem;color:var(--ink-muted)">同伴開叫 1NT 遭敵方插叫時的答叫原則。</p>
+        <div class="sec" style="gap:6px"><h3 style="font-size:1rem"><span class="no">§1</span>遭自然牌組插叫</h3>
+          <table class="resp" style="font-size:.8125rem"><tr><td class="call" style="width:4rem">2NT</td><td>雷本索，迫叫 3<span class="C">♣</span></td></tr><tr><td class="call">3<span class="C">♣</span></td><td>自然，GF</td></tr><tr><td class="call">X</td><td>處罰性</td></tr></table>
+        </div>
+      </div>
+      <div class="bottom"><span>目錄</span><span class="cur">本頁</span><span>搜尋</span><span>閱讀設定</span></div>
+    </div>
+    <div class="phone" aria-label="手機：閱讀設定抽屜">
+      <div class="top"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true" style="width:22px;height:22px"><path d="M4 7h10c1.5 0 2 .6 2 2v16c-1-1-2-1.5-3.5-1.5H4z" fill="#b8923a"/><path d="M28 7H18c-1.5 0-2 .6-2 2v16c1-1 2-1.5 3.5-1.5H28z" fill="#b8923a"/><path d="M6 9h7.5c.9 0 1.5.5 1.5 1.5V22c-.8-.6-1.6-.8-2.5-.8H6z" fill="#fff8e6"/><path d="M26 9h-7.5c-.9 0-1.5.5-1.5 1.5V22c.8-.6 1.6-.8 2.5-.8H26z" fill="#fff8e6"/></svg><span class="pill">社團預設制度 ▾</span><span class="spacer"></span><span aria-hidden="true">⌕</span></div>
+      <div class="body" style="grid-template-rows:1fr auto">
+        <div style="color:var(--ink-muted)">（正文）</div>
+        <div class="sheet-up">
+          <span class="drawer-title">閱讀設定</span>
+          <div class="meta"><span>主題</span><span class="pill" style="height:26px">紙</span><span class="pill" style="height:26px;border-color:var(--cinnabar);color:var(--cinnabar)">夜讀</span><span class="pill" style="height:26px">跟隨</span></div>
+          <div class="meta"><span>字級</span><span class="pill" style="height:26px">小</span><span class="pill" style="height:26px;border-color:var(--cinnabar);color:var(--cinnabar)">中</span><span class="pill" style="height:26px">大</span></div>
+          <div class="meta"><span>閱讀模式</span><span class="pill" style="height:26px;border-color:var(--cinnabar);color:var(--cinnabar)">入門版</span><span class="pill" style="height:26px">完整版</span></div>
+          <div class="meta"><a href="#phone">本頁全部展開</a><a href="#phone">列印本頁</a><a href="#phone">安裝 App</a></div>
+        </div>
+      </div>
+      <div class="bottom"><span>目錄</span><span>本頁</span><span>搜尋</span><span class="cur">閱讀設定</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Convention card -->
+<section class="section" id="card">
+  <h2>4 · 制度卡：從制度集生成，A4 一頁</h2>
+  <p class="note">社團簡式卡的示意（WBF 標準卡是另一個版型檔）。每格右上角「§」連回橋譜段落；搭檔覆寫的內容有朱砂線；填不出來的格子留白讓人補，補的內容存回制度集。列印固定黑白、花色紅黑。</p>
+  <div class="card-a4" aria-label="制度卡示意">
+    <div class="head"><b>淡江橋藝社 · 制度卡</b><small>小明＋小華 · A 隊 · 2026-10-24 · 第 3 版</small></div>
+    <div class="slots">
+      <div class="slot wide"><span class="t">制度概要 <a href="#reading">§總覽</a></span><span>淡江自然制，12 點開叫，五張高花，2/1 迫叫成局，1NT forcing。</span></div>
+      <div class="slot"><span class="t">1NT 開叫與答叫 <a href="#reading">§1NT</a></span><span>15-17。2<span class="C">♣</span> Stayman；2<span class="D">♦</span>/2<span class="H">♥</span> 轉換；2<span class="S">♠</span> 低花問叫；2NT 邀請。</span></div>
+      <div class="slot"><span class="t">2NT 開叫與答叫 <a href="#reading">§2NT</a></span><span>20-21。3<span class="C">♣</span> Stayman；3<span class="D">♦</span>/3<span class="H">♥</span> 轉換。</span></div>
+      <div class="slot"><span class="t">1NT 遭插叫 <a href="#reading">§雷本索</a></span><span>Lebensohl：2NT 迫叫 3<span class="C">♣</span>；三線 GF。<span class="ov">敵方 2<span class="C">♣</span> 兩高時 X＝Stayman（搭檔）</span></span></div>
+      <div class="slot"><span class="t">高花加叫 <a href="#reading">§Bergen</a></span><span>Bergen（松濤版）：3<span class="C">♣</span> 7-9 四張；3<span class="D">♦</span> 10-12 四張；Jacoby 2NT GF 四張。</span></div>
+      <div class="slot"><span class="t">弱二與阻塞 <a href="#reading">§2♦</a></span><span>2<span class="D">♦</span> 一高弱二；2<span class="H">♥</span>/2<span class="S">♠</span> 弱二 6 張。</span></div>
+      <div class="slot"><span class="t">賭倍 <a href="#reading">§賭倍</a></span><span>負性賭倍至 3<span class="S">♠</span>；回答性賭倍；支持性賭倍。</span></div>
+      <div class="slot wide"><span class="t">防守信號 <a href="#reading">§信號</a></span><span>首攻：第四大、A 要態度 K 要張數；態度正；張數標準；墊牌標準。</span></div>
+      <div class="slot wide"><span class="t">需要防禦的特殊叫品 <a href="#reading">§</a></span><span style="color:#999">（留白，請手動填寫）</span></div>
+    </div>
+    <div class="foot"><span>從制度集「小明＋小華」生成 · 覆寫 3 條</span><span>tku-bridge-book.vercel.app/cards/p-3f9a/v/3</span></div>
+  </div>
+</section>
+
+<!-- 5. Tokens -->
+<section class="section" id="tokens">
+  <h2>5 · 色彩與字體</h2>
+  <p class="note">完整對照表與對比值在 <code>docs/DESIGN-V2.md</code> §2、§3。宮燈金只做細線，淡江藍只留在 App 圖示。</p>
+  <div class="swatches">
+    <div class="sw"><i style="background:var(--paper)"></i><span>paper<code>#f3eee3 / #171412</code></span></div>
+    <div class="sw"><i style="background:var(--sheet)"></i><span>sheet<code>#fbf8f1 / #201c18</code></span></div>
+    <div class="sw"><i style="background:var(--sheet-alt)"></i><span>sheetAlt<code>#efe8da / #2a241f</code></span></div>
+    <div class="sw"><i style="background:var(--ink)"></i><span>ink<code>#1f1b17 / #ece4d6</code></span></div>
+    <div class="sw"><i style="background:var(--cinnabar)"></i><span>cinnabar 朱砂<code>#a63d2f / #e38270</code></span></div>
+    <div class="sw"><i style="background:var(--indigo)"></i><span>indigo 靛<code>#3a4a7c / #9fb0e6</code></span></div>
+    <div class="sw"><i style="background:var(--gilt)"></i><span>gilt 宮燈金<code>#b8923a / #d1ab54</code></span></div>
+    <div class="sw"><i style="background:var(--seal)"></i><span>seal 印章<code>#8f2f23 / #ff9a86</code></span></div>
+  </div>
+  <div class="type">
+    <span class="t1">雷本索特約 <small>Noto Serif TC 600 · 2rem · 特約名</small></span>
+    <span class="t2">§1 遭自然牌組插叫 <small>Noto Serif TC 600 · 1.125rem · 第一層段落</small></span>
+    <span class="t3">同伴開叫 1NT 遭敵方插叫時的答叫原則：二線不迫叫、三線 GF。 <small>Noto Sans TC 400 · 1rem／1.75 · 內文</small></span>
+    <span class="t4">1NT &nbsp;2<span class="S">♠</span> &nbsp;2NT &nbsp;3<span class="C">♣</span> &nbsp;3<span class="D">♦</span> &nbsp;3<span class="H">♥</span> &nbsp;X &nbsp;XX <small>Noto Sans TC 500 · tabular-nums · 叫品與四色花色</small></span>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
