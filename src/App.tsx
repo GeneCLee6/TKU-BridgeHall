@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
+import { UpdatePrompt } from './components/UpdatePrompt.tsx'
 import { HandbookPage } from './pages/HandbookPage.tsx'
 import { AuthProvider } from './state/AuthContext.tsx'
 import { ContentProvider } from './state/ContentContext.tsx'
@@ -20,6 +21,7 @@ export function App() {
   return (
     <PreferencesProvider>
       <GlobalStyle />
+      <UpdatePrompt />
       <AuthProvider>
         <ContentProvider>
           <ExpansionProvider>

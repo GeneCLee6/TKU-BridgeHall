@@ -15,7 +15,7 @@ content/conventions/*.ts ──► content/loaders.ts（每個特約一個 chunk
                                                                                      ├─ ConventionCard × N（打開時載入內容）
                                                                                      │    └─ SectionAccordion（遞迴）
                                                                                      │         └─ BlockView → AuctionTable / ResponseTable / …
-                                                                                     └─ lib/search.ts（Fuse；聚焦搜尋框時才下載）──► SearchBar
+                                                                                     └─ lib/search.ts（Fuse＋/search-index.json；聚焦搜尋框時才下載）──► SearchBar
 ```
 
 ## 2. 資料夾結構
@@ -118,7 +118,7 @@ interface Convention {
 - `content/loaders.ts` 用 `import.meta.glob` 把每個 `conventions/<slug>.ts` 打成獨立 chunk，`loadBundled(slug)` 按需下載。檔名必須等於 slug。
 - `content/index.ts` 仍然靜態 import 全部特約，但**只給測試與 manifest 腳本用**；網站程式不能 import 它（否則全部內容會回到首頁的 bundle，效能預算會擋下來）。`categories`、`references` 直接從各自的檔案 import。
 - 卡片第一次打開時用 `useConvention(slug)` 載入內容；載入中顯示「載入中…」，失敗顯示重試。深層連結會先打開路徑，等內容到了再捲動。
-- 搜尋：內容還沒載入的特約先用 manifest 的名稱、標籤、摘要與段落標題；聚焦搜尋框時下載 Fuse 與全部內容，之後就是全文搜尋（A2 改為預建索引）。列印按鈕先載入全部再列印（直接按 Ctrl+P 只印出已載入的特約）。
+- 搜尋：聚焦搜尋框時下載 Fuse 與建置時產生的搜尋索引 `/search-index.json`（`state/useSearch.ts`），不必載入任何特約內容就是全文搜尋。線上改過或新增的特約不用索引裡的紀錄：先用 manifest 的段落標題，再載入那幾個特約的內容補上全文（`lib/search.ts` 的 `mergeIndex`，維持目錄順序，結果與用全部內容建的相同）。索引抓不到（離線又沒快取）時退回舊做法：載入全部內容在瀏覽器建紀錄。列印按鈕先載入全部再列印（直接按 Ctrl+P 只印出已載入的特約）。
 - 線上的修改見 §4.1。
 
 ### 4.1 線上修改的內容（`ContentContext`、`lib/content.ts`）
@@ -148,7 +148,7 @@ interface Convention {
 3. Worker 原封不動回傳 Claude 的 SSE 串流；`sse.ts` 收集文字（refusal fallback 時會有第二個文字區塊，照樣接起來）。
 4. 回覆是扁平的 JSON（段落用 `parentId`、條列用 `level`），`importResult.ts` 組回 `Convention`，存成伺服器上的草稿，再到編輯器檢查、儲存。**schema 定義在牌桌的 `worker/importer.ts`，兩邊要一起改。**`tests/lib/importResult.test.ts` 把每個內建特約轉成扁平格式再還原，結果必須完全相同。
 
-**搜尋**：`lib/search.ts` 為每個特約與每個段落各建一筆紀錄（名稱、別名、標籤、叫品、內文），以 Fuse.js 搜尋（`ignoreLocation`、threshold 0.3）。所有文字與查詢都先經過 `toAsciiSuits`，因此「2♦」與「2D」結果相同。
+**搜尋**：`lib/search.ts` 為每個特約與每個段落各建一筆紀錄（名稱、別名、標籤、叫品、內文），以 Fuse.js 搜尋（`ignoreLocation`、threshold 0.3）。內建特約的紀錄在建置時算好：`scripts/search-index.ts` 產生 `{ version, records }`，`vite.config.ts` 的 `searchIndex` plugin 在 build 時寫進 `dist/search-index.json`、dev server 則每次請求用目前內容現算，所以索引不會過期、也不 commit。之後的文章與名詞加成同一份 records 即可。所有文字與查詢都先經過 `toAsciiSuits`，因此「2♦」與「2D」結果相同。
 
 **列印**：Accordion Content 一律 `forceMount`，關閉時以 CSS（`[data-state='closed']`）隱藏；列印樣式覆寫成全部顯示。
 
@@ -171,9 +171,9 @@ interface Convention {
 - **Lint**：oxlint（react、typescript、oxc 規則），與 WearCast 相同設定。
 - **測試**：Vitest + Testing Library（jsdom）。
   - `tests/content`：內容 schema——slug 與段落 id 唯一且 URL 安全、必填欄位、叫品可解析、意義欄沒有殘留花色字母、待確認數量。
-  - `tests/lib`：叫品格式化、搜尋結果。
+  - `tests/lib`：叫品格式化、搜尋結果（經由索引，並比對與全部內容的結果相同）、service worker（`sw.test.ts`，在假的 worker scope 執行 `public/sw.js`）與新版本提示。
   - `tests/presentation`：卡片展開、深層連結開啟路徑、全部展開／收合、待確認顯示。
-- **手機 App（PWA）**：`public/manifest.webmanifest`（名稱「淡江橋譜」、全螢幕、圖示）、`public/sw.js`（service worker：頁面優先走網路、離線時用快取；`/assets/` 檔名含雜湊，走快取）、`src/lib/pwa.ts`（只在正式版註冊 service worker，保留瀏覽器的安裝邀請給「安裝 App」按鈕）。`vercel.json` 讓 `sw.js` 不被快取，新版本會立刻生效。改 `sw.js` 的快取策略時，記得把 `CACHE` 名稱加版號。
+- **手機 App（PWA）**：`public/manifest.webmanifest`（名稱「淡江橋譜」、全螢幕、圖示）、`public/sw.js`（service worker：頁面優先走網路、離線時用快取；`/assets/` 檔名含雜湊，走快取）、`src/lib/pwa.ts`（只在正式版註冊 service worker，保留瀏覽器的安裝邀請給「安裝 App」按鈕）。`vercel.json` 讓 `sw.js` 不被快取。v2 策略（e10-t05）：安裝時存下 app shell、首頁的建置檔（從 `index.html` 解析）、搜尋索引與線上 manifest，所以看過一次之後離線也能開、能搜；特約 chunk 看過才快取；線上內容與搜尋索引網路優先、離線用快取。`vite.config.ts` 的 `stampServiceWorker` 把建置雜湊寫進 `dist/sw.js`，每次建置都是新的 worker：新版本在背景裝好後等待，頁面顯示「有新版本可以使用」（`UpdatePrompt`、`lib/pwa.ts` 的 `watchForUpdates`／`useUpdate`），按「重新整理」才接手並重新載入；頁面回到前景時會檢查更新。快取名稱跨版本不變（`tku-bridge-book-v4`），看過的特約更新後仍可離線看；只有快取格式改變時才把 `CACHE` 加版號。制度集與制度卡的 API 出現後（A6、D3）加進網路優先的清單。
 - **CI**：GitHub Actions（`.github/workflows/ci.yml`）：`npm ci` → lint → typecheck → test → build → 效能預算（`npm run budget`）；另一個 job 跑 Lighthouse（見 §6.5）。
 - **部署計畫**：任何靜態主機皆可。部署平台是 Vercel（連接 GitHub，但 `main` 不自動部署，見 §7）。因為使用 BrowserRouter，主機需設定 SPA fallback（所有路徑回傳 `index.html`）：Cloudflare Pages 預設即支援；Vercel 用專案根目錄的 `vercel.json` rewrites（已加入，部署平台選定 Vercel）。若改用 GitHub Pages，可換成 HashRouter 或加 `404.html` 轉址。
 

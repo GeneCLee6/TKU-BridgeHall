@@ -24,7 +24,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | 批 | Task | 內容 | 前提 |
 | --- | --- | --- | --- |
 | [x] A1 #8 | `e10-t01` `e10-t02` `e10-t03` | 內容 manifest 與按需載入、線上內容分片 API、效能預算進 CI（牌桌 #60） | — |
-| [ ] A2 | `e10-t04` `e10-t05` | 搜尋索引建置、service worker v2（索引預載、按需快取、更新提示） | A1 |
+| [x] A2 #11 | `e10-t04` `e10-t05` | 搜尋索引建置、service worker v2（索引預載、按需快取、更新提示） | A1 |
 | [ ] A3 | `e1-t01` `e1-t02` `e1-t03` `e1-t04` | `kind`／`level`／`prerequisites` 欄位、內建特約標註、目錄與卡片顯示、編輯器欄位 | — |
 | [ ] A4 | `e1-t05` `e1-t06` | 分類改為資料：Worker 儲存、API、管理 UI | A3 |
 | [ ] A5 | `e1-t07` `e1-t08` | `SystemProfile` 型別進 `shared/protocol.ts`、`resolveProfile` 解析與測試 | A3 |
