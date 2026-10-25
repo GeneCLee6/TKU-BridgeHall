@@ -7,6 +7,7 @@
 - **M0 手冊** ✅ 已上線（https://tku-bridge-book.vercel.app/）：22 個特約、搜尋、深層連結、線上編輯、AI 匯入、共用帳號、PWA。
 - **2026-10-24 健檢與規劃完成**（PR #7）：總 PRD 拆成 11 個 epic、146 個 task、77 條 AC；ROADMAP 排成 Phase A–N；設計規格 `DESIGN-V2.md`、首頁視覺稿 `design/mockup-v2.html`、六種風格×四種版面與討論區展示頁 `design/pitch.html`。健檢結論在 `HEALTH-CHECK.md`。
 - **A1 內容分片完成**（PR #8，牌桌 #60，2026-10-25）：manifest＋每個特約一個 chunk、打開才載入；線上內容改走 `GET /api/book/manifest` 與 `GET /api/book/content/:slug`；CI 有效能預算（`npm run budget`，首頁 JS 141／150 kB）與 Lighthouse（無障礙 ≥ 0.95）。新增特約後要跑 `npm run manifest`。**牌桌 #60 要先合併。**
+- **B1 風格 token 完成**（PR #10，2026-10-25）：`createTheme(mode, textSize, style)`，「一般」＝現行值（測試鎖住）、「中國風」為第二組（e9-t15 前沒有入口）；Noto Serif TC 只在襯線風格時載入；`ui.tsx`、Tag、PendingNote 讀新 token；舊名 `radius`／`shadow`／`lantern`／`vermilion` 到 e9-t14 才移除。與 A2 同時進行。
 - **A2 搜尋索引與 service worker v2 完成**（PR #11，2026-10-25）：建置時產生 `/search-index.json`（43 kB gzip），搜尋不再載入全部特約；線上改過的特約增量合併。service worker 預載首頁、索引、manifest，新版本出現時提示「重新整理」。制度集與制度卡的離線快取等 A6、D3。
 - **正式站改為手動部署**（PR #9）：合併到 `main` 不會上線，步驟見 ARCHITECTURE.md §7。
 - **下一批**：A3（`e1-t01`～`t04` 欄位）與 B0（改名與標誌）都沒有前提，可以交錯做；建議 B0 早做，之後的截圖與文件都用新名字。
@@ -39,7 +40,7 @@ Token 吃掉的是**對話上下文**，不是程式碼。原則：**一個 sess
 2. 讀檔只讀需要的段落；搜尋與大範圍檢視交給 subagent，只把結論帶回來。
 3. 每個 task 做完跑 npm run lint && npm run build && npm test，只看最後 5 行。
 4. 這一批的 task 合成一個 PR（標題列出全部編號），PR 本文寫對應的 AC 與檢查方式；在 PRD 勾選、更新進度表；在 ROADMAP 勾選這一批並寫 PR 號；更新 docs/NEXT.md 的「現在的位置」。
-5. PR 開成 ready（不是 draft），CI 綠了就回報，然後結束，不要接著做下一項。
+5. PR 開成 ready（不是 draft），CI 綠了就直接合併（`gh pr merge <號> --squash --delete-branch`，worktree 先移除；有衝突自己解），合併後回報並結束，不要接著做下一項。只有需要人決定的事（視覺稿核准、內容取捨、範圍）才停下來等。合併不會上線，正式站手動部署。
 ```
 
 其他：

@@ -19,6 +19,12 @@ export const GlobalStyle = createGlobalStyle`
     -webkit-font-smoothing: antialiased;
   }
 
+  /* The style's heading font; in 「一般」 that is the body font at the browser's bold */
+  h1, h2, h3 {
+    font-family: ${({ theme }) => theme.fonts.heading};
+    font-weight: ${({ theme }) => theme.headingWeight};
+  }
+
   a { color: ${({ theme }) => theme.colors.primary}; }
 
   :focus-visible {
