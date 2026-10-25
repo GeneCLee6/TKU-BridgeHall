@@ -13,6 +13,7 @@ const sum = (ns: number[]) => ns.reduce((a, b) => a + b, 0)
 function lines(block: CardBlock): number {
   switch (block.kind) {
     case 'heading':
+      return block.lines ?? 1
     case 'note':
     case 'check':
     case 'choice':
@@ -26,6 +27,8 @@ function lines(block: CardBlock): number {
       return (block.title ? 1 : 0) + 1 + sum(block.rows.map((r) => r.lines ?? 1))
     case 'group':
       return sum(block.blocks.map(lines))
+    case 'split':
+      return Math.max(...block.parts.map((p) => sum(p.blocks.map(lines))))
   }
 }
 
@@ -45,6 +48,8 @@ function labels(block: CardBlock): string[] {
     case 'text':
     case 'group':
       return [block.label]
+    case 'split':
+      return []
     case 'table':
       return [...block.columns.map((c) => c.label), ...block.rows.map((r) => r.label)]
   }
@@ -98,23 +103,50 @@ describe('card templates', () => {
   it.each(cardTemplates.map(byId))('%s has widths that add up to the page and table width', (_, t) => {
     for (const page of t.pages) {
       expect(new Set(page.columns.map((c) => c.id)).size).toBe(page.columns.length)
-      expect(sum(page.columns.map((c) => c.width))).toBeCloseTo(100, 5)
+      const gaps = page.gaps ?? []
+      expect(gaps.length, page.id).toBe(page.gaps ? page.columns.length - 1 : 0)
+      expect(sum([...page.columns.map((c) => c.width), ...gaps])).toBeCloseTo(100, 5)
     }
     for (const { block } of templateBlocks(t)) {
-      if (block.kind !== 'table') continue
-      const widths = [block.rowHeader.width, ...block.columns.map((c) => c.width)]
+      let widths: number[] | undefined
+      if (block.kind === 'table') widths = [block.rowHeader.width, ...block.columns.map((c) => c.width)]
+      if (block.kind === 'split') widths = block.parts.map((p) => p.width)
+      if (block.kind === 'group' && block.widths) {
+        widths = block.widths
+        expect(widths.length, block.id).toBe(block.columns + 1)
+      }
+      if (!widths) continue
       widths.forEach((w) => expect(w, block.id).toBeGreaterThan(0))
       expect(sum(widths), block.id).toBeCloseTo(100, 5)
     }
   })
 
+  it.each(cardTemplates.map(byId))('%s cites the source of every help text', (_, t) => {
+    for (const { block } of templateBlocks(t)) {
+      const helps = [
+        'help' in block ? block.help : undefined,
+        ...(block.kind === 'table' ? [block.rowHeader.help, ...block.columns.map((c) => c.help)] : []),
+      ]
+      for (const help of helps) {
+        if (!help) continue
+        expect(help.text.trim(), block.id).not.toBe('')
+        expect(help.source, block.id).toMatch(/, p\. \d+(–\d+)?$/)
+      }
+    }
+  })
+
+  it.each(cardTemplates.map(byId))('%s puts a table inset over existing rows and columns', (_, t) => {
+    for (const { block } of templateBlocks(t)) {
+      if (block.kind !== 'table' || !block.inset) continue
+      expect(block.rows.map((r) => r.id), block.id).toContain(block.inset.fromRow)
+      block.inset.columns.forEach((c) => expect(block.columns.map((col) => col.id), block.id).toContain(c))
+    }
+  })
+
   it('marks every unverified layout as pending', () => {
-    // Update when a template is checked against the original file (then drop its `pending`)
-    expect(cardTemplates.filter((t) => t.pending).map((t) => t.id)).toEqual([
-      'wbf',
-      'ctcba-simple',
-      'ctcba-simple-2p',
-    ])
+    // Update when a template is checked against the original file (then drop its `pending`).
+    // WBF: the layout follows the blank .doc; which edition to file is still open.
+    expect(cardTemplates.filter((t) => t.pending).map((t) => t.id)).toEqual(['wbf'])
   })
 })
 
@@ -132,17 +164,18 @@ describe('WBF card', () => {
     ])
   })
 
-  it('has every section of page 1, in print order', () => {
+  it('has every section of page 1, in print order, as printed on the blank .doc', () => {
     expect(titles(0)).toEqual([
       'DEFENSIVE AND COMPETITIVE BIDDING',
-      'OVERCALLS (Style; Responses; 1/2 Level; Reopening)',
-      '1NT OVERCALL (2ND/4TH Live; Reopening)',
+      'OVERCALLS (Style: Responses: 1 / 2  Level; Reopening)',
+      '1NT OVERCALL (2nd/4th Live; Responses; Reopening)',
       'JUMP OVERCALLS (Style; Responses; Unusual NT)',
-      'DIRECT AND JUMP CUE BIDS (Style; Responses; Reopen)',
-      'VS. NT (vs. Strong / Weak; Reopening; PH)',
-      'VS. PREEMPTS ( Doubles; Cue-bids; Jumps; NT bids)',
-      'VS. ARTIFICIAL STRONG OPENINGS',
-      "OVER OPPONENTS' TAKE OUT DOUBLE",
+      'Reopen:',
+      'DIRECT & JUMP CUE BIDS (Style; Response; Reopen)',
+      'VS. NT (vs. Strong/Weak; Reopening;PH)',
+      'VS.PREEMTS (Doubles; Cue-bids; Jumps; NT Bids)',
+      'VS. ARTIFICIAL STRONG OPENINGS- i.e. 1♣ or 2♣',
+      'OVER OPPONENTS’ TAKEOUT DOUBLE',
       'LEADS AND SIGNALS',
       'OPENING LEADS STYLE',
       'Other:',
@@ -151,40 +184,54 @@ describe('WBF card', () => {
       'Signals (including Trumps):',
       'DOUBLES',
       'TAKEOUT DOUBLES (Style; Responses; Reopening)',
-      'SPECIAL, ARTIFICIAL AND COMPETITIVE DOUBLES/REDOUBLES',
-      'WBF Convention Card 2.19',
-      'Category:',
-      'Country:',
-      'Event:',
-      'Players:',
+      'SPECIAL, ARTIFICIAL & COMPETITIVE DBLS/RDLS',
+      'W B F CONVENTION CARD',
+      'CATEGORY:',
+      'NCBO:',
+      'PLAYERS:',
       'SYSTEM SUMMARY',
       'GENERAL APPROACH AND STYLE',
-      'SPECIAL BIDS THAT MAY REQUIRE DEFENCE',
+      'SPECIAL BIDS THAT MAY REQUIRE DEFENSE',
       'SPECIAL FORCING PASS SEQUENCES',
-      "IMPORTANT NOTES THAT DON'T FIT ELSEWHERE",
-      'Psychics:',
+      'IMPORTANT NOTES',
+      'PSYCHICS:',
     ])
   })
 
-  it('has page 1 columns of equal height (45 printed lines)', () => {
-    for (const column of wbf.pages[0].columns) expect(sum(column.blocks.map(lines)), column.id).toBe(45)
+  it('has page 1 columns of equal height (the 43 rows of the .doc table)', () => {
+    for (const column of wbf.pages[0].columns) expect(sum(column.blocks.map(lines)), column.id).toBe(43)
   })
 
-  it('has the opening bid table and high level bidding on page 2', () => {
-    expect(titles(1)).toEqual(['OPENING BID DESCRIPTIONS', 'HIGH LEVEL BIDDING'])
+  it('has the .doc widths in twips: 5068 | 203 | 5629 | 184 | 4819', () => {
+    const [p1] = wbf.pages
+    const total = 15903
+    expect(p1.columns.map((c) => Math.round((c.width * total) / 100))).toEqual([5068, 5629, 4819])
+    expect(p1.gaps!.map((g) => Math.round((g * total) / 100))).toEqual([203, 184])
+  })
+
+  it('has the opening bid table with high level bidding inset on page 2', () => {
+    expect(titles(1)).toEqual(['openings'])
     const table = wbf.pages[1].columns[0].blocks[0]
     if (table.kind !== 'table') throw new Error('expected a table')
     expect([table.rowHeader.label, ...table.columns.map((c) => c.label)]).toEqual([
-      'Opening',
-      'Artificial',
-      'Min.',
-      'Neg Dbl thru',
-      'Description',
-      'Responses',
-      'Subsequent Auction',
-      'Passed Hand Bidding',
+      'OPENING',
+      'TICK IF ARTIFICIAL',
+      'MIN. NO. OF CARDS',
+      'NEG.DBL THRU',
+      'DESCRIPTION',
+      'RESPONSES',
+      'SUBSEQUENT ACTION',
+      'PASSED HAND BIDDING',
     ])
-    expect(sum(table.rows.map((r) => r.lines ?? 1))).toBe(24)
+    expect([table.rowHeader.width, ...table.columns.map((c) => c.width)].map((w) => Math.round(w * 161.26))).toEqual(
+      [959, 725, 842, 843, 2551, 3969, 3544, 2693],
+    )
+    expect(table.rows.map((r) => r.label).join(' ')).toBe(
+      '1♣ 1♦ 1♥ 1♠ 1NT 2♣ 2♦ 2♥ 2♠ 2NT 3♣ 3♦ 3♥ 3♠ 3NT 4♣ 4♦ 4♥ 4♠ 4NT 5♣ 5♦ 5♥ 5♠',
+    )
+    // The .doc's 39 body rows, less the three thin filler rows under 5♠
+    expect(sum(table.rows.map((r) => r.lines ?? 1))).toBe(36)
+    expect(table.inset?.block.title).toBe('HIGH LEVEL BIDDING')
   })
 
   it('has the slot ids the fill rules refer to', () => {
@@ -193,6 +240,18 @@ describe('WBF card', () => {
     expect(slots).toContain('wbf.openings.1H.responses')
     expect(slots).toContain('wbf.leads.leads.king.nt')
     expect(slots).toContain('wbf.leads.signals.suit-1.partner')
+    expect(slots).toContain('wbf.high-level')
+    expect(slots).toContain('wbf.openings.5C.responses')
+    expect(slots).not.toContain('wbf.openings.5C.subsequent')
+    expect(slots).not.toContain('wbf.openings.5S.passed-hand')
+    expect(slots).toContain('wbf.openings.4NT.passed-hand')
+  })
+
+  it('has help from the 2017 guide on every fill-in', () => {
+    for (const { block } of templateBlocks(wbf)) {
+      if (block.kind === 'cells' || block.kind === 'text' || block.kind === 'table')
+        expect(block.help?.source, block.id).toMatch(/^Guide to Completion of the WBF System Card \(2017\)/)
+    }
   })
 })
 
@@ -237,9 +296,22 @@ describe('CTCBA simple cards', () => {
     ])
   })
 
-  it('has the same cells on the two-sided card, over two pages', () => {
-    expect(ctcbaSimple2p.pages).toHaveLength(2)
-    const ids = (t: CardTemplate) => templateBlocks(t).map(({ block }) => block.id)
+  it('has the same cells on the two-sided card, front and back, printed two-up', () => {
+    expect(ctcbaSimple2p.pages.map((p) => p.id)).toEqual(['front', 'back'])
+    expect(ctcbaSimple2p.nUp).toBe(2)
+    const ids = (t: CardTemplate) =>
+      templateBlocks(t)
+        .map(({ block }) => block.id)
+        .filter((id) => !id.endsWith('.turn-over'))
     expect(ids(ctcbaSimple2p)).toEqual(ids(ctcbaSimple))
+    expect(templateSlots(ctcbaSimple2p).map((s) => s.id.replace(/^[^.]+/, ''))).toEqual(
+      templateSlots(ctcbaSimple).map((s) => s.id.replace(/^[^.]+/, '')),
+    )
+  })
+
+  it('has the halves measured from the PDF (340 and 354 pt, 36 pt gutter)', () => {
+    const [p1] = ctcbaSimple.pages
+    expect(p1.columns.map((c) => Math.round(c.width * 7.3))).toEqual([340, 354])
+    expect(p1.gaps!.map((g) => Math.round(g * 7.3))).toEqual([36])
   })
 })

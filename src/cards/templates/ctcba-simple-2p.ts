@@ -6,9 +6,13 @@ import {
   ctcbaSimpleOpening,
 } from './ctcba-simple.ts'
 
-// 中華民國橋藝協會「2021 簡易制度卡（非橋士組用）」雙面版. There is no reference image of
-// the two-sided PDF in the repo yet, so this uses the single-sided card's cells (same labels,
-// same block ids), one half per page; see `pending`.
+// 中華民國橋藝協會「2021 簡易制度卡（非橋士組用）」雙面版 (2021-簡易制度卡(非橋士組用)-雙面.pdf).
+// Same cells and labels as the single-sided card (same block ids), set in a serif font. Each A4
+// landscape sheet carries two identical copies side by side, to be cut in half: the front has
+// the header and 開叫約定, the back 競叫約定, 對抗無王開叫 and 防禦約定, and both sides end with
+// （背面尚有約定）. A copy is 340 pt wide (x 71–411 and 432–772 on the front).
+
+const turnOver = '（背面尚有約定）'
 
 export const ctcbaSimple2p: CardTemplate = {
   id: 'ctcba-simple-2p',
@@ -16,16 +20,35 @@ export const ctcbaSimple2p: CardTemplate = {
   year: 2021,
   publisher: '中華民國橋藝協會',
   paper: 'A4-landscape',
-  pending:
-    '雙面版沒有參考圖：暫用單面版的格子，第 1 頁開叫約定、第 2 頁競叫約定／對抗無王開叫／防禦約定；待對照 2021 雙面 PDF 的格子與版面',
+  nUp: 2,
   pages: [
     {
-      id: 'p1',
-      columns: [{ id: 'main', width: 100, blocks: [...ctcbaSimpleHeader, ...ctcbaSimpleOpening] }],
+      id: 'front',
+      columns: [
+        {
+          id: 'main',
+          width: 100,
+          blocks: [
+            ...ctcbaSimpleHeader,
+            ...ctcbaSimpleOpening,
+            { kind: 'note', id: 'front.turn-over', text: turnOver },
+          ],
+        },
+      ],
     },
     {
-      id: 'p2',
-      columns: [{ id: 'main', width: 100, blocks: [...ctcbaSimpleCompetitive, ...ctcbaSimpleDefence] }],
+      id: 'back',
+      columns: [
+        {
+          id: 'main',
+          width: 100,
+          blocks: [
+            ...ctcbaSimpleCompetitive,
+            ...ctcbaSimpleDefence,
+            { kind: 'note', id: 'back.turn-over', text: turnOver },
+          ],
+        },
+      ],
     },
   ],
 }
