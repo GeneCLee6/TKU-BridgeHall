@@ -7,8 +7,11 @@ import { conventionPath, sectionPath } from '../lib/sections.ts'
 import { strings } from '../strings.ts'
 import { RichText } from './Suit.tsx'
 
-/** Searches convention names, aliases, tags, bids and meanings; results are deep links */
-export function SearchBar({ search }: { search: SearchFn }) {
+/**
+ * Searches convention names, aliases, tags, bids and meanings; results are deep links.
+ * `onFocus` lets the page load the content to search while the reader starts typing.
+ */
+export function SearchBar({ search, onFocus }: { search: SearchFn; onFocus?: () => void }) {
   const [query, setQuery] = useState('')
   const results = useMemo(() => search(query), [search, query])
   const inputId = useId()
@@ -29,6 +32,7 @@ export function SearchBar({ search }: { search: SearchFn }) {
           placeholder={strings.searchPlaceholder}
           autoComplete="off"
           aria-controls={showResults ? listId : undefined}
+          onFocus={onFocus}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
         />

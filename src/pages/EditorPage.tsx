@@ -9,7 +9,7 @@ import { Preview } from '../components/editor/Preview.tsx'
 import { RevisionsPanel } from '../components/editor/RevisionsPanel.tsx'
 import { SectionForm, type SectionAction } from '../components/editor/SectionForm.tsx'
 import { Button, ErrorText, Input, Muted, Notice, Row } from '../components/ui.tsx'
-import { categories } from '../content/index.ts'
+import { categories } from '../content/categories.ts'
 import { api, ApiError, errorText, type BookRevision } from '../lib/api.ts'
 import { conventionProblems, conventionWarnings, tidyConvention } from '../lib/content.ts'
 import {
@@ -30,7 +30,7 @@ import { importedItems, type ImportedItem } from '../lib/importResult.ts'
 import { conventionPath } from '../lib/sections.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useAuth } from '../state/AuthContext.tsx'
-import { useContent } from '../state/ContentContext.tsx'
+import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile, mobileQuery } from '../styles/tokens.ts'
 import type { Convention, Section } from '../types/convention.ts'
@@ -86,17 +86,29 @@ function EditorLoader() {
       .catch((e) => setError(errorText(e)))
   }, [draftId, index])
 
+  // The content to edit: the online version, or the bundled one when it has none or is hidden
+  const exists = slug ? Boolean(content.bySlug(slug) ?? content.bundledBySlug(slug)) : false
+  const fetched = useConvention(slug, content.status !== 'loading' && exists && !draftId)
+  // After a save the newer version loads in the background; the open editor keeps going meanwhile
+  // (adjusting state during render, the React-recommended alternative to an effect)
+  const [shown, setShown] = useState<Convention>()
+  if (fetched.convention && fetched.convention !== shown) setShown(fetched.convention)
+  const current = fetched.convention ?? (shown?.slug === slug ? shown : undefined)
+  const { failed, missing } = fetched
+
   if (error) return <Page><ErrorText role="alert">{error}</ErrorText></Page>
-  if (content.status === 'loading' || (draftId && !draft)) return <Page><Muted role="status">{strings.loading}</Muted></Page>
+  if (failed) return <Page><ErrorText role="alert">{strings.online.loadFailed}</ErrorText></Page>
+  if (missing && !draftId) return <Page><ErrorText role="alert">{t.notFound}</ErrorText></Page>
+  if (content.status === 'loading' || (draftId && !draft) || (exists && !draftId && !current))
+    return <Page><Muted role="status">{strings.loading}</Muted></Page>
 
   const info = slug ? content.online.get(slug) : undefined
-  const current = slug ? (content.bySlug(slug) ?? content.bundledBySlug(slug)) : undefined
   const initial = draft
     ? slug
       ? { ...draft.item.convention, slug }
       : draft.item.convention
     : (current ?? blankConvention(categories[0].id, today()))
-  if (slug && !current && !draft) return <Page><ErrorText role="alert">{t.notFound}</ErrorText></Page>
+  if (slug && !exists && !draft) return <Page><ErrorText role="alert">{t.notFound}</ErrorText></Page>
 
   return (
     <EditorBody
@@ -271,8 +283,7 @@ function EditorBody({
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
         // Someone saved in between: fetch their version so the editor can choose
-        const latest = await api.book.content().catch(() => null)
-        const entry = latest?.entries.find((x) => x.slug === tidy.slug)
+        const entry = await api.book.entry(tidy.slug).catch(() => null)
         setConflict({
           version: entry?.version ?? 0,
           convention: entry && conventionProblems(entry.convention, categoryIds).length === 0 ? (entry.convention as Convention) : null,

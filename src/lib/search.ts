@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js'
-import type { Convention } from '../types/convention.ts'
+import type { Convention, ConventionMeta, Section } from '../types/convention.ts'
 import { formatCall, toAsciiSuits } from './calls.ts'
 import { blockText, walkSections } from './sections.ts'
 
@@ -20,8 +20,9 @@ export interface SearchRecord {
 /**
  * One record per convention (names, aliases, tags, summary) and one per section (title, bids,
  * meanings). All text goes through toAsciiSuits, so "2♦" and "2D" find the same rows.
+ * A manifest entry stands in for a convention not loaded yet: its section titles are searchable.
  */
-export function buildRecords(conventions: Convention[]): SearchRecord[] {
+export function buildRecords(conventions: (Convention | ConventionMeta)[]): SearchRecord[] {
   const records: SearchRecord[] = []
   for (const c of conventions) {
     const legacy = c.category === 'system' || undefined
@@ -34,7 +35,8 @@ export function buildRecords(conventions: Convention[]): SearchRecord[] {
       bids: '',
       text: toAsciiSuits(c.summary),
     })
-    walkSections(c.sections, (section, ancestors) => {
+    const sections: Section[] = 'sections' in c ? c.sections : c.outline
+    walkSections(sections, (section, ancestors) => {
       const bids: string[] = []
       for (const block of section.blocks ?? []) {
         if (block.kind === 'responses') block.rows.forEach((r) => bids.push(formatCall(r.call)))
@@ -61,7 +63,7 @@ const LEGACY_PENALTY = 0.2
 
 export type SearchFn = (query: string, limit?: number) => SearchRecord[]
 
-export function createSearch(conventions: Convention[]): SearchFn {
+export function createSearch(conventions: (Convention | ConventionMeta)[]): SearchFn {
   const fuse = new Fuse(buildRecords(conventions), {
     keys: [
       { name: 'name', weight: 3 },

@@ -1,4 +1,14 @@
-import type { Block, Convention, RuleItem, Section } from '../types/convention.ts'
+import type {
+  Block,
+  Convention,
+  ConventionMeta,
+  PendingNote,
+  RuleItem,
+  Section,
+  SectionOutline,
+} from '../types/convention.ts'
+
+export type { PendingNote }
 
 /** Accordion item keys: a convention is its slug, a section is "slug/sectionId" */
 export const conventionKey = (slug: string) => slug
@@ -15,31 +25,50 @@ export const pendingPath = (slug: string, sectionId: string, index: number) =>
   `${sectionPath(slug, sectionId)}?pending=${index}`
 
 /** Depth-first walk over every section, with its ancestors */
-export function walkSections(
-  sections: Section[],
-  visit: (section: Section, ancestors: Section[]) => void,
-  ancestors: Section[] = [],
+export function walkSections<T extends SectionOutline>(
+  sections: T[],
+  visit: (section: T, ancestors: T[]) => void,
+  ancestors: T[] = [],
 ): void {
   for (const section of sections) {
     visit(section, ancestors)
-    if (section.children) walkSections(section.children, visit, [...ancestors, section])
+    if (section.children) walkSections(section.children as T[], visit, [...ancestors, section])
   }
 }
 
+/** A loaded convention's sections, or a manifest entry's outline */
+const tree = (convention: Convention | ConventionMeta): SectionOutline[] =>
+  'sections' in convention ? convention.sections : convention.outline
+
 /** The section and its ancestors, root first; empty when the id does not exist */
-export function findSectionPath(convention: Convention, sectionId: string): Section[] {
-  let found: Section[] = []
-  walkSections(convention.sections, (section, ancestors) => {
+export function findSectionPath(convention: Convention | ConventionMeta, sectionId: string): SectionOutline[] {
+  let found: SectionOutline[] = []
+  walkSections(tree(convention), (section, ancestors) => {
     if (section.id === sectionId) found = [...ancestors, section]
   })
   return found
 }
 
 /** Every accordion key in a convention, the convention itself included */
-export function allKeys(convention: Convention): string[] {
+export function allKeys(convention: Convention | ConventionMeta): string[] {
   const keys = [conventionKey(convention.slug)]
-  walkSections(convention.sections, (s) => keys.push(sectionKey(convention.slug, s.id)))
+  walkSections(tree(convention), (s) => keys.push(sectionKey(convention.slug, s.id)))
   return keys
+}
+
+/** Just the ids, titles and nesting of the sections */
+export function outline(sections: Section[]): SectionOutline[] {
+  return sections.map((s) => ({
+    id: s.id,
+    title: s.title,
+    ...(s.children?.length && { children: outline(s.children) }),
+  }))
+}
+
+/** The manifest entry for a convention: everything but its content */
+export function conventionMeta(convention: Convention): ConventionMeta {
+  const { sections, ...rest } = convention
+  return { ...rest, outline: outline(sections), pending: pendingNotes(convention) }
 }
 
 function flattenRules(items: RuleItem[]): RuleItem[] {
@@ -61,15 +90,6 @@ export function blockText(block: Block): string {
     case 'hand':
       return block.label ?? ''
   }
-}
-
-export interface PendingNote {
-  sectionId: string
-  /** Position among the notes that belong directly to this section, in page order */
-  index: number
-  /** Section titles from the top level down to this section */
-  trail: string[]
-  text: string
 }
 
 /** Every 待確認 note in a convention, in page order */

@@ -304,6 +304,8 @@ export const strings = {
     edited: (by: string, time: string) => `線上修改：${by}，${time}`,
     added: (by: string, time: string) => `線上新增：${by}，${time}`,
     offline: '目前連不上伺服器，顯示的是上次載入的內容。',
+    loadFailed: '這個特約的內容載入失敗，請檢查網路後再試一次。',
+    retry: '再試一次',
     skipped: (n: number) => `有 ${n} 個線上修改的特約格式有誤，暫時沒有顯示，請到編輯器修正。`,
   },
 } as const

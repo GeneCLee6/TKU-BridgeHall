@@ -1,6 +1,7 @@
 /**
  * The content model. Every convention is plain typed data: adding one means adding a file under
- * src/content/conventions and registering it in src/content/index.ts. No component changes.
+ * src/content/conventions, registering it in src/content/index.ts and running `npm run manifest`.
+ * No component changes.
  *
  * Text fields are rendered by RichText, which understands two things only:
  *   - the suit symbols ♠ ♥ ♦ ♣ (coloured, and announced to screen readers by name)
@@ -102,4 +103,30 @@ export interface Convention {
   /** ISO date of the last content review */
   updated: string
   sections: Section[]
+}
+
+/** A section's place in the outline: what the catalogue and deep links need, without the content */
+export interface SectionOutline {
+  id: string
+  title: string
+  children?: SectionOutline[]
+}
+
+export interface PendingNote {
+  sectionId: string
+  /** Position among the notes that belong directly to this section, in page order */
+  index: number
+  /** Section titles from the top level down to this section */
+  trail: string[]
+  text: string
+}
+
+/**
+ * Everything about a convention except its content: the manifest entry the catalogue, the
+ * collapsed card and deep links work from. The content is loaded when the card opens.
+ */
+export interface ConventionMeta extends Omit<Convention, 'sections'> {
+  outline: SectionOutline[]
+  /** Every 待確認 note, in page order */
+  pending: PendingNote[]
 }

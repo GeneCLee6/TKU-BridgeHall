@@ -17,10 +17,12 @@ export function ViewActions({
   variant,
   onExpandAll,
   onCollapseAll,
+  onPrint = () => window.print(),
 }: {
   variant: 'bar' | 'menu'
   onExpandAll: () => void
   onCollapseAll: () => void
+  onPrint?: () => void
 }) {
   const { mode, toggleMode } = usePreferences()
   const themeLabel = mode === 'light' ? strings.themeToDark : strings.themeToLight
@@ -89,7 +91,7 @@ export function ViewActions({
       </IconButton>
       <IconButton
         type="button"
-        onClick={() => window.print()}
+        onClick={onPrint}
         aria-label={strings.print}
         title={strings.print}
       >

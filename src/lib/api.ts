@@ -5,6 +5,8 @@
  * shared/protocol.ts and worker/book.ts in TKU-BridgeTable; change them together.
  */
 
+import type { ConventionMeta } from '../types/convention.ts'
+
 /** TKU BridgeTable (淡江牌桌), whose Worker holds the accounts */
 export const TABLE_SITE = 'https://tku-bridge-table.genelee-pro.workers.dev'
 
@@ -63,9 +65,13 @@ export interface BookEntry {
   bundledUpdated?: string
 }
 
-export interface BookContent {
+/** An online entry without its content: `meta` is the manifest entry, null when hidden */
+export type BookEntrySummary = Omit<BookEntry, 'convention'> & { meta: ConventionMeta | null }
+
+/** GET /api/book/manifest: every online entry, without content */
+export interface BookManifest {
   version: number
-  entries: BookEntry[]
+  entries: BookEntrySummary[]
 }
 
 export interface BookRevision {
@@ -157,7 +163,9 @@ export const api = {
   },
 
   book: {
-    content: () => request<BookContent>('/api/book/content'),
+    manifest: () => request<BookManifest>('/api/book/manifest'),
+    /** One convention's online entry; 404 when it was never changed online */
+    entry: (slug: string) => request<{ entry: BookEntry }>(`/api/book/content/${slug}`).then((r) => r.entry),
     /** `baseVersion` is the version the edit started from: 0 for the bundled one or a new one */
     save: (slug: string, body: { convention: unknown; baseVersion: number; bundledUpdated?: string; note?: string }) =>
       send<{ entry: BookEntry }>('PUT', `/api/book/conventions/${slug}`, body),

@@ -31,10 +31,11 @@ describe('handbook page', () => {
     expect(trigger(/^對抗不尋常2NT/)).toHaveAttribute('aria-expanded', 'false')
   })
 
-  it('opens the whole path down to a deep-linked section', () => {
+  it('opens the whole path down to a deep-linked section', async () => {
     renderAt('/c/defense-vs-unusual-2nt/vs-1s-after-3c-3d')
     expect(trigger(/^對抗不尋常2NT/)).toHaveAttribute('aria-expanded', 'true')
-    expect(trigger(/^如何對抗敵方Unusual 2NT/)).toHaveAttribute('aria-expanded', 'true')
+    // The sections appear once the convention's content has loaded
+    expect(await screen.findByRole('button', { name: /^如何對抗敵方Unusual 2NT/ })).toHaveAttribute('aria-expanded', 'true')
     expect(within(screen.getByRole('main')).getAllByRole('button', { expanded: true }).length).toBe(
       4,
     )

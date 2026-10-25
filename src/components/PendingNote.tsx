@@ -15,9 +15,10 @@ export const Badge = styled.span`
   flex: none;
   display: inline-block;
   padding: 0 ${({ theme }) => theme.space(2)};
+  border: 1px solid ${({ theme }) => theme.colors.pendingBorder};
   border-radius: ${({ theme }) => theme.radius.pill};
-  background: ${({ theme }) => theme.colors.pendingBorder};
-  color: ${({ theme }) => (theme.mode === 'light' ? '#ffffff' : '#1a1200')};
+  background: ${({ theme }) => theme.colors.pendingBg};
+  color: ${({ theme }) => theme.colors.pendingText};
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 1.6rem;

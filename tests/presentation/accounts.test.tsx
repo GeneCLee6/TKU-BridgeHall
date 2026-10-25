@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from '../../src/App.tsx'
 import { conventions } from '../../src/content/index.ts'
-import type { Me } from '../../src/lib/api.ts'
+import type { BookEntry, Me } from '../../src/lib/api.ts'
+import { conventionMeta } from '../../src/lib/sections.ts'
+import type { Convention } from '../../src/types/convention.ts'
 
 /**
  * The account, editing and import pages against a fake API: each test lists the answers it
@@ -15,6 +17,20 @@ let routes: Record<string, Answer>
 let sent: { method: string; path: string; body: unknown }[]
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status })
+
+/** The Worker's book routes for these online entries: the manifest and each entry by slug */
+function serveBook(content: { version: number; entries: BookEntry[] }) {
+  routes['GET /api/book/manifest'] = {
+    body: {
+      version: content.version,
+      entries: content.entries.map(({ convention, ...rest }) => ({
+        ...rest,
+        meta: convention ? conventionMeta(convention as Convention) : null,
+      })),
+    },
+  }
+  for (const entry of content.entries) routes[`GET /api/book/content/${entry.slug}`] = { body: { entry } }
+}
 
 beforeAll(() => {
   window.matchMedia ??= ((query: string) => ({
@@ -133,18 +149,18 @@ describe('what a member sees', () => {
 
   it('shows the online version of a convention, and who changed it', async () => {
     const lebensohl = conventions.find((c) => c.slug === 'lebensohl')!
-    routes['GET /api/book/content'] = {
-      body: {
-        version: 2,
-        entries: [
-          { slug: 'lebensohl', version: 2, convention: { ...lebensohl, summary: '線上改過的摘要' }, createdAt: 1, updatedAt: Date.UTC(2026, 9, 23, 4), updatedBy: 'amy' },
-          { slug: 'jacoby-2nt', version: 1, convention: null, createdAt: 1, updatedAt: 1, updatedBy: 'gene' },
-        ],
-      },
-    }
+    serveBook({
+      version: 2,
+      entries: [
+        { slug: 'lebensohl', version: 2, convention: { ...lebensohl, summary: '線上改過的摘要', nameEn: 'Lebensohl online' }, createdAt: 1, updatedAt: Date.UTC(2026, 9, 23, 4), updatedBy: 'amy' },
+        { slug: 'jacoby-2nt', version: 1, convention: null, createdAt: 1, updatedAt: 1, updatedBy: 'gene' },
+      ],
+    })
     renderAt('/c/lebensohl')
     expect(await screen.findByText('線上改過的摘要')).toBeInTheDocument()
-    expect(screen.getByText(/線上修改：amy，2026\/10\/23/)).toBeInTheDocument()
+    // The content comes from the online entry, loaded when the linked card opens
+    expect(await screen.findByText(/線上修改：amy，2026\/10\/23/)).toBeInTheDocument()
+    expect(sent.map((r) => r.path)).toContain('/api/book/content/lebensohl')
     // Jacoby 2NT is hidden online; the old version of the same name stays
     const slamAsks = screen.getAllByRole('button', { name: /^開叫高花之滿貫詢問叫/ })
     expect(slamAsks.map((b) => b.textContent)).toEqual([expect.stringContaining('舊版')])
@@ -184,7 +200,7 @@ describe('the editor', () => {
 
   it('saves a change against the version it started from', async () => {
     signedIn({ permissions: ['bookEdit'] })
-    routes['GET /api/book/content'] = { body: { version: 0, entries: [] } }
+    serveBook({ version: 0, entries: [] })
     routes['PUT /api/book/conventions/lebensohl'] = {
       body: { entry: { slug: 'lebensohl', version: 1, convention: lebensohl, createdAt: 1, updatedAt: 1, updatedBy: 'amy' } },
     }
@@ -203,8 +219,7 @@ describe('the editor', () => {
 
   it('offers a way out when someone else saved first', async () => {
     signedIn({ permissions: ['bookEdit'] })
-    let content = { version: 0, entries: [] as unknown[] }
-    routes['GET /api/book/content'] = () => ({ body: content })
+    serveBook({ version: 0, entries: [] })
     let puts = 0
     routes['PUT /api/book/conventions/lebensohl'] = () =>
       ++puts === 1
@@ -212,7 +227,7 @@ describe('the editor', () => {
         : { body: { entry: { slug: 'lebensohl', version: 3, convention: lebensohl, createdAt: 1, updatedAt: 1, updatedBy: 'amy' } } }
     renderAt('/edit/lebensohl')
     await userEvent.type(await screen.findByLabelText(/^英文名稱/), ' convention')
-    content = { version: 2, entries: [{ slug: 'lebensohl', version: 2, convention: lebensohl, createdAt: 1, updatedAt: 1, updatedBy: 'ben' }] }
+    serveBook({ version: 2, entries: [{ slug: 'lebensohl', version: 2, convention: lebensohl, createdAt: 1, updatedAt: 1, updatedBy: 'ben' }] })
     await userEvent.click(screen.getByRole('button', { name: '儲存並發布' }))
     expect(await screen.findByText(/有人剛剛修改了這個特約/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /放棄我的修改/ })).toBeInTheDocument()
@@ -223,7 +238,7 @@ describe('the editor', () => {
 
   it('will not save a new convention without its name and address', async () => {
     signedIn({ permissions: ['bookEdit'] })
-    routes['GET /api/book/content'] = { body: { version: 0, entries: [] } }
+    serveBook({ version: 0, entries: [] })
     renderAt('/new')
     await userEvent.type(await screen.findByLabelText(/^摘要/), 'x')
     await userEvent.click(screen.getByRole('button', { name: '儲存並發布' }))
@@ -237,7 +252,7 @@ describe('the editor', () => {
 
   it('types suit symbols into the field being edited', async () => {
     signedIn({ permissions: ['bookEdit'] })
-    routes['GET /api/book/content'] = { body: { version: 0, entries: [] } }
+    serveBook({ version: 0, entries: [] })
     renderAt('/new')
     const name = await screen.findByLabelText(/^中文名稱/)
     await userEvent.type(name, '開叫1')

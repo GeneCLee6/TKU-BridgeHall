@@ -10,12 +10,12 @@
 ```
 
 ```
-content/*.ts ──► content/index.ts（登記）──► HandbookPage
-                                      │            ├─ Sidebar（目錄）
-                                      │            ├─ ConventionCard × N
-                                      │            │    └─ SectionAccordion（遞迴）
-                                      │            │         └─ BlockView → AuctionTable / ResponseTable / …
-                                      └─► lib/search.ts（Fuse 索引）──► SearchBar
+content/index.ts（登記）──npm run manifest──► content/manifest.ts ──► ContentContext ──► HandbookPage
+content/conventions/*.ts ──► content/loaders.ts（每個特約一個 chunk，按需載入）──┘   ├─ Sidebar（目錄，只用 manifest）
+                                                                                     ├─ ConventionCard × N（打開時載入內容）
+                                                                                     │    └─ SectionAccordion（遞迴）
+                                                                                     │         └─ BlockView → AuctionTable / ResponseTable / …
+                                                                                     └─ lib/search.ts（Fuse；聚焦搜尋框時才下載）──► SearchBar
 ```
 
 ## 2. 資料夾結構
@@ -113,13 +113,21 @@ interface Convention {
 - `useMediaQuery(mobileQuery)`：決定 ViewActions 放在頁首（桌機）或選單抽屜（手機），同一時間只渲染一組。
 - 不使用狀態管理函式庫；兩個 Context 就夠了。
 
-**內容載入**：所有特約在 `content/index.ts` 靜態 import，打包進 bundle。線上的修改見 §4.1。
+**內容載入**（2026-10 起，E10 分片）：
+- `content/manifest.ts` 是 `npm run manifest`（`scripts/build-manifest.ts`）產生的清單：每個特約除了內容以外的全部欄位，加上段落大綱（`outline`：id、標題、子段落）與待確認清單（`pending`），型別 `ConventionMeta`。目錄、收合的卡片、深層連結、全部展開都只用它。`tests/content/manifest.test.ts` 確認它和 `content/index.ts` 一致。
+- `content/loaders.ts` 用 `import.meta.glob` 把每個 `conventions/<slug>.ts` 打成獨立 chunk，`loadBundled(slug)` 按需下載。檔名必須等於 slug。
+- `content/index.ts` 仍然靜態 import 全部特約，但**只給測試與 manifest 腳本用**；網站程式不能 import 它（否則全部內容會回到首頁的 bundle，效能預算會擋下來）。`categories`、`references` 直接從各自的檔案 import。
+- 卡片第一次打開時用 `useConvention(slug)` 載入內容；載入中顯示「載入中…」，失敗顯示重試。深層連結會先打開路徑，等內容到了再捲動。
+- 搜尋：內容還沒載入的特約先用 manifest 的名稱、標籤、摘要與段落標題；聚焦搜尋框時下載 Fuse 與全部內容，之後就是全文搜尋（A2 改為預建索引）。列印按鈕先載入全部再列印（直接按 Ctrl+P 只印出已載入的特約）。
+- 線上的修改見 §4.1。
 
 ### 4.1 線上修改的內容（`ContentContext`、`lib/content.ts`）
 
-- 每個特約在伺服器最多一筆「線上版本」（`BookEntry`）：取代同 slug 的內建特約、新增一個特約，或 `convention: null` 隱藏它。`mergeContent` 依內建順序替換，新增的排在後面（依建立時間）。
-- 開頁面時先顯示內建內容（或這台裝置上次看到的線上內容，存在 localStorage），再抓 `GET /api/book/content`；抓不到就維持現狀並顯示離線提示。Service worker 對這支 API 走「先網路、離線用快取」，其他 `/api` 一律不快取。
-- 線上內容在顯示前用 `conventionProblems` 檢查形狀，壞掉的略過（編輯者會看到提示），不會讓頁面掛掉。
+- 每個特約在伺服器最多一筆「線上版本」（`BookEntry`）：取代同 slug 的內建特約、新增一個特約，或 `convention: null` 隱藏它。
+- 開頁面時先顯示內建 manifest（或這台裝置上次看到的線上 manifest，存在 localStorage），再抓 `GET /api/book/manifest`（每筆線上版本不含內容，`meta` 是牌桌 Worker 算好的 `ConventionMeta`，隱藏的為 `null`；`ETag`）。`mergeManifest` 依內建順序替換，新增的排在後面（依建立時間）；抓不到就維持現狀並顯示離線提示。
+- 線上改過的特約，打開時抓 `GET /api/book/content/:slug`（`ETag`；沒有線上版本回 404），用 `onlineConvention`（`conventionProblems`）檢查形狀，壞掉的略過並列入提示，不會讓頁面掛掉。載入的內容以 `slug@版本` 存在 `ContentContext`，線上版本更新後自然換新。
+- 舊的 `GET /api/book/content`（整本一次）牌桌仍保留給舊版前端，這裡已不使用。Service worker 對這兩支 API 走「先網路、離線用快取」，其他 `/api` 一律不快取。
+- 這兩支 API 的型別在 `lib/api.ts`（`BookManifest`、`BookEntrySummary`），對應牌桌 `worker/book.ts`；`pending` 的走訪順序必須和 `lib/sections.ts` 的 `pendingNotes` 一致。
 - **線上版本優先**：某個特約在網站上改過之後，再改它的 `.ts` 檔不會顯示出來，要在編輯器的版本紀錄按「還原為網站內建的版本」，或把線上內容寫回 `.ts` 檔後再還原。`BookEntry.bundledUpdated` 記著第一次線上修改時內建版本的 `updated` 日期。
 
 ### 4.2 帳號與權限（`AuthContext`、`lib/api.ts`）
@@ -166,7 +174,7 @@ interface Convention {
   - `tests/lib`：叫品格式化、搜尋結果。
   - `tests/presentation`：卡片展開、深層連結開啟路徑、全部展開／收合、待確認顯示。
 - **手機 App（PWA）**：`public/manifest.webmanifest`（名稱「淡江橋譜」、全螢幕、圖示）、`public/sw.js`（service worker：頁面優先走網路、離線時用快取；`/assets/` 檔名含雜湊，走快取）、`src/lib/pwa.ts`（只在正式版註冊 service worker，保留瀏覽器的安裝邀請給「安裝 App」按鈕）。`vercel.json` 讓 `sw.js` 不被快取，新版本會立刻生效。改 `sw.js` 的快取策略時，記得把 `CACHE` 名稱加版號。
-- **CI**：GitHub Actions（`.github/workflows/ci.yml`）：`npm ci` → lint → build → test。
+- **CI**：GitHub Actions（`.github/workflows/ci.yml`）：`npm ci` → lint → typecheck → test → build → 效能預算（`npm run budget`）；另一個 job 跑 Lighthouse（見 §6.5）。
 - **部署計畫**：任何靜態主機皆可。建議 Vercel 或 Cloudflare Pages 連接 GitHub，自動部署 `main`。因為使用 BrowserRouter，主機需設定 SPA fallback（所有路徑回傳 `index.html`）：Cloudflare Pages 預設即支援；Vercel 用專案根目錄的 `vercel.json` rewrites（已加入，部署平台選定 Vercel）。若改用 GitHub Pages，可換成 HashRouter 或加 `404.html` 轉址。
 
 ## 6.5 效能
@@ -181,10 +189,27 @@ interface Convention {
 
 2026-10-22 加入舊講義（9 張卡片）後，DOM 由約 2.1 萬增為 3.2 萬個節點。同一台電腦、分頁在前景、等到所有卡片狀態改完為止：未加講義 展開 0.31～0.45 秒／收合 0.09～0.14 秒；加講義後 第一次展開 1.6 秒、之後約 0.6 秒，收合 0.2～0.4 秒。（量測時分頁若在背景，Chrome 會把 requestAnimationFrame 節流到約每秒一次，用「等兩個畫面」量會誤得到約 2 秒，要用 MessageChannel 輪詢狀態。）
 
+### 效能預算（e10-t03，AC-10.1）
+
+`npm run build` 之後跑 `npm run budget`（`scripts/check-budget.mjs`），印出一張表，超出預算時結束碼為 1（`npm run budget -- --no-fail` 只報告）。大小一律是 gzip（level 9）。
+
+| 項目 | 預算 | 怎麼算 |
+| --- | --- | --- |
+| 首頁初始 JS | ≤ 150 kB | `index.html` 的入口 chunk 加上它靜態 import 的所有 chunk（遞移），以及 `dist/index.html` 裡的 script／modulepreload |
+| 首頁不下載特約 | 0 | 首頁的 chunk 圖裡不能有來自 `src/content/conventions/` 的模組；且每個特約檔都要有自己的 chunk（沒拆出來就代表被打包進首頁） |
+| 特約頁額外 JS | 每個 ≤ 30 kB | 特約 chunk 加上它靜態 import、首頁還沒有的共用 chunk |
+| 搜尋索引 | ≤ 300 kB | `dist/search-index.json`；檔案不存在時略過 |
+| CSS | 只報告 | 首頁 CSS 與全部 CSS |
+
+模組與 chunk 的對應來自 Vite 的 build manifest（`vite.config.ts` 的 `build.manifest: true`，輸出 `dist/.vite/manifest.json`），以 manifest 的 `src` 是否以 `src/content/conventions/` 開頭辨認特約 chunk。
+
+**Lighthouse**：CI 的 `lighthouse` job 重新 build，用 `vite preview` 起站，以 Lighthouse CI（`npx @lhci/cli`，設定在 `lighthouserc.json`）量 `/` 與 `/c/jacoby-2nt`，各跑 3 次取中位數。無障礙 < 0.95 會讓 job 失敗；效能 < 0.9、最佳做法 < 0.9 只警告——CI 機器的模擬節流分數浮動大，硬擋會常誤報，效能改由上面的 bundle 預算把關。報告上傳為 artifact `lighthouse-reports`（不上傳到公開的 temporary storage）。本機可跑 `npm run build && npx @lhci/cli@0.15.1 autorun`（需要 Chrome）。
+
 ## 7. CI/CD
 
 ```
-push / PR ──► GitHub Actions「CI」：lint → typecheck → test → build
+push / PR ──► GitHub Actions「CI」：lint → typecheck → test → build → budget
+          │                         └─ lighthouse job（/、/c/jacoby-2nt）
           └─► Vercel Git integration：main → 正式站；PR → 預覽網址（PR 留言會附上）
                  └─ 部署成功回報 commit status「Vercel」
                        └─► GitHub Actions「Production smoke test」（只在 main）

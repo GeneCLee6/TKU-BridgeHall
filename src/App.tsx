@@ -1,8 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
-import { AccountPage } from './pages/AccountPage.tsx'
 import { HandbookPage } from './pages/HandbookPage.tsx'
-import { LoginPage } from './pages/LoginPage.tsx'
 import { AuthProvider } from './state/AuthContext.tsx'
 import { ContentProvider } from './state/ContentContext.tsx'
 import { ExpansionProvider } from './state/ExpansionContext.tsx'
@@ -14,6 +12,9 @@ import { strings } from './strings.ts'
 const AdminPage = lazy(() => import('./pages/AdminPage.tsx').then((m) => ({ default: m.AdminPage })))
 const EditorPage = lazy(() => import('./pages/EditorPage.tsx').then((m) => ({ default: m.EditorPage })))
 const ImportPage = lazy(() => import('./pages/ImportPage.tsx').then((m) => ({ default: m.ImportPage })))
+// Kept out of the first download too, which has a size budget (scripts/check-budget.mjs)
+const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
+const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ default: m.AccountPage })))
 
 export function App() {
   return (

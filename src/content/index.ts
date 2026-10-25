@@ -23,8 +23,13 @@ import { twoDiamondOpening } from './conventions/two-diamond-opening.ts'
 import { twoNotrumpOpening } from './conventions/two-notrump-opening.ts'
 
 /**
- * The registry. To add a convention: create src/content/conventions/<slug>.ts exporting a
- * Convention, import it here and add it to this list (see CONTENT_GUIDE.md).
+ * The registry: every bundled convention, in catalogue order. To add one: create
+ * src/content/conventions/<slug>.ts exporting a Convention, import it here, add it to this list
+ * and run `npm run manifest` (see CONTENT_GUIDE.md).
+ *
+ * Only the tests and scripts/build-manifest.ts import this module. The site works from
+ * manifest.ts and loads each convention's content with loaders.ts, so the page does not download
+ * any content up front (ARCHITECTURE.md §4).
  */
 export const conventions: Convention[] = [
   notrumpResponses,

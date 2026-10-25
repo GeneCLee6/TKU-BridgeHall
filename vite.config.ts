@@ -23,6 +23,8 @@ const tableUrl = process.env.TABLE_URL ?? 'http://localhost:5173'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), appVersion()],
+  // dist/.vite/manifest.json maps chunks to source modules for scripts/check-budget.mjs
+  build: { manifest: true },
   server: {
     // 5173 is TKU BridgeTable's dev server
     port: 5174,

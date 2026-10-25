@@ -49,7 +49,7 @@ export function AccountMenu({
   if (!user) {
     const next = location.pathname === '/login' ? '' : `?next=${encodeURIComponent(location.pathname + location.search)}`
     return (
-      <SignIn to={`/login${next}`} data-print="hide">
+      <SignIn to={`/login${next}`} aria-label={strings.account.signIn} data-print="hide">
         <LogIn size={18} aria-hidden />
         <span>{strings.account.signIn}</span>
       </SignIn>

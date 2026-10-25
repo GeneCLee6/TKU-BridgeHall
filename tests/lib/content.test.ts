@@ -1,31 +1,48 @@
 import { categories, conventions } from '../../src/content/index.ts'
-import type { BookEntry } from '../../src/lib/api.ts'
-import { conventionProblems, conventionWarnings, mergeContent, tidyConvention } from '../../src/lib/content.ts'
-import type { Convention } from '../../src/types/convention.ts'
+import type { BookEntry, BookEntrySummary } from '../../src/lib/api.ts'
+import {
+  conventionProblems,
+  conventionWarnings,
+  mergeManifest,
+  onlineConvention,
+  tidyConvention,
+} from '../../src/lib/content.ts'
+import { conventionMeta } from '../../src/lib/sections.ts'
+import type { Convention, ConventionMeta } from '../../src/types/convention.ts'
 
 const ids = categories.map((c) => c.id as string)
 const lebensohl = conventions.find((c) => c.slug === 'lebensohl')!
+const metas = conventions.map(conventionMeta)
 
-const entry = (slug: string, convention: unknown, extra: Partial<BookEntry> = {}): BookEntry => ({
+const summary = (slug: string, meta: unknown, extra: Partial<BookEntrySummary> = {}): BookEntrySummary => ({
   slug,
   version: 1,
-  convention,
+  meta: meta as ConventionMeta | null,
   createdAt: 1,
   updatedAt: 2,
   updatedBy: 'amy',
   ...extra,
 })
 
+const entry = (slug: string, convention: unknown): BookEntry => ({
+  slug,
+  version: 1,
+  convention,
+  createdAt: 1,
+  updatedAt: 2,
+  updatedBy: 'amy',
+})
+
 describe('online content over the bundle', () => {
   it('replaces, adds and hides conventions, keeping the bundled order', () => {
-    const edited = { ...lebensohl, summary: '線上改過的摘要' }
-    const added: Convention = { ...lebensohl, slug: 'new-one', nameZh: '新特約' }
-    const merged = mergeContent(
-      conventions,
+    const edited = conventionMeta({ ...lebensohl, summary: '線上改過的摘要' })
+    const added = conventionMeta({ ...lebensohl, slug: 'new-one', nameZh: '新特約' })
+    const merged = mergeManifest(
+      metas,
       [
-        entry('lebensohl', edited, { version: 3, bundledUpdated: lebensohl.updated }),
-        entry('new-one', added, { createdAt: 5 }),
-        entry('jacoby-2nt', null),
+        summary('lebensohl', edited, { version: 3, bundledUpdated: lebensohl.updated }),
+        summary('new-one', added, { createdAt: 5 }),
+        summary('jacoby-2nt', null),
       ],
       ids,
     )
@@ -41,13 +58,21 @@ describe('online content over the bundle', () => {
   })
 
   it('leaves out broken entries instead of breaking the page', () => {
-    const merged = mergeContent(
-      conventions,
-      [entry('lebensohl', { slug: 'lebensohl' }), entry('other', { ...lebensohl, slug: 'mismatch' })],
+    const lebensohlMeta = metas.find((c) => c.slug === 'lebensohl')!
+    const merged = mergeManifest(
+      metas,
+      [summary('lebensohl', { slug: 'lebensohl' }), summary('other', { ...lebensohlMeta, slug: 'mismatch' })],
       ids,
     )
-    expect(merged.conventions.find((c) => c.slug === 'lebensohl')).toBe(lebensohl)
+    expect(merged.conventions.find((c) => c.slug === 'lebensohl')).toBe(lebensohlMeta)
     expect(merged.skipped.map((s) => s.slug)).toEqual(['lebensohl', 'other'])
+  })
+
+  it('checks an online convention when it is loaded', () => {
+    const edited: Convention = { ...lebensohl, summary: '線上改過的摘要' }
+    expect(onlineConvention(entry('lebensohl', edited), ids)).toEqual({ convention: edited })
+    expect(onlineConvention(entry('lebensohl', { slug: 'lebensohl' }), ids)).toHaveProperty('problem')
+    expect(onlineConvention(entry('other', edited), ids)).toEqual({ problem: '網址代稱不符' })
   })
 })
 

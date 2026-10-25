@@ -93,7 +93,8 @@ export const jacobyTransfer: Convention = {
 
 ## 4. 登記與檢查
 
-1. 在 `src/content/index.ts` import 新檔，加進 `conventions` 陣列（順序即顯示順序）。
+1. 在 `src/content/index.ts` import 新檔，加進 `conventions` 陣列（順序即顯示順序）。檔名必須等於 slug（`<slug>.ts`）。
+1. 執行 `npm run manifest`，重新產生 `src/content/manifest.ts`（目錄、收合的卡片與深層連結用的輕量清單；內容在打開卡片時才下載）。改了名稱、標籤、摘要、段落標題或待確認之後也要跑；忘了跑時內容測試會失敗。
 2. 需要新分類時，先在 `src/types/convention.ts` 的 `CategoryId` 加一個值，再到 `src/content/categories.ts` 加上名稱與說明。
 3. 執行：
 
