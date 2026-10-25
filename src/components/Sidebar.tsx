@@ -7,6 +7,7 @@ import type { Category, ConventionMeta, Reference } from '../types/convention.ts
 import { conventionPath, pendingPath, sectionPath } from '../lib/sections.ts'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
+import { KindLevel } from './KindLevel.tsx'
 import { RichText } from './Suit.tsx'
 
 /**
@@ -144,6 +145,7 @@ export function Sidebar({
                           <Name>
                             {c.nameZh}
                             <small lang="en">{c.nameEn}</small>
+                            <KindLevel kind={c.kind} level={c.level} $small />
                           </Name>
                         </ConventionLink>
                         {isOpen && (
@@ -343,6 +345,9 @@ const Name = styled.span`
     font-size: 0.75rem;
     font-weight: 400;
     color: ${({ theme }) => theme.colors.textMuted};
+  }
+  small + span {
+    margin-top: ${({ theme }) => theme.space(0.5)};
   }
 `
 

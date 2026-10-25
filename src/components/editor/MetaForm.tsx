@@ -2,22 +2,36 @@ import { useState } from 'react'
 import styled from 'styled-components'
 import { splitList } from '../../lib/editing.ts'
 import { strings } from '../../strings.ts'
-import type { Category, CategoryId, Convention } from '../../types/convention.ts'
+import {
+  conventionKinds,
+  levels,
+  type Category,
+  type CategoryId,
+  type Convention,
+  type ConventionKind,
+  type ConventionMeta,
+  type Level,
+} from '../../types/convention.ts'
 import { Field, Input, Select } from '../ui.tsx'
 import { AutoTextArea } from './fields.tsx'
 
 const t = strings.editor
 
-/** A convention's own fields: names, address, category, tags, summary and source */
+/**
+ * A convention's own fields: names, address, category, kind, level, prerequisites, tags, summary
+ * and source. `conventions` is the catalogue the prerequisites are picked from.
+ */
 export function MetaForm({
   convention,
   categories,
+  conventions,
   slugEditable,
   slugTaken,
   onChange,
 }: {
   convention: Convention
   categories: Category[]
+  conventions: ConventionMeta[]
   /** Only a new convention can choose its address */
   slugEditable: boolean
   slugTaken: boolean
@@ -27,6 +41,17 @@ export function MetaForm({
   const [aliases, setAliases] = useState((convention.aliases ?? []).join('、'))
   const [tags, setTags] = useState(convention.tags.join('、'))
   const set = (patch: Partial<Convention>) => onChange({ ...convention, ...patch })
+  const prerequisites = convention.prerequisites ?? []
+  const togglePrerequisite = (slug: string, on: boolean) => {
+    const next = on ? [...prerequisites, slug] : prerequisites.filter((p) => p !== slug)
+    set({ prerequisites: next.length ? next : undefined })
+  }
+  const known = new Set(conventions.map((c) => c.slug))
+  // Choices in catalogue order; a prerequisite that no longer exists stays visible so it can be removed
+  const choices = [
+    ...conventions.filter((c) => c.slug !== convention.slug).map((c) => ({ slug: c.slug, label: c.nameZh })),
+    ...prerequisites.filter((p) => !known.has(p)).map((p) => ({ slug: p, label: t.prerequisitesMissing(p) })),
+  ]
 
   return (
     <Form aria-label={t.info}>
@@ -63,6 +88,55 @@ export function MetaForm({
           </Select>
         </Field>
       </Columns>
+      <Columns>
+        <Field>
+          {t.kind}
+          <Select
+            value={convention.kind ?? 'convention'}
+            onChange={(e) => set({ kind: e.target.value as ConventionKind })}
+          >
+            {conventionKinds.map((k) => (
+              <option key={k} value={k}>
+                {strings.kinds[k]}
+              </option>
+            ))}
+          </Select>
+          <small>{t.kindHint}</small>
+        </Field>
+        <Field>
+          {t.level}
+          <Select
+            value={convention.level ?? ''}
+            onChange={(e) => set({ level: (e.target.value || undefined) as Level | undefined })}
+          >
+            <option value="">{t.levelNone}</option>
+            {levels.map((l) => (
+              <option key={l} value={l}>
+                {strings.levels[l]}
+              </option>
+            ))}
+          </Select>
+          <small>{t.levelHint}</small>
+        </Field>
+      </Columns>
+      <Choices>
+        <legend>{t.prerequisites}</legend>
+        <small>{t.prerequisitesHint}</small>
+        <ul>
+          {choices.map((c) => (
+            <li key={c.slug}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={prerequisites.includes(c.slug)}
+                  onChange={(e) => togglePrerequisite(c.slug, e.target.checked)}
+                />
+                {c.label}
+              </label>
+            </li>
+          ))}
+        </ul>
+      </Choices>
       {/* Long text gets a whole row and wraps, instead of scrolling inside half a row */}
       <Field>
         {t.summary}
@@ -119,4 +193,48 @@ const Columns = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: ${({ theme }) => theme.space(3)};
+`
+
+const Choices = styled.fieldset`
+  display: grid;
+  gap: ${({ theme }) => theme.space(1)};
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+
+  legend {
+    padding: 0;
+    font-weight: 600;
+  }
+  small {
+    color: ${({ theme }) => theme.colors.textMuted};
+    font-size: 0.75rem;
+  }
+  ul {
+    /* A positioned box, so nothing visually hidden inside it escapes the scroll */
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(3)};
+    max-height: 12rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: ${({ theme }) => theme.space(2)};
+    border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.shape.control};
+    list-style: none;
+  }
+  label {
+    display: flex;
+    align-items: flex-start;
+    gap: ${({ theme }) => theme.space(2)};
+    cursor: pointer;
+  }
+  input {
+    margin-top: 0.25em;
+    accent-color: ${({ theme }) => theme.colors.primary};
+  }
 `

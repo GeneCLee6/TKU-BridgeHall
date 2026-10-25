@@ -1,6 +1,8 @@
 import { categories, conventions } from '../../src/content/index.ts'
 import { splitCall } from '../../src/lib/calls.ts'
+import { conventionProblems } from '../../src/lib/content.ts'
 import { pendingNotes, walkSections } from '../../src/lib/sections.ts'
+import { conventionKinds, levels } from '../../src/types/convention.ts'
 
 /** The content schema: what every convention file must satisfy before it ships */
 describe('convention content', () => {
@@ -70,6 +72,35 @@ describe('convention content', () => {
         }
       })
     }
+  })
+
+  it.each(conventions.map((c) => [c.slug, c] as const))(
+    '%s has a known kind and level, and prerequisites that exist',
+    (_, c) => {
+      const slugs = conventions.map((x) => x.slug)
+      // Every bundled card is classified (CONTENT_GUIDE.md §2.1); the fields stay optional in the type
+      expect(conventionKinds).toContain(c.kind)
+      expect(levels).toContain(c.level)
+      walkSections(c.sections, (s) => {
+        if (s.level !== undefined) expect(levels, `${c.slug}/${s.id}`).toContain(s.level)
+      })
+      const prerequisites = c.prerequisites ?? []
+      expect(new Set(prerequisites).size).toBe(prerequisites.length)
+      for (const p of prerequisites) {
+        expect(slugs, `${c.slug} → ${p}`).toContain(p)
+        expect(p).not.toBe(c.slug)
+      }
+      expect(conventionProblems(c, categories.map((x) => x.id))).toEqual([])
+    },
+  )
+
+  it('has no circular prerequisites', () => {
+    const bySlug = new Map(conventions.map((c) => [c.slug, c.prerequisites ?? []]))
+    const visit = (slug: string, path: string[]): void => {
+      expect(path, `circular: ${[...path, slug].join(' → ')}`).not.toContain(slug)
+      for (const next of bySlug.get(slug) ?? []) visit(next, [...path, slug])
+    }
+    for (const c of conventions) visit(c.slug, [])
   })
 
   it('records the known 待確認 items', () => {

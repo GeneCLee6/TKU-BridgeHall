@@ -104,6 +104,18 @@ describe('handbook page', () => {
       window.matchMedia = original
     }
   })
+  it('shows each convention’s kind and level on the card and in the catalogue', () => {
+    renderAt('/')
+    // The card's title row: the words read with their meaning, the icons are decoration
+    expect(trigger(/^雷本索特約/)).toHaveTextContent('種類：特約')
+    expect(trigger(/^雷本索特約/)).toHaveTextContent('程度：進階')
+    expect(trigger(/^橋牌防守信號/)).toHaveTextContent('種類：信號')
+    expect(trigger(/^淡江自然制總覽/)).toHaveTextContent('種類：制度章節')
+    expect(trigger(/^淡江自然制總覽/)).toHaveTextContent('程度：入門')
+    const menu = within(screen.getByRole('navigation', { name: '特約目錄' }))
+    expect(menu.getByRole('link', { name: /^開叫高花之滿貫詢問叫s*Jacoby 2NT/ })).toHaveTextContent('種類：特約程度：高階')
+  })
+
   it('folds the catalogue: clicking a convention title opens and closes its sections', async () => {
     renderAt('/c/lebensohl')
     const menu = screen.getByRole('navigation', { name: '特約目錄' })

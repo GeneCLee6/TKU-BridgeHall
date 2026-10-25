@@ -68,13 +68,22 @@ interface Section {
   originalTitle?: string // 原文標題（與 title 不同時）
   summary?: string
   pending?: string
+  level?: Level         // 和特約不同時才標；沒標的跟上一層
   blocks?: Block[]
   children?: Section[]  // 可無限巢狀
 }
 
+type ConventionKind = 'system' | 'convention' | 'signal' | 'defense' // 制度章節／特約／信號／防禦
+type Level = 'basic' | 'intermediate' | 'advanced'                   // 入門／進階／高階
+
 interface Convention {
   slug: string; nameZh: string; nameEn: string; aliases?: string[]
-  category: CategoryId; tags: string[]; summary: string
+  category: CategoryId
+  kind?: ConventionKind      // 沒標當作 'convention'（lib/content.ts 的 conventionKind）
+  level?: Level
+  prerequisites?: string[]   // 先讀的特約 slug（E4 學習路徑）
+  cardSlots?: string[]       // 制度卡位置（E3 定義）
+  tags: string[]; summary: string
   source: { title: string; note?: string }; updated: string
   sections: Section[]
 }
@@ -85,6 +94,7 @@ interface Convention {
 - **叫品是結構化資料**，不是字串裡的表格。叫牌過程與答叫表因此能一致地繪製、搜尋與測試。
 - **意義欄保留原文**，只把花色字母換成符號；點力等資訊不另拆欄位，避免轉錄時改寫原意。
 - **`pending` 出現在任何層級**：段落、條列、叫品列都能掛「待確認」說明，`pendingNotes()` 會收集全部。
+- **種類、程度、前置特約都是選填**（E1，CONTENT_GUIDE.md §2.1）：舊內容與線上內容不用改就能顯示；`conventionProblems` 只擋不認得的值。它們跟著 `ConventionMeta` 進 manifest（牌桌算的線上 manifest 原樣帶過），搜尋紀錄帶 `kind`、`level`（段落用自己或最近祖先的程度）給結果顯示標籤。AI 匯入不判斷這三項：匯入既有特約的新版時，編輯器沿用原本的值。
 - **文字格式只支援兩種**：花色符號與 `**粗體**`（原文粗體）。刻意不支援 Markdown，降低內容維護出錯的機會。
 
 ## 4. 路由、狀態與內容載入

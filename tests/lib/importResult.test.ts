@@ -62,7 +62,9 @@ describe('turning the AI reply into conventions', () => {
   it('rebuilds every bundled convention exactly from its flat form', () => {
     for (const c of conventions) {
       const { items } = fromAiReply({ conventions: [toFlat(c)], reviewNotes: '' }, ids, c.updated)
-      expect(items[0].convention, c.slug).toEqual(tidyConvention(c))
+      // The AI does not classify: kind, level and prerequisites are set in the editor
+      const { kind: _k, level: _l, prerequisites: _p, cardSlots: _c, ...unclassified } = tidyConvention(c)
+      expect(items[0].convention, c.slug).toEqual(unclassified)
       expect(items[0].problems, c.slug).toEqual([])
     }
   })

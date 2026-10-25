@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js'
-import type { Convention, ConventionMeta, Section } from '../types/convention.ts'
+import type { Convention, ConventionKind, ConventionMeta, Level, Section } from '../types/convention.ts'
 import { formatCall, toAsciiSuits } from './calls.ts'
 import { blockText, walkSections } from './sections.ts'
 
@@ -15,6 +15,9 @@ export interface SearchRecord {
   text: string
   /** From the old handbook (category 'system'): ranked after the conventions, which override it */
   legacy?: boolean
+  /** The convention's kind and level (a section's own level when it has one), shown with the result */
+  kind?: ConventionKind
+  level?: Level
 }
 
 /**
@@ -26,8 +29,11 @@ export function buildRecords(conventions: (Convention | ConventionMeta)[]): Sear
   const records: SearchRecord[] = []
   for (const c of conventions) {
     const legacy = c.category === 'system' || undefined
+    const kind = c.kind
     records.push({
       legacy,
+      ...(kind && { kind }),
+      ...(c.level && { level: c.level }),
       slug: c.slug,
       label: `${c.nameZh}（${c.nameEn}）`,
       name: toAsciiSuits([c.nameZh, c.nameEn, ...(c.aliases ?? [])].join(' ')),
@@ -41,9 +47,13 @@ export function buildRecords(conventions: (Convention | ConventionMeta)[]): Sear
       for (const block of section.blocks ?? []) {
         if (block.kind === 'responses') block.rows.forEach((r) => bids.push(formatCall(r.call)))
       }
+      // A section without a level takes its nearest ancestor's, then the convention's
+      const level = [...ancestors, section].reverse().find((s) => s.level)?.level ?? c.level
       records.push({
         slug: c.slug,
         legacy,
+        ...(kind && { kind }),
+        ...(level && { level }),
         sectionId: section.id,
         label: [c.nameZh, ...ancestors.map((a) => a.title), section.title].join(' › '),
         name: toAsciiSuits(`${section.title} ${section.originalTitle ?? ''}`),

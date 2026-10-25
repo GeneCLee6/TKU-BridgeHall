@@ -106,6 +106,28 @@ describe('checking a convention', () => {
     ])
   })
 
+  it('checks kind, level and prerequisites, which are all optional', () => {
+    const { kind: _kind, level: _level, ...unclassified } = lebensohl
+    expect(conventionProblems(unclassified, ids)).toEqual([])
+    const broken = {
+      ...lebensohl,
+      kind: 'gadget',
+      level: 'expert',
+      prerequisites: ['lebensohl'],
+      cardSlots: 'top',
+      sections: [{ id: 'a', title: 'A', level: 'hard', blocks: [] }],
+    }
+    expect(conventionProblems(broken, ids)).toEqual([
+      '種類不存在',
+      '程度不存在',
+      '前置特約不能是自己',
+      '制度卡位置要是文字清單',
+      'A：程度不存在',
+    ])
+    expect(conventionProblems({ ...lebensohl, prerequisites: [1] }, ids)).toEqual(['前置特約要是網址代稱清單'])
+    expect(tidyConvention({ ...lebensohl, prerequisites: [' '], cardSlots: [] })).toEqual(lebensohl)
+  })
+
   it('warns about calls it cannot draw and suit letters left in meanings', () => {
     const draft: Convention = {
       ...lebensohl,

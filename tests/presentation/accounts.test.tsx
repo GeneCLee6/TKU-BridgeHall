@@ -217,6 +217,28 @@ describe('the editor', () => {
     expect(save.convention.summary).toBe('新的摘要')
   })
 
+  it('sets the kind, level and prerequisites', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    serveBook({ version: 0, entries: [] })
+    routes['PUT /api/book/conventions/lebensohl'] = {
+      body: { entry: { slug: 'lebensohl', version: 1, convention: lebensohl, createdAt: 1, updatedAt: 1, updatedBy: 'amy' } },
+    }
+    renderAt('/edit/lebensohl')
+    const kind = await screen.findByLabelText(/^種類/)
+    expect(kind).toHaveValue('convention')
+    expect(screen.getByLabelText(/^程度/)).toHaveValue('intermediate')
+    await userEvent.selectOptions(kind, 'defense')
+    await userEvent.selectOptions(screen.getByLabelText(/^程度/), 'advanced')
+    const prerequisites = screen.getByRole('group', { name: '前置特約' })
+    // Every other convention can be picked, but not this one
+    expect(within(prerequisites).queryByRole('checkbox', { name: '雷本索特約' })).toBeNull()
+    await userEvent.click(within(prerequisites).getByRole('checkbox', { name: '1NT的答叫' }))
+    await userEvent.click(screen.getByRole('button', { name: '儲存並發布' }))
+    expect(await screen.findByText(/已儲存並發布（第 1 版）/)).toBeInTheDocument()
+    const save = sent.find((s) => s.method === 'PUT')!.body as { convention: Convention }
+    expect(save.convention).toMatchObject({ kind: 'defense', level: 'advanced', prerequisites: ['notrump-responses'] })
+  })
+
   it('offers a way out when someone else saved first', async () => {
     signedIn({ permissions: ['bookEdit'] })
     serveBook({ version: 0, entries: [] })
