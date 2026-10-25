@@ -49,8 +49,8 @@ export const wbf: CardTemplate = {
   language: 'en',
   printWidth: 805.2,
   fontSize: 7,
-  pending:
-    '版本照 2.19（使用者 2026-10-25 決定）。2.19 只有填好的範例 PDF，沒有空白表，以下幾處範例分不出是印好的字還是填的字，待拿到空白 2.19 確認：第 2 頁開叫欄的 24 列標籤（暫照空白 .doc 的 1♣～5♠）、勾選欄標題被截斷（Artific／Min.／Neg Dbl）、JUMP OVERCALLS 的「1-Suit:」「2-Suit:」（暫當範例自填）',
+  // Settled provisionally (user, 2026-10-25): the 2.19 sample PDF has no blank form, so a few labels
+  // follow the blank .doc / the sample — revisit if a blank 2.19 turns up. Was: 版本照 2.19（使用者 2026-10-25 決定）。2.19 只有填好的範例 PDF，沒有空白表，以下幾處範例分不出是印好的字還是填的字，待拿到空白 2.19 確認：第 2 頁開叫欄的 24 列標籤（暫照空白 .doc 的 1♣～5♠）、勾選欄標題被截斷（Artific／Min.／Neg Dbl）、JUMP OVERCALLS 的「1-Suit:」「2-Suit:」（暫當範例自填）
   pages: [
     {
       id: 'p1',
