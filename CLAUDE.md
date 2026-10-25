@@ -1,10 +1,10 @@
-# CLAUDE.md — TKU BridgeBook · 淡江橋譜
+# CLAUDE.md — TKU BridgeHall · 淡江橋館
 
 給 Claude Code 的專案說明。開始工作前先讀 `RULES.md` 與 `ARCHITECTURE.md`。
 
 ## 這是什麼
 
-淡江橋藝社的制度與特約手冊網站。React 19 + TypeScript（strict）+ styled-components + Vite，靜態網站（Vercel）。介面參考 Swagger UI：每個特約是可收合的卡片，內含多層可收合段落。帳號、線上編輯的內容與 AI 匯入的後端是姊妹站淡江牌桌的 Worker（`C:\dev\TKU-BridgeTable`），`vercel.json` 把 `/api/*` 轉過去（ARCHITECTURE.md §4.1–4.4）。
+淡江橋藝社的制度與特約手冊網站（2026-10-24 由「淡江橋譜 · TKU BridgeBook」改名；「橋譜」現在是館內制度區塊的名字，repo 名稱 `TKU-BridgeBook` 與 `/book` 路由不改）。React 19 + TypeScript（strict）+ styled-components + Vite，靜態網站（Vercel）。介面參考 Swagger UI：每個特約是可收合的卡片，內含多層可收合段落。帳號、線上編輯的內容與 AI 匯入的後端是姊妹站淡江牌桌的 Worker（`C:\dev\TKU-BridgeTable`），`vercel.json` 把 `/api/*` 轉過去（ARCHITECTURE.md §4.1–4.4）。
 
 ## 先讀
 

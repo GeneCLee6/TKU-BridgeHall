@@ -44,7 +44,9 @@ jobs:
           check /c/lebensohl/natural-rules
           check /favicon.svg
           check /logo.svg
+          check /logo-mark.svg
+          curl -fsS "$SITE_URL/logo.svg" | grep -q 'TKU BridgeHall 淡江橋館' || { echo "::error::logo is not the BridgeHall logo"; fail=1; }
           html=$(curl -fsS "$SITE_URL/")
-          echo "$html" | grep -q '<title>TKU BridgeBook 淡江橋譜</title>' || { echo "::error::title missing"; fail=1; }
+          echo "$html" | grep -q '<title>TKU BridgeHall 淡江橋館</title>' || { echo "::error::title missing"; fail=1; }
           for asset in $(echo "$html" | grep -o '/assets/[^"]*'); do check "$asset"; done
           exit $fail

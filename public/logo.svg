@@ -1,32 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 392 96" role="img" aria-labelledby="t">
-  <title id="t">TKU BridgeBook · 淡江橋譜</title>
-  <style>
-    .navy { fill: #0f3d7a; }
-    .word { fill: #0f3d7a; } .zh { fill: #0f3d7a; } .badge-text { fill: #ffffff; }
-    @media (prefers-color-scheme: dark) {
-      .word, .zh { fill: #e6ebf3; }
-    }
-  </style>
-  <g transform="translate(6 6) scale(1.25)">
-    <!-- Cover (gold edge under the pages) -->
-    <path d="M32 19.6c-6-4.2-17-4.9-26-2.7V51c9-2.2 20-1.2 26 3 6-4.2 17-5.2 26-3V16.9c-9-2.2-20-1.5-26 2.7z" fill="#f2b84b"/>
-    <!-- Pages -->
-    <path d="M31 20.5c-5.6-3.6-14-4.4-22-2.6v30c8-1.8 16.4-1 22 2.6z" fill="#fff8e6"/>
-    <path d="M33 20.5c5.6-3.6 14-4.4 22-2.6v30c-8-1.8-16.4-1-22 2.6z" fill="#fff8e6"/>
-    <!-- Suits: spade and heart on the left page, diamond and club on the right -->
-    <path transform="translate(15 23.5)" d="M5 0C3.5 2 0 3.6 0 6c0 1.4 1.1 2.3 2.3 2.3.7 0 1.3-.3 1.7-.7L3.3 10h3.4L6 7.6c.4.4 1 .7 1.7.7C8.9 8.3 10 7.4 10 6 10 3.6 6.5 2 5 0z" fill="#0f3d7a"/>
-    <path transform="translate(15 36)" d="M5 9.5 1 5.5C-.6 3.9.2.8 2.6.8c1.1 0 1.9.7 2.4 1.6.5-.9 1.3-1.6 2.4-1.6 2.4 0 3.2 3.1 1.6 4.7z" fill="#c8102e"/>
-    <path transform="translate(39 23.5)" d="M5 0l4 5-4 5-4-5z" fill="#d35400"/>
-    <g transform="translate(39 36)" fill="#1b7a33"><circle cx="5" cy="2.6" r="2.4"/><circle cx="2.4" cy="5.7" r="2.4"/><circle cx="7.6" cy="5.7" r="2.4"/><path d="M5 3.5 6.6 6.3H3.4z"/><path d="M4.3 5h1.4l1 4.8H3.3z"/></g>
-    <!-- Bookmark ribbon from the spine -->
-    <path d="M29.6 50.5h4.8V61L32 58.4 29.6 61z" fill="#c8102e"/>
-  </g>
-  <!-- TKU monogram -->
-  <rect x="98" y="14" width="80" height="38" rx="8" class="navy"/>
-  <rect x="98" y="48" width="80" height="4" fill="#d9a330"/>
-  <text x="138" y="43" text-anchor="middle" class="badge-text" font-family="'Arial Black','Segoe UI',Arial,sans-serif" font-weight="900" font-size="27" letter-spacing="2">TKU</text>
-  <!-- Wordmark -->
-  <text x="188" y="44" class="word" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-weight="700" font-size="30">BridgeBook</text>
-  <text x="99" y="84" class="zh" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" font-weight="700" font-size="24" letter-spacing="4">淡江橋譜</text>
-  <text x="228" y="83" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" font-size="14" letter-spacing="1"><tspan class="word">♠</tspan><tspan fill="#c8102e">♥♦</tspan><tspan class="word">♣ 橋藝社制度手冊</tspan></text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 392 96" width="392" height="96" role="img" aria-label="TKU BridgeHall 淡江橋館">
+<style>
+.t1{font:700 26px 'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;fill:#0f3d7a;letter-spacing:2px}
+.t2{font:600 15px 'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;fill:#1a2233;letter-spacing:.5px}
+.t3{font:400 12px 'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;fill:#4f5a70}
+.r{stroke:#d9a330}.a{stroke:#0f3d7a}.s{fill:#1a2233}.h{fill:#c8102e}.d{fill:#b34700}.c{fill:#1b7a33}.badge{fill:#0f3d7a}.badgeline{stroke:#d9a330}
+@media (prefers-color-scheme:dark){.t1{fill:#b5d0ff}.t2{fill:#e6ebf3}.t3{fill:#a3afc4}.r{stroke:#e7b850}.a{stroke:#8db8ff}.s{fill:#e6ebf3}.h{fill:#ff6b6b}.d{fill:#ffa04d}.c{fill:#5fd27a}}
+</style>
+<g transform="translate(8 16)">
+<path class="r" d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="#d9a330" stroke-width="4" stroke-linecap="round"/>
+<path class="a" d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="#0f3d7a" stroke-width="4" stroke-linecap="round"/>
+<path class="a" d="M7 55h50" fill="none" stroke="#0f3d7a" stroke-width="4" stroke-linecap="round"/>
+<g transform="translate(19.5 28.5) scale(.5)"><path class="s" fill="#1a2233" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g>
+<g transform="translate(33 28.5) scale(.5)"><path class="h" fill="#c8102e" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g>
+<g transform="translate(19.5 41) scale(.5)"><path class="d" fill="#b34700" d="M12 2l7.5 10L12 22 4.5 12z"/></g>
+<g transform="translate(33 41) scale(.5)"><path class="c" fill="#1b7a33" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g>
+</g>
+<rect class="badge" fill="#0f3d7a" x="88" y="24" width="52" height="26" rx="4"/>
+<line class="badgeline" stroke="#d9a330" x1="88" y1="52" x2="140" y2="52" stroke-width="2"/>
+<text x="114" y="43" text-anchor="middle" font="700 16px 'Noto Sans TC',sans-serif" fill="#ffffff" style="font:700 16px 'Noto Sans TC','PingFang TC',sans-serif;letter-spacing:1px">TKU</text>
+<text class="t1" fill="#0f3d7a" font-family="Noto Sans TC, PingFang TC, Microsoft JhengHei, sans-serif" font-weight="700" font-size="26" x="150" y="46" textLength="150" lengthAdjust="spacingAndGlyphs">淡江橋館</text>
+<text class="t2" fill="#1a2233" font-family="Noto Sans TC, PingFang TC, Microsoft JhengHei, sans-serif" font-weight="600" font-size="15" x="88" y="74" textLength="112" lengthAdjust="spacingAndGlyphs">BridgeHall</text>
+<text class="t3" fill="#4f5a70" font-family="Noto Sans TC, PingFang TC, Microsoft JhengHei, sans-serif" font-size="12" x="212" y="74" textLength="168" lengthAdjust="spacingAndGlyphs">♠♥♦♣ 橋藝社的制度與牌局</text>
 </svg>

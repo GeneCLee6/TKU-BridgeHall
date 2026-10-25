@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="public/logo.svg" alt="TKU BridgeBook 淡江橋譜" width="392" />
+  <img src="public/logo.svg" alt="TKU BridgeHall 淡江橋館" width="392" />
 </p>
 
-# TKU BridgeBook · 淡江橋譜
+# TKU BridgeHall · 淡江橋館
 
-**淡江橋藝社制度與特約手冊。**
+**淡江橋藝社的制度與牌局：制度、特約與手冊。**
 
-社團的叫牌制度與各項橋牌特約，過去散落在一份份 Word 檔裡，常常找不到、版本也對不上。淡江橋譜把它們整理成一個網站：介面參考 Swagger UI，每個特約是一張可展開的卡片，裡面再分層收合各個段落與叫牌表，社員可以自己找到需要的特約、展開來複習，也能把某一段的連結直接貼給隊友。
+社團的叫牌制度與各項橋牌特約，過去散落在一份份 Word 檔裡，常常找不到、版本也對不上。淡江橋館把它們整理成一個網站：介面參考 Swagger UI，每個特約是一張可展開的卡片，裡面再分層收合各個段落與叫牌表，社員可以自己找到需要的特約、展開來複習，也能把某一段的連結直接貼給隊友。
 
 目前收錄的特約：
 
@@ -106,11 +106,11 @@ npm run dev        # http://localhost:5174
 
 | 檔案 | 用途 |
 | --- | --- |
-| `public/logo.svg` | 完整標誌：翻開的橋譜＋TKU 字標＋「TKU BridgeBook · 淡江橋譜」 |
-| `public/logo-mark.svg` | 只有書本圖形 |
-| `public/favicon.svg` | 網站圖示（深藍圓角底＋書本） |
+| `public/logo.svg` | 完整標誌：屋簷與拱門＋TKU 字標＋「淡江橋館 BridgeHall」 |
+| `public/logo-mark.svg` | 只有屋簷與拱門圖形 |
+| `public/favicon.svg` | 網站圖示（深藍圓角底＋拱門） |
 | `public/icon-192.png`、`icon-512.png`、`icon-maskable-512.png`、`apple-touch-icon.png` | 手機 App 圖示 |
 
-淡江橋譜用「書本」，姊妹站淡江牌桌（TKU BridgeTable）用「宮燈」，兩個 App 在手機主畫面上一眼就能分辨。
+淡江橋館用「拱門」，姊妹站淡江牌桌（TKU BridgeTable）用「宮燈」，兩個 App 在手機主畫面上一眼就能分辨。
 
 設計概念與使用規範見 `DESIGN.md` §8。標誌為原創圖形，未使用淡江大學校徽或任何註冊商標。

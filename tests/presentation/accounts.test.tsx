@@ -96,7 +96,7 @@ describe('signing in and registering', () => {
     await userEvent.type(screen.getByLabelText(/^邀請碼/), 'tku')
     await userEvent.type(screen.getByLabelText(/^自我介紹/), '王小美')
     await userEvent.click(screen.getByRole('button', { name: '註冊' }))
-    expect(await screen.findByRole('status')).toHaveTextContent('管理員核准後，就能用這個帳號登入淡江橋譜和淡江牌桌')
+    expect(await screen.findByRole('status')).toHaveTextContent('管理員核准後，就能用這個帳號登入淡江橋館和淡江牌桌')
     expect(sent.find((s) => s.path === '/api/register')!.body).toMatchObject({ note: '王小美', site: 'book' })
   })
 

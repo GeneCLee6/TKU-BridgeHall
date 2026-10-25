@@ -1,4 +1,4 @@
-# PRD — TKU BridgeBook · 淡江橋譜
+# PRD — TKU BridgeHall · 淡江橋館
 
 產品需求文件已於 2026-10-24 搬到 [`docs/PRD/`](docs/PRD/README.md)，並拆成總 PRD 與 10 個 epic：
 
