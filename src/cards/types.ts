@@ -3,6 +3,9 @@
 // preview page (e3-t05), print styles and .docx output all read these structures; adding a
 // template means adding one file under src/cards/templates/ and registering it there.
 //
+// Widths are always percentages (of the page, a table or a group), worked out from the
+// original file's twips or PDF points; each template file keeps the source measurements.
+//
 // Not imported by the site yet; when the card page lands it must be lazy-loaded so the home
 // page budget (scripts/check-budget.mjs) is unaffected.
 
@@ -19,6 +22,11 @@ export interface CardTemplate {
   /** Who publishes the form, printed in its header or footer */
   publisher: string
   paper: 'A4-landscape' | 'A4-portrait'
+  /**
+   * Copies printed side by side on one sheet (the two-sided simple card is printed two-up and
+   * cut in half); a page then describes one copy and its widths are percent of the copy
+   */
+  nUp?: number
   pages: CardPage[]
   /**
    * Layout details that still need checking against the original file (shown as 待確認
@@ -31,14 +39,26 @@ export interface CardPage {
   id: string
   /** Side by side, left to right */
   columns: CardColumn[]
+  /**
+   * Blank gutters between adjacent columns, percent of the printable width (one fewer than
+   * the columns); the columns plus the gutters add up to 100
+   */
+  gaps?: number[]
 }
 
 export interface CardColumn {
   id: string
-  /** Percent of the printable width; a page's columns add up to 100 */
+  /** Percent of the printable width (see `CardPage.gaps`) */
   width: number
   /** Top to bottom */
   blocks: CardBlock[]
+}
+
+/** What a cell asks for, quoted or closely excerpted from the publisher's own guide */
+export interface CardHelp {
+  text: string
+  /** Where the text comes from, e.g. "Guide to Completion of the WBF System Card (2017), p. 11" */
+  source: string
 }
 
 /** A column of a table; `width` is a percent of the table width (row header included) */
@@ -52,6 +72,7 @@ export interface CardTableColumn {
   default?: boolean
   /** Printed with an asterisk: must be alerted */
   alert?: boolean
+  help?: CardHelp
 }
 
 export interface CardTableRow {
@@ -59,6 +80,8 @@ export interface CardTableRow {
   label: string
   /** Printed lines this row occupies (default 1) */
   lines?: number
+  /** Label shared by several adjacent rows (WBF signals: "Suit" beside lines 1–3) */
+  group?: string
 }
 
 /** An option of a `choice`; same marks as a check */
@@ -69,25 +92,40 @@ export interface CardOption {
   alert?: boolean
 }
 
+/** A titled run of free-text lines (WBF: OVERCALLS, GENERAL APPROACH AND STYLE…) */
+export interface CardCellsBlock {
+  kind: 'cells'
+  id: string
+  title: string
+  titleZh?: string
+  lines: number
+  help?: CardHelp
+}
+
 export type CardBlock =
   /** Column or section title with no cells of its own (DEFENSIVE AND COMPETITIVE BIDDING, 開叫約定) */
-  | { kind: 'heading'; id: string; title: string; shaded?: boolean }
-  /** The form's own title area (WBF logo and "WBF Convention Card 2.19") */
-  | { kind: 'banner'; id: string; title: string; lines: number }
+  | { kind: 'heading'; id: string; title: string; shaded?: boolean; /** Printed lines (default 1) */ lines?: number }
+  /** The form's own title area (WBF "W B F CONVENTION CARD", 國橋 簡易制度卡) */
+  | { kind: 'banner'; id: string; title: string; lines: number; shaded?: boolean }
   /** Fixed explanatory text printed on the form */
   | { kind: 'note'; id: string; text: string }
-  /** A titled run of free-text lines (WBF: OVERCALLS, GENERAL APPROACH AND STYLE…) */
-  | { kind: 'cells'; id: string; title: string; titleZh?: string; lines: number; help?: string }
+  | CardCellsBlock
   /** A grid: opening bid descriptions, leads, signals */
   | {
       kind: 'table'
       id: string
       title?: string
       /** Header of the row-label column; `label` may be empty */
-      rowHeader: { label: string; width: number }
+      rowHeader: { label: string; width: number; help?: CardHelp }
       columns: CardTableColumn[]
       rows: CardTableRow[]
-      help?: string
+      /**
+       * A free-text block printed inside the table's bottom-right corner (WBF: HIGH LEVEL
+       * BIDDING over Subsequent action and Passed hand from the 5♣ row down); rows from
+       * `fromRow` on have no cells in `columns`
+       */
+      inset?: { fromRow: string; columns: string[]; block: CardCellsBlock }
+      help?: CardHelp
     }
   /** A tick box (簡易卡); `blank` is a fill-in printed after the label, e.g. 點力 ___ */
   | {
@@ -97,13 +135,19 @@ export type CardBlock =
       alert?: boolean
       default?: boolean
       blank?: { label: string }
-      help?: string
+      help?: CardHelp
     }
   /** One of several printed options; `scope` names the table column it sits under, if any */
-  | { kind: 'choice'; id: string; label: string; options: CardOption[]; scope?: string; help?: string }
-  /** A labelled fill-in of one or more lines (Category:, Psychics:, 使用人, 其他特約) */
-  | { kind: 'text'; id: string; label: string; lines: number; alert?: boolean; help?: string }
-  /** A boxed group with a side label (簡易卡 無王／高花…); `columns` lays its blocks out row-major */
-  | { kind: 'group'; id: string; label: string; columns: number; blocks: CardBlock[] }
+  | { kind: 'choice'; id: string; label: string; options: CardOption[]; scope?: string; help?: CardHelp }
+  /** A labelled fill-in of one or more lines (CATEGORY:, PSYCHICS:, 使用人, 其他特約) */
+  | { kind: 'text'; id: string; label: string; lines: number; alert?: boolean; help?: CardHelp }
+  /**
+   * A boxed group with a label (簡易卡 無王／高花… at the side, 首攻 on top); `columns` lays its
+   * blocks out row-major. `widths`, when given, are percent of the group: the side label, then
+   * each column (a label and its tick box count as one column)
+   */
+  | { kind: 'group'; id: string; label: string; columns: number; widths?: number[]; blocks: CardBlock[] }
+  /** Blocks side by side inside a column (簡易卡: title beside 使用人; 首攻 beside 防禦訊號) */
+  | { kind: 'split'; id: string; parts: { width: number; blocks: CardBlock[] }[] }
 
 export type CardBlockKind = CardBlock['kind']
