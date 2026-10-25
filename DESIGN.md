@@ -31,6 +31,10 @@
 | `focus` | `#2f6fd6` | `#8db8ff` | 鍵盤焦點框 |
 | `pending*` | 米黃底、琥珀框 | 深褐底、金框 | 「待確認」標示 |
 | `warning*` | 淡紅底、紅框 | 深紅底、紅框 | 原文 P.S. 等注意事項 |
+| `callPass` | `#2f9e44` | `#28863a` | 叫牌盒的 Pass 鍵（填色，與淡江牌桌 `bidPass` 同色；深色加深一階，白字對比 ≥ 4.5:1；所有風格同值） |
+| `callDouble` | `#d9372b` | `#d9372b` | 叫牌盒的 X 鍵（牌桌 `bidDouble`） |
+| `callRedouble` | `#2b6fd6` | `#2b6fd6` | 叫牌盒的 XX 鍵（牌桌 `bidRedouble`） |
+| `onCall` | `#ffffff` | `#ffffff` | 上面三個鍵的文字 |
 
 ### 2.2 花色
 
@@ -75,7 +79,7 @@
 | DealDiagram | `components/board/DealDiagram.tsx` | 四家牌（桌機十字、手機四行），中間發牌與身價；有身價的座位名用 `seal`。型別在 `lib/board.ts`，與牌桌相容。討論區用（E11）。 |
 | DealInput | `components/board/DealInput.tsx` | 4×13 選牌面板（方向鍵移動、一個 Tab 停點），點牌歸給目前座位、13 張滿換下一家；發牌與身價下拉。 |
 | HandInput | `components/board/HandInput.tsx` | 單手牌輸入，同一個選牌面板，最多 13 張，顯示張數與大牌點。 |
-| AuctionInput | `components/board/AuctionInput.tsx` | 兩列式叫牌盒（與牌桌同款），只開放合法叫品；鍵盤 1–7＋C D H S N、P、X；可加註；預覽用 `AuctionTable`。 |
+| AuctionInput | `components/board/AuctionInput.tsx` | 兩列式叫牌盒（與牌桌同款），Pass／X／XX 鍵用 `callPass`／`callDouble`／`callRedouble` 填色；只開放合法叫品；鍵盤 1–7＋C D H S N、P、X；可加註；預覽用 `AuctionTable`。 |
 | Tag | `components/Tag.tsx` | 膠囊形標籤。 |
 | PendingNote | `components/PendingNote.tsx` | 「待確認」標記與說明。 |
 | SearchBar | `components/SearchBar.tsx` | 頁首搜尋框，下拉結果為深層連結；Esc 清除。 |

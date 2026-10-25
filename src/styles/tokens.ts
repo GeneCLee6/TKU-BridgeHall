@@ -52,6 +52,12 @@ export interface Palette {
   tagBorder: string
   tagText: string
   overlay: string
+  /** The bidding box's Pass, X and XX keys, filled like 淡江牌桌's (BBO's) */
+  callPass: string
+  callDouble: string
+  callRedouble: string
+  /** Text on the three call colours */
+  onCall: string
 }
 
 type Suits = Record<'S' | 'H' | 'D' | 'C', string>
@@ -69,6 +75,16 @@ interface StyleTokens {
   shadows: Record<ThemeMode, { panel: string }>
   /** The 「待確認」 badge: a pill in 「一般」, a slightly turned seal in 中國風 */
   pendingBadge: { borderWidth: string; rotate: string; serif: boolean }
+}
+
+/**
+ * 淡江牌桌's bidding box colours (its `table.bidPass`, `bidDouble`, `bidRedouble`), the same in
+ * every style so a call looks the same on both sites. In dark mode Pass is a shade darker, so the
+ * white text keeps 4.5:1 and the key still stands out from the dark surface (3:1).
+ */
+const calls: Record<ThemeMode, Pick<Palette, 'callPass' | 'callDouble' | 'callRedouble' | 'onCall'>> = {
+  light: { callPass: '#2f9e44', callDouble: '#d9372b', callRedouble: '#2b6fd6', onCall: '#ffffff' },
+  dark: { callPass: '#28863a', callDouble: '#d9372b', callRedouble: '#2b6fd6', onCall: '#ffffff' },
 }
 
 const sans = `'Noto Sans TC Variable', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif`
@@ -102,6 +118,7 @@ const general: StyleTokens = {
       tagBorder: '#d5dce8',
       tagText: '#4f5a70',
       overlay: 'rgba(10, 20, 40, 0.45)',
+      ...calls.light,
     },
     dark: {
       bg: '#0d1320',
@@ -127,6 +144,7 @@ const general: StyleTokens = {
       tagBorder: '#2c3850',
       tagText: '#a3afc4',
       overlay: 'rgba(0, 0, 0, 0.6)',
+      ...calls.dark,
     },
   },
   suits: {
@@ -171,6 +189,7 @@ const chinese: StyleTokens = {
       tagBorder: '#b5261e',
       tagText: '#b5261e',
       overlay: 'rgba(36, 30, 25, 0.45)',
+      ...calls.light,
     },
     dark: {
       bg: '#1a1512',
@@ -196,6 +215,7 @@ const chinese: StyleTokens = {
       tagBorder: '#e2574a',
       tagText: '#e2574a',
       overlay: 'rgba(0, 0, 0, 0.6)',
+      ...calls.dark,
     },
   },
   suits: {

@@ -17,11 +17,11 @@ import {
   legalCalls,
   seatToFill,
   toggleCard,
-  toTableAuction,
+  toBookAuction,
   vulnerabilityOf,
   withDealer,
-  type Auction,
-  type AuctionCall,
+  type TableAuction,
+  type TableAuctionCall,
   type Call,
   type Deal,
   type Seat,
@@ -36,8 +36,8 @@ const suitDeal = (): Deal => ({
 })
 
 /** Build an auction from compact calls, seats following the dealer */
-function auction(dealer: Seat, calls: Call[]): Auction {
-  return calls.reduce<Auction>((a, call) => {
+function auction(dealer: Seat, calls: Call[]): TableAuction {
+  return calls.reduce<TableAuction>((a, call) => {
     const next = addCall(a, call)
     if (next === a) throw new Error(`illegal ${call}`)
     return next
@@ -146,7 +146,7 @@ describe('auctions', () => {
     expect(isLegalAuction(good)).toBe(true)
     expect(isLegalAuction({ dealer: 'N', calls: [] })).toBe(true)
 
-    const at = (calls: AuctionCall[], dealer: Seat = 'N') => auctionProblem({ dealer, calls })
+    const at = (calls: TableAuctionCall[], dealer: Seat = 'N') => auctionProblem({ dealer, calls })
     expect(at([{ seat: 'N', call: '1D' }, { seat: 'E', call: '1C' }])).toEqual({ kind: 'illegal', index: 1 })
     expect(at([{ seat: 'N', call: '1D' }, { seat: 'E', call: 'P' }, { seat: 'S', call: 'X' }])).toEqual({
       kind: 'illegal',
@@ -179,7 +179,7 @@ describe('auctions', () => {
       [null, '1D', 'P', '1S'],
       ['2H', null, null, null],
     ])
-    const table = toTableAuction(addCall(a, '2N', '平衡'), { N: '北', E: '東', S: '南', W: '西' })
+    const table = toBookAuction(addCall(a, '2N', '平衡'), { N: '北', E: '東', S: '南', W: '西' })
     expect(table.seats).toEqual(['西', '北', '東', '南'])
     expect(table.calls).toEqual(['', '1D', 'P', '1S', '2H', { call: '2NT', note: '平衡' }])
   })

@@ -6,7 +6,7 @@ import { AuctionInput } from '../../src/components/board/AuctionInput.tsx'
 import { DealDiagram } from '../../src/components/board/DealDiagram.tsx'
 import { DealInput } from '../../src/components/board/DealInput.tsx'
 import { HandInput } from '../../src/components/board/HandInput.tsx'
-import { emptyDeal, fullDeck, type Auction, type Card, type Deal } from '../../src/lib/board.ts'
+import { emptyDeal, fullDeck, type TableAuction, type Card, type Deal } from '../../src/lib/board.ts'
 import { createTheme } from '../../src/styles/tokens.ts'
 
 const themed = (node: ReactNode) => render(<ThemeProvider theme={createTheme('light')}>{node}</ThemeProvider>)
@@ -143,8 +143,8 @@ describe('HandInput', () => {
   })
 })
 
-function AuctionHarness({ onAuction }: { onAuction: (a: Auction) => void }) {
-  const [auction, setAuction] = useState<Auction>({ dealer: 'N', calls: [] })
+function AuctionHarness({ onAuction }: { onAuction: (a: TableAuction) => void }) {
+  const [auction, setAuction] = useState<TableAuction>({ dealer: 'N', calls: [] })
   return (
     <AuctionInput
       value={auction}
@@ -159,7 +159,7 @@ function AuctionHarness({ onAuction }: { onAuction: (a: Auction) => void }) {
 describe('AuctionInput', () => {
   it('makes bids from a level and a strain and only allows legal calls', async () => {
     const user = userEvent.setup()
-    let auction: Auction = { dealer: 'N', calls: [] }
+    let auction: TableAuction = { dealer: 'N', calls: [] }
     themed(<AuctionHarness onAuction={(a) => (auction = a)} />)
     const box = screen.getByRole('group', { name: '叫牌盒' })
     expect(within(box).getByRole('button', { name: '賭倍 X' })).toBeDisabled()
@@ -185,7 +185,7 @@ describe('AuctionInput', () => {
 
   it('takes calls from the keyboard, with an alert, and ends after three passes', async () => {
     const user = userEvent.setup()
-    let auction: Auction = { dealer: 'N', calls: [] }
+    let auction: TableAuction = { dealer: 'N', calls: [] }
     themed(<AuctionHarness onAuction={(a) => (auction = a)} />)
     const box = screen.getByRole('group', { name: '叫牌盒' })
     within(box).getByRole('button', { name: 'Pass' }).focus()
@@ -208,7 +208,7 @@ describe('AuctionInput', () => {
 
   it('re-seats the calls when the dealer changes', async () => {
     const user = userEvent.setup()
-    let auction: Auction = { dealer: 'N', calls: [] }
+    let auction: TableAuction = { dealer: 'N', calls: [] }
     themed(<AuctionHarness onAuction={(a) => (auction = a)} />)
     await user.click(screen.getByRole('button', { name: 'Pass' }))
     await user.selectOptions(screen.getByRole('combobox', { name: '發牌' }), '西')

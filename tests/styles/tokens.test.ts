@@ -83,6 +83,16 @@ describe('style tokens', () => {
     expect(usesSerif('general')).toBe(false)
   })
 
+  it.each(styleNames)('colours %s’s bidding box like 淡江牌桌 (its table.bidPass, bidDouble, bidRedouble)', (style) => {
+    const { colors } = createTheme('light', 'medium', style)
+    expect([colors.callPass, colors.callDouble, colors.callRedouble, colors.onCall]).toEqual([
+      '#2f9e44',
+      '#d9372b',
+      '#2b6fd6',
+      '#ffffff',
+    ])
+  })
+
   it('gives 中國風 serif headings, square corners and a turned seal', () => {
     const theme = createTheme('light', 'medium', 'chinese')
     expect(usesSerif('chinese')).toBe(true)
@@ -112,6 +122,14 @@ describe('style tokens', () => {
         expect(contrast(colors.pendingText, pendingGround)).toBeGreaterThanOrEqual(4.5)
         const tagGround = colors.tagBg.startsWith('#') ? colors.tagBg : colors.surface
         expect(contrast(colors.tagText, tagGround)).toBeGreaterThanOrEqual(4.5)
+      })
+
+      it('has bidding box keys that read and stand out', () => {
+        for (const fill of [colors.callPass, colors.callDouble, colors.callRedouble]) {
+          // Light mode keeps 淡江牌桌's colours, whose Pass is 3.45:1 under white bold text
+          expect(contrast(colors.onCall, fill)).toBeGreaterThanOrEqual(mode === 'dark' ? 4.5 : 3)
+          if (mode === 'dark') expect(contrast(fill, colors.surface)).toBeGreaterThanOrEqual(3)
+        }
       })
     },
   )
