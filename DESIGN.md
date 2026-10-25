@@ -11,6 +11,8 @@
 
 ## 2. 色彩
 
+本文描述的是預設風格「一般」。`tokens.ts` 有**風格**這個維度（`createTheme(mode, textSize, style)`）：每種風格是一組完整的 token（色彩、`shape` 圓角、`borders` 線、`shadows` 陰影、字體、「待確認」樣式），元件只讀 token、不判斷風格。「一般」的值就是下面這些，有測試鎖住（`tests/styles/tokens.test.ts`）。另一組「中國風」（宣紙、朱紅、青花、襯線標題、雙線框、印章式待確認）已在 token 裡，個人設定面板（e9-t15）做好之前沒有入口；其餘四種在 e9-t16。風格規格見 `docs/DESIGN-V2.md` §10.5，值以 `docs/design/pitch.html` 為準。
+
 ### 2.1 介面色（淺色／深色）
 
 | Token | 淺色 | 深色 | 用途 |
@@ -46,6 +48,7 @@
 ## 3. 字體
 
 - 內文：**Noto Sans TC**（`@fontsource-variable/noto-sans-tc`，可變字重，依 unicode-range 分片載入），備援 PingFang TC、Microsoft JhengHei。
+- 標題字體跟隨風格（`fonts.heading`）：「一般」與內文相同；「中國風」用 **Noto Serif TC** 600（`@fontsource/noto-serif-tc`，依 unicode-range 分片）。襯線字型只在選了需要它的風格時才載入（`styles/fonts.ts` 動態載入樣式表），「一般」不下載。
 - 花色符號：優先使用 Segoe UI Symbol／Apple Symbols，避免部分 CJK 字型把 ♠♥ 畫成 emoji 或寬度不一。
 - 字級：內文 16px、行高 1.7（中文需要較寬鬆的行距）；表格 15px；次要說明 13–14px；特約名稱 20px／700。以上是「中」字級的大小。
 - 使用者可選字級「小／中／大」（頁首的切換鈕，手機在目錄抽屜）：根字級 87.5%／100%／112.5%，用 rem 的文字、表單元件與側邊欄寬度一起縮放。用百分比是為了保留瀏覽器本身的字級設定。
@@ -55,7 +58,7 @@
 ## 4. 間距與形狀
 
 - 4px 基準：`space(n) = n × 4px`。卡片內距 16px，段落間距 8px，分類間距 40px。
-- 圓角：`sm 6px`（按鈕、表格）、`md 10px`（段落）、`lg 14px`（卡片）、`pill`（標籤、搜尋框）。
+- 圓角：`sm 6px`（按鈕、表格）、`md 10px`（段落）、`lg 14px`（卡片）、`pill`（標籤、搜尋框）。新元件與換過皮的元件改讀依角色命名的 `shape`（`control` 按鈕與輸入框、`panel` 面板、`tag`、`badge`、`note` 提示框）與 `shadows.panel`；`radius`、`shadow` 與色彩的 `lantern`、`vermilion`（改名 `accent`、`seal`）是舊名，e9-t14 移除。
 - 版面：頁首 60px、側邊欄 19rem（「中」字級為 304px，放得下最長的特約名稱）、內容最寬 60rem（960px）；900px 以下切換為行動版。
 - 表單：短欄位兩兩並排（名稱、網址代稱與分類），長文字（摘要、標籤、別名、段落摘要）獨佔一列並自動換行。欄位一律靠上對齊，旁邊有提示文字的欄位不會把同列的輸入框撐高。
 

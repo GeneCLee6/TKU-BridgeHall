@@ -17,8 +17,8 @@ export const Button = styled.button<{ $variant?: 'primary' | 'danger' | 'ghost';
   gap: ${({ theme }) => theme.space(2)};
   min-height: ${({ $small }) => ($small ? '2rem' : '2.25rem')};
   padding: 0 ${({ theme, $small }) => theme.space($small ? 3 : 4)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   font-size: ${({ $small }) => ($small ? '0.875rem' : '0.9375rem')};
@@ -56,11 +56,11 @@ export const Button = styled.button<{ $variant?: 'primary' | 'danger' | 'ghost';
     $variant === 'danger' &&
     css`
       border-color: ${theme.colors.warningBorder};
-      color: ${theme.colors.vermilion};
+      color: ${theme.colors.seal};
       &:hover:not(:disabled) {
         background: ${theme.colors.warningBg};
         border-color: ${theme.colors.warningBorder};
-        color: ${theme.colors.vermilion};
+        color: ${theme.colors.seal};
       }
     `}
   ${({ $variant, theme }) =>
@@ -80,8 +80,8 @@ const control = css`
   width: 100%;
   min-height: 2.25rem;
   padding: 0.3125rem 0.625rem;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.bg};
   color: ${({ theme }) => theme.colors.text};
   font: inherit;
@@ -137,10 +137,10 @@ export const Field = styled.label`
 
 export const Panel = styled.section`
   padding: ${({ theme }) => theme.space(5)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.lg};
+  border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.panel};
   background: ${({ theme }) => theme.colors.surface};
-  box-shadow: ${({ theme }) => theme.shadow};
+  box-shadow: ${({ theme }) => theme.shadows.panel};
 
   ${mobile} {
     padding: ${({ theme }) => theme.space(4)};
@@ -185,7 +185,7 @@ export const ErrorText = styled.p`
   margin: 0;
   padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
   border-left: 4px solid ${({ theme }) => theme.colors.warningBorder};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.note};
   background: ${({ theme }) => theme.colors.warningBg};
   line-height: 1.6;
   white-space: pre-line;
@@ -195,7 +195,7 @@ export const Notice = styled.p`
   margin: 0;
   padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
   border-left: 4px solid ${({ theme }) => theme.colors.primary};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.note};
   background: ${({ theme }) => theme.colors.primarySoft};
   line-height: 1.6;
 `
@@ -240,7 +240,7 @@ const EyeButton = styled.button`
   height: 36px;
   transform: translateY(-50%);
   border: 0;
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: transparent;
   color: ${({ theme }) => theme.colors.textMuted};
   cursor: pointer;

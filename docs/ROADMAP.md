@@ -14,7 +14,7 @@ Phase 用字母，**跳過 E**，避免和 Epic 編號（E1…E10）混淆。
 ```
 讀 CLAUDE.md、docs/NEXT.md、docs/ROADMAP.md。做 ROADMAP 第 <批次號> 批，照 NEXT.md 第 3 點的規則：
 worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行、一批一個 ready PR（標題列出全部 task 編號、本文寫 AC 與檢查）、
-在 PRD 勾選並更新進度表、在 ROADMAP 勾選這一批並寫 PR 號、更新 NEXT.md「現在的位置」，CI 綠了回報後結束。
+在 PRD 勾選並更新進度表、在 ROADMAP 勾選這一批並寫 PR 號、更新 NEXT.md「現在的位置」，CI 綠了直接合併（需要人決定的事才停），合併後回報並結束。
 ```
 
 ---
@@ -38,7 +38,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | 批 | Task | 內容 | 前提 |
 | --- | --- | --- | --- |
 | [ ] B0 | `e9-t18` | 改名「淡江橋館 · TKU BridgeHall」與新標誌（strings、manifest、圖示、Logo 元件、文件；牌桌端同步） | — |
-| [ ] B1 | `e9-t01` `e9-t02` | tokens 加風格維度（「一般」＝現行值，圓角不變）、字體載入、`GlobalStyle`；基礎元件改讀風格 token（`ui.tsx`、Tag、PendingNote、Suit／CallLabel） | — |
+| [x] B1 #10 | `e9-t01` `e9-t02` | tokens 加風格維度（「一般」＝現行值，圓角不變）、字體載入、`GlobalStyle`；基礎元件改讀風格 token（`ui.tsx`、Tag、PendingNote、Suit／CallLabel） | — |
 | [ ] B2 | `e9-t03` `e9-t04` | 頁首 v2 與閱讀設定面板；路由拆頁（首頁、特約頁、全書目錄） | B1, A7 |
 | [ ] B3 | `e9-t05` `e9-t06` `e9-t07` | 特約頁三欄版面；段落、叫牌表、區塊換皮；目錄 v2 | B2 |
 | [ ] B4 | `e9-t08` `e9-t09` | 首頁（制度集卡、第一次來、分類、最近更新）；手機版面與底部工具列 | B3 |

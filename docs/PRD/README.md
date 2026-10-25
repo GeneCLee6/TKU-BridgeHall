@@ -32,7 +32,7 @@
 | [E6](e6-quiz-practice.md) | 練習與測驗 | 0／9 | 0／6 | M2 | planned |
 | [E7](e7-bridgetable-integration.md) | 與淡江牌桌整合 | 0／8 | 0／5 | M2 | planned |
 | [E8](e8-content-governance.md) | 內容治理 | 0／14 | 0／6 | M1、M2 | planned |
-| [E9](e9-ui-redesign.md) | 介面重新設計（v2） | 0／18 | 0／10 | M1 | planned |
+| [E9](e9-ui-redesign.md) | 介面重新設計（v2） | 2／18 | 0／10 | M1 | in progress |
 | [E10](e10-platform-performance-ops.md) | 平台、效能與維運 | 5／11 | 2／6 | M1、M2、M3 | in progress |
 | [E11](e11-community-forum.md) | 社群與討論 | 0／21 | 0／9 | M1（t21 M2） | planned |
 | | **合計** | **0／147** | **0／78** | | |

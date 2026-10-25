@@ -20,10 +20,10 @@ export const TagList = styled.ul`
 
 const Pill = styled.li`
   padding: 0 ${({ theme }) => theme.space(2.5)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.pill};
-  background: ${({ theme }) => theme.colors.surfaceAlt};
-  color: ${({ theme }) => theme.colors.textMuted};
+  border: 1px solid ${({ theme }) => theme.colors.tagBorder};
+  border-radius: ${({ theme }) => theme.shape.tag};
+  background: ${({ theme }) => theme.colors.tagBg};
+  color: ${({ theme }) => theme.colors.tagText};
   font-size: 0.8125rem;
   line-height: 1.75rem;
 `
