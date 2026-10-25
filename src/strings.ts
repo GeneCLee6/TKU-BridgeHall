@@ -365,4 +365,8 @@ export const strings = {
     retry: '再試一次',
     skipped: (n: number) => `有 ${n} 個線上修改的特約格式有誤，暫時沒有顯示，請到編輯器修正。`,
   },
+  profiles: {
+    /** The club profile's name when the Worker has not sent one (lib/profiles.ts) */
+    club: '社團預設',
+  },
 } as const

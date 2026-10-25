@@ -32,7 +32,8 @@ TKU-BridgeBook/
 │  ├─ types/convention.ts   內容模型（唯一的 schema）
 │  ├─ cards/                制度卡（E3）：types（CardTemplate）、slots（格子 id）、templates/（每個版型一個檔案，檔名＝id）；網站程式只能 lazy 載入
 │  ├─ lib/                  calls（叫品解析）、sections（走訪、key、深層連結）、search、content（線上內容合併與檢查）、
-│  │                        editing（編輯器的樹與文字轉換）、docText（讀 .doc/.docx）、importResult、sse、api（唯一有網路的模組）
+│  │                        editing（編輯器的樹與文字轉換）、docText（讀 .doc/.docx）、importResult、sse、api（唯一有網路的模組）、
+│  │                        profiles（制度集解析，E1）
 │  ├─ state/                ExpansionContext（展開狀態）、PreferencesContext（主題）、AuthContext（帳號）、ContentContext（線上內容）
 │  ├─ components/           展示元件
 │  ├─ pages/                HandbookPage、LoginPage、AccountPage、AdminPage、EditorPage、ImportPage、Frame（頁首與權限閘門）
@@ -96,6 +97,40 @@ interface Convention {
 - **`pending` 出現在任何層級**：段落、條列、叫品列都能掛「待確認」說明，`pendingNotes()` 會收集全部。
 - **種類、程度、前置特約都是選填**（E1，CONTENT_GUIDE.md §2.1）：舊內容與線上內容不用改就能顯示；`conventionProblems` 只擋不認得的值。它們跟著 `ConventionMeta` 進 manifest（牌桌算的線上 manifest 原樣帶過），搜尋紀錄帶 `kind`、`level`（段落用自己或最近祖先的程度）給結果顯示標籤。AI 匯入不判斷這三項：匯入既有特約的新版時，編輯器沿用原本的值。
 - **文字格式只支援兩種**：花色符號與 `**粗體**`（原文粗體）。刻意不支援 Markdown，降低內容維護出錯的機會。
+
+### 3.1 制度集（`SystemProfile`，E1）
+
+型別在牌桌 `shared/protocol.ts` 的「System profiles」區段，橋譜 `src/lib/api.ts` 逐欄同步（唯一差別：牌桌把整段覆寫的 `section` 存成 `Record<string, unknown>`，橋譜是 `Section`）。兩邊的 `profileTypes`／`system-profile-types` 測試用同一份欄位清單與範例對拍。
+
+```ts
+const CLUB_PROFILE_ID = 'club'                       // 社團預設：永遠存在、不可刪、所有制度集的根
+type ProfileScope = 'club' | 'team' | 'partnership'
+const PROFILE_LIMITS = { bytesMax: 200_000, overridesMax: 500 }
+
+interface SystemProfile {
+  id: string; name: string; scope: ProfileScope
+  parentId?: string                                  // 沒給就繼承 club；club 的 parentId 不理會
+  adopted: Record<string, 'on' | 'off'>              // 沒列的跟母制度集；全部沒列＝全採用
+  overrides: ProfileOverride[]; notes: ProfileNote[]
+  version: number; updatedAt: number; updatedBy: string
+}
+type ProfileOverride =
+  | { kind: 'row'; slug; sectionId; blockIndex; rowIndex; meaning: string; note?: string } // note 有給就取代，'' 清掉
+  | { kind: 'section'; slug; sectionId; section: Section }                                 // 整段換掉，id 固定為 sectionId
+  | { kind: 'meta'; slug; summary?: string; tags?: string[] }
+interface ProfileNote { slug: string; sectionId?: string; text: string; by: string; at: number }
+```
+
+**解析**（`lib/profiles.ts`，純函式，`tests/lib/profiles.test.ts`）：`resolveProfile(profiles, id, content)` 回傳 `{ profile, chain, conventions, notes, problems }`。
+
+- **繼承鏈**：從 `club` 往下到選的制度集。清單裡沒有 `club` 時補一個空的；選的制度集不存在就退回 `club`（`missingProfile`）；母制度集不存在或繞回自己就停在那裡、直接接 `club`（`missingParent`、`cycle`）。不限定層數，team ← team 也能解析。
+- **採用**：最深一層有列的說了算；`off` 的特約不出現在結果，它的覆寫與備忘保留不用（子層再 `on` 就生效），也不算錯。
+- **覆寫**：由上往下套，子層勝。同一層內先整段、再叫品列、最後 meta，所以叫品列覆寫可以指向同一層換過的段落。叫品列覆寫換掉 `meaning`（`note` 照上面的規則），拿掉原本的 `pending`（那是原文的待確認，不適用於覆寫後的意義）。
+- **`origin`**：被覆寫的部分帶 `origin`（覆寫它的那層的 `scope`）：叫品列、整段換掉的段落與它底下所有段落、改過摘要或標籤的特約。沒有 `origin` 就是橋譜本身的內容。結果型別 `ResolvedConvention` 仍可當 `Convention` 用。
+- **空制度集等於原內容**：沒有覆寫時回傳的就是傳入的物件（同一個參照），所以每個內建特約在空制度集下 `toEqual` 也 `toBe` 原內容。只複製被改到的路徑，傳入的參數一律不改。
+- **壞參照不靜默消失**：覆寫或備忘指到不存在的特約、段落、區塊或列（或那個區塊不是答叫表），略過並放進 `problems`（`brokenOverride`、`brokenNote`、`unknownAdoption`），給「與母制度集比較」頁列出失效的覆寫（e1-t15）。
+
+網站程式目前不 import `lib/profiles.ts`；`ProfileContext`（e1-t11）接上時才用，Worker 儲存與 API 是 e1-t09。
 
 ## 4. 路由、狀態與內容載入
 
