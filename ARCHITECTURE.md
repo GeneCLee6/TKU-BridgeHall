@@ -175,7 +175,7 @@ interface Convention {
   - `tests/presentation`：卡片展開、深層連結開啟路徑、全部展開／收合、待確認顯示。
 - **手機 App（PWA）**：`public/manifest.webmanifest`（名稱「淡江橋譜」、全螢幕、圖示）、`public/sw.js`（service worker：頁面優先走網路、離線時用快取；`/assets/` 檔名含雜湊，走快取）、`src/lib/pwa.ts`（只在正式版註冊 service worker，保留瀏覽器的安裝邀請給「安裝 App」按鈕）。`vercel.json` 讓 `sw.js` 不被快取，新版本會立刻生效。改 `sw.js` 的快取策略時，記得把 `CACHE` 名稱加版號。
 - **CI**：GitHub Actions（`.github/workflows/ci.yml`）：`npm ci` → lint → typecheck → test → build → 效能預算（`npm run budget`）；另一個 job 跑 Lighthouse（見 §6.5）。
-- **部署計畫**：任何靜態主機皆可。建議 Vercel 或 Cloudflare Pages 連接 GitHub，自動部署 `main`。因為使用 BrowserRouter，主機需設定 SPA fallback（所有路徑回傳 `index.html`）：Cloudflare Pages 預設即支援；Vercel 用專案根目錄的 `vercel.json` rewrites（已加入，部署平台選定 Vercel）。若改用 GitHub Pages，可換成 HashRouter 或加 `404.html` 轉址。
+- **部署計畫**：任何靜態主機皆可。部署平台是 Vercel（連接 GitHub，但 `main` 不自動部署，見 §7）。因為使用 BrowserRouter，主機需設定 SPA fallback（所有路徑回傳 `index.html`）：Cloudflare Pages 預設即支援；Vercel 用專案根目錄的 `vercel.json` rewrites（已加入，部署平台選定 Vercel）。若改用 GitHub Pages，可換成 HashRouter 或加 `404.html` 轉址。
 
 ## 6.5 效能
 
@@ -210,7 +210,8 @@ interface Convention {
 ```
 push / PR ──► GitHub Actions「CI」：lint → typecheck → test → build → budget
           │                         └─ lighthouse job（/、/c/jacoby-2nt）
-          └─► Vercel Git integration：main → 正式站；PR → 預覽網址（PR 留言會附上）
+          └─► Vercel Git integration：PR → 預覽網址（PR 留言會附上）；main 不自動部署
+手動部署 main ──► 正式站
                  └─ 部署成功回報 commit status「Vercel」
                        └─► GitHub Actions「Production smoke test」（只在 main）
                              1. 等正式站 <meta name="app-version"> 等於這次 commit SHA
@@ -218,7 +219,8 @@ push / PR ──► GitHub Actions「CI」：lint → typecheck → test → bui
 ```
 
 - 正式站：https://tku-bridge-book.vercel.app/
+- **正式站只手動部署。** 社員已經在用正式站，所以 `vercel.json` 的 `git.deploymentEnabled.main: false` 關掉 `main` 的自動部署；合併 PR 不會上線，PR 的預覽網址照常產生。要上線時：Vercel → 專案 → Deployments → Create Deployment，填 `main`（或要上線的 commit），部署到 Production；或在本機 `npx vercel --prod`（第一次要 `vercel login`、`vercel link`）。上線後跑一次 Production smoke test（下面）。牽涉牌桌 API 的變更，先確認牌桌已部署。
 - `app-version` 由 `vite.config.ts` 的 `appVersion` plugin 寫入，取自 Vercel 的 `VERCEL_GIT_COMMIT_SHA`；本機 build 為 `local`。
 - 手動跑部署檢查：GitHub → Actions → Production smoke test → Run workflow。
 - Dependabot 每月開一個合併的依賴更新 PR（npm 與 GitHub Actions），CI 綠燈且預覽站正常再合併。
-- 限制：私有 repo 在 GitHub 免費方案無法設定 branch protection，所以 CI 失敗不會擋住 Vercel 部署；請以「開 PR → CI 綠燈 → 看預覽站 → 合併」的流程更新內容。
+- 限制：私有 repo 在 GitHub 免費方案無法設定 branch protection，所以 CI 失敗不會擋住合併；請以「開 PR → CI 綠燈 → 看預覽站 → 合併 → 手動部署」的流程更新內容。
