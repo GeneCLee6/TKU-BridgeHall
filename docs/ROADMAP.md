@@ -26,8 +26,8 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | [x] A1 #8 | `e10-t01` `e10-t02` `e10-t03` | 內容 manifest 與按需載入、線上內容分片 API、效能預算進 CI（牌桌 #60） | — |
 | [x] A2 #11 | `e10-t04` `e10-t05` | 搜尋索引建置、service worker v2（索引預載、按需快取、更新提示） | A1 |
 | [x] A3 #15 | `e1-t01` `e1-t02` `e1-t03` `e1-t04` | `kind`／`level`／`prerequisites` 欄位、內建特約標註、目錄與卡片顯示、編輯器欄位 | — |
-| [ ] A4 | `e1-t05` `e1-t06` | 分類改為資料：Worker 儲存、API、管理 UI | A3 |
-| [ ] A5 | `e1-t07` `e1-t08` | `SystemProfile` 型別進 `shared/protocol.ts`、`resolveProfile` 解析與測試 | A3 |
+| [x] A4 #20 | `e1-t05` `e1-t06` | 分類改為資料：Worker 儲存、API、管理 UI | A3 |
+| [x] A5 #18 | `e1-t07` `e1-t08` | `SystemProfile` 型別進 `shared/protocol.ts`、`resolveProfile` 解析與測試 | A3 |
 | [ ] A6 | `e1-t09` `e1-t10` | Worker 制度集儲存、版本、衝突、上限；暫行權限 | A5 |
 | [ ] A7 | `e1-t11` `e1-t12` `e1-t13` `e1-t16` | `ProfileContext`、頁首切換、覆寫標記、帳號偏好 | A6, A1 |
 
@@ -61,7 +61,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 
 | 批 | Task | 內容 | 前提 |
 | --- | --- | --- | --- |
-| [x] D1 #13 | `e3-t01` `e3-t02` | WBF 卡版型檔（主力，對照 `docs/design/wbf-card-reference-p1/p2.png`）、簡易卡版型檔（單面、雙面） | — |
+| [x] D1 #13 #19 | `e3-t01` `e3-t02` | WBF 卡版型檔（主力，對照 `docs/design/wbf-card-reference-p1/p2.png`）、簡易卡版型檔（單面、雙面） | — |
 | [ ] D2 | `e3-t03` `e3-t04` | `fillCard` 與測試；內建特約補 `cardSlots`（幹部核對） | D1, A5 |
 | [ ] D3 | `e3-t05` `e3-t06` `e3-t07` | 預覽頁（含 hover 說明）、人工補格、列印與 PDF | D2, B3 |
 | [ ] D4 | `e3-t08` `e3-t09` `e3-t10` `e3-t11` | `.docx` 輸出、版本快照與分享、段落旁卡位標示、搭檔／隊伍頁入口與全隊合輯 | D3, C4 |
