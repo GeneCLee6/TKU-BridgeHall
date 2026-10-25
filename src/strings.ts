@@ -1,8 +1,8 @@
 /** All user-facing UI copy (繁體中文). Content text lives in src/content instead. */
 export const strings = {
-  appNameEn: 'TKU BridgeBook',
-  appNameZh: '淡江橋譜',
-  tagline: '淡江橋藝社制度與特約手冊',
+  appNameEn: 'TKU BridgeHall',
+  appNameZh: '淡江橋館',
+  tagline: '橋藝社的制度與牌局',
   searchLabel: '搜尋特約、標籤或叫品',
   searchPlaceholder: '特約名稱或叫品，如 2♦',
   searchEmpty: '找不到符合的內容',
@@ -42,7 +42,7 @@ export const strings = {
   opensInNewTab: '（在新分頁開啟）',
   installApp: '安裝 App',
   installTitle: '安裝成手機 App',
-  installIntro: '把淡江橋譜放到手機主畫面，之後點圖示就能全螢幕開啟，沒有網路也能看。',
+  installIntro: '把淡江橋館放到手機主畫面，之後點圖示就能全螢幕開啟，沒有網路也能看。',
   installIos: 'iPhone／iPad：用 Safari 開啟本站，按下方的「分享」按鈕，再選「加入主畫面」。',
   installAndroid:
     'Android：用 Chrome 開啟本站，按右上角「⋮」，再選「安裝應用程式」或「加到主畫面」。',
@@ -78,7 +78,7 @@ export const strings = {
     reset: '重設密碼',
     intro: '閱讀橋譜不需要登入。社員登入後，管理員開了權限就能線上編輯或匯入檔案。',
     resetIntro: '輸入帳號、社團邀請碼和新密碼就能重設。管理員帳號請其他管理員在管理頁重設。',
-    shared: '淡江橋譜和淡江牌桌用同一組帳號，在哪一邊申請都可以。',
+    shared: '淡江橋館和淡江牌桌用同一組帳號，在哪一邊申請都可以。',
     username: '帳號',
     usernameHint: (min: number, max: number) => `${min}–${max} 個字，中英文、數字與 _ . -`,
     password: '密碼',
@@ -97,7 +97,7 @@ export const strings = {
     noAccount: '還沒有帳號？',
     haveAccount: '已經有帳號？',
     applicationSent: (name: string) =>
-      `已送出 ${name} 的申請。管理員核准後，就能用這個帳號登入淡江橋譜和淡江牌桌。`,
+      `已送出 ${name} 的申請。管理員核准後，就能用這個帳號登入淡江橋館和淡江牌桌。`,
     resetDone: '密碼已重設，請用新密碼登入。',
     signInFirst: '請先登入。',
     noPermission: '你的帳號還沒有這項權限，請管理員在「社團管理」開給你。',
@@ -124,7 +124,7 @@ export const strings = {
     noApplications: '目前沒有待審核的申請',
     about: '自我介紹',
     applied: '申請時間',
-    from: (site: 'table' | 'book') => (site === 'book' ? '從淡江橋譜申請' : '從淡江牌桌申請'),
+    from: (site: 'table' | 'book') => (site === 'book' ? '從淡江橋館申請' : '從淡江牌桌申請'),
     approve: '核准',
     reject: '拒絕',
     confirmReject: (name: string) => `確定拒絕 ${name} 的申請？`,

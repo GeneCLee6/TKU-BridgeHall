@@ -1,7 +1,7 @@
 {
-  "name": "TKU BridgeBook 淡江橋譜",
-  "short_name": "淡江橋譜",
-  "description": "淡江橋藝社制度與特約手冊",
+  "name": "TKU BridgeHall 淡江橋館",
+  "short_name": "淡江橋館",
+  "description": "淡江橋藝社的制度與牌局",
   "lang": "zh-Hant-TW",
   "start_url": "/",
   "scope": "/",

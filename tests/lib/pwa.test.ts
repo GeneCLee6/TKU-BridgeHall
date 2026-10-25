@@ -15,8 +15,8 @@ describe('phone app (PWA)', () => {
     p.replace('../../public', ''),
   )
 
-  it('names the app 淡江橋譜 and opens full screen', () => {
-    expect(manifest.short_name).toBe('淡江橋譜')
+  it('names the app 淡江橋館 and opens full screen', () => {
+    expect(manifest.short_name).toBe('淡江橋館')
     expect(manifest.display).toBe('standalone')
     expect(manifest.start_url).toBe('/')
   })

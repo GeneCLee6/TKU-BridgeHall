@@ -19,7 +19,7 @@ import { mobile } from '../styles/tokens.ts'
 import { Frame, Gate } from './Frame.tsx'
 
 /**
- * 社團管理: registrations waiting for approval, members' BridgeBook permissions and passwords,
+ * 社團管理: registrations waiting for approval, members' BridgeHall permissions and passwords,
  * and the invite code. The accounts are TKU BridgeTable's; adding or deleting members, admins and
  * tables stay on its admin page.
  */

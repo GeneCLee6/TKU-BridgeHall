@@ -1,4 +1,4 @@
-// TKU BridgeBook service worker: lets phones install the handbook as an app and read it offline.
+// TKU BridgeHall service worker: lets phones install the handbook as an app and read it offline.
 // Pages come from the network when it is there (so new content shows at once) and from the cache
 // when it is not; built files, whose names change with every build, come from the cache (each
 // convention is its own built file, cached once it has been read). The content edited online

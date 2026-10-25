@@ -1,15 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="t">
-  <title id="t">TKU BridgeBook 淡江橋譜 標誌：翻開的橋譜</title>
-  <!-- Cover (gold edge under the pages) -->
-  <path d="M32 19.6c-6-4.2-17-4.9-26-2.7V51c9-2.2 20-1.2 26 3 6-4.2 17-5.2 26-3V16.9c-9-2.2-20-1.5-26 2.7z" fill="#f2b84b"/>
-  <!-- Pages -->
-  <path d="M31 20.5c-5.6-3.6-14-4.4-22-2.6v30c8-1.8 16.4-1 22 2.6z" fill="#fff8e6"/>
-  <path d="M33 20.5c5.6-3.6 14-4.4 22-2.6v30c-8-1.8-16.4-1-22 2.6z" fill="#fff8e6"/>
-  <!-- Suits: spade and heart on the left page, diamond and club on the right -->
-  <path transform="translate(15 23.5)" d="M5 0C3.5 2 0 3.6 0 6c0 1.4 1.1 2.3 2.3 2.3.7 0 1.3-.3 1.7-.7L3.3 10h3.4L6 7.6c.4.4 1 .7 1.7.7C8.9 8.3 10 7.4 10 6 10 3.6 6.5 2 5 0z" fill="#0f3d7a"/>
-  <path transform="translate(15 36)" d="M5 9.5 1 5.5C-.6 3.9.2.8 2.6.8c1.1 0 1.9.7 2.4 1.6.5-.9 1.3-1.6 2.4-1.6 2.4 0 3.2 3.1 1.6 4.7z" fill="#c8102e"/>
-  <path transform="translate(39 23.5)" d="M5 0l4 5-4 5-4-5z" fill="#d35400"/>
-  <g transform="translate(39 36)" fill="#1b7a33"><circle cx="5" cy="2.6" r="2.4"/><circle cx="2.4" cy="5.7" r="2.4"/><circle cx="7.6" cy="5.7" r="2.4"/><path d="M5 3.5 6.6 6.3H3.4z"/><path d="M4.3 5h1.4l1 4.8H3.3z"/></g>
-  <!-- Bookmark ribbon from the spine -->
-  <path d="M29.6 50.5h4.8V61L32 58.4 29.6 61z" fill="#c8102e"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="淡江橋館">
+<style>.r{stroke:#d9a330}.a{stroke:#0f3d7a}.s{fill:#1a2233}.h{fill:#c8102e}.d{fill:#b34700}.c{fill:#1b7a33}
+@media (prefers-color-scheme:dark){.r{stroke:#e7b850}.a{stroke:#8db8ff}.s{fill:#e6ebf3}.h{fill:#ff6b6b}.d{fill:#ffa04d}.c{fill:#5fd27a}}</style>
+<path class="r" d="M6 27C16 16 24 12 32 12s16 4 26 15" fill="none" stroke="#d9a330" stroke-width="4" stroke-linecap="round"/>
+<path class="a" d="M48 55V37a16 16 0 0 0-32 0v18" fill="none" stroke="#0f3d7a" stroke-width="4" stroke-linecap="round"/>
+<path class="a" d="M7 55h50" fill="none" stroke="#0f3d7a" stroke-width="4" stroke-linecap="round"/>
+<g transform="translate(19.5 28.5) scale(.5)"><path class="s" fill="#1a2233" d="M12 2C8.5 6.5 5 9.2 5 13a4 4 0 0 0 6.2 3.3L10 21h4l-1.2-4.7A4 4 0 0 0 19 13c0-3.8-3.5-6.5-7-11z"/></g>
+<g transform="translate(33 28.5) scale(.5)"><path class="h" fill="#c8102e" d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></g>
+<g transform="translate(19.5 41) scale(.5)"><path class="d" fill="#b34700" d="M12 2l7.5 10L12 22 4.5 12z"/></g>
+<g transform="translate(33 41) scale(.5)"><path class="c" fill="#1b7a33" d="M12 2a4 4 0 0 0-3.3 6.2A4 4 0 1 0 10.4 15L9.3 21h5.4l-1.1-6a4 4 0 1 0 1.7-6.8A4 4 0 0 0 12 2z"/></g>
 </svg>

@@ -1,4 +1,4 @@
-# ARCHITECTURE — TKU BridgeBook · 淡江橋譜
+# ARCHITECTURE — TKU BridgeHall · 淡江橋館
 
 ## 1. 總覽
 
@@ -174,7 +174,7 @@ interface Convention {
   - `tests/content`：內容 schema——slug 與段落 id 唯一且 URL 安全、必填欄位、叫品可解析、意義欄沒有殘留花色字母、待確認數量。
   - `tests/lib`：叫品格式化、搜尋結果（經由索引，並比對與全部內容的結果相同）、service worker（`sw.test.ts`，在假的 worker scope 執行 `public/sw.js`）與新版本提示。
   - `tests/presentation`：卡片展開、深層連結開啟路徑、全部展開／收合、待確認顯示。
-- **手機 App（PWA）**：`public/manifest.webmanifest`（名稱「淡江橋譜」、全螢幕、圖示）、`public/sw.js`（service worker：頁面優先走網路、離線時用快取；`/assets/` 檔名含雜湊，走快取）、`src/lib/pwa.ts`（只在正式版註冊 service worker，保留瀏覽器的安裝邀請給「安裝 App」按鈕）。`vercel.json` 讓 `sw.js` 不被快取。v2 策略（e10-t05）：安裝時存下 app shell、首頁的建置檔（從 `index.html` 解析）、搜尋索引與線上 manifest，所以看過一次之後離線也能開、能搜；特約 chunk 看過才快取；線上內容與搜尋索引網路優先、離線用快取。`vite.config.ts` 的 `stampServiceWorker` 把建置雜湊寫進 `dist/sw.js`，每次建置都是新的 worker：新版本在背景裝好後等待，頁面顯示「有新版本可以使用」（`UpdatePrompt`、`lib/pwa.ts` 的 `watchForUpdates`／`useUpdate`），按「重新整理」才接手並重新載入；頁面回到前景時會檢查更新。快取名稱跨版本不變（`tku-bridge-book-v4`），看過的特約更新後仍可離線看；只有快取格式改變時才把 `CACHE` 加版號。制度集與制度卡的 API 出現後（A6、D3）加進網路優先的清單。
+- **手機 App（PWA）**：`public/manifest.webmanifest`（名稱「淡江橋館」、全螢幕、圖示）、`public/sw.js`（service worker：頁面優先走網路、離線時用快取；`/assets/` 檔名含雜湊，走快取）、`src/lib/pwa.ts`（只在正式版註冊 service worker，保留瀏覽器的安裝邀請給「安裝 App」按鈕）。`vercel.json` 讓 `sw.js` 不被快取。v2 策略（e10-t05）：安裝時存下 app shell、首頁的建置檔（從 `index.html` 解析）、搜尋索引與線上 manifest，所以看過一次之後離線也能開、能搜；特約 chunk 看過才快取；線上內容與搜尋索引網路優先、離線用快取。`vite.config.ts` 的 `stampServiceWorker` 把建置雜湊寫進 `dist/sw.js`，每次建置都是新的 worker：新版本在背景裝好後等待，頁面顯示「有新版本可以使用」（`UpdatePrompt`、`lib/pwa.ts` 的 `watchForUpdates`／`useUpdate`），按「重新整理」才接手並重新載入；頁面回到前景時會檢查更新。快取名稱跨版本不變（`tku-bridge-book-v4`），看過的特約更新後仍可離線看；只有快取格式改變時才把 `CACHE` 加版號。制度集與制度卡的 API 出現後（A6、D3）加進網路優先的清單。
 - **CI**：GitHub Actions（`.github/workflows/ci.yml`）：`npm ci` → lint → typecheck → test → build → 效能預算（`npm run budget`）；另一個 job 跑 Lighthouse（見 §6.5）。
 - **部署計畫**：任何靜態主機皆可。部署平台是 Vercel（連接 GitHub，但 `main` 不自動部署，見 §7）。因為使用 BrowserRouter，主機需設定 SPA fallback（所有路徑回傳 `index.html`）：Cloudflare Pages 預設即支援；Vercel 用專案根目錄的 `vercel.json` rewrites（已加入，部署平台選定 Vercel）。若改用 GitHub Pages，可換成 HashRouter 或加 `404.html` 轉址。
 
