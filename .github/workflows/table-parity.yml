@@ -1,0 +1,65 @@
+name: Table type parity
+
+# e10-t09: src/lib/api.ts mirrors TKU-BridgeTable's shared/protocol.ts and worker/book.ts
+# (CLAUDE.md rule 10). This checks out the table's main branch into .table/ and runs
+# `npm run parity` (scripts/check-table-parity.mjs): the type checks in parity/table-types.ts and
+# the shared constants in tests/lib/tableParity.test.ts. It also runs every morning, because the
+# table can change without a push here.
+#
+# TKU-BridgeTable is private: the checkout needs the secret TABLE_REPO_TOKEN (a fine-grained token
+# with Contents: read on GeneCLee6/TKU-BridgeTable). Without it (not set yet, Dependabot, forks)
+# the job ends with a notice instead of failing.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 22 * * *' # 06:00 in Taiwan
+  workflow_dispatch:
+    inputs:
+      table_ref:
+        description: TKU-BridgeTable branch, tag or commit to compare with
+        default: main
+
+concurrency:
+  group: table-parity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HAS_TOKEN: ${{ secrets.TABLE_REPO_TOKEN != '' }}
+    steps:
+      - name: Is there a token for TKU-BridgeTable?
+        if: env.HAS_TOKEN != 'true'
+        run: echo "::notice title=Type parity skipped::The secret TABLE_REPO_TOKEN is not set, so the private TKU-BridgeTable cannot be checked out (ARCHITECTURE.md §7)."
+
+      - uses: actions/checkout@v7
+        if: env.HAS_TOKEN == 'true'
+
+      - name: Check out TKU-BridgeTable into .table/
+        if: env.HAS_TOKEN == 'true'
+        uses: actions/checkout@v7
+        with:
+          repository: GeneCLee6/TKU-BridgeTable
+          ref: ${{ inputs.table_ref || 'main' }}
+          token: ${{ secrets.TABLE_REPO_TOKEN }}
+          path: .table
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        if: env.HAS_TOKEN == 'true'
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        if: env.HAS_TOKEN == 'true'
+        run: npm ci
+
+      - name: Compare src/lib/api.ts with the table's types
+        if: env.HAS_TOKEN == 'true'
+        run: npm run parity
