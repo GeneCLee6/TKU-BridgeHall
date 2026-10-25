@@ -134,8 +134,11 @@ export const PROFILE_SCOPES = ['club', 'team', 'partnership'] as const
 export type ProfileScope = (typeof PROFILE_SCOPES)[number]
 export const isProfileScope = (value: unknown): value is ProfileScope => PROFILE_SCOPES.includes(value as ProfileScope)
 
-/** Size limits on a saved profile: its JSON in bytes, and how many overrides it may hold */
-export const PROFILE_LIMITS = { bytesMax: 200_000, overridesMax: 500 } as const
+/**
+ * Limits the Worker checks on a saved profile: its JSON in UTF-8 bytes, how many overrides it may
+ * hold, how many profiles the club may have besides its own, the name's length and a note's length
+ */
+export const PROFILE_LIMITS = { bytesMax: 200_000, overridesMax: 500, profilesMax: 100, nameMax: 40, noteMax: 2_000 } as const
 
 /** Whether a profile plays a convention; a convention it does not list follows the parent profile */
 export type Adoption = 'on' | 'off'
@@ -179,6 +182,32 @@ export interface SystemProfile {
   /** The user id that saved this version */
   updatedBy: string
 }
+
+/** GET /api/book/profiles: a profile without its adoptions, overrides and notes, which it counts instead */
+export interface ProfileSummary {
+  id: string
+  name: string
+  scope: ProfileScope
+  parentId?: string
+  version: number
+  updatedAt: number
+  updatedBy: string
+  counts: { adopted: number; overrides: number; notes: number }
+}
+
+/** A saved version of a profile, newest first in the list, which leaves out `profile` */
+export interface ProfileRevision {
+  profileId: string
+  version: number
+  at: number
+  /** The user id that saved it */
+  by: string
+  note: string
+  profile?: SystemProfile
+}
+
+/** What an editor sends to create or save a profile; the Worker sets the id, version and who saved it */
+export type ProfileInput = Pick<SystemProfile, 'name' | 'scope' | 'parentId' | 'adopted' | 'overrides' | 'notes'>
 
 /** An error from the API, with the server's message (in Traditional Chinese) */
 export class ApiError extends Error {
@@ -269,6 +298,31 @@ export const api = {
      */
     saveCategories: (categories: Omit<BookCategory, 'order'>[], baseVersion: number) =>
       send<BookCategories>('PUT', '/api/book/categories', { categories, baseVersion }),
+    /**
+     * System profiles. Signed out, the list has the club's only and `profile` reads the club's
+     * without its notes; signed in, every member reads them all. Writes and versions need bookEdit.
+     * The club's exists before anyone saves it (version 0) and cannot be deleted.
+     */
+    profiles: () => request<{ profiles: ProfileSummary[] }>('/api/book/profiles').then((r) => r.profiles),
+    profile: (id: string) =>
+      request<{ profile: SystemProfile }>(`/api/book/profiles/${encodeURIComponent(id)}`).then((r) => r.profile),
+    /** A team's or partnership's profile; the Worker picks its id */
+    createProfile: (profile: ProfileInput, note?: string) =>
+      post<{ profile: SystemProfile }>('/api/book/profiles', { profile, note }).then((r) => r.profile),
+    /** 409 `profileConflict` when someone saved since `baseVersion` (0 for the club's before its first save) */
+    saveProfile: (id: string, profile: ProfileInput, baseVersion: number, note?: string) =>
+      send<{ profile: SystemProfile }>('PUT', `/api/book/profiles/${encodeURIComponent(id)}`, { profile, baseVersion, note }).then(
+        (r) => r.profile,
+      ),
+    /** 403 `profileProtected` for the club's; 409 `profileInUse` while another profile inherits it */
+    deleteProfile: (id: string, baseVersion: number) =>
+      send<{ ok: true }>('DELETE', `/api/book/profiles/${encodeURIComponent(id)}`, { baseVersion }),
+    profileRevisions: (id: string) =>
+      request<{ revisions: ProfileRevision[] }>(`/api/book/profiles/${encodeURIComponent(id)}/revisions`).then((r) => r.revisions),
+    profileRevision: (id: string, version: number) =>
+      request<{ revision: ProfileRevision }>(`/api/book/profiles/${encodeURIComponent(id)}/revisions/${version}`).then(
+        (r) => r.revision,
+      ),
     importTicket: () => post<{ ticket: string; url: string; ready: boolean }>('/api/book/import/ticket'),
     drafts: () => request<{ drafts: ImportDraftSummary[] }>('/api/book/drafts'),
     draft: (id: string) => request<{ draft: ImportDraft }>(`/api/book/drafts/${id}`),

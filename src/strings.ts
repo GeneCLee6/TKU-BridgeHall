@@ -72,7 +72,6 @@ export const strings = {
     mine: '我的帳號',
     admin: '社團管理',
     adminPending: (n: number) => `社團管理（${n} 筆待審核）`,
-    categories: '管理分類',
     newConvention: '新增特約',
     importFiles: '匯入檔案',
     signOut: '登出',
@@ -154,6 +153,7 @@ export const strings = {
     more: '新增或刪除社員、設定管理員、關閉牌桌，請到淡江牌桌的管理頁。',
     tableAdmin: '淡江牌桌管理頁',
     adminOnly: '只有管理員可以使用這一頁。',
+    editorIntro: '帳號、申請與社團設定只有管理員看得到；其他管理功能編輯者都能使用。',
   },
 
   // 社團管理 → 分類 (editors with bookEdit too)

@@ -130,7 +130,23 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - **空制度集等於原內容**：沒有覆寫時回傳的就是傳入的物件（同一個參照），所以每個內建特約在空制度集下 `toEqual` 也 `toBe` 原內容。只複製被改到的路徑，傳入的參數一律不改。
 - **壞參照不靜默消失**：覆寫或備忘指到不存在的特約、段落、區塊或列（或那個區塊不是答叫表），略過並放進 `problems`（`brokenOverride`、`brokenNote`、`unknownAdoption`），給「與母制度集比較」頁列出失效的覆寫（e1-t15）。
 
-網站程式目前不 import `lib/profiles.ts`；`ProfileContext`（e1-t11）接上時才用，Worker 儲存與 API 是 e1-t09。
+網站程式目前不 import `lib/profiles.ts`；`ProfileContext`（e1-t11）接上時才用。
+
+**儲存與 API**（牌桌 `worker/profiles.ts`，e1-t09／e1-t10；橋譜的 client 在 `lib/api.ts` 的 `api.book.profiles` 等）：
+
+| 呼叫 | 路由 | 權限 |
+| --- | --- | --- |
+| `profiles()` | `GET /api/book/profiles` → `ProfileSummary[]`（不含內容，只有 `counts`；`club` 在前） | 社員；未登入只回 `club` |
+| `profile(id)` | `GET /api/book/profiles/:id` → `SystemProfile` | 社員；未登入只能讀 `club`，且不含 `notes` |
+| `createProfile(input, note?)` | `POST /api/book/profiles`，id 由 Worker 產生 | bookEdit |
+| `saveProfile(id, input, baseVersion, note?)` | `PUT /api/book/profiles/:id`；`baseVersion` 不符 409 `profileConflict` | bookEdit |
+| `deleteProfile(id, baseVersion)` | `DELETE /api/book/profiles/:id`；`club` 403 `profileProtected`，有子制度集 409 `profileInUse` | bookEdit |
+| `profileRevisions(id)`、`profileRevision(id, version)` | `GET /api/book/profiles/:id/revisions[/:version]` | bookEdit |
+
+- `ProfileInput` 只有可編輯的欄位（`name`、`scope`、`parentId`、`adopted`、`overrides`、`notes`）；id、版本、`updatedAt`、`updatedBy`（使用者 id）由 Worker 填。`club` 沒存過時是空的、版本 0，第一次存 `baseVersion` 給 0。
+- 層次：隊伍繼承 `club`，搭檔繼承 `club` 或隊伍；不給 `parentId` 就是 `club`。有搭檔繼承的隊伍不能刪，也不能改成搭檔。
+- 上限 `PROFILE_LIMITS`（兩邊一致）：JSON 200,000 bytes（UTF-8，413 `contentTooLarge`）、覆寫 500 條、`club` 以外 100 個、名稱 40 字、每則備忘 2,000 字。Worker 只檢查形狀（整段覆寫的段落用跟特約一樣的檢查），覆寫指到的段落或列不存在由 `resolveProfile` 回報。
+- 讀取暫時是登入的社員都能看全部，寫入都要 `bookEdit`；E2 改成依隊伍、搭檔成員。未登入的讀者照 PRD 不抓這支 API（只有 `club`）。
 
 ## 4. 路由、狀態與內容載入
 
@@ -143,7 +159,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/c/:slug/:sectionId` | 展開特約與該段落的所有祖先段落，捲動並聚焦到段落標題 |
 | `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
 | `/account` | 我的帳號：權限、修改密碼 |
-| `/admin` | 社團管理（管理員）：待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限、分類；只有 bookEdit 的編輯者只看到分類 |
+| `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（分類）編輯者也看得到（§4.2） |
 | `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約 |
 | `/import` | 匯入檔案（bookImport） |
 | 其他 | 顯示首頁；找不到的 slug／段落顯示提示 |
@@ -179,6 +195,23 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 ### 4.2 帳號與權限（`AuthContext`、`lib/api.ts`）
 
 帳號在淡江牌桌（`TKU-BridgeTable` ARCHITECTURE.md §5.2）：註冊送出申請、管理員核准；忘記密碼用帳號＋邀請碼重設（管理員除外）。`Me.permissions`：`bookEdit`（線上編輯）、`bookImport`（匯入檔案），管理員兩者都有。閱讀不需要登入。`api.ts` 的型別要和牌桌的 `shared/protocol.ts`、`worker/book.ts` 一致。
+
+**角色**（使用者決定，2026-10-25；名稱暫時沿用）：**管理員**什麼都能管，包括使用者帳號；**編輯者**（有 `bookEdit`）能管帳號以外的所有東西。
+
+| 功能 | 社員 | 編輯者 | 管理員 |
+| --- | --- | --- | --- |
+| 閱讀；登入後讀制度集 | ✓ | ✓ | ✓ |
+| 編輯、還原特約，版本紀錄 | | ✓ | ✓ |
+| 隱藏特約（原本只限管理員） | | ✓ | ✓ |
+| 分類、制度集（新增、儲存、刪除、版本） | | ✓ | ✓ |
+| `/admin` 的非帳號面板（目前是「分類」） | | ✓ | ✓ |
+| 關閉卡住的牌桌（牌桌 API；牌桌管理頁畫面仍只給管理員） | | ✓ | ✓ |
+| 帳號：申請核准、新增／刪除、重設密碼、管理員身分、權限、社團設定（人數上限、邀請碼） | | | ✓ |
+| AI 匯入（`bookImport`） | 個別勾選 | 個別勾選 | ✓ |
+
+- 牌桌的 `worker/roles.ts` 決定每條 API 要什麼（`bookRouteNeed`、`adminRouteNeed`），`tests/worker/roles.test.ts` 逐條列出。
+- 橋譜：`/admin` 給 `bookEdit` 進（`Gate need="bookEdit"`）。帳號面板（申請、社員、社團設定、到牌桌管理頁的連結）只有管理員看得到，也只有管理員才會呼叫 `/api/admin/*`；其他面板編輯者都看得到。帳號選單的「社團管理」對編輯者也顯示。編輯器的「從橋譜隱藏這個特約」編輯者也有。
+- **新增管理功能時**：不是帳號相關的，就開給編輯者（Worker 用 `bookEdit`、`/admin` 放在帳號面板外面）。
 
 ### 4.3 線上編輯器（`pages/EditorPage.tsx`、`components/editor/`、`lib/editing.ts`）
 
