@@ -100,8 +100,8 @@ M0 的 `Convention` 只有一種身分：「社團的一份特約」，分類是
 
 - [x] `e1-t07` `SystemProfile`、`Override`、`Note` 型別進 `shared/protocol.ts`；橋譜 `lib/api.ts` 對應；型別對拍測試 · AC-1.3 · #18（牌桌 #80）
 - [x] `e1-t08` `lib/profiles.ts`：`resolveProfile` 與 `origin` 標記；`tests/lib/profiles.test.ts`（繼承、覆寫、不採用、壞參照、空制度集等同原內容）· AC-1.4 · #18
-- [x] `e1-t09` Worker：`profile:` 儲存、版本、`baseVersion` 衝突、大小與數量上限、`club` 保護；`GET/PUT /api/book/profiles[/:id]`、`/revisions` · AC-1.5 · M · ← e1-t07 · A6（牌桌 #90）
-- [x] `e1-t10` 權限：`club` 由 `bookEdit` 改；其他制度集暫時也 `bookEdit`（E2 接手改成成員權限）；未登入只回 `club` · AC-1.5 · S · ← e1-t09 · A6（牌桌 #90）；同時落實角色規則（下方「權限」）
+- [x] `e1-t09` Worker：`profile:` 儲存、版本、`baseVersion` 衝突、大小與數量上限、`club` 保護；`GET/PUT /api/book/profiles[/:id]`、`/revisions` · AC-1.5 · #23（牌桌 #90）
+- [x] `e1-t10` 權限：`club` 由 `bookEdit` 改；其他制度集暫時也 `bookEdit`（E2 接手改成成員權限）；未登入只回 `club` · AC-1.5 · #23；同時落實角色規則（下方「權限」）
 - [ ] `e1-t11` 前端 `ProfileContext`：載入清單、目前選擇（帳號偏好或 localStorage）、`resolved`；`HandbookPage`、`Sidebar`、搜尋改讀 `resolved` · AC-1.6 · M · ← e1-t08, e1-t09
 - [ ] `e1-t12` 頁首制度集選單（桌機下拉、手機進目錄抽屜）；切換動畫與可及性 · AC-1.6 · S · ← e1-t11
 - [ ] `e1-t13` 覆寫標記元件：段落標題旁的來源標、叫品列的來源線、備忘區塊（只有成員看到）· AC-1.6 · S · ← e1-t11
