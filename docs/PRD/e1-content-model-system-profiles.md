@@ -75,8 +75,8 @@ M0 的 `Convention` 只有一種身分：「社團的一份特約」，分類是
 
 - [x] AC-1.1 — `kind`、`level`、`prerequisites` 可在 `.ts` 與線上編輯器設定；舊內容不改也通過 `tests/content`；卡片與目錄顯示種類與程度。
 - [ ] AC-1.2 — 分類是資料：內建分類檔＋線上可新增、改名、排序；側邊欄、首頁、編輯器的分類選單都讀同一份；刪分類時有特約在裡面會被擋。
-- [ ] AC-1.3 — `SystemProfile` 型別在 `shared/protocol.ts`，橋譜與牌桌的型別對拍測試通過；`club` 制度集永遠存在且不可刪。
-- [ ] AC-1.4 — `resolveProfile` 純函式：三層繼承、子層覆寫勝、不採用隱藏整個特約、覆寫指到不存在的列會回報；每個內建特約在空制度集下解析結果與原本完全相同。
+- [ ] AC-1.3 — `SystemProfile` 型別在 `shared/protocol.ts`，橋譜與牌桌的型別對拍測試通過；`club` 制度集永遠存在且不可刪。（型別與對拍測試已完成；解析時缺 `club` 會補一個空的。Worker 端「不可刪」隨 `e1-t09` 完成後再勾。）
+- [x] AC-1.4 — `resolveProfile` 純函式：三層繼承、子層覆寫勝、不採用隱藏整個特約、覆寫指到不存在的列會回報；每個內建特約在空制度集下解析結果與原本完全相同。
 - [ ] AC-1.5 — API：列表、讀取、儲存（`baseVersion` 衝突 409）、版本列表與載入舊版；JSON 大小與覆寫數上限；未登入只拿得到 `club`。
 - [ ] AC-1.6 — 頁首可切換制度集；切換後目錄、內容、搜尋結果都跟著變；覆寫處有文字標記；選擇記在帳號或 localStorage。
 - [ ] AC-1.7 — 「與母制度集比較」列出不採用的特約與每條覆寫（原文 vs 覆寫後），點一條跳到該段。
@@ -96,8 +96,8 @@ M0 的 `Convention` 只有一種身分：「社團的一份特約」，分類是
 
 **M1 · 制度集**
 
-- [ ] `e1-t07` `SystemProfile`、`Override`、`Note` 型別進 `shared/protocol.ts`；橋譜 `lib/api.ts` 對應；型別對拍測試 · AC-1.3 · S
-- [ ] `e1-t08` `lib/profiles.ts`：`resolveProfile` 與 `origin` 標記；`tests/lib/profiles.test.ts`（繼承、覆寫、不採用、壞參照、空制度集等同原內容）· AC-1.4 · M · ← e1-t07
+- [x] `e1-t07` `SystemProfile`、`Override`、`Note` 型別進 `shared/protocol.ts`；橋譜 `lib/api.ts` 對應；型別對拍測試 · AC-1.3 · S · A5（牌桌 #80；名稱加前綴為 `ProfileOverride`、`ProfileNote`）
+- [x] `e1-t08` `lib/profiles.ts`：`resolveProfile` 與 `origin` 標記；`tests/lib/profiles.test.ts`（繼承、覆寫、不採用、壞參照、空制度集等同原內容）· AC-1.4 · M · ← e1-t07 · A5
 - [ ] `e1-t09` Worker：`profile:` 儲存、版本、`baseVersion` 衝突、大小與數量上限、`club` 保護；`GET/PUT /api/book/profiles[/:id]`、`/revisions` · AC-1.5 · M · ← e1-t07
 - [ ] `e1-t10` 權限：`club` 由 `bookEdit` 改；其他制度集暫時也 `bookEdit`（E2 接手改成成員權限）；未登入只回 `club` · AC-1.5 · S · ← e1-t09
 - [ ] `e1-t11` 前端 `ProfileContext`：載入清單、目前選擇（帳號偏好或 localStorage）、`resolved`；`HandbookPage`、`Sidebar`、搜尋改讀 `resolved` · AC-1.6 · M · ← e1-t08, e1-t09

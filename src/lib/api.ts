@@ -5,7 +5,7 @@
  * shared/protocol.ts and worker/book.ts in TKU-BridgeTable; change them together.
  */
 
-import type { ConventionMeta } from '../types/convention.ts'
+import type { ConventionMeta, Section } from '../types/convention.ts'
 
 /** TKU BridgeTable (淡江牌桌), whose Worker holds the accounts */
 export const TABLE_SITE = 'https://tku-bridge-table.genelee-pro.workers.dev'
@@ -95,6 +95,65 @@ export interface ImportDraftSummary {
 
 export interface ImportDraft extends ImportDraftSummary {
   result: unknown
+}
+
+// System profiles (制度集, E1 e1-t07): mirrors the "System profiles" part of TKU-BridgeTable
+// shared/protocol.ts, field for field; tests/lib/profileTypes.test.ts has the same checks there.
+// The one difference: the Worker keeps a replaced section as Record<string, unknown>, typed here
+// as the handbook's Section. lib/profiles.ts resolves the layers.
+
+/** The club's own profile: always there, never deleted, the root every other profile inherits */
+export const CLUB_PROFILE_ID = 'club'
+
+/** Who a profile belongs to: the club, a team, or a partnership */
+export const PROFILE_SCOPES = ['club', 'team', 'partnership'] as const
+export type ProfileScope = (typeof PROFILE_SCOPES)[number]
+export const isProfileScope = (value: unknown): value is ProfileScope => PROFILE_SCOPES.includes(value as ProfileScope)
+
+/** Size limits on a saved profile: its JSON in bytes, and how many overrides it may hold */
+export const PROFILE_LIMITS = { bytesMax: 200_000, overridesMax: 500 } as const
+
+/** Whether a profile plays a convention; a convention it does not list follows the parent profile */
+export type Adoption = 'on' | 'off'
+
+/**
+ * One place where a profile differs from its parent. Rows are found by position, the same as the
+ * editor: `blockIndex` within the section's own blocks, `rowIndex` within that `responses` block
+ */
+export type ProfileOverride =
+  /** A response row means something else; `note`, when present, replaces the row's note ('' clears it) */
+  | { kind: 'row'; slug: string; sectionId: string; blockIndex: number; rowIndex: number; meaning: string; note?: string }
+  /** The whole section is replaced (it keeps `sectionId` as its id) */
+  | { kind: 'section'; slug: string; sectionId: string; section: Section }
+  /** The convention's summary or tags, whichever is present */
+  | { kind: 'meta'; slug: string; summary?: string; tags?: string[] }
+
+/** A private note on a convention or one of its sections, shown only to the profile's members */
+export interface ProfileNote {
+  slug: string
+  sectionId?: string
+  text: string
+  /** The user id that wrote it */
+  by: string
+  at: number
+}
+
+export interface SystemProfile {
+  /** CLUB_PROFILE_ID for the club; a random id for the others */
+  id: string
+  /** 「社團預設」「A 隊」「小明＋小華」 */
+  name: string
+  scope: ProfileScope
+  /** The profile this one inherits; absent for the club, and taken as the club when absent on any other */
+  parentId?: string
+  /** slug -> plays it or not; a slug left out follows the parent */
+  adopted: Record<string, Adoption>
+  overrides: ProfileOverride[]
+  notes: ProfileNote[]
+  version: number
+  updatedAt: number
+  /** The user id that saved this version */
+  updatedBy: string
 }
 
 /** An error from the API, with the server's message (in Traditional Chinese) */
