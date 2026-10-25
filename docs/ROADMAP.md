@@ -28,7 +28,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | [x] A3 #15 | `e1-t01` `e1-t02` `e1-t03` `e1-t04` | `kind`／`level`／`prerequisites` 欄位、內建特約標註、目錄與卡片顯示、編輯器欄位 | — |
 | [x] A4 #20 | `e1-t05` `e1-t06` | 分類改為資料：Worker 儲存、API、管理 UI | A3 |
 | [x] A5 #18 | `e1-t07` `e1-t08` | `SystemProfile` 型別進 `shared/protocol.ts`、`resolveProfile` 解析與測試 | A3 |
-| [ ] A6 | `e1-t09` `e1-t10` | Worker 制度集儲存、版本、衝突、上限；暫行權限 | A5 |
+| [x] A6 #23 | `e1-t09` `e1-t10` | Worker 制度集儲存、版本、衝突、上限；暫行權限 | A5 |
 | [ ] A7 | `e1-t11` `e1-t12` `e1-t13` `e1-t16` | `ProfileContext`、頁首切換、覆寫標記、帳號偏好 | A6, A1 |
 
 ## Phase B · M1 介面 v2（E9，集中一條線做完）
@@ -62,7 +62,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | 批 | Task | 內容 | 前提 |
 | --- | --- | --- | --- |
 | [x] D1 #13 #19 | `e3-t01` `e3-t02` | WBF 卡版型檔（主力，對照 `docs/design/wbf-card-reference-p1/p2.png`）、簡易卡版型檔（單面、雙面） | — |
-| [ ] D2 | `e3-t03` `e3-t04` | `fillCard` 與測試；內建特約補 `cardSlots`（幹部核對） | D1, A5 |
+| [ ] D2 #24（e3-t04 待幹部核對） | `e3-t03` `e3-t04` | `fillCard` 與測試；內建特約補 `cardSlots`（幹部核對） | D1, A5 |
 | [ ] D3 | `e3-t05` `e3-t06` `e3-t07` | 預覽頁（含 hover 說明）、人工補格、列印與 PDF | D2, B3 |
 | [ ] D4 | `e3-t08` `e3-t09` `e3-t10` `e3-t11` | `.docx` 輸出、版本快照與分享、段落旁卡位標示、搭檔／隊伍頁入口與全隊合輯 | D3, C4 |
 | [ ] D5 | `e3-t12` | 棕標申報表（開叫／蓋叫）：欄位、版型、自動填入、`.docx` | D4 |
@@ -139,7 +139,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | --- | --- | --- | --- |
 | [ ] L1 | `e8-t12` `e8-t13` `e8-t14` | 匯出 API、GitHub Action 寫回、文件改為「線上為真相」 | F4 |
 | [ ] L2 | `e10-t06` `e10-t07` | 錯誤回報、匿名分析（若決定做） | B6 |
-| [ ] L3 | `e10-t08` `e10-t09` | 每日備份到 R2 與還原演練、型別對拍自動化 | — |
+| [ ] L3 #22（牌桌 #89 等 R2 bucket；還原演練待部署） | `e10-t08` `e10-t09` | 每日備份到 R2 與還原演練、型別對拍自動化 | — |
 | [ ] L4 | `e3-t13` | Worker 端產 PDF（視 Browser Rendering 額度） | D3 |
 
 **做完 L4 ＝ M2 學習與叢書完成。**
