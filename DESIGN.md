@@ -72,6 +72,10 @@
 | ResponseTable（BidSequence） | `components/ResponseTable.tsx` | 「叫品／意義」表；意義下方可帶補充說明與待確認。 |
 | CallLabel、Suit、RichText | `components/Suit.tsx` | 叫品與花色的唯一繪製方式；RichText 只解析花色符號與 `**粗體**`。 |
 | Hand | `components/Hand.tsx` | 一手牌（♠♥♦♣ 四行），供未來的牌例使用。 |
+| DealDiagram | `components/board/DealDiagram.tsx` | 四家牌（桌機十字、手機四行），中間發牌與身價；有身價的座位名用 `seal`。型別在 `lib/board.ts`，與牌桌相容。討論區用（E11）。 |
+| DealInput | `components/board/DealInput.tsx` | 4×13 選牌面板（方向鍵移動、一個 Tab 停點），點牌歸給目前座位、13 張滿換下一家；發牌與身價下拉。 |
+| HandInput | `components/board/HandInput.tsx` | 單手牌輸入，同一個選牌面板，最多 13 張，顯示張數與大牌點。 |
+| AuctionInput | `components/board/AuctionInput.tsx` | 兩列式叫牌盒（與牌桌同款），只開放合法叫品；鍵盤 1–7＋C D H S N、P、X；可加註；預覽用 `AuctionTable`。 |
 | Tag | `components/Tag.tsx` | 膠囊形標籤。 |
 | PendingNote | `components/PendingNote.tsx` | 「待確認」標記與說明。 |
 | SearchBar | `components/SearchBar.tsx` | 頁首搜尋框，下拉結果為深層連結；Esc 清除。 |
