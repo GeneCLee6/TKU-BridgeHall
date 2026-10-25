@@ -85,7 +85,7 @@ M0 的介面是 Swagger UI 的翻版：一整頁卡片堆、每張卡再疊多�
 - [ ] `e9-t14` 移除舊 token 別名與死樣式；`DESIGN.md` 以 `DESIGN-V2.md` 取代 · AC-9.1 · S · ← e9-t11
 - [ ] `e9-t15` 個人設定：`PreferencesContext` 加 `style`（六選一）、`layout`（四選一）、`font`（跟隨風格／襯線標題／無襯線／系統字型）、`textSize`（小中大特大）、`suitColors`（四色／雙色，與牌桌同步）、`density`（舒適／緊湊）；設定面板（頁面「設定」按鈕與我的帳號 › 顯示）；登入記帳號、未登入記 localStorage · AC-9.9 · M · ← e9-t03, e9-t04
 - [ ] `e9-t16` 六種風格的 token 檔：一般（現行 token，圓角不變）、中國風、圓潤、夜讀、四色、極簡；`createTheme(mode, textSize, style, …)`；視覺回歸截圖 · AC-9.9 · M · ← e9-t15
-- [x] `e9-t18` 改名與新標誌：`strings.ts`（appNameZh 淡江橋館、appNameEn TKU BridgeHall、tagline「橋藝社的制度與牌局」；「橋譜」改為制度區塊的名稱）、`index.html` 標題、`manifest.webmanifest`（名稱與圖示）、`public/` 的 logo.svg／logo-mark.svg／favicon.svg 換成 `docs/design/logo/` 的檔案、`icon-192/512/maskable/apple-touch` 由 `favicon.svg` 與 `icon-maskable.svg` 重新輸出、`components/Logo.tsx` 改畫新標誌、README／CLAUDE／DESIGN 文件名稱、smoke test 的 logo 檢查；牌桌端 `DESIGN.md` §6 與 README 提到橋譜的地方同步（牌桌 PR）· AC-9.10 · M
+- [x] `e9-t18` 改名與新標誌：`strings.ts`（appNameZh 淡江橋館、appNameEn TKU BridgeHall、tagline「橋藝社的制度與牌局」；「橋譜」改為制度區塊的名稱）、`index.html` 標題、`manifest.webmanifest`（名稱與圖示）、`public/` 的 logo.svg／logo-mark.svg／favicon.svg 換成 `docs/design/logo/` 的檔案、`icon-192/512/maskable/apple-touch` 由 `favicon.svg` 與 `icon-maskable.svg` 重新輸出、`components/Logo.tsx` 改畫新標誌、README／CLAUDE／DESIGN 文件名稱、smoke test 的 logo 檢查；牌桌端 `DESIGN.md` §6 與 README 提到橋譜的地方同步（牌桌 PR）· AC-9.10 · #12（牌桌 #77）
 - [ ] `e9-t17` 第四種版面「卡片總覽」：分類頁籤、特約磁貼（程度、待確認、覆寫數）、右側抽屜預覽；手機為兩欄磁貼 · AC-9.9 · M · ← e9-t04
 
 ## 風險與對策

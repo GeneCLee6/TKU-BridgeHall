@@ -101,8 +101,8 @@ depends_on: [E1, E9, E10]
 
 **M1 · 前端**
 
-- [x] `e11-t11` `DealDiagram`（四家牌，與牌桌 `shared/board.ts` 的 `Deal` 同型別）與 `DealInput`（4×13 點選面板、發牌者與身價）；E5 共用 · AC-11.3 · M
-- [x] `e11-t12` `AuctionInput`（兩列式叫牌盒輸入，輸出 `Auction`）與 `HandInput`（單手牌）· AC-11.3 · M
+- [x] `e11-t11` `DealDiagram`（四家牌，與牌桌 `shared/board.ts` 的 `Deal` 同型別）與 `DealInput`（4×13 點選面板、發牌者與身價）；E5 共用 · AC-11.3 · #14
+- [x] `e11-t12` `AuctionInput`（兩列式叫牌盒輸入，輸出 `Auction`）與 `HandInput`（單手牌）· AC-11.3 · #14
 - [ ] `e11-t13` 發文框：文字、圖片（e11-t02）、四家牌、叫牌過程、單手牌、特約引用（搜尋特約段落）；草稿存 localStorage · AC-11.3 · M · ← e11-t11, e11-t12
 - [ ] `e11-t14` 貼文卡與貼文頁：區塊渲染、反應列、留言（含留言內的叫牌過程與單手牌）、`@` 自動完成、編輯與刪除 · AC-11.3、AC-11.4 · M · ← e11-t13, e11-t07
 - [ ] `e11-t15` 板面頁與討論區殼 `/forum`、`/forum/:boardId`、`/forum/p/:postId`：左板面、中動態牆、右社團新聞與活躍的人；手機單欄與底部工具列「討論」· AC-11.2 · M · ← e11-t14

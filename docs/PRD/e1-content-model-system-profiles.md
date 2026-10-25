@@ -87,10 +87,10 @@ M0 的 `Convention` 只有一種身分：「社團的一份特約」，分類是
 
 **M1 · 內容欄位與分類**
 
-- [x] `e1-t01` `Convention` 加 `kind`、`level`、`prerequisites`、`cardSlots?`（選填）；`tests/content` 加驗證（前置 slug 存在、程度值合法）· AC-1.1 · S
-- [x] `e1-t02` 內建特約補 `kind` 與 `level`（22 張：`system-*` 為 `system`；Lebensohl、Bergen、J2N 等依內容標）；標法寫進 `CONTENT_GUIDE.md` · AC-1.1 · S · ← e1-t01
-- [x] `e1-t03` 卡片標題列、側邊欄、搜尋結果顯示種類與程度標籤（文字＋小圖示）· AC-1.1 · S · ← e1-t01
-- [x] `e1-t04` 編輯器 `MetaForm` 加種類、程度、前置特約（多選）欄位 · AC-1.1 · S · ← e1-t01
+- [x] `e1-t01` `Convention` 加 `kind`、`level`、`prerequisites`、`cardSlots?`（選填）；`tests/content` 加驗證（前置 slug 存在、程度值合法）· AC-1.1 · #15（牌桌 #78）
+- [x] `e1-t02` 內建特約補 `kind` 與 `level`（22 張：`system-*` 為 `system`；Lebensohl、Bergen、J2N 等依內容標）；標法寫進 `CONTENT_GUIDE.md` · AC-1.1 · #15
+- [x] `e1-t03` 卡片標題列、側邊欄、搜尋結果顯示種類與程度標籤（文字＋小圖示）· AC-1.1 · #15
+- [x] `e1-t04` 編輯器 `MetaForm` 加種類、程度、前置特約（多選）欄位 · AC-1.1 · #15
 - [ ] `e1-t05` 分類改為資料：`Category` 加 `order`；Worker 存 `category:<id>`；`GET/PUT /api/book/categories`；內建分類為預設值 · AC-1.2 · M
 - [ ] `e1-t06` 分類管理 UI（編輯者）：新增、改名、排序、刪除（有特約時擋）；編輯器分類選單讀同一份 · AC-1.2 · S · ← e1-t05
 
