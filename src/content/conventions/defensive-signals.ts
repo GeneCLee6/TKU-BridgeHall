@@ -13,7 +13,7 @@ export const defensiveSignals: Convention = {
   aliases: ['信號', '防守信號', '張數', '態度', '墊牌', 'O/E', '奇正偶轉', '全轉換', 'Smith Echo'],
   category: 'signals',
   kind: 'signal',
-  level: 'intermediate',
+  level: 'basic',
   tags: ['拔牌信號', '張數', '態度', '墊牌', 'Smith Echo'],
   summary: '拔牌信號、王牌／無王合約的張數與態度、墊牌（奇正偶轉、全轉換）與 Smith Echo。',
   source: { title: '橋牌防守信號' },

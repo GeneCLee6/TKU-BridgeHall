@@ -1194,7 +1194,7 @@ export const manifest: ConventionMeta[] = [
     ],
     "category": "competitive",
     "kind": "defense",
-    "level": "advanced",
+    "level": "intermediate",
     "tags": [
       "高花開叫",
       "2NT 插叫",
@@ -1498,7 +1498,7 @@ export const manifest: ConventionMeta[] = [
     ],
     "category": "signals",
     "kind": "signal",
-    "level": "intermediate",
+    "level": "basic",
     "tags": [
       "拔牌信號",
       "張數",

@@ -10,9 +10,14 @@
  *
  * The table has no single `Deal` type: a board is its `Hands` plus `dealerOf` and
  * `vulnerabilityOf`. `Deal` bundles those three fields under the table's own names.
+ *
+ * `TableAuction` and `TableAuctionCall` are the table's `Auction` and `AuctionCall`. They carry a
+ * `Table` prefix because `types/convention.ts` has its own `Auction` and `AuctionCall` (the shape
+ * `AuctionTable` draws, imported here as `BookAuction`); `toBookAuction` converts the first into
+ * the second.
  */
 
-import type { Auction as TableAuction } from '../types/convention.ts'
+import type { Auction as BookAuction } from '../types/convention.ts'
 
 export type Suit = 'S' | 'H' | 'D' | 'C'
 export type Strain = Suit | 'N'
@@ -27,7 +32,7 @@ export type Vulnerability = 'None' | 'NS' | 'EW' | 'Both'
 export type Call = string
 
 /** Table `shared/auction.ts` `AuctionCall` (without the robot-only fields) */
-export interface AuctionCall {
+export interface TableAuctionCall {
   seat: Seat
   call: Call
   /** The call was alerted; the text is the explanation (may be empty) */
@@ -42,9 +47,9 @@ export interface Deal {
 }
 
 /** An auction and who started it; each call's seat follows from the dealer */
-export interface Auction {
+export interface TableAuction {
   dealer: Seat
-  calls: AuctionCall[]
+  calls: TableAuctionCall[]
 }
 
 /** ♠ ♥ ♦ ♣, the order hands are shown in */
@@ -253,12 +258,12 @@ export function seatToCall(dealer: Seat, count: number): Seat {
 }
 
 /** Four passes to start, or three passes after any bid, end the auction */
-export function isAuctionComplete(calls: readonly AuctionCall[]): boolean {
+export function isAuctionComplete(calls: readonly TableAuctionCall[]): boolean {
   return calls.length >= 4 && calls.slice(-3).every((c) => c.call === 'P')
 }
 
 /** Every call the next seat may make */
-export function legalCalls(calls: readonly AuctionCall[], dealer: Seat): Set<Call> {
+export function legalCalls(calls: readonly TableAuctionCall[], dealer: Seat): Set<Call> {
   const legal = new Set<Call>()
   if (isAuctionComplete(calls)) return legal
   const seat = seatToCall(dealer, calls.length)
@@ -285,7 +290,7 @@ export type AuctionProblem =
  * The first problem in an auction, or null when every call is legal in turn. An auction that
  * has not ended yet is fine: a post may stop at the call being discussed.
  */
-export function auctionProblem(auction: Auction): AuctionProblem | null {
+export function auctionProblem(auction: TableAuction): AuctionProblem | null {
   if (!isSeat(auction.dealer)) return { kind: 'dealer' }
   const calls = auction.calls
   for (let index = 0; index < calls.length; index++) {
@@ -299,12 +304,12 @@ export function auctionProblem(auction: Auction): AuctionProblem | null {
   return null
 }
 
-export const isLegalAuction = (auction: Auction) => auctionProblem(auction) === null
+export const isLegalAuction = (auction: TableAuction) => auctionProblem(auction) === null
 
 /** Add the next seat's call; the auction is returned unchanged when the call is not legal */
-export function addCall(auction: Auction, call: Call, alert?: string): Auction {
+export function addCall(auction: TableAuction, call: Call, alert?: string): TableAuction {
   if (!legalCalls(auction.calls, auction.dealer).has(call)) return auction
-  const entry: AuctionCall = { seat: seatToCall(auction.dealer, auction.calls.length), call }
+  const entry: TableAuctionCall = { seat: seatToCall(auction.dealer, auction.calls.length), call }
   if (alert !== undefined) entry.alert = alert
   return { ...auction, calls: [...auction.calls, entry] }
 }
@@ -313,7 +318,7 @@ export function addCall(auction: Auction, call: Call, alert?: string): Auction {
  * The same calls started by another dealer. Who may double depends only on which side acted
  * last, so a legal auction stays legal.
  */
-export function withDealer(auction: Auction, dealer: Seat): Auction {
+export function withDealer(auction: TableAuction, dealer: Seat): TableAuction {
   return {
     dealer,
     calls: auction.calls.map((c, i) => ({ ...c, seat: seatToCall(dealer, i) })),
@@ -330,11 +335,11 @@ export const toLabelCall = (call: Call) => (isBid(call) && call[1] === 'N' ? `${
  * The auction in the shape `AuctionTable` draws: columns 西 北 東 南, blank cells before the
  * dealer, an alert's explanation as the call's note.
  */
-export function toTableAuction(auction: Auction, seatNames: Record<Seat, string>): TableAuction {
+export function toBookAuction(auction: TableAuction, seatNames: Record<Seat, string>): BookAuction {
   const cells = auctionRows(auction).flat()
   while (cells.length && cells[cells.length - 1] === null) cells.pop()
   return {
-    seats: AUCTION_COLUMNS.map((seat) => seatNames[seat]) as TableAuction['seats'],
+    seats: AUCTION_COLUMNS.map((seat) => seatNames[seat]) as BookAuction['seats'],
     calls: cells.map((cell) => {
       if (!cell) return ''
       const call = toLabelCall(cell.call)
@@ -346,10 +351,10 @@ export function toTableAuction(auction: Auction, seatNames: Record<Seat, string>
 /**
  * Rows of four cells in `AUCTION_COLUMNS` order; cells before the dealer are empty (null).
  */
-export function auctionRows(auction: Auction): (AuctionCall | null)[][] {
+export function auctionRows(auction: TableAuction): (TableAuctionCall | null)[][] {
   const lead = AUCTION_COLUMNS.indexOf(auction.dealer)
-  const cells: (AuctionCall | null)[] = [...Array<null>(lead).fill(null), ...auction.calls]
-  const rows: (AuctionCall | null)[][] = []
+  const cells: (TableAuctionCall | null)[] = [...Array<null>(lead).fill(null), ...auction.calls]
+  const rows: (TableAuctionCall | null)[][] = []
   for (let i = 0; i < cells.length; i += 4) {
     const row = cells.slice(i, i + 4)
     while (row.length < 4) row.push(null)

@@ -10,9 +10,9 @@ import {
   seatToCall,
   STRAINS,
   toLabelCall,
-  toTableAuction,
+  toBookAuction,
   withDealer,
-  type Auction,
+  type TableAuction,
   type Call,
   type Seat,
   type Strain,
@@ -38,8 +38,8 @@ export function AuctionInput({
   onChange,
   dealerFixed = false,
 }: {
-  value: Auction
-  onChange: (auction: Auction) => void
+  value: TableAuction
+  onChange: (auction: TableAuction) => void
   dealerFixed?: boolean
 }) {
   const b = strings.board
@@ -90,7 +90,7 @@ export function AuctionInput({
         </Field>
       )}
 
-      <AuctionTable auction={toTableAuction(value, b.seatNames)} />
+      <AuctionTable auction={toBookAuction(value, b.seatNames)} />
       <Status role="status">
         {ended ? b.auctionEnded : b.nextToCall(b.seatNames[seatToCall(value.dealer, value.calls.length)])}
       </Status>
@@ -221,18 +221,22 @@ const Key = styled.button<{ $wide?: boolean; $selected?: boolean; $tone?: 'pass'
   border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme, $tone }) =>
-    $tone === 'double'
-      ? theme.colors.seal
-      : $tone === 'redouble'
-        ? theme.colors.structure
-        : $tone === 'pass'
-          ? theme.colors.primary
-          : theme.colors.text};
+  color: ${({ theme }) => theme.colors.text};
   font-size: 1rem;
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+
+  /* Pass, X and XX are filled in the table's colours */
+  ${({ $tone, theme }) => {
+    if (!$tone) return ''
+    const fill = { pass: theme.colors.callPass, double: theme.colors.callDouble, redouble: theme.colors.callRedouble }[$tone]
+    return css`
+      border-color: ${fill};
+      background: ${fill};
+      color: ${theme.colors.onCall};
+    `
+  }}
 
   ${({ $selected, theme }) =>
     $selected &&
