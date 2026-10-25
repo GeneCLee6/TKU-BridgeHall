@@ -27,6 +27,8 @@ coverage
 *.htm
 *.html.bak
 tmp/
+# TKU-BridgeTable checked out for the type parity check (scripts/check-table-parity.mjs)
+.table/
 source-docs/
 
 # Editor directories and files

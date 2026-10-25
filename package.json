@@ -11,6 +11,7 @@
     "manifest": "node scripts/build-manifest.ts",
     "preview": "vite preview",
     "budget": "node scripts/check-budget.mjs",
+    "parity": "node scripts/check-table-parity.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

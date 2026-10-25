@@ -1,0 +1,38 @@
+// @vitest-environment node
+import { describe, expect, it } from 'vitest'
+import * as api from '../../src/lib/api.ts'
+
+/**
+ * The constants src/lib/api.ts copies from TKU-BridgeTable shared/protocol.ts (e10-t09). Runs only
+ * with TABLE_DIR set to a table checkout: `npm run parity` sets it, along with the type checks in
+ * parity/table-types.ts. Without it (plain `npm test`) the suite is skipped.
+ */
+// An absolute path (the script resolves it); the tests have no Node types, hence the cast
+const tableDir = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.TABLE_DIR
+
+describe.skipIf(!tableDir)('constants shared with TKU-BridgeTable', () => {
+  const protocol = () => import(/* @vite-ignore */ `${tableDir!.replaceAll('\\', '/')}/shared/protocol.ts`)
+
+  it('has the same form limits', async () => {
+    const { LIMITS } = await protocol()
+    expect(api.LIMITS).toEqual({
+      usernameMin: LIMITS.usernameMin,
+      usernameMax: LIMITS.usernameMax,
+      passwordMin: LIMITS.passwordMin,
+      // The registration note; the table calls it applicationNoteMax
+      noteMax: LIMITS.applicationNoteMax,
+    })
+  })
+
+  it('knows only permissions the table has, and every book one', async () => {
+    const { PERMISSIONS } = await protocol()
+    expect(api.PERMISSIONS).toEqual((PERMISSIONS as string[]).filter((p) => p.startsWith('book')))
+  })
+
+  it('has the same system profile constants', async () => {
+    const { CLUB_PROFILE_ID, PROFILE_SCOPES, PROFILE_LIMITS } = await protocol()
+    expect(api.CLUB_PROFILE_ID).toBe(CLUB_PROFILE_ID)
+    expect(api.PROFILE_SCOPES).toEqual(PROFILE_SCOPES)
+    expect(api.PROFILE_LIMITS).toEqual(PROFILE_LIMITS)
+  })
+})

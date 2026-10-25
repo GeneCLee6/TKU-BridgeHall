@@ -277,4 +277,10 @@ push / PR ──► GitHub Actions「CI」：lint → typecheck → test → bui
 - `app-version` 由 `vite.config.ts` 的 `appVersion` plugin 寫入，取自 Vercel 的 `VERCEL_GIT_COMMIT_SHA`；本機 build 為 `local`。
 - 手動跑部署檢查：GitHub → Actions → Production smoke test → Run workflow。
 - Dependabot 每月開一個合併的依賴更新 PR（npm 與 GitHub Actions），CI 綠燈且預覽站正常再合併。
+- **與淡江牌桌的型別對拍**（e10-t09，CLAUDE.md 第 10 條）：workflow「Table type parity」（`.github/workflows/table-parity.yml`，每次 push、PR、每天台灣 06:00，也可以手動指定牌桌的分支）把牌桌 `main` checkout 到 `.table/`，跑 `npm run parity`（`scripts/check-table-parity.mjs`）：
+  1. 用 `@table/*` 指向牌桌，型別檢查 `parity/table-types.ts`。`lib/api.ts` 對應牌桌 `shared/protocol.ts`、`worker/book.ts` 的每個型別在這裡各有一行：`Same`（兩邊完全相同）或 `Reads`（牌桌送來的資料可以當成橋譜的型別讀，而且橋譜沒有牌桌沒有的欄位）；刻意的差異（橋譜只認得 `book*` 權限、`convention` 是 `unknown`、制度集被取代的段落是 `Section`）寫在該行旁邊。只算這個檔的錯誤；牌桌自己的檔由牌桌 CI 檢查。
+  2. 跑 `tests/lib/tableParity.test.ts`，比對共用的常數（`LIMITS`、`PERMISSIONS`、制度集常數）；平常的 `npm test` 沒有 `TABLE_DIR` 時整組略過。
+  - 牌桌是 private repo，要在橋譜 repo 設 secret **`TABLE_REPO_TOKEN`**（fine-grained token，只給 `GeneCLee6/TKU-BridgeTable` 的 Contents: Read）；沒設時 job 以 notice 略過，不會失敗。本機：`npm run parity` 依序找 `$TABLE_DIR`、`.table/`、`../TKU-BridgeTable`，都沒有就略過。
+  - 兩邊一起改的 PR：牌桌先合併，橋譜的 parity 才會綠；也可以 Actions → Table type parity → Run workflow，填牌桌的分支。lib/api.ts 新增對應牌桌的型別時，在 `parity/table-types.ts` 加一行。
+- **備份**：牌桌 Worker 每天把橋譜的線上內容（`book*`、`profile*`、`article*`）備份到 R2、保留 30 天（e10-t08）；啟用、還原步驟與演練見牌桌的 [`DEPLOY.md` §4.3](https://github.com/GeneCLee6/TKU-BridgeTable/blob/main/DEPLOY.md#43-每日備份與還原淡江橋譜-e10-t08)。
 - 限制：私有 repo 在 GitHub 免費方案無法設定 branch protection，所以 CI 失敗不會擋住合併；請以「開 PR → CI 綠燈 → 看預覽站 → 合併 → 手動部署」的流程更新內容。
