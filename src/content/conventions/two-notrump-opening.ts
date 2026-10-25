@@ -17,6 +17,8 @@ export const twoNotrumpOpening: Convention = {
   nameEn: '2NT Opening and Responses',
   aliases: ['2NT', '2NT開叫', '開叫2NT', 'puppet', '轉換'],
   category: 'notrump',
+  kind: 'system',
+  level: 'intermediate',
   tags: ['2NT 開叫', 'Puppet', '轉換', '短門詢問', 'RKCB'],
   summary:
     '開叫 2NT（20~21 平均牌）：Puppet Stayman、高花與低花轉換、高花 55、4NT 邀請與 5NT 迫叫，以及各叫品的詳細後續。',

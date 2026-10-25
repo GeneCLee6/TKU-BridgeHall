@@ -28,6 +28,8 @@ export const systemNotrump: Convention = {
     '賴本索',
   ],
   category: 'system',
+  kind: 'system',
+  level: 'basic',
   tags: ['舊講義', '1NT 開叫', '2NT 開叫', 'Stayman', '轉換', 'Gerber', 'CAPP'],
   summary:
     '第五章：開叫 1NT、2NT 的答叫、Stayman、轉換叫、Gerber、1NT 遭蓋叫的賴本索，以及對抗敵方 1NT 的 CAPP。答叫以「1NT的答叫」「開叫2NT及答叫」「雷本索特約」為準。',

@@ -25,6 +25,8 @@ export const systemStrongAndPreempts: Convention = {
     'gambling 3NT',
   ],
   category: 'system',
+  kind: 'system',
+  level: 'basic',
   tags: ['舊講義', '2♣ 開叫', '弱二', '阻塞叫', '賭博性 3NT'],
   summary:
     '第六～九章：開叫 2♣（22 點↑）與遭插叫、2♥/♠ 弱二與 2NT 問短門、三線阻塞叫、賭博性 3NT。',

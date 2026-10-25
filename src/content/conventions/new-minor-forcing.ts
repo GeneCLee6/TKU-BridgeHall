@@ -17,6 +17,8 @@ export const newMinorForcing: Convention = {
   nameEn: 'New Minor Forcing',
   aliases: ['NMF', 'new minor forcing', '新低花', '第四門新花'],
   category: 'suit-openings',
+  kind: 'convention',
+  level: 'intermediate',
   tags: ['NMF', '1NT 再叫', '迫叫', 'pass-hand'],
   summary:
     '開叫者再叫 1NT 或 2 線低花後，答叫者叫最低的新低花為邀請以上的迫叫；含 pass-hand 的 NMF 與第四門新花。',

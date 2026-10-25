@@ -16,6 +16,8 @@ export const systemOneDiamond: Convention = {
   nameEn: '1♦ Opening (Natural System)',
   aliases: ['開叫1D', '1D開叫', '1♦', '第四門新花', '倒叫', 'negative double'],
   category: 'system',
+  kind: 'system',
+  level: 'basic',
   tags: ['舊講義', '1♦ 開叫', '答叫', '再叫', '第四門新花', '倒叫', '遭插叫'],
   summary:
     '第三章：開叫 1♦（13-21 點，保證 4 張♦↑）的答叫、開叫者再叫、答叫者迫叫與第四門新花、倒叫、遭插叫或賭倍後的叫法、低花反序。',

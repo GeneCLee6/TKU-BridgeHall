@@ -16,6 +16,8 @@ export const manifest: ConventionMeta[] = [
       "低花詢問"
     ],
     "category": "notrump",
+    "kind": "system",
+    "level": "basic",
     "tags": [
       "1NT",
       "stayman",
@@ -115,6 +117,8 @@ export const manifest: ConventionMeta[] = [
       "轉換"
     ],
     "category": "notrump",
+    "kind": "system",
+    "level": "intermediate",
     "tags": [
       "2NT 開叫",
       "Puppet",
@@ -248,6 +252,8 @@ export const manifest: ConventionMeta[] = [
       "Lebensohl"
     ],
     "category": "notrump",
+    "kind": "convention",
+    "level": "intermediate",
     "tags": [
       "1NT",
       "插叫",
@@ -314,6 +320,8 @@ export const manifest: ConventionMeta[] = [
       "try slam"
     ],
     "category": "suit-openings",
+    "kind": "convention",
+    "level": "intermediate",
     "tags": [
       "單加高花",
       "2NT 問牌型",
@@ -411,6 +419,8 @@ export const manifest: ConventionMeta[] = [
       "第四門新花"
     ],
     "category": "suit-openings",
+    "kind": "convention",
+    "level": "intermediate",
     "tags": [
       "NMF",
       "1NT 再叫",
@@ -464,6 +474,8 @@ export const manifest: ConventionMeta[] = [
       "1H 2S"
     ],
     "category": "suit-openings",
+    "kind": "convention",
+    "level": "advanced",
     "tags": [
       "高花開叫",
       "滿貫詢問",
@@ -707,6 +719,8 @@ export const manifest: ConventionMeta[] = [
       "doblue"
     ],
     "category": "suit-openings",
+    "kind": "convention",
+    "level": "advanced",
     "tags": [
       "高花開叫",
       "滿貫詢問",
@@ -824,6 +838,8 @@ export const manifest: ConventionMeta[] = [
       "高花加叫"
     ],
     "category": "suit-openings",
+    "kind": "convention",
+    "level": "advanced",
     "tags": [
       "高花開叫",
       "跳叫答叫",
@@ -1101,6 +1117,8 @@ export const manifest: ConventionMeta[] = [
       "P/C"
     ],
     "category": "suit-openings",
+    "kind": "system",
+    "level": "intermediate",
     "tags": [
       "2♦ 開叫",
       "弱二",
@@ -1175,6 +1193,8 @@ export const manifest: ConventionMeta[] = [
       "不尋常2NT"
     ],
     "category": "competitive",
+    "kind": "defense",
+    "level": "advanced",
     "tags": [
       "高花開叫",
       "2NT 插叫",
@@ -1300,6 +1320,8 @@ export const manifest: ConventionMeta[] = [
       "Lebensohl 2NT"
     ],
     "category": "competitive",
+    "kind": "convention",
+    "level": "advanced",
     "tags": [
       "好壞2NT",
       "競叫",
@@ -1376,6 +1398,8 @@ export const manifest: ConventionMeta[] = [
       "responsive"
     ],
     "category": "competitive",
+    "kind": "convention",
+    "level": "intermediate",
     "tags": [
       "賭倍",
       "T/O",
@@ -1473,6 +1497,8 @@ export const manifest: ConventionMeta[] = [
       "Smith Echo"
     ],
     "category": "signals",
+    "kind": "signal",
+    "level": "intermediate",
     "tags": [
       "拔牌信號",
       "張數",
@@ -1526,6 +1552,8 @@ export const manifest: ConventionMeta[] = [
       "制度總覽"
     ],
     "category": "system",
+    "kind": "system",
+    "level": "basic",
     "tags": [
       "舊講義",
       "開叫總表",
@@ -1618,6 +1646,8 @@ export const manifest: ConventionMeta[] = [
       "1♣"
     ],
     "category": "system",
+    "kind": "system",
+    "level": "basic",
     "tags": [
       "舊講義",
       "1♣ 開叫",
@@ -1713,6 +1743,8 @@ export const manifest: ConventionMeta[] = [
       "negative double"
     ],
     "category": "system",
+    "kind": "system",
+    "level": "basic",
     "tags": [
       "舊講義",
       "1♦ 開叫",
@@ -1839,6 +1871,8 @@ export const manifest: ConventionMeta[] = [
       "黑木"
     ],
     "category": "system",
+    "kind": "system",
+    "level": "basic",
     "tags": [
       "舊講義",
       "高花開叫",
@@ -1953,6 +1987,8 @@ export const manifest: ConventionMeta[] = [
       "賴本索"
     ],
     "category": "system",
+    "kind": "system",
+    "level": "basic",
     "tags": [
       "舊講義",
       "1NT 開叫",
@@ -2023,6 +2059,8 @@ export const manifest: ConventionMeta[] = [
       "gambling 3NT"
     ],
     "category": "system",
+    "kind": "system",
+    "level": "basic",
     "tags": [
       "舊講義",
       "2♣ 開叫",
@@ -2093,6 +2131,8 @@ export const manifest: ConventionMeta[] = [
       "SOS"
     ],
     "category": "system",
+    "kind": "system",
+    "level": "intermediate",
     "tags": [
       "舊講義",
       "賭倍",
@@ -2182,6 +2222,8 @@ export const manifest: ConventionMeta[] = [
       "埋伏"
     ],
     "category": "system",
+    "kind": "system",
+    "level": "intermediate",
     "tags": [
       "舊講義",
       "競叫",
@@ -2278,6 +2320,8 @@ export const manifest: ConventionMeta[] = [
       "牌張組合"
     ],
     "category": "system",
+    "kind": "system",
+    "level": "basic",
     "tags": [
       "舊講義",
       "評估",

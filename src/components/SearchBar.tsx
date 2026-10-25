@@ -5,6 +5,7 @@ import styled from 'styled-components'
 import type { SearchFn } from '../lib/search.ts'
 import { conventionPath, sectionPath } from '../lib/sections.ts'
 import { strings } from '../strings.ts'
+import { KindLevel } from './KindLevel.tsx'
 import { RichText } from './Suit.tsx'
 
 /**
@@ -51,6 +52,7 @@ export function SearchBar({ search, onFocus }: { search: SearchFn; onFocus?: () 
                 >
                   <RichText text={r.label} />
                 </Link>
+                <KindLevel kind={r.kind} level={r.level} $small />
               </li>
             ))}
           </ul>
@@ -117,7 +119,15 @@ const Results = styled.div`
     padding: 0;
     list-style: none;
   }
+  li {
+    display: flex;
+    align-items: center;
+    gap: ${({ theme }) => theme.space(2)};
+    padding-right: ${({ theme }) => theme.space(2)};
+  }
   a {
+    flex: 1;
+    min-width: 0;
     display: block;
     padding: ${({ theme }) => theme.space(2)};
     border-radius: ${({ theme }) => theme.radius.sm};

@@ -34,6 +34,8 @@ export const systemDoubles: Convention = {
     'SOS',
   ],
   category: 'system',
+  kind: 'system',
+  level: 'intermediate',
   tags: ['舊講義', '賭倍', '迫伴賭倍', '負性賭倍', '合作性賭倍', '再賭倍'],
   summary:
     '第十章：迫伴賭倍與答叫、回答性賭倍、負性賭倍、處罰與合作性賭倍、高限賭倍、S.O.S. 再賭倍，以及敵方賭倍後我方的叫法。',

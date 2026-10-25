@@ -19,6 +19,8 @@ export const systemCompetition: Convention = {
   nameEn: 'Competitive Bidding and Ghestem-style Twos (Natural System)',
   aliases: ['競叫', '蓋叫', 'overcall', '平衡叫', 'balancing', '輕開叫', '搶先叫', '技光', '埋伏'],
   category: 'system',
+  kind: 'system',
+  level: 'intermediate',
   tags: ['舊講義', '競叫', '蓋叫', '平衡叫', '搶先叫', '技光'],
   summary:
     '第十一章：蓋叫的目的、原則與答叫、埋伏、平衡叫、第三家輕開叫、搶先叫與答叫，以及「技光」開叫與對抗方法。',

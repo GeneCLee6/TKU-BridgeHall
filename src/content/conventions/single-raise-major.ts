@@ -61,6 +61,8 @@ export const singleRaiseMajor: Convention = {
   nameEn: 'After a Single Raise of Responder’s Major',
   aliases: ['1H 2H', '1S 2S', '單加', '高花單加', '2NT 問牌型', 'try slam'],
   category: 'suit-openings',
+  kind: 'convention',
+  level: 'intermediate',
   tags: ['單加高花', '2NT 問牌型', '長門邀請', 'splinter', 'RKCB'],
   summary:
     '開叫者單加答叫者的一線高花後：答叫者的再叫（長門邀請、2NT 問牌型、splinter），以及 2NT 後開叫者報牌型。',

@@ -21,6 +21,8 @@ export const defenseVsUnusual2nt: Convention = {
   nameEn: 'Defense vs. Unusual 2NT',
   aliases: ['如何對抗弱跳叫2NT兩低', 'Unusually 2NT', 'Unusual 2NT', '兩低', '不尋常2NT'],
   category: 'competitive',
+  kind: 'defense',
+  level: 'advanced',
   tags: ['高花開叫', '2NT 插叫', '兩低', 'mini splinter', '短門', 'slam try'],
   summary: '我方開 1♥／1♠ 遭敵方 2NT（兩低）插叫時的答叫與後續；附我方使用 Unusual 2NT 的條件。',
   source: { title: '如何對抗弱跳叫2NT兩低' },

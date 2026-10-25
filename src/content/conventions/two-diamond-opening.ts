@@ -16,6 +16,8 @@ export const twoDiamondOpening: Convention = {
   nameEn: '2♦ Opening',
   aliases: ['2D', '2D開叫', '2D open', '一高弱二', '弱二', 'multi', 'P/C'],
   category: 'suit-openings',
+  kind: 'system',
+  level: 'intermediate',
   tags: ['2♦ 開叫', '弱二', '20-21 平均牌', '22↑ 低花', 'P/C', '2NT 詢問'],
   summary:
     '2♦ 開叫包括弱二♥、弱二♠、20-21 平均牌、22↑帶 5 張低花：答叫者 P/C 與 2NT 詢問，以及 2♦ 2♥ 之後的完整後續。',

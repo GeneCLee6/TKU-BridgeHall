@@ -15,6 +15,8 @@ export const lebensohl: Convention = {
   nameEn: 'Lebensohl',
   aliases: ['雷本所', '雷本索', '1NT遭插叫的答叫原則', 'Lebensohl'],
   category: 'notrump',
+  kind: 'convention',
+  level: 'intermediate',
   tags: ['1NT', '插叫', '2NT 迫叫 3♣', 'stayman', '擋張'],
   summary: '同伴開叫 1NT 遭敵方插叫時的答叫原則：二線不迫叫、三線 GF、2NT 迫叫 3♣ 後續。',
   source: {

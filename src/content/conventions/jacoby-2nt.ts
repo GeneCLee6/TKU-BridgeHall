@@ -24,6 +24,8 @@ export const jacoby2nt: Convention = {
   nameEn: 'Jacoby 2NT',
   aliases: ['J2N', 'Jacoby', 'Jacoby 2NT', '滿貫詢問', '1S 2NT', '1H 2S'],
   category: 'suit-openings',
+  kind: 'convention',
+  level: 'advanced',
   tags: ['高花開叫', '滿貫詢問', '短門', 'EKB', 'RKCB', '報控'],
   summary:
     '同伴開叫高花、我方 3 張↑支持且有成局點時的滿貫詢問：1♠ 2NT、1♥ 2♠，含開叫者報牌型、加一詢問與後續 check。',

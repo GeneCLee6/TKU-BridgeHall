@@ -1,4 +1,14 @@
-import type { Block, Convention, ConventionMeta, RuleItem, Section } from '../types/convention.ts'
+import {
+  conventionKinds,
+  levels,
+  type Block,
+  type Convention,
+  type ConventionKind,
+  type ConventionMeta,
+  type Level,
+  type RuleItem,
+  type Section,
+} from '../types/convention.ts'
 import type { BookEntry, BookEntrySummary } from './api.ts'
 import { splitCall } from './calls.ts'
 import { walkSections } from './sections.ts'
@@ -43,6 +53,21 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const isString = (value: unknown): value is string => typeof value === 'string'
 const optionalString = (value: unknown) => value === undefined || isString(value)
 const isStrings = (value: unknown) => Array.isArray(value) && value.every(isString)
+const isLevel = (value: unknown): value is Level => levels.includes(value as Level)
+const optionalLevel = (value: unknown) => value === undefined || isLevel(value)
+
+/** A card's kind, level, prerequisites and card slots, the fields set only in the editor or files */
+export function classification(c: Partial<Pick<Convention, 'kind' | 'level' | 'prerequisites' | 'cardSlots'>> = {}) {
+  return {
+    ...(c.kind && { kind: c.kind }),
+    ...(c.level && { level: c.level }),
+    ...(c.prerequisites?.length && { prerequisites: [...c.prerequisites] }),
+    ...(c.cardSlots?.length && { cardSlots: [...c.cardSlots] }),
+  }
+}
+
+/** What a card is; a card that does not say is a convention */
+export const conventionKind = (c: Pick<Convention, 'kind'>): ConventionKind => c.kind ?? 'convention'
 
 /**
  * Why a value cannot be shown as a convention, worded for editors; empty when it can.
@@ -59,6 +84,11 @@ export function conventionProblems(value: unknown, categories: string[]): string
   if (!isString(value.nameZh) || !value.nameZh.trim()) add('缺少中文名稱')
   if (!isString(value.nameEn)) add('缺少英文名稱')
   if (!isString(value.category) || !categories.includes(value.category)) add('分類不存在')
+  if (value.kind !== undefined && !conventionKinds.includes(value.kind as ConventionKind)) add('種類不存在')
+  if (!optionalLevel(value.level)) add('程度不存在')
+  if (value.prerequisites !== undefined && !isStrings(value.prerequisites)) add('前置特約要是網址代稱清單')
+  else if ((value.prerequisites as string[] | undefined)?.includes(value.slug as string)) add('前置特約不能是自己')
+  if (value.cardSlots !== undefined && !isStrings(value.cardSlots)) add('制度卡位置要是文字清單')
   if (!isStrings(value.tags)) add('標籤要是文字清單')
   if (value.aliases !== undefined && !isStrings(value.aliases)) add('別名要是文字清單')
   if (!isString(value.summary)) add('缺少摘要')
@@ -119,6 +149,7 @@ export function conventionProblems(value: unknown, categories: string[]): string
     if (depth > 8) add(`${where}：段落層數太多`)
     if (!optionalString(s.originalTitle) || !optionalString(s.summary) || !optionalString(s.pending))
       add(`${where}：原文標題、摘要與待確認要是文字`)
+    if (!optionalLevel(s.level)) add(`${where}：程度不存在`)
     if (s.blocks !== undefined) {
       if (!Array.isArray(s.blocks)) add(`${where}：內容要是清單`)
       else for (const b of s.blocks) block(b, where)
@@ -179,6 +210,9 @@ function metaProblems(value: unknown, categories: string[]): string[] {
   if (!isString(value.category) || !categories.includes(value.category)) problems.push('分類不存在')
   if (!isStrings(value.tags) || !isString(value.summary)) problems.push('缺少標籤或摘要')
   if (!Array.isArray(value.outline) || !Array.isArray(value.pending)) problems.push('缺少段落')
+  if ((value.kind !== undefined && !conventionKinds.includes(value.kind as ConventionKind)) || !optionalLevel(value.level))
+    problems.push('種類或程度不存在')
+  if (value.prerequisites !== undefined && !isStrings(value.prerequisites)) problems.push('前置特約格式不正確')
   return problems
 }
 
@@ -295,17 +329,24 @@ export function tidyConvention(convention: Convention): Convention {
       ...(text(s.originalTitle) && { originalTitle: s.originalTitle }),
       ...(text(s.summary) && { summary: s.summary }),
       ...(text(s.pending) && { pending: s.pending }),
+      ...(s.level && { level: s.level }),
       ...(s.blocks?.some((b) => !emptyBlock(b)) && { blocks: s.blocks.filter((b) => !emptyBlock(b)).map(block) }),
       ...(children?.length && { children }),
     }
   }
   const aliases = convention.aliases?.filter((a) => a.trim())
+  const prerequisites = convention.prerequisites?.filter((p) => p.trim())
+  const cardSlots = convention.cardSlots?.filter((p) => p.trim())
   return {
     slug: convention.slug,
     nameZh: convention.nameZh,
     nameEn: convention.nameEn,
     ...(aliases?.length && { aliases }),
     category: convention.category,
+    ...(convention.kind && { kind: convention.kind }),
+    ...(convention.level && { level: convention.level }),
+    ...(prerequisites?.length && { prerequisites }),
+    ...(cardSlots?.length && { cardSlots }),
     tags: convention.tags.filter((t) => t.trim()),
     summary: convention.summary,
     source: { title: convention.source.title, ...(text(convention.source.note) && { note: convention.source.note }) },

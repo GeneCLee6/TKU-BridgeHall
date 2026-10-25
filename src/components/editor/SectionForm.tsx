@@ -4,8 +4,8 @@ import styled from 'styled-components'
 import { blankBlock } from '../../lib/editing.ts'
 import { SECTION_ID_PATTERN } from '../../lib/content.ts'
 import { strings } from '../../strings.ts'
-import type { Block, Section } from '../../types/convention.ts'
-import { Button, Field, Input, Row } from '../ui.tsx'
+import { levels, type Block, type Level, type Section } from '../../types/convention.ts'
+import { Button, Field, Input, Row, Select } from '../ui.tsx'
 import { BlockEditor, PendingField } from './BlockEditor.tsx'
 import { AutoTextArea, MiniButton } from './fields.tsx'
 
@@ -103,6 +103,21 @@ export function SectionForm({
         <AutoTextArea minRows={1} value={section.summary ?? ''} onChange={(e) => onChange({ ...section, summary: e.target.value })} />
       </Field>
       <PendingField value={section.pending ?? ''} onChange={(pending) => onChange({ ...section, pending })} />
+      <Field>
+        {t.sectionLevel}
+        <Select
+          value={section.level ?? ''}
+          onChange={(e) => onChange({ ...section, level: (e.target.value || undefined) as Level | undefined })}
+        >
+          <option value="">{t.sectionLevelInherit}</option>
+          {levels.map((l) => (
+            <option key={l} value={l}>
+              {strings.levels[l]}
+            </option>
+          ))}
+        </Select>
+        <small>{t.sectionLevelHint}</small>
+      </Field>
       <Advanced>
         <summary>{t.sectionId}</summary>
         <Field>

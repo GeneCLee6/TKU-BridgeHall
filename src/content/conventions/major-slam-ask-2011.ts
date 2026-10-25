@@ -16,6 +16,8 @@ export const majorSlamAsk2011: Convention = {
   nameEn: 'Major Slam Ask (2011 version)',
   aliases: ['1S 2NT舊版', '1S 2NT', '1H 2S', '舊版J2N', 'doblue'],
   category: 'suit-openings',
+  kind: 'convention',
+  level: 'advanced',
   tags: ['高花開叫', '滿貫詢問', '舊版', '短門', 'RKCB'],
   summary:
     '2011 年的舊版：1♠ 2NT、1♥ 2♠ 的滿貫詢問，開叫者報短門／平均牌型，加一詢問點力與牌型。新版見「開叫高花之滿貫詢問叫」。',

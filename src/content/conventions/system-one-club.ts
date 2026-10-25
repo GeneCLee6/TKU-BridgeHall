@@ -16,6 +16,8 @@ export const systemOneClub: Convention = {
   nameEn: '1♣ Opening (Natural System)',
   aliases: ['開叫1C', '1C開叫', '1♣'],
   category: 'system',
+  kind: 'system',
+  level: 'basic',
   tags: ['舊講義', '1♣ 開叫', '答叫', '再叫', '低花反序'],
   summary:
     '第二章：開叫 1♣（13-21 點，保證 2 張♣↑）的答叫、開叫者再叫、低花修正叫、強支持與低花反序。',

@@ -14,6 +14,8 @@ export const systemConcepts: Convention = {
   nameEn: 'Bidding Concepts, Defence and Play (Natural System)',
   aliases: ['評估牌力', '配合', '不配合', '防禦', '首攻', '首引', '打牌', '牌張組合'],
   category: 'system',
+  kind: 'system',
+  level: 'basic',
   tags: ['舊講義', '評估', '配合', '防禦', '首攻', '打牌'],
   summary: '講義後半：如何評估叫牌制度與牌力、配合與不配合、防禦與首攻、訊號、王牌與無王合約打法。',
   source: {

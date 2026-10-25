@@ -52,4 +52,13 @@ describe('search box', () => {
     await searchFor('張花色只能是低花')
     expect(await screen.findByRole('link', { name: /^1NT的答叫 › 開叫1NT$/ })).toBeInTheDocument()
   })
+
+  it('shows the kind and level with each result', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 503 })))
+    renderHome()
+    await searchFor('Bergen')
+    const link = await screen.findByRole('link', { name: /^Bergen加叫（松濤版）（Bergen Raises）$/ })
+    expect(link.parentElement).toHaveTextContent('種類：特約')
+    expect(link.parentElement).toHaveTextContent('程度：高階')
+  })
 })

@@ -15,6 +15,8 @@ export const notrumpResponses: Convention = {
   nameEn: 'Responses to 1NT',
   aliases: ['1NT答叫', '開叫1NT', 'stayman', 'transfer', 'Texas transfer', 'gerber', '低花詢問'],
   category: 'notrump',
+  kind: 'system',
+  level: 'basic',
   tags: ['1NT', 'stayman', 'transfer', 'Texas transfer', 'gerber', '低花詢問'],
   summary: '開叫 1NT（15~17）後的答叫一覽、依目的選擇合約的方式，以及 2♣／2♦／2♥／2♠ 等後續。',
   source: { title: '1NT的答叫' },

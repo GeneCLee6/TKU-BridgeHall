@@ -14,6 +14,8 @@ export const systemOverview: Convention = {
   nameEn: 'TKU Natural System — Overview',
   aliases: ['我們的制度', '自然制', 'Nature', '5-5-4-2', '5542', '制度總覽'],
   category: 'system',
+  kind: 'system',
+  level: 'basic',
   tags: ['舊講義', '開叫總表', '牌力', '訊號', '禮節'],
   summary:
     '2010 年講義《我們的制度》：開叫總表、牌力線位與範圍、開叫基本原則、訊號與橋藝禮節。現行為 12 點開叫、1NT forcing、2/1 迫叫成局。',

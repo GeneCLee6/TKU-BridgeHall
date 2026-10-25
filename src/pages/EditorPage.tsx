@@ -11,7 +11,7 @@ import { SectionForm, type SectionAction } from '../components/editor/SectionFor
 import { Button, ErrorText, Input, Muted, Notice, Row } from '../components/ui.tsx'
 import { categories } from '../content/categories.ts'
 import { api, ApiError, errorText, type BookRevision } from '../lib/api.ts'
-import { conventionProblems, conventionWarnings, tidyConvention } from '../lib/content.ts'
+import { classification, conventionProblems, conventionWarnings, tidyConvention } from '../lib/content.ts'
 import {
   blankBlock,
   blankConvention,
@@ -103,9 +103,11 @@ function EditorLoader() {
     return <Page><Muted role="status">{strings.loading}</Muted></Page>
 
   const info = slug ? content.online.get(slug) : undefined
+  // AI import does not classify: an update keeps the kind, level and prerequisites it replaces
+  const replaced = slug ? (content.bySlug(slug) ?? content.bundledBySlug(slug)) : undefined
   const initial = draft
     ? slug
-      ? { ...draft.item.convention, slug }
+      ? { ...classification(replaced), ...draft.item.convention, slug }
       : draft.item.convention
     : (current ?? blankConvention(categories[0].id, today()))
   if (slug && !exists && !draft) return <Page><ErrorText role="alert">{t.notFound}</ErrorText></Page>
@@ -310,6 +312,7 @@ function EditorBody({
         key={`info-${generation}`}
         convention={draft}
         categories={categories}
+        conventions={content.conventions}
         slugEditable={!slug}
         slugTaken={slugTaken}
         onChange={change}

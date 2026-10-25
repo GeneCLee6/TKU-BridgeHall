@@ -68,6 +68,8 @@ export interface Section {
   originalTitle?: string
   summary?: string
   pending?: string
+  /** Set when this section is aimed at another level than its convention; otherwise inherited */
+  level?: Level
   blocks?: Block[]
   children?: Section[]
 }
@@ -87,6 +89,20 @@ export interface Reference {
   url: string
 }
 
+/**
+ * What a card is (CONTENT_GUIDE.md §2.1): a chapter of the bidding system, a convention, a
+ * defensive signal, or a defence against the opponents' convention. A card without one is a
+ * convention.
+ */
+export type ConventionKind = 'system' | 'convention' | 'signal' | 'defense'
+
+export const conventionKinds: readonly ConventionKind[] = ['system', 'convention', 'signal', 'defense']
+
+/** Who a card or section is for */
+export type Level = 'basic' | 'intermediate' | 'advanced'
+
+export const levels: readonly Level[] = ['basic', 'intermediate', 'advanced']
+
 export interface Convention {
   /** URL-safe and unique: /c/:slug */
   slug: string
@@ -95,6 +111,14 @@ export interface Convention {
   /** Other names people search for */
   aliases?: string[]
   category: CategoryId
+  /** Defaults to 'convention' */
+  kind?: ConventionKind
+  /** Absent when not yet classified */
+  level?: Level
+  /** Slugs of the conventions to read first (E4 learning paths) */
+  prerequisites?: string[]
+  /** Where the convention goes on the convention card (E3); the slot ids are defined there */
+  cardSlots?: string[]
   tags: string[]
   /** One line, shown on the collapsed card */
   summary: string

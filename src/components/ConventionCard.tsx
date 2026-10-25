@@ -15,6 +15,7 @@ import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
 import type { Convention, ConventionMeta } from '../types/convention.ts'
 import { CopyLinkButton, IconButton } from './CopyLinkButton.tsx'
+import { KindLevel } from './KindLevel.tsx'
 import { Badge } from './PendingNote.tsx'
 import { SectionAccordion } from './SectionAccordion.tsx'
 import { RichText } from './Suit.tsx'
@@ -58,6 +59,7 @@ export function ConventionCard({
               <Names>
                 <NameZh>{convention.nameZh}</NameZh>
                 <NameEn lang="en">{convention.nameEn}</NameEn>
+                <KindLevel kind={convention.kind} level={convention.level} />
               </Names>
             </Trigger>
             {editPath && (
@@ -174,6 +176,11 @@ const Names = styled.span`
   flex-wrap: wrap;
   align-items: baseline;
   column-gap: ${({ theme }) => theme.space(3)};
+  row-gap: ${({ theme }) => theme.space(1)};
+
+  & > :last-child {
+    align-self: center;
+  }
 `
 
 const NameZh = styled.span`
