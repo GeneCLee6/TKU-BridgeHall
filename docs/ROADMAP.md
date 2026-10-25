@@ -25,7 +25,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | --- | --- | --- | --- |
 | [x] A1 #8 | `e10-t01` `e10-t02` `e10-t03` | 內容 manifest 與按需載入、線上內容分片 API、效能預算進 CI（牌桌 #60） | — |
 | [x] A2 #11 | `e10-t04` `e10-t05` | 搜尋索引建置、service worker v2（索引預載、按需快取、更新提示） | A1 |
-| [ ] A3 | `e1-t01` `e1-t02` `e1-t03` `e1-t04` | `kind`／`level`／`prerequisites` 欄位、內建特約標註、目錄與卡片顯示、編輯器欄位 | — |
+| [x] A3 #15 | `e1-t01` `e1-t02` `e1-t03` `e1-t04` | `kind`／`level`／`prerequisites` 欄位、內建特約標註、目錄與卡片顯示、編輯器欄位 | — |
 | [ ] A4 | `e1-t05` `e1-t06` | 分類改為資料：Worker 儲存、API、管理 UI | A3 |
 | [ ] A5 | `e1-t07` `e1-t08` | `SystemProfile` 型別進 `shared/protocol.ts`、`resolveProfile` 解析與測試 | A3 |
 | [ ] A6 | `e1-t09` `e1-t10` | Worker 制度集儲存、版本、衝突、上限；暫行權限 | A5 |
@@ -37,7 +37,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 
 | 批 | Task | 內容 | 前提 |
 | --- | --- | --- | --- |
-| [ ] B0 | `e9-t18` | 改名「淡江橋館 · TKU BridgeHall」與新標誌（strings、manifest、圖示、Logo 元件、文件；牌桌端同步） | — |
+| [x] B0 #12 | `e9-t18` | 改名「淡江橋館 · TKU BridgeHall」與新標誌（strings、manifest、圖示、Logo 元件、文件；牌桌端同步） | — |
 | [x] B1 #10 | `e9-t01` `e9-t02` | tokens 加風格維度（「一般」＝現行值，圓角不變）、字體載入、`GlobalStyle`；基礎元件改讀風格 token（`ui.tsx`、Tag、PendingNote、Suit／CallLabel） | — |
 | [ ] B2 | `e9-t03` `e9-t04` | 頁首 v2 與閱讀設定面板；路由拆頁（首頁、特約頁、全書目錄） | B1, A7 |
 | [ ] B3 | `e9-t05` `e9-t06` `e9-t07` | 特約頁三欄版面；段落、叫牌表、區塊換皮；目錄 v2 | B2 |
@@ -61,7 +61,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 
 | 批 | Task | 內容 | 前提 |
 | --- | --- | --- | --- |
-| [ ] D1 | `e3-t01` `e3-t02` | WBF 卡版型檔（主力，對照 `docs/design/wbf-card-reference-p1/p2.png`）、簡易卡版型檔（單面、雙面） | — |
+| [x] D1 #13 | `e3-t01` `e3-t02` | WBF 卡版型檔（主力，對照 `docs/design/wbf-card-reference-p1/p2.png`）、簡易卡版型檔（單面、雙面） | — |
 | [ ] D2 | `e3-t03` `e3-t04` | `fillCard` 與測試；內建特約補 `cardSlots`（幹部核對） | D1, A5 |
 | [ ] D3 | `e3-t05` `e3-t06` `e3-t07` | 預覽頁（含 hover 說明）、人工補格、列印與 PDF | D2, B3 |
 | [ ] D4 | `e3-t08` `e3-t09` `e3-t10` `e3-t11` | `.docx` 輸出、版本快照與分享、段落旁卡位標示、搭檔／隊伍頁入口與全隊合輯 | D3, C4 |
@@ -87,7 +87,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | [ ] G1 | `e11-t01` `e11-t02` `e11-t03` | 個人檔案模型與 API、R2 bucket 與圖片上傳、頭像（裁切、預設字首、`Avatar` 元件） | B2 |
 | [ ] G2 | `e11-t04` `e11-t05` `e11-t19` | 我的帳號編輯檔案、他人檔案頁；`shared/forum.ts` 型別；牌桌名牌改讀共用頭像 | G1 |
 | [ ] G3 | `e11-t06` `e11-t07` | `worker/forum.ts`：板面、貼文、分頁、置頂與鎖定、速率；留言、反應、`@` | G2 |
-| [ ] G4 | `e11-t11` `e11-t12` | `DealDiagram`／`DealInput`、`AuctionInput`／`HandInput`（E5 共用） | B1 |
+| [x] G4 #14 | `e11-t11` `e11-t12` | `DealDiagram`／`DealInput`、`AuctionInput`／`HandInput`（E5 共用） | B1 |
 | [ ] G5 | `e11-t13` `e11-t14` | 發文框、貼文卡與貼文頁（留言、反應、編輯刪除） | G3, G4 |
 | [ ] G6 | `e11-t15` `e11-t16` | 討論區殼與板面頁、手機工具列「討論」；首頁社團新聞與最新討論 | G5, B4 |
 | [ ] G7 | `e11-t08` `e11-t09` `e11-t17` | 通知、`forumModerate` 與檢舉、管理 UI | G6 |
