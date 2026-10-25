@@ -1,10 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { categories } from '../content/categories.ts'
+import { categories as bundledCategories } from '../content/categories.ts'
 import { loadBundled } from '../content/loaders.ts'
 import { manifest as bundledManifest } from '../content/manifest.ts'
 import { api, type BookEntry, type BookManifest } from '../lib/api.ts'
+import { knownCategoryIds, resolveCategories } from '../lib/categories.ts'
 import { mergeManifest, onlineConvention, type OnlineInfo, type Skipped } from '../lib/content.ts'
-import type { Convention, ConventionMeta } from '../types/convention.ts'
+import type { Category, Convention, ConventionMeta } from '../types/convention.ts'
 
 /**
  * The conventions the handbook shows: the bundled manifest with the online changes laid over it
@@ -22,6 +23,8 @@ interface Content {
   bySlug: (slug: string) => ConventionMeta | undefined
   /** The convention as it ships with the site, before online changes */
   bundledBySlug: (slug: string) => ConventionMeta | undefined
+  /** The catalogue's groups in order: the online list, or the bundled one (lib/categories.ts) */
+  categories: Category[]
   /** A convention's content if it is loaded already */
   loaded: (slug: string) => Convention | undefined
   /**
@@ -40,7 +43,6 @@ interface Content {
 }
 
 const CACHE_KEY = 'tku-bridge-book-manifest'
-const categoryIds = categories.map((c) => c.id as string)
 const bundledIndex = new Map(bundledManifest.map((c) => [c.slug, c]))
 
 function cached(): BookManifest | null {
@@ -109,7 +111,9 @@ export function ContentProvider({
   }, [reload])
 
   const value = useMemo((): Content => {
+    const categoryIds = knownCategoryIds(bundledCategories, manifest?.categories)
     const merged = mergeManifest(bundledManifest, manifest?.entries ?? [], categoryIds)
+    const categories = resolveCategories(bundledCategories, manifest?.categories, merged.conventions)
     const index = new Map(merged.conventions.map((c) => [c.slug, c]))
     // Which version of a convention `load` gives: the online one unless it is hidden
     const source = (slug: string) => {
@@ -145,6 +149,7 @@ export function ContentProvider({
       conventions: merged.conventions,
       bySlug: (slug) => index.get(slug),
       bundledBySlug: (slug) => bundledIndex.get(slug),
+      categories,
       loaded: (slug) => {
         const from = source(slug)
         return from && contents.get(from.key)

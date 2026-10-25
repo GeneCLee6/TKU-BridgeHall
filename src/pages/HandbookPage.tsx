@@ -7,7 +7,6 @@ import { ConventionCard } from '../components/ConventionCard.tsx'
 import { Sidebar } from '../components/Sidebar.tsx'
 import { ViewActions } from '../components/ViewActions.tsx'
 import { Button } from '../components/ui.tsx'
-import { categories } from '../content/categories.ts'
 import { references } from '../content/references.ts'
 import { formatDateTime } from '../lib/format.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
@@ -34,7 +33,7 @@ import { AccountCorner } from './Frame.tsx'
  * the page starts from the manifest and each card loads its content when it opens.
  */
 export function HandbookPage() {
-  const { conventions, bySlug: conventionBySlug, loadAll, online, status, skipped } = useContent()
+  const { conventions, categories, bySlug: conventionBySlug, loadAll, online, status, skipped } = useContent()
   const { can } = useAuth()
   const { slug, sectionId } = useParams()
   const [searchParams] = useSearchParams()

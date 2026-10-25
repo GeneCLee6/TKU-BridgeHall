@@ -27,7 +27,7 @@ TKU-BridgeBook/
 │  ├─ components/editor/    線上編輯器的段落樹、表單、各種區塊、預覽、版本紀錄
 │  ├─ content/
 │  │  ├─ conventions/       每個特約一個檔案（lebensohl.ts、defense-vs-unusual-2nt.ts）
-│  │  ├─ categories.ts      分類與顯示順序
+│  │  ├─ categories.ts      內建分類與顯示順序（線上改過時以線上為準，§4.5）
 │  │  └─ index.ts           特約登記表
 │  ├─ types/convention.ts   內容模型（唯一的 schema）
 │  ├─ cards/                制度卡（E3）：types（CardTemplate）、slots（格子 id）、templates/（每個版型一個檔案，檔名＝id）；網站程式只能 lazy 載入
@@ -143,7 +143,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/c/:slug/:sectionId` | 展開特約與該段落的所有祖先段落，捲動並聚焦到段落標題 |
 | `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
 | `/account` | 我的帳號：權限、修改密碼 |
-| `/admin` | 社團管理（管理員）：待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限 |
+| `/admin` | 社團管理（管理員）：待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限、分類；只有 bookEdit 的編輯者只看到分類 |
 | `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約 |
 | `/import` | 匯入檔案（bookImport） |
 | 其他 | 顯示首頁；找不到的 slug／段落顯示提示 |
@@ -170,7 +170,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 ### 4.1 線上修改的內容（`ContentContext`、`lib/content.ts`）
 
 - 每個特約在伺服器最多一筆「線上版本」（`BookEntry`）：取代同 slug 的內建特約、新增一個特約，或 `convention: null` 隱藏它。
-- 開頁面時先顯示內建 manifest（或這台裝置上次看到的線上 manifest，存在 localStorage），再抓 `GET /api/book/manifest`（每筆線上版本不含內容，`meta` 是牌桌 Worker 算好的 `ConventionMeta`，隱藏的為 `null`；`ETag`）。`mergeManifest` 依內建順序替換，新增的排在後面（依建立時間）；抓不到就維持現狀並顯示離線提示。
+- 開頁面時先顯示內建 manifest（或這台裝置上次看到的線上 manifest，存在 localStorage），再抓 `GET /api/book/manifest`（每筆線上版本不含內容，`meta` 是牌桌 Worker 算好的 `ConventionMeta`，隱藏的為 `null`；`categories` 是線上的分類，見 §4.5；`ETag`）。`mergeManifest` 依內建順序替換，新增的排在後面（依建立時間）；抓不到就維持現狀並顯示離線提示。
 - 線上改過的特約，打開時抓 `GET /api/book/content/:slug`（`ETag`；沒有線上版本回 404），用 `onlineConvention`（`conventionProblems`）檢查形狀，壞掉的略過並列入提示，不會讓頁面掛掉。載入的內容以 `slug@版本` 存在 `ContentContext`，線上版本更新後自然換新。
 - 舊的 `GET /api/book/content`（整本一次）牌桌仍保留給舊版前端，這裡已不使用。Service worker 對這兩支 API 走「先網路、離線用快取」，其他 `/api` 一律不快取。
 - 這兩支 API 的型別在 `lib/api.ts`（`BookManifest`、`BookEntrySummary`），對應牌桌 `worker/book.ts`；`pending` 的走訪順序必須和 `lib/sections.ts` 的 `pendingNotes` 一致。
@@ -197,6 +197,14 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 **搜尋**：`lib/search.ts` 為每個特約與每個段落各建一筆紀錄（名稱、別名、標籤、叫品、內文），以 Fuse.js 搜尋（`ignoreLocation`、threshold 0.3）。內建特約的紀錄在建置時算好：`scripts/search-index.ts` 產生 `{ version, records }`，`vite.config.ts` 的 `searchIndex` plugin 在 build 時寫進 `dist/search-index.json`、dev server 則每次請求用目前內容現算，所以索引不會過期、也不 commit。之後的文章與名詞加成同一份 records 即可。所有文字與查詢都先經過 `toAsciiSuits`，因此「2♦」與「2D」結果相同。
 
 **列印**：Accordion Content 一律 `forceMount`，關閉時以 CSS（`[data-state='closed']`）隱藏；列印樣式覆寫成全部顯示。
+
+### 4.5 分類（`lib/categories.ts`、`components/admin/CategoriesPanel.tsx`）
+
+- 分類是資料：`Category { id, label, description, order }`，`id` 小寫英數與連字號、建立後不變（特約的 `category` 指向它），`CategoryId` 因此是 `string`。內建的一份在 `content/categories.ts`，離線、未登入、牌桌沒回應、或從沒在線上改過時就用它。
+- 線上的一份存在牌桌 Worker（每個分類一筆 `book:category:<id>`），跟著 `GET /api/book/manifest` 的 `categories` 一起來，所以 localStorage 的 manifest 快取與 service worker 的「先網路、離線用快取」都涵蓋它；空清單或沒有這個欄位（舊 Worker）＝用內建的。
+- `ContentContext` 用 `resolveCategories` 算出 `categories`：有線上清單就照它的 `order`，沒有就用內建；線上清單沒列、但還有特約在裡面的內建分類（例如線上改過之後才在 repo 加的）接在最後，特約不會從目錄消失。驗證特約時接受線上與內建兩份的 id（`knownCategoryIds`）。側邊欄、首頁、編輯器的分類選單、匯入送給 AI 的分類都讀這一份。
+- 管理：`/admin` 的「分類」面板（bookEdit；跟著管理頁 lazy 載入，不進首頁 bundle）。改名、上下移、新增（代號自動產生 `c-<時間>`）、刪除，按「儲存分類」一次 `PUT /api/book/categories` `{ categories, baseVersion }` 整份取代。有特約（目前目錄裡的，含內建；隱藏的不算）的分類刪除鈕停用；Worker 另外擋還有線上特約的分類（409 `categoryInUse`），因為它只知道線上的特約。別人先存了回 409 `categoryConflict`，按「重新載入」拿對方的版本。存檔後重抓 manifest。
+- 型別 `BookCategory`、`BookCategories` 在 `lib/api.ts`，對應牌桌 `worker/book.ts`；上限（20 個、名稱 40 字、說明 200 字）兩邊一致。
 
 ## 5. UI 函式庫選擇
 
