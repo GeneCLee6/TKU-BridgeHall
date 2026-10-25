@@ -47,6 +47,9 @@ export const strings = {
   installAndroid:
     'Android：用 Chrome 開啟本站，按右上角「⋮」，再選「安裝應用程式」或「加到主畫面」。',
   installClose: '關閉',
+  updateAvailable: '有新版本可以使用。',
+  updateReload: '重新整理',
+  updateLater: '稍後',
 
   loading: '載入中…',
   save: '儲存',

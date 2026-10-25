@@ -1,7 +1,21 @@
+import { searchIndexJson } from '../../scripts/search-index.ts'
 import { conventions } from '../../src/content/index.ts'
-import { createSearch } from '../../src/lib/search.ts'
+import { manifest } from '../../src/content/manifest.ts'
+import {
+  buildRecords,
+  createSearch,
+  isSearchIndex,
+  mergeIndex,
+  searchRecords,
+  type SearchIndex,
+} from '../../src/lib/search.ts'
+import { conventionMeta } from '../../src/lib/sections.ts'
+import type { Convention } from '../../src/types/convention.ts'
 
-const search = createSearch(conventions)
+// What the site searches: the index file as built, with the manifest (no content loaded)
+const index = JSON.parse(searchIndexJson()) as SearchIndex
+const search = searchRecords(mergeIndex(index, manifest, () => true))
+const fromContent = createSearch(conventions)
 
 describe('search', () => {
   it.each([
@@ -53,7 +67,48 @@ describe('search', () => {
     expect(search('Stayman')[0].slug).toBe('notrump-responses')
   })
 
+  it('gives the same results from the index as from the full content', () => {
+    for (const query of ['Lebensohl', '2D', '問A', '信號', '1S 2NT舊版', 'NMF', '平衡位置']) {
+      const ids = (fn: typeof search) => fn(query).map((r) => `${r.slug}/${r.sectionId ?? ''}`)
+      expect(ids(search)).toEqual(ids(fromContent))
+    }
+  })
+
   it('returns nothing for an empty query', () => {
     expect(search('   ')).toEqual([])
+  })
+})
+
+describe('search index', () => {
+  it('holds a record for every bundled convention and section', () => {
+    expect(isSearchIndex(index)).toBe(true)
+    expect(index.records).toEqual(buildRecords(conventions))
+    expect(isSearchIndex({ version: 0, records: [] })).toBe(false)
+    expect(isSearchIndex(null)).toBe(false)
+  })
+
+  it('replaces the records of a convention changed online with its new content', () => {
+    const original = conventions.find((c) => c.slug === 'lebensohl')!
+    const edited: Convention = {
+      ...original,
+      sections: [{ id: 'new', title: '新段落', blocks: [{ kind: 'paragraph', text: '只在線上版本出現的句子' }] }],
+    }
+    const catalogue = manifest.map((c) => (c.slug === 'lebensohl' ? edited : c))
+    const online = searchRecords(mergeIndex(index, catalogue, (slug) => slug !== 'lebensohl'))
+    expect(online('只在線上版本出現')[0]).toMatchObject({ slug: 'lebensohl', sectionId: 'new' })
+    // The bundled sections are gone with the bundled content
+    const bundledSection = original.sections[0].id
+    expect(online('雷本索').some((r) => r.slug === 'lebensohl' && r.sectionId === bundledSection)).toBe(false)
+  })
+
+  it('searches the section titles of a convention changed online until its content loads', () => {
+    const meta = conventionMeta(conventions.find((c) => c.slug === 'jacoby-2nt')!)
+    const records = mergeIndex(index, [meta], () => false)
+    expect(records).toEqual(buildRecords([meta]))
+  })
+
+  it('leaves out conventions no longer in the catalogue (hidden online)', () => {
+    const records = mergeIndex(index, manifest.filter((c) => c.slug !== 'lebensohl'), () => true)
+    expect(records.some((r) => r.slug === 'lebensohl')).toBe(false)
   })
 })

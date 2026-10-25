@@ -58,13 +58,56 @@ export function buildRecords(conventions: (Convention | ConventionMeta)[]): Sear
   return records
 }
 
+/**
+ * The search index file, /search-index.json: the records of every bundled convention, built with
+ * the site (scripts/search-index.ts) so readers search without downloading the content. Fuse
+ * takes the records as they are; indexing them in the browser takes a few milliseconds.
+ * Articles and glossary terms can join as records of their own.
+ */
+export interface SearchIndex {
+  version: typeof SEARCH_INDEX_VERSION
+  records: SearchRecord[]
+}
+
+export const SEARCH_INDEX_VERSION = 1
+
+export const buildSearchIndex = (conventions: Convention[]): SearchIndex => ({
+  version: SEARCH_INDEX_VERSION,
+  records: buildRecords(conventions),
+})
+
+export const isSearchIndex = (value: unknown): value is SearchIndex =>
+  typeof value === 'object' &&
+  value !== null &&
+  (value as SearchIndex).version === SEARCH_INDEX_VERSION &&
+  Array.isArray((value as SearchIndex).records)
+
+/**
+ * The records for the catalogue as shown: the index's records for a convention `fromIndex`
+ * accepts (bundled and not changed online), and records built here for the others (changed or
+ * added online; their content when loaded, their section titles until then). Catalogue order is
+ * kept, so results rank as they would from the full content.
+ */
+export function mergeIndex(
+  index: SearchIndex,
+  catalogue: (Convention | ConventionMeta)[],
+  fromIndex: (slug: string) => boolean,
+): SearchRecord[] {
+  const bySlug = new Map<string, SearchRecord[]>()
+  for (const r of index.records) bySlug.set(r.slug, [...(bySlug.get(r.slug) ?? []), r])
+  return catalogue.flatMap((c) => (fromIndex(c.slug) && bySlug.get(c.slug)) || buildRecords([c]))
+}
+
 /** Added to an old-handbook match's score (Fuse scores run 0 = exact … 1 = no match) */
 const LEGACY_PENALTY = 0.2
 
 export type SearchFn = (query: string, limit?: number) => SearchRecord[]
 
-export function createSearch(conventions: (Convention | ConventionMeta)[]): SearchFn {
-  const fuse = new Fuse(buildRecords(conventions), {
+export const createSearch = (conventions: (Convention | ConventionMeta)[]): SearchFn =>
+  searchRecords(buildRecords(conventions))
+
+export function searchRecords(records: SearchRecord[]): SearchFn {
+  const fuse = new Fuse(records, {
     keys: [
       { name: 'name', weight: 3 },
       { name: 'tags', weight: 2 },

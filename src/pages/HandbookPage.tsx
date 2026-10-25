@@ -1,5 +1,5 @@
 import { FilePlus2, FileUp } from 'lucide-react'
-import { startTransition, useEffect, useMemo, useState } from 'react'
+import { startTransition, useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { AppHeader } from '../components/AppHeader.tsx'
@@ -10,7 +10,6 @@ import { Button } from '../components/ui.tsx'
 import { categories } from '../content/categories.ts'
 import { references } from '../content/references.ts'
 import { formatDateTime } from '../lib/format.ts'
-import type { SearchFn } from '../lib/search.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import {
   allKeys,
@@ -23,6 +22,7 @@ import {
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
+import { useSearch } from '../state/useSearch.ts'
 import { strings } from '../strings.ts'
 import { mobile, mobileQuery } from '../styles/tokens.ts'
 import { AccountCorner } from './Frame.tsx'
@@ -34,7 +34,7 @@ import { AccountCorner } from './Frame.tsx'
  * the page starts from the manifest and each card loads its content when it opens.
  */
 export function HandbookPage() {
-  const { conventions, bySlug: conventionBySlug, loaded, loadAll, online, status, skipped } = useContent()
+  const { conventions, bySlug: conventionBySlug, loadAll, online, status, skipped } = useContent()
   const { can } = useAuth()
   const { slug, sectionId } = useParams()
   const [searchParams] = useSearchParams()
@@ -45,23 +45,8 @@ export function HandbookPage() {
   const expandAll = () => startTransition(() => open(conventions.flatMap(allKeys)))
   const collapseAll = () => startTransition(closeAll)
   const [menuOpen, setMenuOpen] = useState(false)
-  // Until a convention's content is loaded its section titles stand in for it. Focusing the
-  // search box loads the rest, so full-text results follow within moments.
-  const searchable = conventions.map((c) => loaded(c.slug) ?? c)
-  const searchKey = searchable.map((c) => ('sections' in c ? 1 : 0)).join('')
-  // The search code (Fuse) is downloaded when the box is focused, with the content. The index is
-  // built on the first query after a change, not on every convention that loads.
-  const [searchLib, setSearchLib] = useState<typeof import('../lib/search.ts')>()
-  const search = useMemo((): SearchFn => {
-    if (!searchLib) return () => []
-    let built: SearchFn | undefined
-    return (query, limit) => (built ??= searchLib.createSearch(searchable))(query, limit)
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- rebuilt when the catalogue or what is loaded changes
-  }, [searchLib, conventions, searchKey])
-  const loadEverything = () => {
-    void import('../lib/search.ts').then(setSearchLib)
-    void loadAll().catch(() => {})
-  }
+  // Focusing the search box downloads the search code and index (state/useSearch.ts)
+  const { search, prepare: prepareSearch } = useSearch()
   // Printing shows every convention, so everything is loaded first
   const print = () =>
     void loadAll()
@@ -128,7 +113,7 @@ export function HandbookPage() {
       <SkipLink href="#main">{strings.skipToContent}</SkipLink>
       <AppHeader
         search={search}
-        onSearchFocus={loadEverything}
+        onSearchFocus={prepareSearch}
         menuOpen={menuOpen}
         onToggleMenu={() => setMenuOpen((o) => !o)}
         actions={

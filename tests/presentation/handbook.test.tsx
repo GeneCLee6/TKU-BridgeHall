@@ -45,7 +45,8 @@ describe('handbook page', () => {
     renderAt('/')
     await userEvent.click(screen.getByRole('button', { name: '全部展開' }))
     expect(trigger(/^雷本索特約/)).toHaveAttribute('aria-expanded', 'true')
-    expect(trigger(/^遭非自然牌組插叫/)).toHaveAttribute('aria-expanded', 'true')
+    // Sections appear once their convention's content has loaded
+    expect(await screen.findByRole('button', { name: /^遭非自然牌組插叫/ })).toHaveAttribute('aria-expanded', 'true')
     await userEvent.click(screen.getByRole('button', { name: '全部收合' }))
     expect(
       within(screen.getByRole('main')).queryAllByRole('button', { expanded: true }),
@@ -141,7 +142,7 @@ describe('handbook page', () => {
     expect(link).toHaveAttribute('href', '/c/notrump-responses/slam-try?pending=0')
     await userEvent.click(link)
     expect(trigger(/^1NT的答叫/)).toHaveAttribute('aria-expanded', 'true')
-    expect(trigger(/^合約選擇方式/)).toHaveAttribute('aria-expanded', 'true')
+    expect(await screen.findByRole('button', { name: /^合約選擇方式/ })).toHaveAttribute('aria-expanded', 'true')
     expect(trigger(/^嘗試滿貫/)).toHaveAttribute('aria-expanded', 'true')
   })
 

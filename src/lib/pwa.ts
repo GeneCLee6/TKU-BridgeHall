@@ -33,8 +33,68 @@ export function setUpApp() {
   if (import.meta.env.PROD && 'serviceWorker' in navigator)
     window.addEventListener(
       'load',
-      () => void navigator.serviceWorker.register('/sw.js').catch(() => undefined),
+      () =>
+        void navigator.serviceWorker
+          .register('/sw.js')
+          .then((registration) => watchForUpdates(registration, navigator.serviceWorker))
+          .catch(() => undefined),
     )
+}
+
+// --- New versions ----------------------------------------------------------------------------
+// Every build is a new service worker (vite.config.ts stamps sw.js). It installs in the
+// background and waits; the page offers to reload (UpdatePrompt), and reloading asks it to take
+// over first, so the reloaded page and its cache belong to the same version.
+
+let waiting: ServiceWorker | null = null
+const updateListeners = new Set<() => void>()
+const setWaiting = (worker: ServiceWorker | null) => {
+  waiting = worker
+  updateListeners.forEach((listener) => listener())
+}
+
+/**
+ * Notices a new version waiting to take over, now or later. A phone app can stay open for days,
+ * so the check for one is repeated whenever the page comes back into view.
+ */
+export function watchForUpdates(
+  registration: ServiceWorkerRegistration,
+  container: ServiceWorkerContainer,
+) {
+  // The very first worker has no older version to replace: nothing to offer
+  const offer = (worker: ServiceWorker | null) => worker && container.controller && setWaiting(worker)
+  offer(registration.waiting)
+  registration.addEventListener('updatefound', () => {
+    const worker = registration.installing
+    worker?.addEventListener('statechange', () => worker.state === 'installed' && offer(worker))
+  })
+  let reloading = false
+  container.addEventListener('controllerchange', () => {
+    if (!waiting || reloading) return
+    reloading = true
+    window.location.reload()
+  })
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') void registration.update().catch(() => undefined)
+  })
+}
+
+/** Whether a new version is waiting; `reload` switches to it */
+export function useUpdate() {
+  const available = useSyncExternalStore(
+    (listener) => {
+      updateListeners.add(listener)
+      return () => updateListeners.delete(listener)
+    },
+    () => waiting !== null,
+    () => false,
+  )
+  const reload = () => {
+    // The page reloads once the new worker has taken over (controllerchange above)
+    if (waiting) waiting.postMessage({ type: 'skip-waiting' })
+    else window.location.reload()
+  }
+  return { available, reload }
 }
 
 /** Whether the page is already running as the installed app */
