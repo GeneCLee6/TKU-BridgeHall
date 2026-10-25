@@ -24,9 +24,10 @@
 4. **顏色只來自 `styles/tokens.ts`**，介面文字只來自 `strings.ts`。
 5. **線上版本優先**：網站上改過的特約，改 `.ts` 檔不會顯示（ARCHITECTURE.md §4.1）。改內容前先確認那個特約沒有線上版本，或在編輯器還原為內建版本。
 6. **只用於樣式的 prop 加 `$` 前綴。**
-7. **不要直接推送到 `main`，也不要 force-push。** 功能走分支＋PR。
-8. 程式碼、註解、commit 用英文；文件與介面用繁體中文（台灣用語）。
-9. **與淡江牌桌的介面要一起改**：`src/lib/api.ts` 的型別對應牌桌的 `shared/protocol.ts`、`worker/book.ts`；`src/lib/importResult.ts` 對應牌桌 `worker/importer.ts` 的扁平 schema。
+7. **不要直接推送到 `main`，也不要 force-push。** 功能走分支＋PR。合併一律用 `gh pr merge <號> --squash --delete-branch`，遠端與本地分支一起刪；分支在 worktree 裡的話先 `git worktree remove` 再刪分支。GitHub 已開「合併後自動刪除分支」，但關掉不合併的 PR 不會自動刪，要手動 `git push origin --delete <分支>`。
+8. **正式站只手動部署**：合併到 `main` 不會上線（`vercel.json` 關掉了 `main` 的自動部署）；上線的步驟在 ARCHITECTURE.md §7。不要自己部署正式站，除非使用者要求。
+9. 程式碼、註解、commit 用英文；文件與介面用繁體中文（台灣用語）。
+10. **與淡江牌桌的介面要一起改**：`src/lib/api.ts` 的型別對應牌桌的 `shared/protocol.ts`、`worker/book.ts`；`src/lib/importResult.ts` 對應牌桌 `worker/importer.ts` 的扁平 schema。
 
 ## 已知陷阱
 
