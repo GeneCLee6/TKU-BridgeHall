@@ -1,13 +1,14 @@
-import type { Block, Convention, RuleItem, Section } from '../types/convention.ts'
-import type { BookEntry } from './api.ts'
+import type { Block, Convention, ConventionMeta, RuleItem, Section } from '../types/convention.ts'
+import type { BookEntry, BookEntrySummary } from './api.ts'
 import { splitCall } from './calls.ts'
 import { walkSections } from './sections.ts'
 
 /**
  * The handbook's content at run time: the conventions bundled with the site, with what members
  * changed online laid over them. An online entry replaces the bundled convention with the same
- * slug, adds a new one, or hides one. Anything that does not have the shape of a Convention is
- * left out (and reported), so a bad save can never break the page.
+ * slug, adds a new one, or hides one. The catalogue is merged from manifest entries (no content);
+ * each convention's content is checked when it is loaded. Anything that does not have the right
+ * shape is left out (and reported), so a bad save can never break the page.
  */
 
 /** What the handbook knows about a convention that was changed online */
@@ -22,11 +23,16 @@ export interface OnlineInfo {
   bundledUpdated?: string
 }
 
-export interface MergedContent {
-  conventions: Convention[]
+export interface Skipped {
+  slug: string
+  problem: string
+}
+
+export interface MergedManifest {
+  conventions: ConventionMeta[]
   online: Map<string, OnlineInfo>
-  /** Online entries left out because their content is broken, with the first problem */
-  skipped: { slug: string; problem: string }[]
+  /** Online entries left out because they are broken, with the first problem */
+  skipped: Skipped[]
 }
 
 export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
@@ -164,31 +170,46 @@ export function conventionWarnings(convention: Convention): string[] {
   return warnings
 }
 
-/** Lays the online entries over the bundled conventions */
-export function mergeContent(bundled: Convention[], entries: BookEntry[], categories: string[]): MergedContent {
+/** Why a manifest entry cannot be shown in the catalogue; empty when it can */
+function metaProblems(value: unknown, categories: string[]): string[] {
+  if (!isObject(value)) return ['不是一個特約']
+  const problems: string[] = []
+  if (!isString(value.slug) || !SLUG_PATTERN.test(value.slug)) problems.push('網址代稱不正確')
+  if (!isString(value.nameZh) || !isString(value.nameEn)) problems.push('缺少名稱')
+  if (!isString(value.category) || !categories.includes(value.category)) problems.push('分類不存在')
+  if (!isStrings(value.tags) || !isString(value.summary)) problems.push('缺少標籤或摘要')
+  if (!Array.isArray(value.outline) || !Array.isArray(value.pending)) problems.push('缺少段落')
+  return problems
+}
+
+/** Lays the online entries over the bundled manifest */
+export function mergeManifest(
+  bundled: ConventionMeta[],
+  entries: BookEntrySummary[],
+  categories: string[],
+): MergedManifest {
   const online = new Map<string, OnlineInfo>()
-  const skipped: MergedContent['skipped'] = []
-  const replaced = new Map<string, Convention | null>()
+  const skipped: Skipped[] = []
+  const replaced = new Map<string, ConventionMeta | null>()
   const bundledSlugs = new Set(bundled.map((c) => c.slug))
-  const added: { createdAt: number; convention: Convention }[] = []
+  const added: { createdAt: number; meta: ConventionMeta }[] = []
 
   for (const entry of entries) {
-    if (entry.convention !== null) {
-      const problems = conventionProblems(entry.convention, categories)
-      const convention = entry.convention as Convention
-      if (problems.length || convention.slug !== entry.slug) {
+    if (entry.meta !== null) {
+      const problems = metaProblems(entry.meta, categories)
+      if (problems.length || entry.meta.slug !== entry.slug) {
         skipped.push({ slug: entry.slug, problem: problems[0] ?? '網址代稱不符' })
         continue
       }
-      if (bundledSlugs.has(entry.slug)) replaced.set(entry.slug, convention)
-      else added.push({ createdAt: entry.createdAt, convention })
+      if (bundledSlugs.has(entry.slug)) replaced.set(entry.slug, entry.meta)
+      else added.push({ createdAt: entry.createdAt, meta: entry.meta })
     } else if (bundledSlugs.has(entry.slug)) replaced.set(entry.slug, null)
     online.set(entry.slug, {
       version: entry.version,
       updatedAt: entry.updatedAt,
       updatedBy: entry.updatedBy,
       added: !bundledSlugs.has(entry.slug),
-      hidden: entry.convention === null,
+      hidden: entry.meta === null,
       bundledUpdated: entry.bundledUpdated,
     })
   }
@@ -199,7 +220,18 @@ export function mergeContent(bundled: Convention[], entries: BookEntry[], catego
     return replacement ? [replacement] : []
   })
   added.sort((a, b) => a.createdAt - b.createdAt)
-  return { conventions: [...conventions, ...added.map((a) => a.convention)], online, skipped }
+  return { conventions: [...conventions, ...added.map((a) => a.meta)], online, skipped }
+}
+
+/** An online entry's content, checked: the convention, or why it cannot be shown */
+export function onlineConvention(
+  entry: BookEntry,
+  categories: string[],
+): { convention: Convention } | { problem: string } {
+  const problems = conventionProblems(entry.convention, categories)
+  if (problems.length) return { problem: problems[0] }
+  const convention = entry.convention as Convention
+  return convention.slug === entry.slug ? { convention } : { problem: '網址代稱不符' }
 }
 
 /** A block with nothing in it, as the editor leaves behind: dropped on save */

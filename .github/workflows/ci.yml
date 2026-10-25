@@ -1,6 +1,7 @@
 name: CI
 
-# Runs on every push and on pull requests targeting main: install -> lint -> typecheck -> test -> build.
+# Runs on every push and on pull requests targeting main: install -> lint -> typecheck -> test -> build
+# -> performance budget. A separate `lighthouse` job audits the home page and a convention page.
 # Deployment itself is handled by Vercel's Git integration (production on main, previews on PRs).
 on:
   push:
@@ -38,3 +39,37 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: Performance budget (bundle size, gzip)
+        run: npm run budget
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      # Config in lighthouserc.json: serves dist with `vite preview` and audits / and /c/jacoby-2nt.
+      # Accessibility < 0.95 fails the job; performance and best practices only warn (runner noise).
+      - name: Lighthouse CI
+        run: npx --yes @lhci/cli@0.15.1 autorun
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci
+          if-no-files-found: ignore
+          retention-days: 14

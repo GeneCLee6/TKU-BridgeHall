@@ -20,7 +20,7 @@
 
 1. **內容正確性第一。** 特約內容逐字轉錄自社團的 Word 檔。不得依一般橋牌知識補充、刪減或修正叫品意義、點力範圍或例子。有疑義時保留原文、加 `pending`（網站顯示「待確認」），並更新 `CONTENT_GUIDE.md` 的清單。
 2. **原始 Word 檔與轉檔輸出不得 commit。**（`.gitignore` 已排除 `*.doc`、`*.docx`、`*.htm`、`tmp/`。）
-3. **新增特約不改元件**：只新增 `src/content/conventions/<slug>.ts` 並在 `src/content/index.ts` 登記。
+3. **新增特約不改元件**：只新增 `src/content/conventions/<slug>.ts`（檔名＝slug）、在 `src/content/index.ts` 登記，再跑 `npm run manifest`。網站程式不要 import `content/index.ts`（只給測試與 manifest 腳本用，見 ARCHITECTURE.md §4）。
 4. **顏色只來自 `styles/tokens.ts`**，介面文字只來自 `strings.ts`。
 5. **線上版本優先**：網站上改過的特約，改 `.ts` 檔不會顯示（ARCHITECTURE.md §4.1）。改內容前先確認那個特約沒有線上版本，或在編輯器還原為內建版本。
 6. **只用於樣式的 prop 加 `$` 前綴。**
@@ -33,6 +33,7 @@
 - **Radix Accordion 的 `forceMount` 不會隱藏關閉的內容。** 關閉時的隱藏靠 `GlobalStyle` 的 `[data-accordion-content][data-state='closed']`；列印樣式再全部顯示。新增收合元件時記得加 `data-accordion-content`。
 - **測試用 `getByRole('button', { name })` 找觸發器時，用 `^` 錨定開頭**，否則會同時配到「複製連結：…」按鈕。
 - **花色在無障礙名稱中是中文**（`Suit` 的 `aria-label`），例如「開叫1♠時」的名稱是「開叫1黑桃時」。
+- **效能預算在 CI 擋**（`npm run budget`，`scripts/check-budget.mjs`）：首頁 JS gzip ≤ 150 kB、首頁不得含任何特約內容。新功能的大頁面或函式庫用 `React.lazy`／動態 `import()`。
 - **「待確認」數量寫在測試裡**（`tests/content/conventions.test.ts`），新增或解決時要同步更新。
 - **`cfb` 是 CommonJS**：Node 只給 default export，打包工具給具名 export，用 `docText.ts` 開頭的寫法取得。
 - **捲動框裡的 `.visually-hidden` 要有定位的祖先。** 它是 `position: absolute`；沒有定位祖先時會跑出 `overflow: auto` 的框，把整頁撐長（編輯器的預覽曾因此在下方多出幾千 px 空白）。捲動框加 `position: relative`。

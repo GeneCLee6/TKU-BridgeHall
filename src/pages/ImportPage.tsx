@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { AutoTextArea } from '../components/editor/fields.tsx'
 import { Button, ErrorText, Field, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
-import { categories } from '../content/index.ts'
+import { categories } from '../content/categories.ts'
 import { api, ApiError, errorText, type ImportDraftSummary } from '../lib/api.ts'
 import { DocTextError, docToText, docxToText } from '../lib/docText.ts'
 import { formatDateTime, today } from '../lib/format.ts'
@@ -12,7 +12,7 @@ import { draftBody, fromAiReply, importedItems, type ImportResult } from '../lib
 import { readReply, StreamError } from '../lib/sse.ts'
 import { useContent } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
-import type { Convention, Section } from '../types/convention.ts'
+import type { ConventionMeta, SectionOutline } from '../types/convention.ts'
 import { Frame, Gate } from './Frame.tsx'
 
 const t = strings.importer
@@ -39,14 +39,14 @@ export function ImportPage() {
 }
 
 /** The site's conventions, one per line with their sections, so the AI can match and reuse ids */
-function catalogue(conventions: Convention[]) {
-  const sections = (list: Section[], depth = 0): string[] =>
+function catalogue(conventions: ConventionMeta[]) {
+  const sections = (list: SectionOutline[], depth = 0): string[] =>
     list.flatMap((s) => [`${'  '.repeat(depth + 1)}${s.id}：${s.title}`, ...sections(s.children ?? [], depth + 1)])
   return conventions
     .map((c) =>
       [
         `${c.slug}｜${c.nameZh}｜${c.nameEn}｜分類 ${c.category}${c.aliases?.length ? `｜別名 ${c.aliases.join('、')}` : ''}｜${c.summary}`,
-        ...sections(c.sections),
+        ...sections(c.outline),
       ].join('\n'),
     )
     .join('\n')

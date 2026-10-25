@@ -3,8 +3,8 @@ import { ChevronRight, ExternalLink } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, NavLink, useParams } from 'react-router-dom'
 import styled from 'styled-components'
-import type { Category, Convention, Reference } from '../types/convention.ts'
-import { conventionPath, pendingNotes, pendingPath, sectionPath } from '../lib/sections.ts'
+import type { Category, ConventionMeta, Reference } from '../types/convention.ts'
+import { conventionPath, pendingPath, sectionPath } from '../lib/sections.ts'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 import { RichText } from './Suit.tsx'
@@ -24,7 +24,7 @@ export function Sidebar({
   actions,
 }: {
   categories: Category[]
-  conventions: Convention[]
+  conventions: ConventionMeta[]
   /** Outside websites, listed after the categories */
   references: Reference[]
   open: boolean
@@ -34,7 +34,7 @@ export function Sidebar({
 }) {
   const { slug } = useParams()
   const pending = conventions
-    .map((c) => ({ convention: c, notes: pendingNotes(c) }))
+    .map((c) => ({ convention: c, notes: c.pending }))
     .filter((p) => p.notes.length > 0)
   const pendingTotal = pending.reduce((n, p) => n + p.notes.length, 0)
   const [openGroups, setOpenGroups] = useState<string[]>(() => [
@@ -148,7 +148,7 @@ export function Sidebar({
                         </ConventionLink>
                         {isOpen && (
                           <Branch>
-                            {c.sections.map((s) => (
+                            {c.outline.map((s) => (
                               <li key={s.id}>
                                 <SectionLink to={sectionPath(c.slug, s.id)} onClick={onNavigate}>
                                   <RichText text={s.title} />

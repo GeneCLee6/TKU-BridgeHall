@@ -10,9 +10,10 @@ import {
   pendingNotes,
   pendingPath,
 } from '../lib/sections.ts'
+import { useConvention } from '../state/ContentContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
-import type { Convention } from '../types/convention.ts'
+import type { Convention, ConventionMeta } from '../types/convention.ts'
 import { CopyLinkButton, IconButton } from './CopyLinkButton.tsx'
 import { Badge } from './PendingNote.tsx'
 import { SectionAccordion } from './SectionAccordion.tsx'
@@ -22,19 +23,26 @@ import { Tag, TagList } from './Tag.tsx'
 /**
  * A Swagger-style operation block: one convention, collapsed to its name, tags and summary.
  * `editPath` adds an edit button for members who may edit; `online` notes who changed it online.
+ * The collapsed card comes from the manifest; the sections load the first time it opens. Given a
+ * whole Convention (the editor's preview) it shows that instead.
  */
 export function ConventionCard({
   convention,
   editPath,
   online,
 }: {
-  convention: Convention
+  convention: ConventionMeta | Convention
   editPath?: string
   online?: string
 }) {
   const { openAmong, setLevel, open, close } = useExpansion()
   const key = conventionKey(convention.slug)
-  const pending = pendingNotes(convention)
+  const given = 'sections' in convention ? convention : undefined
+  const pending = given ? pendingNotes(given) : (convention as ConventionMeta).pending
+  const isOpen = openAmong([key]).length > 0
+  const fetched = useConvention(convention.slug, isOpen && !given)
+  const loaded = given ?? fetched.convention
+  const { failed, retry } = fetched
 
   return (
     <Accordion.Root
@@ -89,7 +97,18 @@ export function ConventionCard({
               {strings.collapseConvention}
             </TextButton>
           </Toolbar>
-          <SectionAccordion slug={convention.slug} sections={convention.sections} />
+          {loaded ? (
+            <SectionAccordion slug={convention.slug} sections={loaded.sections} />
+          ) : failed ? (
+            <Loading role="alert">
+              {strings.online.loadFailed}
+              <TextButton type="button" onClick={retry}>
+                {strings.online.retry}
+              </TextButton>
+            </Loading>
+          ) : (
+            isOpen && <Loading role="status">{strings.loading}</Loading>
+          )}
           <Source>
             {strings.source}：{convention.source.title}
             {convention.source.note && `（${convention.source.note}）`}・{strings.updated}：
@@ -225,5 +244,14 @@ const PendingLink = styled(Badge).attrs({ as: Link })`
 const Source = styled.p`
   margin: ${({ theme }) => theme.space(4)} 0 0;
   font-size: 0.8125rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+`
+
+const Loading = styled.p`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(3)};
+  margin: 0;
   color: ${({ theme }) => theme.colors.textMuted};
 `

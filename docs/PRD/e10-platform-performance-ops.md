@@ -50,7 +50,7 @@ M0 把 22 個特約全部打包進一個 bundle、整本放在一頁（3.2 萬�
 
 ## 驗收條件
 
-- [ ] AC-10.1 — 分片：manifest ＋按需載入；首頁不下載任何特約內容；線上內容按 slug 取；效能預算達標。
+- [x] AC-10.1 — 分片：manifest ＋按需載入；首頁不下載任何特約內容；線上內容按 slug 取；效能預算達標。
 - [ ] AC-10.2 — 搜尋索引建置時產生、前端載入；結果與 M0 相同（既有搜尋測試通過）；文章與名詞可加入索引。
 - [ ] AC-10.3 — 離線：manifest、索引、看過的特約、我的制度集與制度卡離線可開；新版本提示。
 - [ ] AC-10.4 — 錯誤回報與匿名分析進管理頁；不含個資；可關閉。
@@ -61,9 +61,9 @@ M0 把 22 個特約全部打包進一個 bundle、整本放在一頁（3.2 萬�
 
 **M1 · 分片與索引**
 
-- [ ] `e10-t01` 內容 manifest 與 lazy loaders；`ContentContext` 改為按 slug 載入；`tests/content` 仍驗全部 · AC-10.1 · M
-- [ ] `e10-t02` 線上內容分片 API `GET /api/book/content/:slug`（`ETag`）與清單 API；前端合併 · AC-10.1 · M · ← e10-t01
-- [ ] `e10-t03` 效能預算檢查進 CI（bundle size、Lighthouse 特約頁）· AC-10.1 · S · ← e10-t01
+- [x] `e10-t01` 內容 manifest 與 lazy loaders；`ContentContext` 改為按 slug 載入；`tests/content` 仍驗全部 · AC-10.1 · #8
+- [x] `e10-t02` 線上內容分片 API `GET /api/book/content/:slug`（`ETag`）與清單 API `GET /api/book/manifest`；前端合併 · AC-10.1 · #8（牌桌 #60）
+- [x] `e10-t03` 效能預算檢查進 CI（bundle size、Lighthouse 特約頁）· AC-10.1 · #8
 - [ ] `e10-t04` 搜尋索引建置腳本與前端載入；線上內容增量合併；既有搜尋測試遷移 · AC-10.2 · M · ← e10-t01
 - [ ] `e10-t05` service worker 策略 v2（manifest／索引預載、按需快取、制度集與制度卡、更新提示）· AC-10.3 · M · ← e10-t04
 

@@ -7,9 +7,10 @@ import { ConventionCard } from '../components/ConventionCard.tsx'
 import { Sidebar } from '../components/Sidebar.tsx'
 import { ViewActions } from '../components/ViewActions.tsx'
 import { Button } from '../components/ui.tsx'
-import { categories, references } from '../content/index.ts'
+import { categories } from '../content/categories.ts'
+import { references } from '../content/references.ts'
 import { formatDateTime } from '../lib/format.ts'
-import { createSearch } from '../lib/search.ts'
+import type { SearchFn } from '../lib/search.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import {
   allKeys,
@@ -20,7 +21,7 @@ import {
   sectionKey,
 } from '../lib/sections.ts'
 import { useAuth } from '../state/AuthContext.tsx'
-import { useContent } from '../state/ContentContext.tsx'
+import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile, mobileQuery } from '../styles/tokens.ts'
@@ -29,10 +30,11 @@ import { AccountCorner } from './Frame.tsx'
 /**
  * The whole handbook on one page, Swagger style. The route only decides what to open and scroll
  * to: /c/:slug opens a convention, /c/:slug/:sectionId opens the path down to that section.
- * The conventions are the bundled ones with the online changes laid over them (ContentContext).
+ * The conventions are the bundled ones with the online changes laid over them (ContentContext);
+ * the page starts from the manifest and each card loads its content when it opens.
  */
 export function HandbookPage() {
-  const { conventions, bySlug: conventionBySlug, online, status, skipped } = useContent()
+  const { conventions, bySlug: conventionBySlug, loaded, loadAll, online, status, skipped } = useContent()
   const { can } = useAuth()
   const { slug, sectionId } = useParams()
   const [searchParams] = useSearchParams()
@@ -43,7 +45,28 @@ export function HandbookPage() {
   const expandAll = () => startTransition(() => open(conventions.flatMap(allKeys)))
   const collapseAll = () => startTransition(closeAll)
   const [menuOpen, setMenuOpen] = useState(false)
-  const search = useMemo(() => createSearch(conventions), [conventions])
+  // Until a convention's content is loaded its section titles stand in for it. Focusing the
+  // search box loads the rest, so full-text results follow within moments.
+  const searchable = conventions.map((c) => loaded(c.slug) ?? c)
+  const searchKey = searchable.map((c) => ('sections' in c ? 1 : 0)).join('')
+  // The search code (Fuse) is downloaded when the box is focused, with the content. The index is
+  // built on the first query after a change, not on every convention that loads.
+  const [searchLib, setSearchLib] = useState<typeof import('../lib/search.ts')>()
+  const search = useMemo((): SearchFn => {
+    if (!searchLib) return () => []
+    let built: SearchFn | undefined
+    return (query, limit) => (built ??= searchLib.createSearch(searchable))(query, limit)
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- rebuilt when the catalogue or what is loaded changes
+  }, [searchLib, conventions, searchKey])
+  const loadEverything = () => {
+    void import('../lib/search.ts').then(setSearchLib)
+    void loadAll().catch(() => {})
+  }
+  // Printing shows every convention, so everything is loaded first
+  const print = () =>
+    void loadAll()
+      .catch(() => {})
+      .then(() => window.requestAnimationFrame(() => window.print()))
   const canEdit = can('bookEdit')
   const onlineNote = (s: string) => {
     const info = online.get(s)
@@ -53,14 +76,25 @@ export function HandbookPage() {
   const isMobile = useMediaQuery(mobileQuery)
 
   const convention = slug ? conventionBySlug(slug) : undefined
+  // The linked convention's content: the scroll waits for it, as the section is not there before
+  const target = useConvention(slug)
+  const ready = Boolean(target.convention) || target.failed
   const path = convention && sectionId ? findSectionPath(convention, sectionId) : []
   const notFound = (slug && !convention) || (sectionId && path.length === 0)
 
+  // Open the path to the link at once; the scroll below waits for the content. Both depend on the
+  // manifest entry itself, which stays the same object while other conventions load.
   useEffect(() => {
-    const target = slug ? conventionBySlug(slug) : undefined
+    const target = convention
     if (!target) return
     const trail = sectionId ? findSectionPath(target, sectionId) : []
     open([conventionKey(target.slug), ...trail.map((s) => sectionKey(target.slug, s.id))])
+  }, [sectionId, open, convention])
+
+  useEffect(() => {
+    const target = convention
+    if (!target || !ready) return
+    const trail = sectionId ? findSectionPath(target, sectionId) : []
     const domId =
       sectionId && trail.length
         ? sectionDomId(target.slug, sectionId)
@@ -87,18 +121,19 @@ export function HandbookPage() {
       )
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [slug, sectionId, pendingIndex, open, conventionBySlug])
+  }, [sectionId, pendingIndex, convention, ready])
 
   return (
     <>
       <SkipLink href="#main">{strings.skipToContent}</SkipLink>
       <AppHeader
         search={search}
+        onSearchFocus={loadEverything}
         menuOpen={menuOpen}
         onToggleMenu={() => setMenuOpen((o) => !o)}
         actions={
           !isMobile && (
-            <ViewActions variant="bar" onExpandAll={expandAll} onCollapseAll={collapseAll} />
+            <ViewActions variant="bar" onExpandAll={expandAll} onCollapseAll={collapseAll} onPrint={print} />
           )
         }
         account={<AccountCorner />}

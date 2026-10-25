@@ -16,12 +16,14 @@ import { SearchBar } from './SearchBar.tsx'
  */
 export function AppHeader({
   search,
+  onSearchFocus,
   menuOpen = false,
   onToggleMenu,
   actions,
   account,
 }: {
   search?: SearchFn
+  onSearchFocus?: () => void
   menuOpen?: boolean
   onToggleMenu?: () => void
   actions?: ReactNode
@@ -50,7 +52,7 @@ export function AppHeader({
           </span>
         </BrandText>
       </Brand>
-      {search ? <SearchBar search={search} /> : <Spacer />}
+      {search ? <SearchBar search={search} onFocus={onSearchFocus} /> : <Spacer />}
       {actions}
       {account}
     </Bar>
