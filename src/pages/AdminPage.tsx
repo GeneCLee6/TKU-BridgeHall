@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import styled from 'styled-components'
+import { CategoriesPanel } from '../components/admin/CategoriesPanel.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import {
   api,
@@ -20,18 +21,24 @@ import { Frame, Gate } from './Frame.tsx'
 
 /**
  * 社團管理: registrations waiting for approval, members' BridgeHall permissions and passwords,
- * and the invite code. The accounts are TKU BridgeTable's; adding or deleting members, admins and
- * tables stay on its admin page.
+ * the invite code, and the handbook's categories. The accounts are TKU BridgeTable's; adding or
+ * deleting members, admins and tables stay on its admin page. Editors who are not admins (bookEdit)
+ * see the categories only.
  */
 export function AdminPage() {
   return (
     <Frame title={strings.admin.title}>
       <PageTitle>{strings.admin.title}</PageTitle>
-      <Gate need="admin">
-        <AdminBody />
+      <Gate need="bookEdit">
+        <AdminOrEditor />
       </Gate>
     </Frame>
   )
+}
+
+function AdminOrEditor() {
+  const { user } = useAuth()
+  return user?.admin ? <AdminBody /> : <CategoriesPanel />
 }
 
 type Pending = { id: string; action: 'reject' | 'password' } | null
@@ -254,6 +261,8 @@ function AdminBody() {
           </div>
         </SettingsForm>
       </Panel>
+
+      <CategoriesPanel />
 
       <Muted>
         {t.more}{' '}

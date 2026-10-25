@@ -9,7 +9,6 @@ import { Preview } from '../components/editor/Preview.tsx'
 import { RevisionsPanel } from '../components/editor/RevisionsPanel.tsx'
 import { SectionForm, type SectionAction } from '../components/editor/SectionForm.tsx'
 import { Button, ErrorText, Input, Muted, Notice, Row } from '../components/ui.tsx'
-import { categories } from '../content/categories.ts'
 import { api, ApiError, errorText, type BookRevision } from '../lib/api.ts'
 import { classification, conventionProblems, conventionWarnings, tidyConvention } from '../lib/content.ts'
 import {
@@ -38,7 +37,6 @@ import { usePageTitle } from '../lib/usePageTitle.ts'
 import { Frame, Gate } from './Frame.tsx'
 
 const t = strings.editor
-const categoryIds = categories.map((c) => c.id as string)
 
 /**
  * The online editor. /edit/:slug edits a convention (the online version if there is one, else the
@@ -109,7 +107,7 @@ function EditorLoader() {
     ? slug
       ? { ...classification(replaced), ...draft.item.convention, slug }
       : draft.item.convention
-    : (current ?? blankConvention(categories[0].id, today()))
+    : (current ?? blankConvention(content.categories[0].id, today()))
   if (slug && !exists && !draft) return <Page><ErrorText role="alert">{t.notFound}</ErrorText></Page>
 
   return (
@@ -147,6 +145,9 @@ function EditorBody({
   savedNotice?: number
 }) {
   const content = useContent()
+  // The same list the catalogue shows (lib/categories.ts)
+  const { categories } = content
+  const categoryIds = categories.map((c) => c.id)
   const { user } = useAuth()
   const navigate = useNavigate()
   const wide = useMediaQuery('(min-width: 1280px)')

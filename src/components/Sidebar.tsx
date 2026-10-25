@@ -44,6 +44,14 @@ export function Sidebar({
   ])
   const [openItems, setOpenItems] = useState<string[]>(() => (slug ? [slug] : []))
 
+  // Categories that arrive later (edited online) start open like the others
+  const [seenGroups, setSeenGroups] = useState(() => categories.map((c) => c.id))
+  const freshGroups = categories.map((c) => c.id).filter((id) => !seenGroups.includes(id))
+  if (freshGroups.length) {
+    setSeenGroups((s) => [...s, ...freshGroups])
+    setOpenGroups((g) => [...g, ...freshGroups])
+  }
+
   // When the URL moves to another convention, unfold it (adjusting state during render,
   // the React-recommended alternative to an effect).
   const [seenSlug, setSeenSlug] = useState(slug)

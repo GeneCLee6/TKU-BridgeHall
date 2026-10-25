@@ -74,12 +74,19 @@ export interface Section {
   children?: Section[]
 }
 
-export type CategoryId = 'notrump' | 'suit-openings' | 'competitive' | 'signals' | 'system'
+/**
+ * A category's id: lower-case letters, digits and hyphens. The bundled ones are in
+ * content/categories.ts; editors can add more online (ARCHITECTURE.md §4.5), so any string may be one.
+ */
+export type CategoryId = string
 
+/** A group in the catalogue; conventions point at it by `id`, which never changes */
 export interface Category {
   id: CategoryId
   label: string
   description: string
+  /** Place in the catalogue, from 0 */
+  order: number
 }
 
 /** An outside website worth keeping at hand, listed under 外部參考 in the catalogue */

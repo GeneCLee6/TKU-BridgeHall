@@ -72,6 +72,7 @@ export const strings = {
     mine: '我的帳號',
     admin: '社團管理',
     adminPending: (n: number) => `社團管理（${n} 筆待審核）`,
+    categories: '管理分類',
     newConvention: '新增特約',
     importFiles: '匯入檔案',
     signOut: '登出',
@@ -153,6 +154,34 @@ export const strings = {
     more: '新增或刪除社員、設定管理員、關閉牌桌，請到淡江牌桌的管理頁。',
     tableAdmin: '淡江牌桌管理頁',
     adminOnly: '只有管理員可以使用這一頁。',
+  },
+
+  // 社團管理 → 分類 (editors with bookEdit too)
+  categories: {
+    title: '分類',
+    intro:
+      '目錄與首頁依這裡的分類分組，編輯器的分類選單也是這一份。改名、排序、新增或刪除之後按「儲存分類」，大家重新整理就會看到。',
+    bundled: '目前用的是網站內建的分類；第一次儲存後改用線上這一份。',
+    updated: (name: string, time: string) => `最後由 ${name} 在 ${time} 修改`,
+    name: '名稱',
+    description: '說明',
+    conventions: '特約數',
+    order: '排序',
+    nameOf: (label: string) => `「${label || '新分類'}」的名稱`,
+    descriptionOf: (label: string) => `「${label || '新分類'}」的說明`,
+    up: (label: string) => `把「${label}」往上移`,
+    down: (label: string) => `把「${label}」往下移`,
+    remove: (label: string) => `刪除「${label}」`,
+    inUse: (n: number) => `裡面還有 ${n} 個特約，先在編輯器把它們改到別的分類才能刪除`,
+    add: '新增分類',
+    newName: '新分類的名稱',
+    newDescription: '說明（選填）',
+    save: '儲存分類',
+    undo: '放棄修改',
+    unsaved: '有尚未儲存的修改。',
+    nameRequired: '每個分類都要有名稱。',
+    tooMany: (max: number) => `分類最多 ${max} 個。`,
+    reload: '重新載入',
   },
 
   // The online editor

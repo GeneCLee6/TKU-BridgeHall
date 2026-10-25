@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { AutoTextArea } from '../components/editor/fields.tsx'
 import { Button, ErrorText, Field, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
-import { categories } from '../content/categories.ts'
 import { api, ApiError, errorText, type ImportDraftSummary } from '../lib/api.ts'
 import { DocTextError, docToText, docxToText } from '../lib/docText.ts'
 import { formatDateTime, today } from '../lib/format.ts'
@@ -17,7 +16,6 @@ import { Frame, Gate } from './Frame.tsx'
 
 const t = strings.importer
 const PDF_MAX_MB = 20
-const categoryIds = categories.map((c) => c.id as string)
 
 /** What was taken out of the chosen file */
 type Source = { name: string; kind: 'text'; text: string } | { name: string; kind: 'pdf'; file: File }
@@ -78,6 +76,8 @@ type Phase =
 
 function ImportBody() {
   const content = useContent()
+  const { categories } = content
+  const categoryIds = categories.map((c) => c.id)
   const [source, setSource] = useState<Source | null>(null)
   const [reading, setReading] = useState(false)
   const [instructions, setInstructions] = useState('')

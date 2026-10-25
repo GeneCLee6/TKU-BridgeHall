@@ -124,7 +124,7 @@ describe('what a member sees', () => {
     renderAt('/')
     await userEvent.click(await screen.findByRole('button', { name: 'amy 的帳號選單' }))
     const menu = screen.getByRole('menu')
-    expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['新增特約', '我的帳號', '登出'])
+    expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['新增特約', '管理分類', '我的帳號', '登出'])
     expect(screen.getAllByRole('link', { name: /^編輯：/ }).length).toBe(conventions.length)
   })
 
@@ -188,10 +188,120 @@ describe('the admin page', () => {
     expect(sent.some((s) => s.method === 'POST' && s.path === '/api/admin/applications/a1/approve')).toBe(true)
   })
 
-  it('stays closed to members who are not admins', async () => {
-    signedIn({ permissions: ['bookEdit'] })
+  it('stays closed to members without the editing permission', async () => {
+    signedIn({ permissions: ['bookImport'] })
     renderAt('/admin')
-    expect(await screen.findByRole('alert')).toHaveTextContent('只有管理員')
+    expect(await screen.findByRole('alert')).toHaveTextContent('還沒有這項權限')
+  })
+
+  it('shows editors who are not admins the categories only', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    routes['GET /api/book/categories'] = { body: { version: 0, categories: [] } }
+    renderAt('/admin')
+    expect(await screen.findByRole('heading', { name: '分類' }, { timeout: 5000 })).toBeInTheDocument()
+    expect(screen.queryByText('待審核的申請')).toBeNull()
+    expect(sent.some((s) => s.path.startsWith('/api/admin/'))).toBe(false)
+  })
+})
+
+describe('categories', () => {
+  const bundled = [
+    { id: 'notrump', label: '無王開叫後續', description: '1NT、2NT 開叫之後的答叫與競叫', order: 0 },
+    { id: 'suit-openings', label: '花色開叫後續', description: '花色開叫之後的答叫與再叫', order: 1 },
+    { id: 'signals', label: '防守信號', description: '防守時的出牌與墊牌信號', order: 2 },
+    { id: 'competitive', label: '競叫與防守', description: '敵方插叫或我方插叫時的約定', order: 3 },
+    { id: 'system', label: '制度總覽（舊講義）', description: '2010 年講義《我們的制度》；與特約衝突時以特約為準', order: 4 },
+  ]
+
+  it('renames, reorders and adds categories, saved as one list, and blocks removing one in use', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    routes['GET /api/book/categories'] = { body: { version: 0, categories: [] } }
+    routes['PUT /api/book/categories'] = (init) => {
+      const body = JSON.parse(String(init?.body))
+      const categories = body.categories.map((c: object, order: number) => ({ ...c, order }))
+      return { body: { version: 1, categories, updatedBy: 'amy', updatedAt: 1 } }
+    }
+    renderAt('/admin')
+    const name = await screen.findByRole('textbox', { name: '「競叫與防守」的名稱' }, { timeout: 5000 })
+    expect(screen.getByText('目前用的是網站內建的分類；第一次儲存後改用線上這一份。')).toBeInTheDocument()
+
+    // Every bundled category has conventions in it, so none can be removed
+    const remove = screen.getByRole('button', { name: /^刪除「競叫與防守」：裡面還有 \d+ 個特約/ })
+    expect(remove).toBeDisabled()
+
+    await userEvent.clear(name)
+    await userEvent.type(name, '競叫')
+    await userEvent.click(screen.getByRole('button', { name: '把「防守信號」往上移' }))
+    const add = screen.getByRole('form', { name: '新增分類' })
+    await userEvent.type(within(add).getByRole('textbox', { name: '新分類的名稱' }), '滿貫')
+    await userEvent.click(within(add).getByRole('button', { name: '新增分類' }))
+    // A new one is empty, so it can go again
+    await userEvent.click(screen.getByRole('button', { name: '刪除「滿貫」' }))
+    await userEvent.type(within(add).getByRole('textbox', { name: '新分類的名稱' }), '滿貫叫法')
+    await userEvent.click(within(add).getByRole('button', { name: '新增分類' }))
+
+    await userEvent.click(screen.getByRole('button', { name: '儲存分類' }))
+    await waitFor(() => expect(sent.some((s) => s.method === 'PUT')).toBe(true))
+    const put = sent.find((s) => s.method === 'PUT')!.body as { baseVersion: number; categories: { id: string; label: string }[] }
+    expect(put.baseVersion).toBe(0)
+    expect(put.categories.map((c) => c.label)).toEqual(['無王開叫後續', '防守信號', '花色開叫後續', '競叫', '制度總覽（舊講義）', '滿貫叫法'])
+    expect(put.categories[5].id).toMatch(/^c-[a-z0-9]+$/)
+    expect(await screen.findByText('已儲存')).toBeInTheDocument()
+    expect(screen.getByText(/最後由 amy 在/)).toBeInTheDocument()
+    // The catalogue is fetched again so it shows the new list
+    expect(sent.filter((s) => s.path === '/api/book/manifest').length).toBeGreaterThan(1)
+  })
+
+  it('says when someone else saved first, and loads their list', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    routes['GET /api/book/categories'] = { body: { version: 3, categories: bundled, updatedBy: 'ben', updatedAt: 1 } }
+    routes['PUT /api/book/categories'] = {
+      status: 409,
+      body: { error: 'ben 剛剛修改了分類，請重新載入後再改', code: 'categoryConflict', params: { name: 'ben' } },
+    }
+    renderAt('/admin')
+    const name = await screen.findByRole('textbox', { name: '「防守信號」的名稱' }, { timeout: 5000 })
+    await userEvent.type(name, '！')
+    await userEvent.click(screen.getByRole('button', { name: '儲存分類' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('ben 剛剛修改了分類')
+    expect((sent.find((s) => s.method === 'PUT')!.body as { baseVersion: number }).baseVersion).toBe(3)
+    await userEvent.click(screen.getByRole('button', { name: '重新載入' }))
+    expect(await screen.findByRole('textbox', { name: '「防守信號」的名稱' })).toHaveValue('防守信號')
+  })
+
+  it('groups the catalogue, the home page and the editor by the online list', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    const online = [
+      { ...bundled[3], label: '競叫（線上）', order: 0 },
+      { ...bundled[0], order: 1 },
+      { id: 'slam', label: '滿貫', description: '', order: 2 },
+    ]
+    routes['GET /api/book/manifest'] = { body: { version: 1, entries: [], categories: online } }
+    renderAt('/')
+    expect((await screen.findAllByRole('heading', { name: /^競叫（線上）/ })).length).toBeGreaterThan(0)
+    const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.id).filter((id) => id.startsWith('cat-'))
+    // Online order first; the bundled ones the list left out still have conventions, so they follow
+    expect(headings).toEqual(['cat-competitive', 'cat-notrump', 'cat-suit-openings', 'cat-signals', 'cat-system'])
+  })
+
+  it('offers the same list in the editor', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    routes['GET /api/book/manifest'] = {
+      body: { version: 1, entries: [], categories: [{ id: 'slam', label: '滿貫', description: '', order: 0 }, { ...bundled[0], order: 1 }] },
+    }
+    renderAt('/new')
+    // The editor is a lazy chunk; give it time on a busy machine
+    const select = await screen.findByRole('combobox', { name: '分類' }, { timeout: 5000 })
+    await waitFor(() => expect(within(select).getAllByRole('option')[0]).toHaveTextContent('滿貫'), { timeout: 5000 })
+    // The bundled ones still in use follow, so every convention can keep its category
+    expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual([
+      '滿貫',
+      '無王開叫後續',
+      '花色開叫後續',
+      '防守信號',
+      '競叫與防守',
+      '制度總覽（舊講義）',
+    ])
   })
 })
 

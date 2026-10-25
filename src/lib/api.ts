@@ -68,10 +68,34 @@ export interface BookEntry {
 /** An online entry without its content: `meta` is the manifest entry, null when hidden */
 export type BookEntrySummary = Omit<BookEntry, 'convention'> & { meta: ConventionMeta | null }
 
-/** GET /api/book/manifest: every online entry, without content */
+/**
+ * A catalogue group as edited online (TKU-BridgeTable worker/book.ts BookCategory); the same shape
+ * as the handbook's Category
+ */
+export interface BookCategory {
+  id: string
+  label: string
+  description: string
+  order: number
+}
+
+/**
+ * GET /api/book/categories. An empty list means they were never edited online, so the bundled ones
+ * apply; `version` is what a save sends back as `baseVersion`.
+ */
+export interface BookCategories {
+  version: number
+  categories: BookCategory[]
+  updatedAt?: number
+  updatedBy?: string
+}
+
+/** GET /api/book/manifest: every online entry, without content, and the online categories */
 export interface BookManifest {
   version: number
   entries: BookEntrySummary[]
+  /** Absent from a Worker (or a manifest cached) before categories were data */
+  categories?: BookCategory[]
 }
 
 export interface BookRevision {
@@ -237,6 +261,14 @@ export const api = {
       request<{ revisions: BookRevision[] }>(`/api/book/conventions/${slug}/revisions`),
     revision: (slug: string, id: string) =>
       request<{ revision: BookRevision }>(`/api/book/conventions/${slug}/revisions/${id}`),
+    categories: () => request<BookCategories>('/api/book/categories'),
+    /**
+     * Replaces the whole list (add, rename, reorder, remove); `order` follows the list. 409
+     * `categoryConflict` when someone saved since `baseVersion`, `categoryInUse` when a removed one
+     * still has a convention edited online.
+     */
+    saveCategories: (categories: Omit<BookCategory, 'order'>[], baseVersion: number) =>
+      send<BookCategories>('PUT', '/api/book/categories', { categories, baseVersion }),
     importTicket: () => post<{ ticket: string; url: string; ready: boolean }>('/api/book/import/ticket'),
     drafts: () => request<{ drafts: ImportDraftSummary[] }>('/api/book/drafts'),
     draft: (id: string) => request<{ draft: ImportDraft }>(`/api/book/drafts/${id}`),
