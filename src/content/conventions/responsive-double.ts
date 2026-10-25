@@ -20,6 +20,11 @@ export const responsiveDouble: Convention = {
   category: 'competitive',
   kind: 'convention',
   level: 'intermediate',
+  cardSlots: [
+    'wbf.doubles.takeout <- principles',
+    'wbf.doubles.special <- opener-double',
+    'ctcba-simple.comp.responsive-double <- principles',
+  ],
   tags: ['賭倍', 'T/O', '競叫', '2NT 選低花'],
   summary:
     '敵方開叫、同伴 T/O、右手敵方加叫後的 X（通常 6-11 點）：同伴的再叫、2NT 選低花，以及開叫者的回答性賭倍。',

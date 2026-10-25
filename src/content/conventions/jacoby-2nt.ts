@@ -26,6 +26,11 @@ export const jacoby2nt: Convention = {
   category: 'suit-openings',
   kind: 'convention',
   level: 'advanced',
+  cardSlots: [
+    'wbf.openings.1H.responses <- heart-responses#0',
+    'wbf.openings.1S.responses <- spade-responses#0',
+    'ctcba-simple.major.jacoby-2nt <- intro',
+  ],
   tags: ['高花開叫', '滿貫詢問', '短門', 'EKB', 'RKCB', '報控'],
   summary:
     '同伴開叫高花、我方 3 張↑支持且有成局點時的滿貫詢問：1♠ 2NT、1♥ 2♠，含開叫者報牌型、加一詢問與後續 check。',

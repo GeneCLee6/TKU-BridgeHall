@@ -27,6 +27,17 @@ export const systemStrongAndPreempts: Convention = {
   category: 'system',
   kind: 'system',
   level: 'basic',
+  cardSlots: [
+    'wbf.openings.2C.responses <- two-clubs#1',
+    'wbf.openings.2C.subsequent <- two-clubs#2',
+    'wbf.openings.2C.subsequent <- two-clubs#3',
+    'wbf.summary.forcing-pass <- two-clubs-interference#9:0',
+    'wbf.openings.3C.description <- three-level#1',
+    'wbf.openings.3D.description <- three-level#1',
+    'wbf.openings.3H.description <- three-level#1',
+    'wbf.openings.3S.description <- three-level#1',
+    'ctcba-simple.other.gambling-3nt <- gambling',
+  ],
   tags: ['舊講義', '2♣ 開叫', '弱二', '阻塞叫', '賭博性 3NT'],
   summary:
     '第六～九章：開叫 2♣（22 點↑）與遭插叫、2♥/♠ 弱二與 2NT 問短門、三線阻塞叫、賭博性 3NT。',

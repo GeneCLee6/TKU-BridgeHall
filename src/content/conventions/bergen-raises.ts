@@ -63,6 +63,10 @@ export const bergenRaises: Convention = {
   category: 'suit-openings',
   kind: 'convention',
   level: 'advanced',
+  cardSlots: [
+    'wbf.openings.1H.responses <- heart-raises#0',
+    'wbf.openings.1S.responses <- spade-raises#0',
+  ],
   tags: ['高花開叫', '跳叫答叫', '加叫', '短門', 'splinter'],
   summary:
     '開叫 1♠／1♥ 後答叫者以跳叫表示支持與牌力（依牌值分段），以及開叫者詢問短門、好壞牌的後續。',

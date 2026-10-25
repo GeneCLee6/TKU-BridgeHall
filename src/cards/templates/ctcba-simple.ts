@@ -267,6 +267,10 @@ export const ctcbaSimple: CardTemplate = {
   year: 2021,
   publisher: '中華民國橋藝協會',
   paper: 'A4-landscape',
+  language: 'zh',
+  // 58–788 pt; the labels are set in 12 pt
+  printWidth: 730,
+  fontSize: 12,
   pages: [
     {
       id: 'p1',

@@ -18,6 +18,10 @@ export const goodBad2nt: Convention = {
   category: 'competitive',
   kind: 'convention',
   level: 'advanced',
+  cardSlots: [
+    'wbf.summary.special-bids <- *',
+    'ctcba-simple.comp.more <- *',
+  ],
   tags: ['好壞2NT', '競叫', '開叫者再叫', '問擋'],
   summary:
     '開叫 1♥／1♦／1♣ 後在 2 線競叫時，開叫者三線直接叫 15-17，叫 2NT 為 11-14 或 18↑；含啟動條件與各開叫的範例。',

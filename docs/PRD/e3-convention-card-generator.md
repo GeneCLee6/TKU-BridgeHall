@@ -16,12 +16,12 @@ depends_on: [E1, E2]
 
 | 檔案 | 是什麼 | 橋譜 |
 | --- | --- | --- |
-| WBF版空白制度卡.doc、(gillsans字型).doc | **WBF 制度卡**的 Word 空白表（主力）。兩頁橫式：第 1 頁三欄（Defensive and competitive bidding；Leads and signals＋Doubles；卡頭＋System summary），第 2 頁開叫表（OPENING／TICK IF ARTIFICIAL／MIN. NO. OF CARDS／NEG.DBL THRU／DESCRIPTION／RESPONSES／SUBSEQUENT ACTION／PASSED HAND BIDDING），HIGH LEVEL BIDDING 嵌在表格右下角（5♣ 列起）。檔案沒有版本號（最後列印 2004-03-12） | **生成**：填好內容輸出 `.docx`（照官方版面）與 PDF；字型版只是選項 |
-| WBFCard-2.19.pdf | 較新版（2.19）WBF 卡的填寫範例（Bridge World Standard），後接 8 頁 Supplementary notes；卡頭是 Category／Country／Event／Players，部分標題與空白 .doc 不同 | **生成**：卡面＋補充說明頁一起輸出；卡上 `[Note n]` 對應附頁，附頁內容就是橋譜段落全文 |
+| WBF版空白制度卡.doc、(gillsans字型).doc | **WBF 制度卡**的 Word 空白表（舊版；2026-10-25 起版型改照 2.19）。兩頁橫式：第 1 頁三欄（Defensive and competitive bidding；Leads and signals＋Doubles；卡頭＋System summary），第 2 頁開叫表（OPENING／TICK IF ARTIFICIAL／MIN. NO. OF CARDS／NEG.DBL THRU／DESCRIPTION／RESPONSES／SUBSEQUENT ACTION／PASSED HAND BIDDING），HIGH LEVEL BIDDING 嵌在表格右下角（5♣ 列起）。檔案沒有版本號（最後列印 2004-03-12） | 參考：2.19 範例分不出印好的字與填的字時（開叫欄標籤等）對照；`.docx` 輸出的字型版只是選項 |
+| WBFCard-2.19.pdf | 較新版（2.19）WBF 卡的填寫範例（Bridge World Standard，WBF CCE 2005-02-02 產生），後接 8 頁 Supplementary notes；卡頭是 Category／Country／Event／Players，部分標題與空白 .doc 不同。**WBF 版型照這一版**（使用者 2026-10-25 決定；格線座標量欄寬與行數） | **生成**：填好內容輸出 PDF 與 `.docx`，卡面＋補充說明頁一起輸出；卡上 `[Note n]` 對應附頁，附頁內容就是橋譜段落全文 |
 | 2021-簡易制度卡(非橋士組用)-單面／雙面.pdf | 國橋簡易卡：橫式 A4 **勾選表**（開叫約定、競叫約定、對抗無王開叫、防禦約定；粗斜體＝預設、星號＝Alert、空格填點力與線位）。雙面版格子相同，一張 A4 並排印兩份、裁半：正面卡頭＋開叫約定，背面競叫、對抗無王、防禦約定 | **生成**：自動勾選、填空格 |
 | WBF版BSC開叫申報表.docx、WBF版BSC蓋叫申報表.docx | 棕標特約（Brown Sticker Convention）的開叫／蓋叫申報表：Names、Event、Opening bid／Overcall、Shows、Detailed description、Responses and rebids、Competitive agreements、Proposed defence | **生成**：特約標記 `brownSticker` 時，從該特約的段落填表 |
 | 2023WBFSystemsPolicy.pdf | WBF 制度政策（HUM、棕標的定義） | 參考：標記棕標時連到這份 |
-| GuidetoCompletionWBFcc_2017.pdf | WBF 卡填寫指南（描述的就是空白 .doc 這一版：CATEGORY、NCBO、NAME OF PLAYER…） | 參考：每格的說明文字來源（hover 顯示）；WBF 版型每個填寫格的 `help` 摘自這份並註明頁碼 |
+| GuidetoCompletionWBFcc_2017.pdf | WBF 卡填寫指南（描述的就是空白 .doc 這一版：CATEGORY、NCBO、NAME OF PLAYER…） | 參考：每格的說明文字來源（hover 顯示）；WBF 版型每個填寫格的 `help` 摘自這份並註明頁碼（2.19 新增、指南沒有的 Event 不填） |
 
 ## 目標
 
@@ -56,10 +56,10 @@ depends_on: [E1, E2]
     | { kind: 'text'; id: string; label: string; lines: number }                                              // 簡易卡空格、BSC 表的段落
   ```
 
-- **填入**：`fillCard(template, resolvedConventions, profile) → FilledCard`，純函式。來源有三種，寫在特約的 `cardSlots`（E1）：
-  - `{ slot: 'wbf.summary.general', text: '…' }`：固定文字（可含制度集變數如 `{{1nt.range}}`）。
-  - `{ slot: 'wbf.openings.1H.responses', from: { sectionId, blockIndex } }`：把某段的叫品表濃縮成一行（`call=meaning; …`），超過行數就寫 `[Note n]` 並把全文放補充說明頁。
-  - `{ slot: 'ctcba-simple.notrump.stayman', check: true, blank: { from: … } }`：簡易卡的勾選與空格。
+- **填入**：`fillCard(template, resolveProfile(...), edits?) → FilledCard`，純函式（`src/cards/fill.ts`）。特約的 `cardSlots`（E1，維持 `string[]`，牌桌與編輯器不用改）每條寫成 `<格子>[ = <值>][ <- <出處>]`（`src/cards/cardSlots.ts`，CONTENT_GUIDE.md §2.2）：
+  - `wbf.summary.general = …`：固定文字（幹部寫的英文）。制度集變數（如 `{{1nt.range}}`）先不做。
+  - `wbf.openings.1H.responses <- heart-raises#0`：把某段（`*` 整個特約、`段落`、`段落#區塊`、`段落#區塊:列`）濃縮（叫品表 `call=meaning; …`），放不下就寫 `[Note n]` 並把全文放補充說明頁。
+  - `ctcba-simple.nt.stayman <- responses#0:0`：簡易卡的勾選；`= ✓` 勾表格格子、`= <選項 id>` 選選項。
   - 制度集 `adopted: 'off'` ⇒ 該特約的 slot 全部不填／不勾；覆寫 ⇒ 用覆寫後的列。填入結果每一格帶 `origin`（club／team／partnership），預覽時覆寫格有淡色底。
 - **人工補格**：每格可編輯、標記、重設；存 `profile.cardEdits[slotId]`。
 - **輸出**：
@@ -85,8 +85,9 @@ depends_on: [E1, E2]
 ## 驗收條件
 
 - [ ] AC-3.1 — 版型即資料：WBF、簡易單面、簡易雙面、BSC 開叫、BSC 蓋叫五個版型檔；新增版型只加檔案；每格有 `id`、種類、說明。
-      （D1b：WBF 與簡易卡兩版已對照原始檔，WBF 每個填寫格有 Guide 2017 的說明；簡易卡官方沒有說明文字，所以不填。BSC 兩版待 `e3-t12`，到時才勾。）
+      （D1b：WBF 與簡易卡兩版已對照原始檔，WBF 每個填寫格有 Guide 2017 的說明；簡易卡官方沒有說明文字，所以不填。BSC 兩版待 `e3-t12`，到時才勾。D2：WBF 版型改照 2.19。）
 - [ ] AC-3.2 — 填入：`fillCard` 純函式有測試；內建特約透過 `cardSlots` 寫滿 WBF 卡的制度摘要、特殊叫品、開叫表、防守與競叫、首攻與信號、賭倍；長內容自動轉 `[Note n]` 與附頁；不採用不填、覆寫填覆寫值；社團預設制度集的結果由幹部確認。
+      （D2：`fillCard` 與測試、內建特約的 `cardSlots`、`[Note n]` 附頁、不採用不填、覆寫填覆寫值都已完成；對應待幹部核對，有疑義的格子沒填（CONTENT_GUIDE.md §2.2），核對完才勾。）
 - [ ] AC-3.3 — 人工補格：每格可編輯、標記、重設；存回制度集。
 - [ ] AC-3.4 — PDF：五種版型 A4 列印在三個瀏覽器不跑版，與官方檔的格線、欄寬、字級一致；黑白。
 - [ ] AC-3.5 — `.docx`：WBF 卡（含 Gill Sans 版）、BSC 表可下載 Word 檔，Word 與 LibreOffice 開啟版面一致。
@@ -100,8 +101,8 @@ depends_on: [E1, E2]
 
 - [x] `e3-t01` `CardTemplate` 型別與 WBF 版型檔（第 1 頁三欄、第 2 頁開叫表與高階叫牌；逐格對照 `docs/design/wbf-card-reference-p1/p2.png` 與原始 .doc 的欄寬）· AC-3.1 · #13；D1b 依空白 .doc 定稿欄寬、行數、標題，並加 Guide 2017 說明
 - [x] `e3-t02` 簡易卡版型檔（單面、雙面；對照 `ctcba-simple-card-reference.png`）· AC-3.1 · #13；D1b 依兩份 PDF 定稿欄寬與雙面版的正反面
-- [ ] `e3-t03` `fill.ts`：三種來源、濃縮規則、`[Note n]` 與附頁、`origin`；`tests/cards/fill.test.ts` · AC-3.2 · M · ← e3-t01, e1-t08
-- [ ] `e3-t04` 內建特約補 `cardSlots`（WBF 與簡易卡兩套）：1NT／2NT 答叫、Lebensohl、J2N、Bergen、NMF、2♦、弱二、各種賭倍、對抗不尋常 2NT、好壞 2NT、防守信號、制度總覽的開叫表；幹部對照手寫卡 · AC-3.2 · M · ← e3-t03
+- [x] `e3-t03` `fill.ts`：三種來源、濃縮規則、`[Note n]` 與附頁、`origin`；`tests/cards/fill.test.ts` · AC-3.2 · M · ← e3-t01, e1-t08 · #24（D2）
+- [ ] `e3-t04` 內建特約補 `cardSlots`（WBF 與簡易卡兩套）：1NT／2NT 答叫、Lebensohl、J2N、Bergen、NMF、2♦、弱二、各種賭倍、對抗不尋常 2NT、好壞 2NT、防守信號、制度總覽的開叫表；幹部對照手寫卡 · AC-3.2 · M · ← e3-t03 · #24（D2）已填對應（弱二與一線開叫點力有疑義未填），待幹部核對後勾
 - [ ] `e3-t05` `/cards/:profileId/:templateId` 預覽頁：版型切換、格子渲染（含覆寫底色）、hover 說明、來源連結 · AC-3.6 · M · ← e3-t03
 - [ ] `e3-t06` 人工補格（inline 編輯、標記、重設）；存 `profile.cardEdits` · AC-3.3 · S · ← e3-t05
 - [ ] `e3-t07` 列印樣式：WBF 橫式兩頁＋附頁、簡易卡橫式、黑白；三瀏覽器檢查；「下載 PDF」走列印 · AC-3.4 · M · ← e3-t05
@@ -117,7 +118,7 @@ depends_on: [E1, E2]
 
 ## 風險與對策
 
-- **官方表格改版**：版型是資料檔，改版只改檔案；版型檔記年份（WBF 空白 .doc 2004、簡易卡 2021）。
+- **官方表格改版**：版型是資料檔，改版只改檔案；版型檔記版本與年份（WBF 2.19、2005；簡易卡 2021）。
 - **WBF 的格子一行寫不下**：濃縮規則（`call=meaning;` 分號相連、常用縮寫表 NF／F1／GF／INV／PRE）＋ 超過就 `[Note n]` 進附頁；幹部可手動改。
 - **`.docx` 版面跑掉**：欄寬固定 twips、字級固定，對照原始 .doc 的表格結構重建；不直接改原始 .doc 二進位。
 - **英文**：WBF 卡格子用英文（裁判與對手看），來源段落是中文；`cardSlots` 的固定文字由幹部寫英文，叫品表濃縮時中文意義保留並加常用英文縮寫。
@@ -131,5 +132,5 @@ depends_on: [E1, E2]
       **A:** WBF 版空白制度卡（2026-10-24）；簡易卡與棕標申報表也要能生成。
 - [ ] **Q:** WBF 卡英文格子的濃縮文字由誰定稿（幹部寫固定英文，還是先機器濃縮再改）？
       **A:** _(unanswered)_
-- [ ] **Q:** WBF 卡要照哪一版？國橋的空白 .doc（無版本號，卡頭 CATEGORY／NCBO／PLAYERS）與同頁的 WBFCard-2.19.pdf（卡頭 Category／Country／Event／Players）不同；版型目前照空白 .doc（`wbf.ts` 的 `pending`）。
-      **A:** _(unanswered)_
+- [x] **Q:** WBF 卡要照哪一版？國橋的空白 .doc（無版本號，卡頭 CATEGORY／NCBO／PLAYERS）與同頁的 WBFCard-2.19.pdf（卡頭 Category／Country／Event／Players）不同。
+      **A:** 照 2.19（使用者 2026-10-25 決定）。D2 已改版型；2.19 只有填好的範例，開叫欄標籤、被截斷的勾選欄標題、「1-Suit:」「2-Suit:」待拿到空白 2.19 確認（`wbf.ts` 的 `pending`）。

@@ -21,6 +21,10 @@ export const systemCompetition: Convention = {
   category: 'system',
   kind: 'system',
   level: 'intermediate',
+  cardSlots: [
+    'wbf.defence.overcalls <- overcalls',
+    'wbf.defence.overcalls <- advancing',
+  ],
   tags: ['舊講義', '競叫', '蓋叫', '平衡叫', '搶先叫', '技光'],
   summary:
     '第十一章：蓋叫的目的、原則與答叫、埋伏、平衡叫、第三家輕開叫、搶先叫與答叫，以及「技光」開叫與對抗方法。',

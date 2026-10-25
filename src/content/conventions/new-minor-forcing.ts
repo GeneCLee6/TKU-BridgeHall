@@ -19,6 +19,13 @@ export const newMinorForcing: Convention = {
   category: 'suit-openings',
   kind: 'convention',
   level: 'intermediate',
+  cardSlots: [
+    'wbf.openings.1C.subsequent <- principles',
+    'wbf.openings.1D.subsequent <- principles',
+    'wbf.openings.1C.passed-hand <- passed-hand',
+    'wbf.openings.1D.passed-hand <- passed-hand-fourth-suit',
+    'ctcba-simple.minor.nmf <- principles',
+  ],
   tags: ['NMF', '1NT 再叫', '迫叫', 'pass-hand'],
   summary:
     '開叫者再叫 1NT 或 2 線低花後，答叫者叫最低的新低花為邀請以上的迫叫；含 pass-hand 的 NMF 與第四門新花。',

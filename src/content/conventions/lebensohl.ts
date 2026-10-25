@@ -17,6 +17,11 @@ export const lebensohl: Convention = {
   category: 'notrump',
   kind: 'convention',
   level: 'intermediate',
+  cardSlots: [
+    'wbf.summary.special-bids <- *',
+    'wbf.defence.vs-preempts <- other-uses#0:0',
+    'ctcba-simple.comp.more <- *',
+  ],
   tags: ['1NT', '插叫', '2NT 迫叫 3♣', 'stayman', '擋張'],
   summary: '同伴開叫 1NT 遭敵方插叫時的答叫原則：二線不迫叫、三線 GF、2NT 迫叫 3♣ 後續。',
   source: {

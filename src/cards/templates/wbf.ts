@@ -1,51 +1,69 @@
 import type { CardHelp, CardTemplate } from '../types.ts'
 
-// WBF convention card, blank Word form as distributed by the CTCBA (WBF版空白制度卡.doc; the
-// Gill Sans file has the same tables, only the font and the suit glyphs differ). Labels are
-// copied from the .doc as printed, spelling included (PREEMTS, DEFENSE, Response); widths are
-// the .doc's twips; every table row of the .doc is one printed line.
+// WBF Convention Card 2.19 (WBFCard-2.19.pdf on the CTCBA download page; the user chose this
+// edition on 2026-10-25 over the undated blank Word form, WBF版空白制度卡.doc, last printed 2004).
+// The PDF is the WBF Convention Card Editor's card filled in with Bridge World Standard, then eight
+// pages of supplementary notes. Labels are copied from its text layer as printed, spelling and
+// straight quotes included (DEFENCE, TAKE OUT, Partners Lead); widths and line counts are its
+// grid lines, in points.
 //
-// The .doc has no version number (last printed 2004). WBFCard-2.19.pdf on the same download
-// page is a filled sample of a later edition whose header reads Category/Country/Event/Players
-// and whose titles differ slightly; this template follows the blank form, which is what the
-// help texts (Guide to Completion of the WBF System Card, 2017) describe.
+// The sample cannot tell a printed label from a filled-in word when both sit in the same cell, so:
+// - "Reopen:" (last line of JUMP OVERCALLS) is kept as a label, as on the .doc and in the Guide
+//   ("on the last line of this section"); "1-Suit:" and "2-Suit:" above it are taken as the
+//   sample's own text.
+// - "1NT Openings:" and "2 OVER 1 Responses" under GENERAL APPROACH AND STYLE are labels: the
+//   Guide has them as sub-items there, and the sample's text after the second one clips it.
+// - The opening column on page 2 is filled in by the sample (1C twice, no 3♦–3♠, "5D and 5C"), so
+//   its labels are not printed in the PDF. The 24 rows are kept as the .doc's 24 openings, 1♣ to
+//   5♠, one line each.
+// - The tick columns' headers are clipped in the PDF; their text is the text layer's (Artific,
+//   Min., Neg Dbl).
 //
-// Page 1 is one table of 43 rows: three columns of 5068, 5629 and 4819 twips with blank gutters
-// of 203 and 184 between them. Page 2 is one table of 8 columns (16126 twips).
+// Help texts are from the Guide to Completion of the WBF System Card (2017), which describes the
+// earlier form; the cells 2.19 has and the Guide does not (Event) have none.
+//
+// Page 1 (A4 landscape, x 18.4–823.6, rows 12.16 pt) is three columns of 268.35, 268.55 and 268.3
+// pt with no gutter. The defence column has 45 rows, the other two 44: the strip under them is
+// unruled. Page 2 (x 18.4–823.9, rows 15.1 pt) is the opening table of 8 columns, then HIGH LEVEL
+// BIDDING across the full width (in the .doc it was inset in the table's corner).
 
 const guide = (page: number | string, text: string): CardHelp => ({
   text,
   source: `Guide to Completion of the WBF System Card (2017), p. ${page}`,
 })
 
-const P1 = 15903 // 5068 + 203 + 5629 + 184 + 4819
-const MID = 5629 // grid columns 744 + 567 + 992 + 1135 + 566 + 1625
-const P2 = 16126 // 959 + 725 + 842 + 843 + 2551 + 3969 + 3544 + 2693
-const pct = (twips: number, of: number) => (twips / of) * 100
+const P1 = 805.2 // 268.35 + 268.55 + 268.3
+const MID = 268.55 // leads: 32.55 + 117.9 + 118.1; signals: 40.55 + 75.1 + 75.1 + 77.8
+const P2 = 805.5 // 40.5 + 16.3 + 16.3 + 24.4 + 104.8 + 241.7 + 217.6 + 143.9
+const pct = (points: number, of: number) => (points / of) * 100
 
 export const wbf: CardTemplate = {
   id: 'wbf',
-  name: 'W B F CONVENTION CARD',
+  name: 'WBF Convention Card',
   nameZh: 'WBF 制度卡',
-  year: 2004,
+  version: '2.19',
+  // The PDF was made by the WBF Convention Card Editor ("WBF CCE") on 2005-02-02
+  year: 2005,
   publisher: 'World Bridge Federation',
   paper: 'A4-landscape',
+  language: 'en',
+  printWidth: 805.2,
+  fontSize: 7,
   pending:
-    '版面已依國橋的空白 .doc 定稿；待確認的是版本：空白 .doc 沒有版本號（year 取檔案的最後列印日 2004-03-12），同頁的 WBFCard-2.19.pdf 是較新版的填寫範例，卡頭是 Category／Country／Event／Players、部分標題不同。比賽要交哪一版待幹部確認',
+    '版本照 2.19（使用者 2026-10-25 決定）。2.19 只有填好的範例 PDF，沒有空白表，以下幾處範例分不出是印好的字還是填的字，待拿到空白 2.19 確認：第 2 頁開叫欄的 24 列標籤（暫照空白 .doc 的 1♣～5♠）、勾選欄標題被截斷（Artific／Min.／Neg Dbl）、JUMP OVERCALLS 的「1-Suit:」「2-Suit:」（暫當範例自填）',
   pages: [
     {
       id: 'p1',
-      gaps: [pct(203, P1), pct(184, P1)],
       columns: [
         {
           id: 'defence',
-          width: pct(5068, P1),
+          width: pct(268.35, P1),
           blocks: [
             { kind: 'heading', id: 'defence.title', title: 'DEFENSIVE AND COMPETITIVE BIDDING', shaded: true },
             {
               kind: 'cells',
               id: 'defence.overcalls',
-              title: 'OVERCALLS (Style: Responses: 1 / 2  Level; Reopening)',
+              title: 'OVERCALLS (Style; Responses; 1/2 Level; Reopening)',
               lines: 6,
               help: guide(
                 11,
@@ -55,7 +73,7 @@ export const wbf: CardTemplate = {
             {
               kind: 'cells',
               id: 'defence.1nt-overcall',
-              title: '1NT OVERCALL (2nd/4th Live; Responses; Reopening)',
+              title: '1NT OVERCALL (2ND/4TH Live; Responses; Reopening)',
               lines: 5,
               help: guide(
                 11,
@@ -85,7 +103,7 @@ export const wbf: CardTemplate = {
             {
               kind: 'cells',
               id: 'defence.cue-bids',
-              title: 'DIRECT & JUMP CUE BIDS (Style; Response; Reopen)',
+              title: 'DIRECT and JUMP CUE BIDS (Style; Responses; Reopen)',
               lines: 4,
               help: guide(
                 12,
@@ -95,7 +113,7 @@ export const wbf: CardTemplate = {
             {
               kind: 'cells',
               id: 'defence.vs-nt',
-              title: 'VS. NT (vs. Strong/Weak; Reopening;PH)',
+              title: 'VS. NT (vs. Strong / Weak; Reopening; PH)',
               lines: 6,
               help: guide(
                 12,
@@ -105,22 +123,22 @@ export const wbf: CardTemplate = {
             {
               kind: 'cells',
               id: 'defence.vs-preempts',
-              title: 'VS.PREEMTS (Doubles; Cue-bids; Jumps; NT Bids)',
+              title: 'VS. PREEMPTS ( Doubles; Cue-bids; Jumps; NT bids)',
               lines: 3,
               help: guide(12, 'Describe strength, shape, advances.'),
             },
             {
               kind: 'cells',
               id: 'defence.vs-strong',
-              title: 'VS. ARTIFICIAL STRONG OPENINGS- i.e. 1♣ or 2♣',
-              lines: 3,
+              title: 'VS. ARTIFICIAL STRONG OPENINGS',
+              lines: 4,
               help: guide(12, 'Style. Any ART bids and continuations. Advances over 2-suited or ambiguous overcalls?'),
             },
             {
               kind: 'cells',
               id: 'defence.vs-takeout-double',
-              title: 'OVER OPPONENTS’ TAKEOUT DOUBLE',
-              lines: 3,
+              title: "OVER OPPONENTS' TAKE OUT DOUBLE",
+              lines: 4,
               help: guide(
                 12,
                 "What is forcing or not? Advancer's new suit, jumps, cues, 1/2NT, RD (strength, forcing how far).",
@@ -137,10 +155,10 @@ export const wbf: CardTemplate = {
               kind: 'table',
               id: 'leads.style',
               title: 'OPENING LEADS STYLE',
-              rowHeader: { label: '', width: pct(1311, MID) },
+              rowHeader: { label: '', width: pct(32.55, MID) },
               columns: [
-                { id: 'lead', label: 'Lead', width: pct(2127, MID) },
-                { id: 'partner', label: 'In Partner’s Suit', width: pct(2191, MID) },
+                { id: 'lead', label: 'Lead', width: pct(117.9, MID) },
+                { id: 'partner', label: "In Partner's Suit", width: pct(118.1, MID) },
               ],
               rows: [
                 { id: 'suit', label: 'Suit' },
@@ -166,10 +184,10 @@ export const wbf: CardTemplate = {
               kind: 'table',
               id: 'leads.leads',
               title: 'LEADS',
-              rowHeader: { label: 'Lead', width: pct(1311, MID) },
+              rowHeader: { label: 'Lead', width: pct(32.55, MID) },
               columns: [
-                { id: 'suit', label: 'Vs. Suit', width: pct(2127, MID) },
-                { id: 'nt', label: 'Vs. NT', width: pct(2191, MID) },
+                { id: 'suit', label: 'Vs. Suit', width: pct(117.9, MID) },
+                { id: 'nt', label: 'Vs. NT', width: pct(118.1, MID) },
               ],
               rows: [
                 { id: 'ace', label: 'Ace' },
@@ -178,8 +196,8 @@ export const wbf: CardTemplate = {
                 { id: 'jack', label: 'Jack' },
                 { id: '10', label: '10' },
                 { id: '9', label: '9' },
-                { id: 'hi-x', label: 'Hi-X' },
-                { id: 'lo-x', label: 'Lo-X' },
+                { id: 'hi-x', label: 'Hi-x' },
+                { id: 'lo-x', label: 'Lo-x' },
               ],
               help: guide(
                 '8–9',
@@ -190,20 +208,20 @@ export const wbf: CardTemplate = {
               kind: 'table',
               id: 'leads.signals',
               title: 'SIGNALS IN ORDER OF PRIORITY',
-              rowHeader: { label: '', width: pct(744, MID) },
+              rowHeader: { label: '', width: pct(40.55, MID) },
               columns: [
-                { id: 'partner', label: 'Partner’s Lead', width: pct(1559, MID) },
-                { id: 'declarer', label: 'Declarer’s Lead', width: pct(1701, MID) },
-                { id: 'discard', label: 'Discarding', width: pct(1625, MID) },
+                { id: 'partner', label: 'Partners Lead', width: pct(75.1, MID) },
+                { id: 'declarer', label: "Declarer's Lead", width: pct(75.1, MID) },
+                { id: 'discard', label: 'Discarding', width: pct(77.8, MID) },
               ],
-              // The .doc prints the numbers right-aligned and the group label on the middle line
+              // Printed "Suit:1st", "2nd", "3rd", then "NT:  1st", "2nd", "3rd"
               rows: [
-                { id: 'suit-1', label: '1', group: 'Suit' },
-                { id: 'suit-2', label: '2', group: 'Suit' },
-                { id: 'suit-3', label: '3', group: 'Suit' },
-                { id: 'nt-1', label: '1', group: 'NT' },
-                { id: 'nt-2', label: '2', group: 'NT' },
-                { id: 'nt-3', label: '3', group: 'NT' },
+                { id: 'suit-1', label: '1st', group: 'Suit:' },
+                { id: 'suit-2', label: '2nd', group: 'Suit:' },
+                { id: 'suit-3', label: '3rd', group: 'Suit:' },
+                { id: 'nt-1', label: '1st', group: 'NT:' },
+                { id: 'nt-2', label: '2nd', group: 'NT:' },
+                { id: 'nt-3', label: '3rd', group: 'NT:' },
               ],
               help: guide(
                 9,
@@ -220,7 +238,7 @@ export const wbf: CardTemplate = {
                 'Describe here if and how you may signal interest in other suits, how you liked the lead, if you want to ruff, or show the parity of your hand (perhaps a high trump to say that you hold one odd and three even suits). As elsewhere, avoid using "names" or expressions like "SMITH", "standard" or "reversed". If you do, clarify your interpretation.',
               ),
             },
-            { kind: 'heading', id: 'doubles.title', title: 'DOUBLES', shaded: true, lines: 2 },
+            { kind: 'heading', id: 'doubles.title', title: 'DOUBLES', shaded: true },
             {
               kind: 'cells',
               id: 'doubles.takeout',
@@ -234,8 +252,8 @@ export const wbf: CardTemplate = {
             {
               kind: 'cells',
               id: 'doubles.special',
-              title: 'SPECIAL, ARTIFICIAL & COMPETITIVE DBLS/RDLS',
-              lines: 6,
+              title: 'SPECIAL, ARTIFICIAL AND COMPETITIVE DOUBLES/REDOUBLES',
+              lines: 8,
               help: guide(
                 10,
                 'NEGATIVE DBLs have a column on the BACK OF THE CARD to indicate how high you play NEGATIVE DBLs, but no space for further explanations. Mention here or in a SUPP note what is expected at different levels in the form of suit lengths and hp. Doubles for leads or non-leads in own suit, partner\'s suit, dummy\'s first or later suits, unbid suits. Describe your agreements if any.',
@@ -245,14 +263,15 @@ export const wbf: CardTemplate = {
         },
         {
           id: 'summary',
-          width: pct(4819, P1),
+          width: pct(268.3, P1),
           blocks: [
-            // Title row, then a blank row inside the same box
-            { kind: 'banner', id: 'header.title', title: 'W B F CONVENTION CARD', lines: 2, shaded: true },
+            // Four rows without inner rules, the title and the WBF logo in the middle
+            { kind: 'banner', id: 'header.title', title: 'WBF Convention Card 2.19', lines: 4, shaded: true },
+            // Category: to Players: have the label in a cell of their own (555.3–598.5 pt)
             {
               kind: 'text',
               id: 'header.category',
-              label: 'CATEGORY:',
+              label: 'Category:',
               lines: 1,
               help: guide(
                 5,
@@ -261,37 +280,59 @@ export const wbf: CardTemplate = {
             },
             {
               kind: 'text',
-              id: 'header.ncbo',
-              label: 'NCBO:',
+              id: 'header.country',
+              label: 'Country:',
               lines: 1,
+              // The Guide's NCBO line, which 2.19 calls Country
               help: guide(
                 5,
                 'Enter the name of your National Contract Bridge Organisation (which is also the name of your country, e.g. Brazil)',
               ),
             },
-            // PLAYERS: and the three blank rows under it, up to SYSTEM SUMMARY
+            // New in 2.19; the Guide has no text for it
+            { kind: 'text', id: 'header.event', label: 'Event:', lines: 1 },
             {
               kind: 'text',
               id: 'header.players',
-              label: 'PLAYERS:',
-              lines: 4,
+              label: 'Players:',
+              lines: 1,
               help: guide(5, "Enter your own name and your partner's name. Underline the surname (family name) in each case."),
             },
-            { kind: 'heading', id: 'summary.title', title: 'SYSTEM SUMMARY', shaded: true, lines: 2 },
+            { kind: 'heading', id: 'summary.title', title: 'SYSTEM SUMMARY', shaded: true },
             {
               kind: 'cells',
               id: 'summary.general',
               title: 'GENERAL APPROACH AND STYLE',
-              lines: 8,
+              lines: 6,
               help: guide(
                 5,
-                'Be informative but concise; Note your tendencies to open, respond and compete on light or substandard hands. Four- vs five-card majors. Describe your pre-empting style, perhaps a general word about your two-bids. If you play a Strong Club system, explain your approach. Just provide an over-view. 1NT Opening: the true range, please; note positional and vulnerability variations if they exist. 2 over 1 response: "FG/1M," or "FG/1M except direct rebid," or "promises rebid," are the sorts of things you should aim for here.',
+                'Be informative but concise; Note your tendencies to open, respond and compete on light or substandard hands. Four- vs five-card majors. Describe your pre-empting style, perhaps a general word about your two-bids. If you play a Strong Club system, explain your approach. Just provide an over-view.',
+              ),
+            },
+            {
+              kind: 'text',
+              id: 'summary.1nt',
+              label: '1NT Openings:',
+              lines: 1,
+              help: guide(
+                5,
+                'The true range, please (if you cheat by a point regularly, have your range reflect that); note positional and vulnerability variations if they exist.',
+              ),
+            },
+            {
+              kind: 'text',
+              id: 'summary.2-over-1',
+              label: '2 OVER 1 Responses',
+              lines: 1,
+              help: guide(
+                5,
+                '"FG/1M," or "FG/1M except direct rebid," or "promises rebid," and "1-2 F2NT" are the sorts of things you should aim for here.',
               ),
             },
             {
               kind: 'cells',
               id: 'summary.special-bids',
-              title: 'SPECIAL BIDS THAT MAY REQUIRE DEFENSE',
+              title: 'SPECIAL BIDS THAT MAY REQUIRE DEFENCE',
               lines: 15,
               help: guide(
                 6,
@@ -311,8 +352,8 @@ export const wbf: CardTemplate = {
             {
               kind: 'cells',
               id: 'summary.notes',
-              title: 'IMPORTANT NOTES',
-              lines: 2,
+              title: "IMPORTANT NOTES THAT DON'T FIT ELSEWHERE",
+              lines: 3,
               help: guide(
                 6,
                 'This section is for alert-worthy parts of your system that you can\'t accommodate elsewhere. If you have partnership rules for resolving ambiguity in undiscussed situations, this is the place to mention them, "In unclear situations, we do not pass."',
@@ -321,8 +362,8 @@ export const wbf: CardTemplate = {
             {
               kind: 'text',
               id: 'summary.psychics',
-              label: 'PSYCHICS:',
-              lines: 1,
+              label: 'Psychics:',
+              lines: 2,
               help: guide(
                 7,
                 'Psychic bids are permitted by the Laws of Contract Bridge, provided they are made randomly and any partnership understandings are revealed. Even where a "rarely" is true, more detail is expected. When you do psyche, what sort of hand would you have? Long suit? Short suit? Major? No Trump? Maximum strength? Defensive tricks possible?',
@@ -339,14 +380,13 @@ export const wbf: CardTemplate = {
           id: 'openings',
           width: 100,
           blocks: [
-            // Two header rows: OPENING and the three tick columns span both (printed sideways);
-            // DESCRIPTION to PASSED HAND BIDDING sit under an empty shaded row
             {
               kind: 'table',
               id: 'openings',
+              title: 'OPENING BID DESCRIPTIONS',
               rowHeader: {
-                label: 'OPENING',
-                width: pct(959, P2),
+                label: 'Opening',
+                width: pct(40.5, P2),
                 help: guide(
                   13,
                   '"All" openings are listed in this column. You may save space by combining, say all 5-openings if structure and continuations are the same.',
@@ -355,14 +395,14 @@ export const wbf: CardTemplate = {
               columns: [
                 {
                   id: 'artificial',
-                  label: 'TICK IF ARTIFICIAL',
-                  width: pct(725, P2),
+                  label: 'Artific',
+                  width: pct(16.3, P2),
                   help: guide(13, 'Tick to clarify that this opening does not show the suit, but is artificial.'),
                 },
                 {
                   id: 'min',
-                  label: 'MIN. NO. OF CARDS',
-                  width: pct(842, P2),
+                  label: 'Min.',
+                  width: pct(16.3, P2),
                   help: guide(
                     13,
                     'In the "Description" section you should add your priority order for openings with 3-3 in minors, or with 4-4 in any two.',
@@ -370,8 +410,8 @@ export const wbf: CardTemplate = {
                 },
                 {
                   id: 'neg-dbl',
-                  label: 'NEG.DBL THRU',
-                  width: pct(843, P2),
+                  label: 'Neg Dbl',
+                  width: pct(24.4, P2),
                   help: guide(
                     13,
                     'Here is how high you use negative doubles. Clarify further what to expect from the doubler at different levels on the FRONT OF CARD, middle section, under DOUBLES. If needed refer to SUPPs',
@@ -379,8 +419,8 @@ export const wbf: CardTemplate = {
                 },
                 {
                   id: 'description',
-                  label: 'DESCRIPTION',
-                  width: pct(2551, P2),
+                  label: 'Description',
+                  width: pct(104.8, P2),
                   help: guide(
                     13,
                     'Your opponents want to know as much as possible about the opening bid itself (strength, unbalanced No Trump openings, canapé patterns etc). Strength range please. Do not say weak, pre, or L/T opening!! Your rules for opening with different four-fours or four-five in the minors. If you preempt, what is your style with regard to suit quality, outside strength, length in Major side suit?',
@@ -388,8 +428,8 @@ export const wbf: CardTemplate = {
                 },
                 {
                   id: 'responses',
-                  label: 'RESPONSES',
-                  width: pct(3969, P2),
+                  label: 'Responses',
+                  width: pct(241.7, P2),
                   help: guide(
                     13,
                     'Do you bid your suits up the line as responder? Does strength matter? How light can you be to respond to 1m? Or to 1M? Specify all conventional or ART responses and rebids. If you open or respond with an obstructive or MULTI-bid, it is essential that you describe all early auctions.',
@@ -397,8 +437,8 @@ export const wbf: CardTemplate = {
                 },
                 {
                   id: 'subsequent',
-                  label: 'SUBSEQUENT ACTION',
-                  width: pct(3544, P2),
+                  label: 'Subsequent Auction',
+                  width: pct(217.6, P2),
                   help: guide(
                     13,
                     'Essentially, you should take the bidding through 2NT and through the first two rounds of bidding at any level wherever there are related special understandings. For CONSTRUCTIVE treatments, try to be as concise as possible; if you are embroiled in an artificial method, just summarise on the card and supply details in a SUPP SHEET.',
@@ -406,35 +446,31 @@ export const wbf: CardTemplate = {
                 },
                 {
                   id: 'passed-hand',
-                  label: 'PASSED HAND BIDDING',
-                  width: pct(2693, P2),
+                  label: 'Passed Hand Bidding',
+                  width: pct(143.9, P2),
                   help: guide(
                     14,
                     'If you treat a new suit response by a passed hand as forcing, mention it. Specify any changes in your agreements about a passed-hand. Include details on the following, if applicable: 2/1 by PH NF? "Fourth Suit" by PH; Art relays not on by PH; Jump shifts and raises by PH.',
                   ),
                 },
               ],
-              // A label row starts each opening; the unlabelled rows under it belong to it (in
-              // the label column some boxes hold several openings, e.g. 1♥ with 1♠ and 4♦ to 4NT;
-              // the labels decide). The .doc
-              // types 1NT as "INT". The three thin filler rows under 5♠ (95, 95 and 244 twips high)
-              // are below one printed line and are left out.
+              // 24 rows of one line (49.0–411.9 pt); labels as on the .doc, see the top of the file
               rows: [
-                { id: '1C', label: '1♣', lines: 2 },
-                { id: '1D', label: '1♦', lines: 2 },
-                { id: '1H', label: '1♥', lines: 2 },
+                { id: '1C', label: '1♣' },
+                { id: '1D', label: '1♦' },
+                { id: '1H', label: '1♥' },
                 { id: '1S', label: '1♠' },
-                { id: '1NT', label: '1NT', lines: 2 },
-                { id: '2C', label: '2♣', lines: 2 },
-                { id: '2D', label: '2♦', lines: 2 },
-                { id: '2H', label: '2♥', lines: 2 },
-                { id: '2S', label: '2♠', lines: 2 },
-                { id: '2NT', label: '2NT', lines: 2 },
+                { id: '1NT', label: '1NT' },
+                { id: '2C', label: '2♣' },
+                { id: '2D', label: '2♦' },
+                { id: '2H', label: '2♥' },
+                { id: '2S', label: '2♠' },
+                { id: '2NT', label: '2NT' },
                 { id: '3C', label: '3♣' },
                 { id: '3D', label: '3♦' },
                 { id: '3H', label: '3♥' },
-                { id: '3S', label: '3♠', lines: 2 },
-                { id: '3NT', label: '3NT', lines: 2 },
+                { id: '3S', label: '3♠' },
+                { id: '3NT', label: '3NT' },
                 { id: '4C', label: '4♣' },
                 { id: '4D', label: '4♦' },
                 { id: '4H', label: '4♥' },
@@ -443,25 +479,21 @@ export const wbf: CardTemplate = {
                 { id: '5C', label: '5♣' },
                 { id: '5D', label: '5♦' },
                 { id: '5H', label: '5♥' },
-                { id: '5S', label: '5♠', lines: 2 },
+                { id: '5S', label: '5♠' },
               ],
-              inset: {
-                fromRow: '5C',
-                columns: ['subsequent', 'passed-hand'],
-                block: {
-                  kind: 'cells',
-                  id: 'high-level',
-                  title: 'HIGH LEVEL BIDDING',
-                  lines: 4,
-                  help: guide(
-                    14,
-                    'Simply listing Cue-bids is inadequate. Blackwood variations must be explained; you are ALWAYS safe by LISTING THE RESPONSES. For contested auctions, you should deal with "pass and pull" sequences here rather than in the SPECIAL FORCING PASS section. Indicate any agreements about showing or denying control of an enemy suit, and any "defensive" agreements for situations where your opponents are in a slam sequence.',
-                  ),
-                },
-              },
               help: guide(
                 13,
                 'Some pairs will need more space for continued bidding, others for description. You can (in Word) modify column widths to allow for your needs.',
+              ),
+            },
+            {
+              kind: 'cells',
+              id: 'high-level',
+              title: 'HIGH LEVEL BIDDING',
+              lines: 9,
+              help: guide(
+                14,
+                'Simply listing Cue-bids is inadequate. Blackwood variations must be explained; you are ALWAYS safe by LISTING THE RESPONSES. For contested auctions, you should deal with "pass and pull" sequences here rather than in the SPECIAL FORCING PASS section. Indicate any agreements about showing or denying control of an enemy suit, and any "defensive" agreements for situations where your opponents are in a slam sequence.',
               ),
             },
           ],

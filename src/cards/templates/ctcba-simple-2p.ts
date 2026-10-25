@@ -20,6 +20,11 @@ export const ctcbaSimple2p: CardTemplate = {
   year: 2021,
   publisher: '中華民國橋藝協會',
   paper: 'A4-landscape',
+  language: 'zh',
+  // One copy, 340 pt wide; 12 pt like the single-sided card
+  printWidth: 340,
+  fontSize: 12,
+  sameSlotsAs: 'ctcba-simple',
   nUp: 2,
   pages: [
     {

@@ -30,6 +30,10 @@ export const systemOneMajor: Convention = {
   category: 'system',
   kind: 'system',
   level: 'basic',
+  cardSlots: [
+    'wbf.high-level <- rkcb#2',
+    'ctcba-simple.other.rkcb <- rkcb',
+  ],
   tags: ['舊講義', '高花開叫', '1NT 迫叫', '2 蓋 1', 'RKCB', '遭插叫'],
   summary:
     '第四章：開叫 1♥/1♠（13-21 點，保證 5 張）的答叫、1NT 迫叫後的再叫、開叫者再叫、RKCB 與黑木問 A、遭插叫與不尋常 2NT。',

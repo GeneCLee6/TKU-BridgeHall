@@ -16,6 +16,15 @@ export const systemOverview: Convention = {
   category: 'system',
   kind: 'system',
   level: 'basic',
+  cardSlots: [
+    'wbf.summary.general <- current#0',
+    'wbf.openings.2C.description <- nature#0:5',
+    'ctcba-simple.header.2over1 = gf <- current#0',
+    'ctcba-simple.major.five <- nature#0:2',
+    'ctcba-simple.major.five <- nature#0:3',
+    'ctcba-simple.major.forcing-1nt <- current#0',
+    'ctcba-simple.leads.4th <- signals#0:3',
+  ],
   tags: ['舊講義', '開叫總表', '牌力', '訊號', '禮節'],
   summary:
     '2010 年講義《我們的制度》：開叫總表、牌力線位與範圍、開叫基本原則、訊號與橋藝禮節。現行為 12 點開叫、1NT forcing、2/1 迫叫成局。',

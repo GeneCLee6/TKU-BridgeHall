@@ -30,6 +30,14 @@ export const systemNotrump: Convention = {
   category: 'system',
   kind: 'system',
   level: 'basic',
+  cardSlots: [
+    'wbf.defence.vs-nt <- capp',
+    'ctcba-simple.vs-nt.table.double.strong <- capp#0:0',
+    'ctcba-simple.vs-nt.table.2C.strong <- capp#0:1',
+    'ctcba-simple.vs-nt.table.2D.strong <- capp#0:2',
+    'ctcba-simple.vs-nt.table.2H.strong <- capp#0:3',
+    'ctcba-simple.vs-nt.table.2S.strong <- capp#0:4',
+  ],
   tags: ['舊講義', '1NT 開叫', '2NT 開叫', 'Stayman', '轉換', 'Gerber', 'CAPP'],
   summary:
     '第五章：開叫 1NT、2NT 的答叫、Stayman、轉換叫、Gerber、1NT 遭蓋叫的賴本索，以及對抗敵方 1NT 的 CAPP。答叫以「1NT的答叫」「開叫2NT及答叫」「雷本索特約」為準。',

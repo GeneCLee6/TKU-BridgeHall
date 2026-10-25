@@ -23,6 +23,12 @@ export const defenseVsUnusual2nt: Convention = {
   category: 'competitive',
   kind: 'defense',
   level: 'intermediate',
+  cardSlots: [
+    'wbf.defence.jump-overcalls <- our-overcall#0',
+    'wbf.summary.special-bids <- defense',
+    'ctcba-simple.comp.unusual-2nt <- our-overcall#0',
+    'ctcba-simple.comp.more <- defense',
+  ],
   tags: ['高花開叫', '2NT 插叫', '兩低', 'mini splinter', '短門', 'slam try'],
   summary: '我方開 1♥／1♠ 遭敵方 2NT（兩低）插叫時的答叫與後續；附我方使用 Unusual 2NT 的條件。',
   source: { title: '如何對抗弱跳叫2NT兩低' },

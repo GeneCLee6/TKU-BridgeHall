@@ -143,18 +143,36 @@ describe('card templates', () => {
     }
   })
 
+  it.each(cardTemplates.map(byId))('%s has its print width, font size and language', (_, t) => {
+    expect(t.printWidth).toBeGreaterThan(100)
+    expect(t.fontSize).toBeGreaterThan(4)
+    expect(['en', 'zh']).toContain(t.language)
+    if (t.sameSlotsAs) {
+      const other = cardTemplates.find((o) => o.id === t.sameSlotsAs)!
+      const local = (x: CardTemplate) => templateSlots(x).map((s) => s.id.slice(x.id.length))
+      expect(local(t)).toEqual(local(other))
+    }
+  })
+
   it('marks every unverified layout as pending', () => {
     // Update when a template is checked against the original file (then drop its `pending`).
-    // WBF: the layout follows the blank .doc; which edition to file is still open.
+    // WBF: the edition is settled (2.19); a few labels wait for a blank 2.19 form.
     expect(cardTemplates.filter((t) => t.pending).map((t) => t.id)).toEqual(['wbf'])
+    expect(wbf.pending).not.toMatch(/哪一版|比賽要交/)
   })
 })
 
 describe('WBF card', () => {
   const titles = (page: number) =>
     wbf.pages[page].columns.flatMap((c) =>
-      c.blocks.map((b) => ('title' in b ? b.title : b.kind === 'text' ? b.label : b.id)),
+      c.blocks.map((b) => ('title' in b && b.title ? b.title : b.kind === 'text' ? b.label : b.id)),
     )
+
+  it('follows WBF Convention Card 2.19', () => {
+    expect(wbf.version).toBe('2.19')
+    expect(wbf.year).toBe(2005)
+    expect(wbf.language).toBe('en')
+  })
 
   it('is two landscape pages: three columns, then the opening bid table', () => {
     expect(wbf.paper).toBe('A4-landscape')
@@ -164,18 +182,18 @@ describe('WBF card', () => {
     ])
   })
 
-  it('has every section of page 1, in print order, as printed on the blank .doc', () => {
+  it('has every section of page 1, in print order, as printed on the 2.19 card', () => {
     expect(titles(0)).toEqual([
       'DEFENSIVE AND COMPETITIVE BIDDING',
-      'OVERCALLS (Style: Responses: 1 / 2  Level; Reopening)',
-      '1NT OVERCALL (2nd/4th Live; Responses; Reopening)',
+      'OVERCALLS (Style; Responses; 1/2 Level; Reopening)',
+      '1NT OVERCALL (2ND/4TH Live; Responses; Reopening)',
       'JUMP OVERCALLS (Style; Responses; Unusual NT)',
       'Reopen:',
-      'DIRECT & JUMP CUE BIDS (Style; Response; Reopen)',
-      'VS. NT (vs. Strong/Weak; Reopening;PH)',
-      'VS.PREEMTS (Doubles; Cue-bids; Jumps; NT Bids)',
-      'VS. ARTIFICIAL STRONG OPENINGS- i.e. 1♣ or 2♣',
-      'OVER OPPONENTS’ TAKEOUT DOUBLE',
+      'DIRECT and JUMP CUE BIDS (Style; Responses; Reopen)',
+      'VS. NT (vs. Strong / Weak; Reopening; PH)',
+      'VS. PREEMPTS ( Doubles; Cue-bids; Jumps; NT bids)',
+      'VS. ARTIFICIAL STRONG OPENINGS',
+      "OVER OPPONENTS' TAKE OUT DOUBLE",
       'LEADS AND SIGNALS',
       'OPENING LEADS STYLE',
       'Other:',
@@ -184,73 +202,83 @@ describe('WBF card', () => {
       'Signals (including Trumps):',
       'DOUBLES',
       'TAKEOUT DOUBLES (Style; Responses; Reopening)',
-      'SPECIAL, ARTIFICIAL & COMPETITIVE DBLS/RDLS',
-      'W B F CONVENTION CARD',
-      'CATEGORY:',
-      'NCBO:',
-      'PLAYERS:',
+      'SPECIAL, ARTIFICIAL AND COMPETITIVE DOUBLES/REDOUBLES',
+      'WBF Convention Card 2.19',
+      'Category:',
+      'Country:',
+      'Event:',
+      'Players:',
       'SYSTEM SUMMARY',
       'GENERAL APPROACH AND STYLE',
-      'SPECIAL BIDS THAT MAY REQUIRE DEFENSE',
+      '1NT Openings:',
+      '2 OVER 1 Responses',
+      'SPECIAL BIDS THAT MAY REQUIRE DEFENCE',
       'SPECIAL FORCING PASS SEQUENCES',
-      'IMPORTANT NOTES',
-      'PSYCHICS:',
+      "IMPORTANT NOTES THAT DON'T FIT ELSEWHERE",
+      'Psychics:',
     ])
   })
 
-  it('has page 1 columns of equal height (the 43 rows of the .doc table)', () => {
-    for (const column of wbf.pages[0].columns) expect(sum(column.blocks.map(lines)), column.id).toBe(43)
+  it('has the rows of the 2.19 grid: 45 in the defence column, 44 in the other two', () => {
+    expect(wbf.pages[0].columns.map((c) => sum(c.blocks.map(lines)))).toEqual([45, 44, 44])
   })
 
-  it('has the .doc widths in twips: 5068 | 203 | 5629 | 184 | 4819', () => {
+  it('has the 2.19 widths in points: 268.35 | 268.55 | 268.3, no gutters', () => {
     const [p1] = wbf.pages
-    const total = 15903
-    expect(p1.columns.map((c) => Math.round((c.width * total) / 100))).toEqual([5068, 5629, 4819])
-    expect(p1.gaps!.map((g) => Math.round((g * total) / 100))).toEqual([203, 184])
+    expect(p1.gaps).toBeUndefined()
+    expect(p1.columns.map((c) => Math.round(c.width * 805.2) / 100)).toEqual([268.35, 268.55, 268.3])
+    const signals = templateBlocks(wbf).find(({ block }) => block.id === 'leads.signals')!.block
+    if (signals.kind !== 'table') throw new Error('expected a table')
+    expect(signals.rows.map((r) => `${r.group}${r.label}`)).toEqual(['Suit:1st', 'Suit:2nd', 'Suit:3rd', 'NT:1st', 'NT:2nd', 'NT:3rd'])
   })
 
-  it('has the opening bid table with high level bidding inset on page 2', () => {
-    expect(titles(1)).toEqual(['openings'])
-    const table = wbf.pages[1].columns[0].blocks[0]
-    if (table.kind !== 'table') throw new Error('expected a table')
+  it('has the opening bid table, then high level bidding across page 2', () => {
+    expect(titles(1)).toEqual(['OPENING BID DESCRIPTIONS', 'HIGH LEVEL BIDDING'])
+    const [table, high] = wbf.pages[1].columns[0].blocks
+    if (table.kind !== 'table' || high.kind !== 'cells') throw new Error('expected a table and cells')
     expect([table.rowHeader.label, ...table.columns.map((c) => c.label)]).toEqual([
-      'OPENING',
-      'TICK IF ARTIFICIAL',
-      'MIN. NO. OF CARDS',
-      'NEG.DBL THRU',
-      'DESCRIPTION',
-      'RESPONSES',
-      'SUBSEQUENT ACTION',
-      'PASSED HAND BIDDING',
+      'Opening',
+      'Artific',
+      'Min.',
+      'Neg Dbl',
+      'Description',
+      'Responses',
+      'Subsequent Auction',
+      'Passed Hand Bidding',
     ])
-    expect([table.rowHeader.width, ...table.columns.map((c) => c.width)].map((w) => Math.round(w * 161.26))).toEqual(
-      [959, 725, 842, 843, 2551, 3969, 3544, 2693],
-    )
+    expect(
+      [table.rowHeader.width, ...table.columns.map((c) => c.width)].map((w) => Math.round(w * 80.55) / 10),
+    ).toEqual([40.5, 16.3, 16.3, 24.4, 104.8, 241.7, 217.6, 143.9])
     expect(table.rows.map((r) => r.label).join(' ')).toBe(
       '1♣ 1♦ 1♥ 1♠ 1NT 2♣ 2♦ 2♥ 2♠ 2NT 3♣ 3♦ 3♥ 3♠ 3NT 4♣ 4♦ 4♥ 4♠ 4NT 5♣ 5♦ 5♥ 5♠',
     )
-    // The .doc's 39 body rows, less the three thin filler rows under 5♠
-    expect(sum(table.rows.map((r) => r.lines ?? 1))).toBe(36)
-    expect(table.inset?.block.title).toBe('HIGH LEVEL BIDDING')
+    expect(table.rows.every((r) => (r.lines ?? 1) === 1)).toBe(true)
+    expect(table.inset).toBeUndefined()
+    expect(high.lines).toBe(9)
+    // Title, header, 24 rows, then the high level title and its 9 lines: the 36 rows of page 2
+    expect(sum(wbf.pages[1].columns[0].blocks.map(lines))).toBe(36)
   })
 
   it('has the slot ids the fill rules refer to', () => {
     const slots = templateSlots(wbf).map((s) => s.id)
     expect(slots).toContain('wbf.summary.general')
+    expect(slots).toContain('wbf.summary.1nt')
+    expect(slots).toContain('wbf.header.event')
+    expect(slots).not.toContain('wbf.header.ncbo')
     expect(slots).toContain('wbf.openings.1H.responses')
     expect(slots).toContain('wbf.leads.leads.king.nt')
     expect(slots).toContain('wbf.leads.signals.suit-1.partner')
     expect(slots).toContain('wbf.high-level')
-    expect(slots).toContain('wbf.openings.5C.responses')
-    expect(slots).not.toContain('wbf.openings.5C.subsequent')
-    expect(slots).not.toContain('wbf.openings.5S.passed-hand')
-    expect(slots).toContain('wbf.openings.4NT.passed-hand')
+    expect(slots).toContain('wbf.openings.5S.passed-hand')
   })
 
-  it('has help from the 2017 guide on every fill-in', () => {
+  it('has help from the 2017 guide on every fill-in the guide covers', () => {
+    // Event is new in 2.19 and the Guide has nothing on it
+    const uncovered = ['header.event']
     for (const { block } of templateBlocks(wbf)) {
-      if (block.kind === 'cells' || block.kind === 'text' || block.kind === 'table')
-        expect(block.help?.source, block.id).toMatch(/^Guide to Completion of the WBF System Card \(2017\)/)
+      if (block.kind !== 'cells' && block.kind !== 'text' && block.kind !== 'table') continue
+      if (uncovered.includes(block.id)) expect(block.help, block.id).toBeUndefined()
+      else expect(block.help?.source, block.id).toMatch(/^Guide to Completion of the WBF System Card \(2017\)/)
     }
   })
 })

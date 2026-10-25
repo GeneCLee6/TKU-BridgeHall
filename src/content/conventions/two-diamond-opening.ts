@@ -18,6 +18,14 @@ export const twoDiamondOpening: Convention = {
   category: 'suit-openings',
   kind: 'system',
   level: 'intermediate',
+  cardSlots: [
+    'wbf.openings.2D.description <- hands',
+    'wbf.openings.2D.responses <- responses#0',
+    'wbf.openings.2D.subsequent <- after-2h',
+    'wbf.openings.2D.subsequent <- after-2s',
+    'wbf.openings.2D.subsequent <- after-2nt',
+    'ctcba-simple.other.more <- hands',
+  ],
   tags: ['2♦ 開叫', '弱二', '20-21 平均牌', '22↑ 低花', 'P/C', '2NT 詢問'],
   summary:
     '2♦ 開叫包括弱二♥、弱二♠、20-21 平均牌、22↑帶 5 張低花：答叫者 P/C 與 2NT 詢問，以及 2♦ 2♥ 之後的完整後續。',

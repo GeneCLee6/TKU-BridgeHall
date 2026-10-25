@@ -125,7 +125,9 @@ describe('checking a convention', () => {
       'A：程度不存在',
     ])
     expect(conventionProblems({ ...lebensohl, prerequisites: [1] }, ids)).toEqual(['前置特約要是網址代稱清單'])
-    expect(tidyConvention({ ...lebensohl, prerequisites: [' '], cardSlots: [] })).toEqual(lebensohl)
+    expect(tidyConvention({ ...lebensohl, prerequisites: [' '], cardSlots: [...lebensohl.cardSlots!, ' '] })).toEqual(
+      lebensohl,
+    )
   })
 
   it('warns about calls it cannot draw and suit letters left in meanings', () => {
