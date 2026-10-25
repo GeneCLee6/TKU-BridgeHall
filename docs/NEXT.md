@@ -13,13 +13,13 @@
 - **A3、B0、D1、G4 同時完成**（2026-10-25，四個 subagent 各一個 worktree 平行做）：
   - **A3 內容欄位**（PR #15，牌桌 #78）：`Convention` 加 `kind`／`level`／`prerequisites`／`cardSlots`，22 張內建特約補種類與程度（標法與一覽在 `CONTENT_GUIDE.md` §2.1，程度標法使用者已確認（入門 < 進階 < 高階；PR #17 修正對抗不尋常2NT、防守信號）），卡片、側邊欄、搜尋結果顯示標籤，編輯器有欄位。前置特約內建先不填（留給 E4）；AI 匯入不判斷這三項。
   - **B0 改名**（PR #12，牌桌 #77）：網站名改為淡江橋館 · TKU BridgeHall、新標誌與圖示；service worker 快取名稱（`tku-bridge-book-v4`）刻意不改，以免清掉離線內容。
-  - **D1 制度卡版型**（PR #13，依原始檔校正 PR #19）：`src/cards/` 的 `CardTemplate` 型別、WBF 卡、簡易卡單面與雙面。原始檔來自中華橋協（網址記在 PRD e3），放 `tmp/ctcba/`，不 commit。**國橋的 WBF 空白 .doc 是 2004 年的舊版卡，不是 2.19**，版型照空白 .doc 定稿；使用者決定改照 2.19（PR #24），只剩範例 PDF 分不出印好或填寫的三處 `pending`，待拿到空白 2.19 確認。
+  - **D1 制度卡版型**（PR #13，依原始檔校正 PR #19）：`src/cards/` 的 `CardTemplate` 型別、WBF 卡、簡易卡單面與雙面。原始檔來自中華橋協（網址記在 PRD e3），放 `tmp/ctcba/`，不 commit。**國橋的 WBF 空白 .doc 是 2004 年的舊版卡，不是 2.19**，版型照空白 .doc 定稿；使用者決定改照 2.19（PR #24），範例 PDF 分不出印好或填寫的三處暫定照現狀（使用者接受，`pending` 已移除）。
   - **G4 牌例元件**（PR #14）：`lib/board.ts`（型別對應牌桌 `shared/board.ts`，牌桌沒有 `Deal` 型別，橋譜端先定義）與 `components/board/` 的 `DealDiagram`、`DealInput`、`AuctionInput`、`HandInput`，還沒有頁面使用；叫牌型別改名 `TableAuction`，叫牌盒用牌桌同色的 `callPass`／`callDouble`／`callRedouble` token（PR #17）。
 - **A4 分類改為資料**（PR #20，牌桌 #81）：分類存在 Worker（`GET`／`PUT /api/book/categories`、版本衝突、使用中不可刪），內建分類仍是離線與未登入的預設；管理頁新增分類面板，`bookEdit` 權限即可進 `/admin` 管分類。
 - **A5 制度集型別**（PR #18，牌桌 #80）：`SystemProfile` 在牌桌 `shared/protocol.ts` 與 `src/lib/api.ts` 各一份並有對拍測試；`lib/profiles.ts` 的 `resolveProfile` 處理繼承、覆寫、`origin` 與壞參照。覆寫的叫品列會拿掉原本的 `pending`（使用者確認）。
 - **牌桌的 deploy workflow 沒有 Cloudflare 金鑰，合併牌桌 PR 也不會上線**（2026-10-25 確認）；兩站都是手動部署。
 - **A6 制度集儲存與角色**（PR #23，牌桌 #90）：Worker CRUD、版本衝突、上限、`club` 不可刪；權限集中在牌桌 `worker/roles.ts`。**角色規則（使用者 2026-10-25 決定）**：管理員管所有事（含帳號）；編輯者（`bookEdit`）管帳號以外的一切（內容、分類、制度集、`/admin` 非帳號面板）；位階名稱之後再改。AI 匯入、精選牌局仍是個別權限。
-- **D2 填制度卡**（PR #24）：`src/cards/fill.ts` 的 `fillCard`；WBF 版型改照 2.19；內建 18 個特約共 90 條 `cardSlots` 對應，表在 `CONTENT_GUIDE.md` §2.2，**待幹部核對**（e3-t04 與 AC-3.2 核對後才勾；有疑義沒填的清單也在那裡）。`cardSlots` 不進 manifest，以免撐大首頁。
+- **D2 填制度卡**（PR #24）：`src/cards/fill.ts` 的 `fillCard`；WBF 版型改照 2.19；內建 18 個特約共 90 條 `cardSlots` 對應，表在 `CONTENT_GUIDE.md` §2.2，使用者暫定核可（PR #26，有問題再改）；原文有疑義的格子留空，等制度編寫好再補；WBF 卡先填中文。`cardSlots` 不進 manifest，以免撐大首頁。
 - **L3 備份與型別對拍**（PR #22，牌桌 #89 **未合併**）：牌桌每日備份 `book*`／`profile*`／`article*` 到 R2（保留 30 天）與還原 API；橋譜 CI 的「Table type parity」比對兩邊型別。上線前要人做：建 R2 bucket（`npx wrangler r2 bucket create tku-bridge-backups`）後才合併牌桌 #89；設 secret `TABLE_REPO_TOKEN`（牌桌 Contents 唯讀）；部署後照牌桌 `DEPLOY.md` §4.3 演練還原再勾 AC-10.5。
 - **首頁 JS 148.3／150 kB**：之後的功能一律 lazy。
 - **下一批**：A7（`ProfileContext`、頁首切換、覆寫標記、帳號偏好；前提 A6、A1）。C2（隊伍與搭檔模型）前提 A6 也滿足，可以平行；D3 等 B3，G 期等 B2。

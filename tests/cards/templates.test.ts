@@ -154,11 +154,9 @@ describe('card templates', () => {
     }
   })
 
-  it('marks every unverified layout as pending', () => {
-    // Update when a template is checked against the original file (then drop its `pending`).
-    // WBF: the edition is settled (2.19); a few labels wait for a blank 2.19 form.
-    expect(cardTemplates.filter((t) => t.pending).map((t) => t.id)).toEqual(['wbf'])
-    expect(wbf.pending).not.toMatch(/哪一版|比賽要交/)
+  it('has no unverified layout left', () => {
+    // Add `pending` to a template whose layout is not checked against the original file.
+    expect(cardTemplates.filter((t) => t.pending).map((t) => t.id)).toEqual([])
   })
 })
 
