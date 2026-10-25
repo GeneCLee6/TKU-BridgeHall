@@ -30,6 +30,7 @@ TKU-BridgeBook/
 │  │  ├─ categories.ts      分類與顯示順序
 │  │  └─ index.ts           特約登記表
 │  ├─ types/convention.ts   內容模型（唯一的 schema）
+│  ├─ cards/                制度卡（E3）：types（CardTemplate）、slots（格子 id）、templates/（每個版型一個檔案，檔名＝id）；網站程式只能 lazy 載入
 │  ├─ lib/                  calls（叫品解析）、sections（走訪、key、深層連結）、search、content（線上內容合併與檢查）、
 │  │                        editing（編輯器的樹與文字轉換）、docText（讀 .doc/.docx）、importResult、sse、api（唯一有網路的模組）
 │  ├─ state/                ExpansionContext（展開狀態）、PreferencesContext（主題）、AuthContext（帳號）、ContentContext（線上內容）

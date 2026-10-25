@@ -97,8 +97,8 @@ depends_on: [E1, E2]
 
 **M1**
 
-- [ ] `e3-t01` `CardTemplate` 型別與 WBF 版型檔（第 1 頁三欄、第 2 頁開叫表與高階叫牌；逐格對照 `docs/design/wbf-card-reference-p1/p2.png` 與原始 .doc 的欄寬）· AC-3.1 · M
-- [ ] `e3-t02` 簡易卡版型檔（單面、雙面；對照 `ctcba-simple-card-reference.png`）· AC-3.1 · S · ← e3-t01
+- [x] `e3-t01` `CardTemplate` 型別與 WBF 版型檔（第 1 頁三欄、第 2 頁開叫表與高階叫牌；逐格對照 `docs/design/wbf-card-reference-p1/p2.png` 與原始 .doc 的欄寬）· AC-3.1 · M
+- [x] `e3-t02` 簡易卡版型檔（單面、雙面；對照 `ctcba-simple-card-reference.png`）· AC-3.1 · S · ← e3-t01
 - [ ] `e3-t03` `fill.ts`：三種來源、濃縮規則、`[Note n]` 與附頁、`origin`；`tests/cards/fill.test.ts` · AC-3.2 · M · ← e3-t01, e1-t08
 - [ ] `e3-t04` 內建特約補 `cardSlots`（WBF 與簡易卡兩套）：1NT／2NT 答叫、Lebensohl、J2N、Bergen、NMF、2♦、弱二、各種賭倍、對抗不尋常 2NT、好壞 2NT、防守信號、制度總覽的開叫表；幹部對照手寫卡 · AC-3.2 · M · ← e3-t03
 - [ ] `e3-t05` `/cards/:profileId/:templateId` 預覽頁：版型切換、格子渲染（含覆寫底色）、hover 說明、來源連結 · AC-3.6 · M · ← e3-t03
