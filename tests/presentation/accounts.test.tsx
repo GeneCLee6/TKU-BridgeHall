@@ -124,7 +124,7 @@ describe('what a member sees', () => {
     renderAt('/')
     await userEvent.click(await screen.findByRole('button', { name: 'amy 的帳號選單' }))
     const menu = screen.getByRole('menu')
-    expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['新增特約', '管理分類', '我的帳號', '登出'])
+    expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['新增特約', '社團管理', '我的帳號', '登出'])
     expect(screen.getAllByRole('link', { name: /^編輯：/ }).length).toBe(conventions.length)
   })
 
@@ -186,6 +186,9 @@ describe('the admin page', () => {
     await waitFor(() => expect(sent.some((s) => s.path === '/api/admin/users/u2/permissions')).toBe(true))
     expect(sent.find((s) => s.path === '/api/admin/users/u2/permissions')!.body).toEqual({ permissions: ['bookImport'] })
     expect(sent.some((s) => s.method === 'POST' && s.path === '/api/admin/applications/a1/approve')).toBe(true)
+    // Admins have the editors' panels too
+    expect(screen.getByRole('heading', { name: '分類' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '社團設定' })).toBeInTheDocument()
   })
 
   it('stays closed to members without the editing permission', async () => {
@@ -194,12 +197,14 @@ describe('the admin page', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('還沒有這項權限')
   })
 
-  it('shows editors who are not admins the categories only', async () => {
+  it('shows editors who are not admins every panel but the account ones', async () => {
     signedIn({ permissions: ['bookEdit'] })
     routes['GET /api/book/categories'] = { body: { version: 0, categories: [] } }
     renderAt('/admin')
     expect(await screen.findByRole('heading', { name: '分類' }, { timeout: 5000 })).toBeInTheDocument()
-    expect(screen.queryByText('待審核的申請')).toBeNull()
+    expect(screen.getByText(/帳號、申請與社團設定只有管理員看得到/)).toBeInTheDocument()
+    for (const accounts of ['待審核的申請', '社員', '社團設定']) expect(screen.queryByRole('heading', { name: accounts })).toBeNull()
+    expect(screen.queryByRole('link', { name: /淡江牌桌管理頁/ })).toBeNull()
     expect(sent.some((s) => s.path.startsWith('/api/admin/'))).toBe(false)
   })
 })
@@ -366,6 +371,21 @@ describe('the editor', () => {
     await userEvent.click(screen.getByRole('button', { name: /仍然用我的版本覆蓋/ }))
     expect(await screen.findByText(/已儲存並發布（第 3 版）/)).toBeInTheDocument()
     expect(sent.filter((s) => s.method === 'PUT').map((s) => (s.body as { baseVersion: number }).baseVersion)).toEqual([0, 2])
+  })
+
+  it('lets editors hide a convention, which only admins could before', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    serveBook({ version: 0, entries: [] })
+    routes['GET /api/book/conventions/lebensohl/revisions'] = { body: { revisions: [] } }
+    routes['POST /api/book/conventions/lebensohl/hide'] = {
+      body: { entry: { slug: 'lebensohl', version: 1, convention: null, createdAt: 1, updatedAt: 1, updatedBy: 'amy' } },
+    }
+    renderAt('/edit/lebensohl')
+    await userEvent.click(await screen.findByRole('button', { name: '版本紀錄' }))
+    await userEvent.click(await screen.findByRole('button', { name: '從橋譜隱藏這個特約' }))
+    await userEvent.click(screen.getByRole('button', { name: '確定' }))
+    await waitFor(() => expect(sent.some((s) => s.method === 'POST' && s.path === '/api/book/conventions/lebensohl/hide')).toBe(true))
+    expect(sent.find((s) => s.path === '/api/book/conventions/lebensohl/hide')!.body).toEqual({ baseVersion: 0 })
   })
 
   it('will not save a new convention without its name and address', async () => {

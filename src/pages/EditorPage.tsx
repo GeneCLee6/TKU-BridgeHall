@@ -28,7 +28,6 @@ import { formatDateTime, today } from '../lib/format.ts'
 import { importedItems, type ImportedItem } from '../lib/importResult.ts'
 import { conventionPath } from '../lib/sections.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
-import { useAuth } from '../state/AuthContext.tsx'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile, mobileQuery } from '../styles/tokens.ts'
@@ -148,7 +147,6 @@ function EditorBody({
   // The same list the catalogue shows (lib/categories.ts)
   const { categories } = content
   const categoryIds = categories.map((c) => c.id)
-  const { user } = useAuth()
   const navigate = useNavigate()
   const wide = useMediaQuery('(min-width: 1280px)')
   const phone = useMediaQuery(mobileQuery)
@@ -505,7 +503,8 @@ function EditorBody({
                 : undefined
             }
             onHide={
-              user?.admin && !hidden
+              // Editors may hide a convention too: everything but accounts is theirs (ARCHITECTURE.md §4.2)
+              !hidden
                 ? async () => {
                     await api.book.hide(slug, base)
                     forget()

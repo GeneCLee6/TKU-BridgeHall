@@ -83,16 +83,10 @@ export function AccountMenu({
               {strings.account.importFiles}
             </Item>
           )}
-          {user.admin ? (
+          {(user.admin || can('bookEdit')) && (
             <Item role="menuitem" to="/admin">
               {pending > 0 ? strings.account.adminPending(pending) : strings.account.admin}
             </Item>
-          ) : (
-            can('bookEdit') && (
-              <Item role="menuitem" to="/admin">
-                {strings.account.categories}
-              </Item>
-            )
           )}
           <Item role="menuitem" to="/account">
             {strings.account.mine}

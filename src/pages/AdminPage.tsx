@@ -20,10 +20,12 @@ import { mobile } from '../styles/tokens.ts'
 import { Frame, Gate } from './Frame.tsx'
 
 /**
- * 社團管理: registrations waiting for approval, members' BridgeHall permissions and passwords,
- * the invite code, and the handbook's categories. The accounts are TKU BridgeTable's; adding or
- * deleting members, admins and tables stay on its admin page. Editors who are not admins (bookEdit)
- * see the categories only.
+ * 社團管理. Admins manage everything, accounts included; editors (bookEdit) everything else
+ * (ARCHITECTURE.md §4.2, decided 2026-10-25). So the account panels (registrations waiting for
+ * approval, members' permissions and passwords, the account limit and invite code) are admins';
+ * every other panel (the handbook's categories, and the system profiles to come) is for editors
+ * too. The accounts are TKU BridgeTable's; adding or deleting members, admins and tables stay on
+ * its admin page.
  */
 export function AdminPage() {
   return (
@@ -38,12 +40,29 @@ export function AdminPage() {
 
 function AdminOrEditor() {
   const { user } = useAuth()
-  return user?.admin ? <AdminBody /> : <CategoriesPanel />
+  const t = strings.admin
+  return (
+    <>
+      {user?.admin ? <AccountPanels /> : <Muted>{t.editorIntro}</Muted>}
+      {/* Not about accounts: editors' too */}
+      <CategoriesPanel />
+      {user?.admin && (
+        <Muted>
+          {t.more}{' '}
+          <a href={`${TABLE_SITE}/admin`} target="_blank" rel="noreferrer">
+            {t.tableAdmin}
+            {strings.opensInNewTab}
+          </a>
+        </Muted>
+      )}
+    </>
+  )
 }
 
 type Pending = { id: string; action: 'reject' | 'password' } | null
 
-function AdminBody() {
+/** Admins only: registrations, members and the club settings, which decide who may join */
+function AccountPanels() {
   const { refresh } = useAuth()
   const t = strings.admin
   const [applications, setApplications] = useState<Application[] | null>(null)
@@ -262,15 +281,6 @@ function AdminBody() {
         </SettingsForm>
       </Panel>
 
-      <CategoriesPanel />
-
-      <Muted>
-        {t.more}{' '}
-        <a href={`${TABLE_SITE}/admin`} target="_blank" rel="noreferrer">
-          {t.tableAdmin}
-          {strings.opensInNewTab}
-        </a>
-      </Muted>
     </>
   )
 }
