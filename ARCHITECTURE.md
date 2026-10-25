@@ -305,8 +305,8 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 ```
 push / PR ──► GitHub Actions「CI」：lint → typecheck → test → build → budget
           │                         └─ lighthouse job（/、/c/jacoby-2nt）
-          └─► Vercel Git integration：PR → 預覽網址（PR 留言會附上）；main 不自動部署
-手動部署 main ──► 正式站
+          └─► Vercel Git integration：PR → 預覽網址（PR 留言會附上）；main → 正式站
+合併到 main ──► 正式站（自動）
                  └─ 部署成功回報 commit status「Vercel」
                        └─► GitHub Actions「Production smoke test」（只在 main）
                              1. 等正式站 <meta name="app-version"> 等於這次 commit SHA
@@ -314,7 +314,7 @@ push / PR ──► GitHub Actions「CI」：lint → typecheck → test → bui
 ```
 
 - 正式站：https://tku-bridge-book.vercel.app/
-- **正式站只手動部署。** 社員已經在用正式站，所以 `vercel.json` 的 `git.deploymentEnabled.main: false` 關掉 `main` 的自動部署；合併 PR 不會上線，PR 的預覽網址照常產生。要上線時：Vercel → 專案 → Deployments → Create Deployment，填 `main`（或要上線的 commit），部署到 Production；或在本機 `npx vercel --prod`（第一次要 `vercel login`、`vercel link`）。上線後跑一次 Production smoke test（下面）。牽涉牌桌 API 的變更，先確認牌桌已部署。
+- **合併到 `main` 就自動部署正式站**（2026-10-25 起；之前 PR #9 曾關掉）。所以合併前要 CI 全綠、看過預覽站。要暫停自動上線，在 `vercel.json` 加回 `"git": { "deploymentEnabled": { "main": false } }`。牽涉牌桌 API 的變更：牌桌 PR 先合併，等牌桌的 Deploy workflow 完成，再合併橋譜。上線後 Production smoke test 會自動跑（下面）。
 - `app-version` 由 `vite.config.ts` 的 `appVersion` plugin 寫入，取自 Vercel 的 `VERCEL_GIT_COMMIT_SHA`；本機 build 為 `local`。
 - 手動跑部署檢查：GitHub → Actions → Production smoke test → Run workflow。
 - Dependabot 每月開一個合併的依賴更新 PR（npm 與 GitHub Actions），CI 綠燈且預覽站正常再合併。
