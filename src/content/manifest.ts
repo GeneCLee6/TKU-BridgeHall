@@ -1333,7 +1333,7 @@ export const manifest: ConventionMeta[] = [
       "title": "好壞2NT的約定叫品(松濤20160226)",
       "note": "文件標題：開叫者好壞2NT的約定叫品"
     },
-    "updated": "2026-10-21",
+    "updated": "2026-10-23",
     "outline": [
       {
         "id": "conditions",

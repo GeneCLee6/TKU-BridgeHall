@@ -29,7 +29,7 @@ export const goodBad2nt: Convention = {
     title: '好壞2NT的約定叫品(松濤20160226)',
     note: '文件標題：開叫者好壞2NT的約定叫品',
   },
-  updated: '2026-10-21',
+  updated: '2026-10-23',
   sections: [
     {
       id: 'conditions',
@@ -155,7 +155,7 @@ export const goodBad2nt: Convention = {
             },
             {
               call: '3D',
-              meaning: '5張♥↑，4張♣↑，15-17',
+              meaning: '5張♥↑，4張♦↑，15-17',
               pending: '與 3♣ 同寫「4張♣↑」，疑應為「4張♦↑」（1♥ 2♠ P P 之後的 3♦ 寫 4張♦↑）。',
             },
             {
