@@ -65,9 +65,10 @@ export function outline(sections: Section[]): SectionOutline[] {
   }))
 }
 
-/** The manifest entry for a convention: everything but its content */
+/** The manifest entry for a convention: everything but its content and card slots */
 export function conventionMeta(convention: Convention): ConventionMeta {
-  const { sections, ...rest } = convention
+  // Card slots stay out of the manifest: only the card pages use them, and those load the content
+  const { sections, cardSlots: _cardSlots, ...rest } = convention
   return { ...rest, outline: outline(sections), pending: pendingNotes(convention) }
 }
 

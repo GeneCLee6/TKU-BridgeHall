@@ -22,6 +22,18 @@ export interface CardTemplate {
   /** Who publishes the form, printed in its header or footer */
   publisher: string
   paper: 'A4-landscape' | 'A4-portrait'
+  /** Language of the printed labels: what `fillCard` writes in labels of its own ([Note n] names) */
+  language: 'en' | 'zh'
+  /** Printable width of one copy, in points, measured from the source file */
+  printWidth: number
+  /** Body font size of the source file, in points (with `printWidth`, how much text a cell holds) */
+  fontSize: number
+  /**
+   * The template whose slot ids this one shares under its own prefix (the two-sided simple card
+   * has the single-sided card's cells): conventions' `cardSlots` written for that template fill
+   * this one as well
+   */
+  sameSlotsAs?: CardTemplateId
   /**
    * Copies printed side by side on one sheet (the two-sided simple card is printed two-up and
    * cut in half); a page then describes one copy and its widths are percent of the copy

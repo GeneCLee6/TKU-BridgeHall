@@ -30,7 +30,8 @@ TKU-BridgeBook/
 │  │  ├─ categories.ts      內建分類與顯示順序（線上改過時以線上為準，§4.5）
 │  │  └─ index.ts           特約登記表
 │  ├─ types/convention.ts   內容模型（唯一的 schema）
-│  ├─ cards/                制度卡（E3）：types（CardTemplate）、slots（格子 id）、templates/（每個版型一個檔案，檔名＝id）；網站程式只能 lazy 載入
+│  ├─ cards/                制度卡（E3）：types（CardTemplate）、slots（格子 id）、templates/（每個版型一個檔案，檔名＝id）、
+│  │                        cardSlots（特約的格子對應）、fill（fillCard 填卡）；網站程式只能 lazy 載入
 │  ├─ lib/                  calls（叫品解析）、sections（走訪、key、深層連結）、search、content（線上內容合併與檢查）、
 │  │                        editing（編輯器的樹與文字轉換）、docText（讀 .doc/.docx）、importResult、sse、api（唯一有網路的模組）、
 │  │                        profiles（制度集解析，E1）
@@ -83,7 +84,7 @@ interface Convention {
   kind?: ConventionKind      // 沒標當作 'convention'（lib/content.ts 的 conventionKind）
   level?: Level
   prerequisites?: string[]   // 先讀的特約 slug（E4 學習路徑）
-  cardSlots?: string[]       // 制度卡位置（E3 定義）
+  cardSlots?: string[]       // 制度卡位置：'<格子> [= 值] <- <出處>'（src/cards/cardSlots.ts、CONTENT_GUIDE.md §2.2）；不進 manifest
   tags: string[]; summary: string
   source: { title: string; note?: string }; updated: string
   sections: Section[]
@@ -147,6 +148,13 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - 層次：隊伍繼承 `club`，搭檔繼承 `club` 或隊伍；不給 `parentId` 就是 `club`。有搭檔繼承的隊伍不能刪，也不能改成搭檔。
 - 上限 `PROFILE_LIMITS`（兩邊一致）：JSON 200,000 bytes（UTF-8，413 `contentTooLarge`）、覆寫 500 條、`club` 以外 100 個、名稱 40 字、每則備忘 2,000 字。Worker 只檢查形狀（整段覆寫的段落用跟特約一樣的檢查），覆寫指到的段落或列不存在由 `resolveProfile` 回報。
 - 讀取暫時是登入的社員都能看全部，寫入都要 `bookEdit`；E2 改成依隊伍、搭檔成員。未登入的讀者照 PRD 不抓這支 API（只有 `club`）。
+
+**填制度卡**（`src/cards/fill.ts`，純函式，`tests/cards/fill.test.ts`）：`fillCard(template, resolveProfile(...) 的結果, edits?)` 回傳 `{ cells, notes, problems }`。
+
+- 來源：制度集採用的特約的 `cardSlots`（不採用就不填；覆寫過的列與段落填覆寫後的文字），再疊上人工補格 `edits`（之後存 `profile.cardEdits`，e3-t06）。每格帶 `sources`（特約、那一條 `cardSlots`、段落 id，給「§」連回）與 `origin`（覆寫或人工補格的那層；沒有就是橋譜原文）、`pending`（原文有待確認）。
+- 濃縮：叫品表成 `叫品=意義`，一行的格子用「; 」相連、多行的格子一條一行。格子能放多少字由版型的 `printWidth`（pt）、`fontSize` 與欄寬估算（中日韓文與花色算兩個半形字）；放不下就從最長的那條起改成「名稱 [Note n]」（名稱也放不下就只寫 `[Note n]`），全文進 `notes`（附頁），編號照列印順序。還是放不下的格子標 `overflow`。
+- 壞的對應不靜默消失：讀不懂、格子不存在、出處找不到、選項不存在、人工補格指到不存在的格子，都放進 `problems`。
+- `ctcba-simple-2p` 的 `sameSlotsAs: 'ctcba-simple'`：寫給單面卡的 `cardSlots` 也填雙面卡。
 
 ## 4. 路由、狀態與內容載入
 
