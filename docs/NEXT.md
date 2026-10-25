@@ -9,7 +9,7 @@
 - **A1 內容分片完成**（PR #8，牌桌 #60，2026-10-25）：manifest＋每個特約一個 chunk、打開才載入；線上內容改走 `GET /api/book/manifest` 與 `GET /api/book/content/:slug`；CI 有效能預算（`npm run budget`，首頁 JS 141／150 kB）與 Lighthouse（無障礙 ≥ 0.95）。新增特約後要跑 `npm run manifest`。**牌桌 #60 要先合併。**
 - **B1 風格 token 完成**（PR #10，2026-10-25）：`createTheme(mode, textSize, style)`，「一般」＝現行值（測試鎖住）、「中國風」為第二組（e9-t15 前沒有入口）；Noto Serif TC 只在襯線風格時載入；`ui.tsx`、Tag、PendingNote 讀新 token；舊名 `radius`／`shadow`／`lantern`／`vermilion` 到 e9-t14 才移除。與 A2 同時進行。
 - **A2 搜尋索引與 service worker v2 完成**（PR #11，2026-10-25）：建置時產生 `/search-index.json`（43 kB gzip），搜尋不再載入全部特約；線上改過的特約增量合併。service worker 預載首頁、索引、manifest，新版本出現時提示「重新整理」。制度集與制度卡的離線快取等 A6、D3。
-- **正式站改為手動部署**（PR #9）：合併到 `main` 不會上線，步驟見 ARCHITECTURE.md §7。
+- **自動部署重新打開**（2026-10-25）：PR #9 曾改為手動部署；現在合併到 `main` 就上線（橋譜 Vercel、牌桌 Deploy workflow），所以合併前 CI 要全綠。
 - **A3、B0、D1、G4 同時完成**（2026-10-25，四個 subagent 各一個 worktree 平行做）：
   - **A3 內容欄位**（PR #15，牌桌 #78）：`Convention` 加 `kind`／`level`／`prerequisites`／`cardSlots`，22 張內建特約補種類與程度（標法與一覽在 `CONTENT_GUIDE.md` §2.1，程度標法使用者已確認（入門 < 進階 < 高階；PR #17 修正對抗不尋常2NT、防守信號）），卡片、側邊欄、搜尋結果顯示標籤，編輯器有欄位。前置特約內建先不填（留給 E4）；AI 匯入不判斷這三項。
   - **B0 改名**（PR #12，牌桌 #77）：網站名改為淡江橋館 · TKU BridgeHall、新標誌與圖示；service worker 快取名稱（`tku-bridge-book-v4`）刻意不改，以免清掉離線內容。
@@ -17,7 +17,7 @@
   - **G4 牌例元件**（PR #14）：`lib/board.ts`（型別對應牌桌 `shared/board.ts`，牌桌沒有 `Deal` 型別，橋譜端先定義）與 `components/board/` 的 `DealDiagram`、`DealInput`、`AuctionInput`、`HandInput`，還沒有頁面使用；叫牌型別改名 `TableAuction`，叫牌盒用牌桌同色的 `callPass`／`callDouble`／`callRedouble` token（PR #17）。
 - **A4 分類改為資料**（PR #20，牌桌 #81）：分類存在 Worker（`GET`／`PUT /api/book/categories`、版本衝突、使用中不可刪），內建分類仍是離線與未登入的預設；管理頁新增分類面板，`bookEdit` 權限即可進 `/admin` 管分類。
 - **A5 制度集型別**（PR #18，牌桌 #80）：`SystemProfile` 在牌桌 `shared/protocol.ts` 與 `src/lib/api.ts` 各一份並有對拍測試；`lib/profiles.ts` 的 `resolveProfile` 處理繼承、覆寫、`origin` 與壞參照。覆寫的叫品列會拿掉原本的 `pending`（使用者確認）。
-- **牌桌的 deploy workflow 沒有 Cloudflare 金鑰，合併牌桌 PR 也不會上線**（2026-10-25 確認）；兩站都是手動部署。
+- **牌桌 Deploy workflow 要 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 兩個 secret**；在設好之前合併牌桌 PR 不會上線（10/23 之後牌桌 Worker 沒部署過）。
 - **A6 制度集儲存與角色**（PR #23，牌桌 #90）：Worker CRUD、版本衝突、上限、`club` 不可刪；權限集中在牌桌 `worker/roles.ts`。**角色規則（使用者 2026-10-25 決定）**：管理員管所有事（含帳號）；編輯者（`bookEdit`）管帳號以外的一切（內容、分類、制度集、`/admin` 非帳號面板）；位階名稱之後再改。AI 匯入、精選牌局仍是個別權限。
 - **D2 填制度卡**（PR #24）：`src/cards/fill.ts` 的 `fillCard`；WBF 版型改照 2.19；內建 18 個特約共 90 條 `cardSlots` 對應，表在 `CONTENT_GUIDE.md` §2.2，使用者暫定核可（PR #26，有問題再改）；原文有疑義的格子留空，等制度編寫好再補；WBF 卡先填中文。`cardSlots` 不進 manifest，以免撐大首頁。
 - **L3 備份與型別對拍**（PR #22，牌桌 #89 **未合併**）：牌桌每日備份 `book*`／`profile*`／`article*` 到 R2（保留 30 天）與還原 API；橋譜 CI 的「Table type parity」比對兩邊型別。上線前要人做：建 R2 bucket（`npx wrangler r2 bucket create tku-bridge-backups`）後才合併牌桌 #89；設 secret `TABLE_REPO_TOKEN`（牌桌 Contents 唯讀）；部署後照牌桌 `DEPLOY.md` §4.3 演練還原再勾 AC-10.5。
@@ -52,7 +52,7 @@ Token 吃掉的是**對話上下文**，不是程式碼。原則：**一個 sess
 2. 讀檔只讀需要的段落；搜尋與大範圍檢視交給 subagent，只把結論帶回來。
 3. 每個 task 做完跑 npm run lint && npm run build && npm test，只看最後 5 行。
 4. 這一批的 task 合成一個 PR（標題列出全部編號），PR 本文寫對應的 AC 與檢查方式；在 PRD 勾選、更新進度表；在 ROADMAP 勾選這一批並寫 PR 號；更新 docs/NEXT.md 的「現在的位置」。
-5. PR 開成 ready（不是 draft），CI 綠了就直接合併（`gh pr merge <號> --squash --delete-branch`，worktree 先移除；有衝突自己解），合併後回報並結束，不要接著做下一項。只有需要人決定的事（視覺稿核准、內容取捨、範圍）才停下來等。合併不會上線，正式站手動部署。
+5. PR 開成 ready（不是 draft），CI 綠了就直接合併（`gh pr merge <號> --squash --delete-branch`，worktree 先移除；有衝突自己解），合併後回報並結束，不要接著做下一項。只有需要人決定的事（視覺稿核准、內容取捨、範圍）才停下來等。合併就會上線。
 ```
 
 其他：
