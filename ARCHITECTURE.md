@@ -149,6 +149,21 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - 上限 `PROFILE_LIMITS`（兩邊一致）：JSON 200,000 bytes（UTF-8，413 `contentTooLarge`）、覆寫 500 條、`club` 以外 100 個、名稱 40 字、每則備忘 2,000 字。Worker 只檢查形狀（整段覆寫的段落用跟特約一樣的檢查），覆寫指到的段落或列不存在由 `resolveProfile` 回報。
 - 讀取暫時是登入的社員都能看全部，寫入都要 `bookEdit`；E2 改成依隊伍、搭檔成員。未登入的讀者照 PRD 不抓這支 API（只有 `club`）。
 
+**隊伍與搭檔**（E2，`api.club`；型別 `ClubTeam`、`Partnership`、`TEAM_LIMITS` 對應牌桌 `shared/protocol.ts`，`parity/table-types.ts` 檢查，路由 `tests/lib/teamApi.test.ts`）：
+
+| 呼叫 | 路由 | 誰能用 |
+| --- | --- | --- |
+| `teams()`、`team(id)` | `GET /api/club/teams[/:id]`；單一隊伍連同它現役的搭檔 `{ team, pairs }` | 社員 |
+| `createTeam(input)` | `POST /api/club/teams`；同時開隊伍的制度集（繼承 `club`） | bookEdit |
+| `updateTeam(id, patch)` | `PATCH /api/club/teams/:id`：改名、換隊長、封存（封存後只能取消封存） | 隊長／bookEdit |
+| `addMember`、`removeMember` | `POST /api/club/teams/:id/members`、`DELETE …/members/:userId` | 隊長／bookEdit；本人可退出（隊長不行） |
+| `pairs()`、`pair(id)` | `GET /api/club/pairs[/:id]`；`pairs()` 是自己的（含已結束） | 社員 |
+| `invite({ partnerId, teamId? })` | `POST /api/club/pairs`，通知對方 | 社員 |
+| `accept`、`decline`、`end` | `POST /api/club/pairs/:id/accept|decline|end`；接受時開搭檔的制度集（繼承隊伍或 `club`），結束後制度集保留 | 受邀者；`end` 兩人之一 |
+
+- 上限 `TEAM_LIMITS`：一隊 8 人（409 `teamFull`）、每人等回覆加現役的搭檔 10 個（409 `pairLimit`）、隊名 40 字；同兩人同隊伍不能重複（409 `pairExists`）。邀請到接受之前 `profileId` 是空字串。
+- 搭檔通知（`pairInvited` 等）在牌桌的鈴鐺，連到這裡的 `/pairs/:id`（C4 做頁面）。成員制的制度集權限與可見範圍是 e2-t04（C3）。
+
 **填制度卡**（`src/cards/fill.ts`，純函式，`tests/cards/fill.test.ts`）：`fillCard(template, resolveProfile(...) 的結果, edits?)` 回傳 `{ cells, notes, problems }`。
 
 - 來源：制度集採用的特約的 `cardSlots`（不採用就不填；覆寫過的列與段落填覆寫後的文字），再疊上人工補格 `edits`（之後存 `profile.cardEdits`，e3-t06）。每格帶 `sources`（特約、那一條 `cardSlots`、段落 id，給「§」連回）與 `origin`（覆寫或人工補格的那層；沒有就是橋譜原文）、`pending`（原文有待確認）。

@@ -209,6 +209,65 @@ export interface ProfileRevision {
 /** What an editor sends to create or save a profile; the Worker sets the id, version and who saved it */
 export type ProfileInput = Pick<SystemProfile, 'name' | 'scope' | 'parentId' | 'adopted' | 'overrides' | 'notes'>
 
+// Teams and partnerships (E2 e2-t01): mirrors the "Teams and partnerships" part of TKU-BridgeTable
+// shared/protocol.ts, field for field (parity/table-types.ts). The team type is ClubTeam there
+// because Team is a team match's side; the same name here keeps the two easy to compare.
+
+/** Most members a team may have (its captain included); most partnerships, pending or active, one member may be in */
+export const TEAM_LIMITS = { membersMax: 8, pairsMax: 10, nameMax: 40 } as const
+
+export interface ClubTeam {
+  id: string
+  name: string
+  /** A member of the team; manages it with the editors */
+  captainId: string
+  /** User ids, the captain's among them, in the order they joined */
+  memberIds: string[]
+  /** The team's system profile, made with the team */
+  profileId: string
+  createdAt: number
+  /** Archived teams keep their members and profile but are left off the lists by the handbook */
+  archived?: boolean
+}
+
+export const PAIR_STATUSES = ['pending', 'active', 'ended'] as const
+export type PairStatus = (typeof PAIR_STATUSES)[number]
+
+export interface Partnership {
+  id: string
+  /** [who invited, who was invited] */
+  userIds: [string, string]
+  /** The team the two play for, when they do; both are its members */
+  teamId?: string
+  /** The partnership's system profile, made when the invitation is accepted: '' while pending */
+  profileId: string
+  createdAt: number
+  status: PairStatus
+  /** When the invitation was accepted, and when the partnership ended */
+  acceptedAt?: number
+  endedAt?: number
+}
+
+/** POST /api/club/teams: the captain is added to the members when left out */
+export interface TeamInput {
+  name: string
+  captainId: string
+  memberIds?: string[]
+}
+
+/** PATCH /api/club/teams/:id: whichever fields are present */
+export interface TeamPatch {
+  name?: string
+  captainId?: string
+  archived?: boolean
+}
+
+/** POST /api/club/pairs: invite `partnerId`, optionally as partners in a team both belong to */
+export interface PairInvite {
+  partnerId: string
+  teamId?: string
+}
+
 /** An error from the API, with the server's message (in Traditional Chinese) */
 export class ApiError extends Error {
   readonly status: number
@@ -272,6 +331,38 @@ export const api = {
     settings: () => request<{ settings: ClubSettings }>('/api/admin/settings'),
     saveSettings: (settings: Partial<ClubSettings>) =>
       post<{ settings: ClubSettings }>('/api/admin/settings', settings),
+  },
+
+  /**
+   * Teams and partnerships (E2). Any member reads them; editors make teams, which the captain and
+   * the editors manage; a member invites a partner, and only the two answer or end it. A team gets
+   * its profile when made, a partnership when accepted.
+   */
+  club: {
+    teams: () => request<{ teams: ClubTeam[] }>('/api/club/teams').then((r) => r.teams),
+    /** A team and its active partnerships; 404 `teamGone` */
+    team: (id: string) => request<{ team: ClubTeam; pairs: Partnership[] }>(`/api/club/teams/${encodeURIComponent(id)}`),
+    /** bookEdit; 409 `teamFull` past TEAM_LIMITS.membersMax */
+    createTeam: (team: TeamInput) => post<{ team: ClubTeam }>('/api/club/teams', team).then((r) => r.team),
+    /** The captain or an editor; an archived team only takes `{ archived: false }` (409 `teamArchived`) */
+    updateTeam: (id: string, patch: TeamPatch) =>
+      send<{ team: ClubTeam }>('PATCH', `/api/club/teams/${encodeURIComponent(id)}`, patch).then((r) => r.team),
+    addMember: (teamId: string, userId: string) =>
+      post<{ team: ClubTeam }>(`/api/club/teams/${encodeURIComponent(teamId)}/members`, { userId }).then((r) => r.team),
+    /** The captain or an editor, or the member leaving; never the captain */
+    removeMember: (teamId: string, userId: string) =>
+      send<{ team: ClubTeam }>('DELETE', `/api/club/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(userId)}`).then(
+        (r) => r.team,
+      ),
+    /** The member's own partnerships and invitations, ended ones too, newest first */
+    pairs: () => request<{ pairs: Partnership[] }>('/api/club/pairs').then((r) => r.pairs),
+    pair: (id: string) => request<{ pair: Partnership }>(`/api/club/pairs/${encodeURIComponent(id)}`).then((r) => r.pair),
+    /** Notifies the partner; 409 `pairExists` or `pairLimit` */
+    invite: (invite: PairInvite) => post<{ pair: Partnership }>('/api/club/pairs', invite).then((r) => r.pair),
+    accept: (id: string) => post<{ pair: Partnership }>(`/api/club/pairs/${encodeURIComponent(id)}/accept`).then((r) => r.pair),
+    decline: (id: string) => post<{ ok: true }>(`/api/club/pairs/${encodeURIComponent(id)}/decline`),
+    /** Ends an active partnership (its profile stays); on a pending one, takes it back or declines it (then null) */
+    end: (id: string) => post<{ pair: Partnership | null }>(`/api/club/pairs/${encodeURIComponent(id)}/end`).then((r) => r.pair),
   },
 
   book: {

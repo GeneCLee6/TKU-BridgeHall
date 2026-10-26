@@ -1,7 +1,7 @@
 ---
 title: E2 — 隊伍與搭檔
 date: 2026-10-24
-status: planned
+status: in progress
 epic: E2
 owner: GeneCLee6
 milestones: [M1]
@@ -38,8 +38,10 @@ depends_on: [E1]
   interface Partnership { id: string; userIds: [string, string]; teamId?: string; profileId: string; createdAt: number; status: 'pending' | 'active' | 'ended' }
   ```
 
+  實作（C2，#29／牌桌 #122）：隊伍型別叫 `ClubTeam`（牌桌的 `Team` 已是隊制賽的 A／B）；`Partnership` 多 `acceptedAt?`、`endedAt?`，`userIds` 是 `[邀請者, 受邀者]`，邀請期間 `profileId` 是空字串、接受時才開制度集；婉拒或收回的邀請直接刪掉。API 在 `/api/club/teams*`、`/api/club/pairs*`（ARCHITECTURE.md §3.1）。
+
 - 權限：
-  - 隊伍：建立＝管理員或 `bookEdit`；改名、加減隊員、指定新隊長＝隊長；隊伍制度集＝隊長（可開給隊員）。
+  - 隊伍：建立＝管理員或 `bookEdit`；改名、加減隊員、指定新隊長、封存＝隊長（編輯者也可以，C2 起）；隊伍制度集＝隊長（可開給隊員）。
   - 搭檔：兩人都能改搭檔制度集；結束搭檔後制度集保留唯讀。
   - 閱讀：隊伍與搭檔的制度集預設全社團社員可看（備忘除外）；可設為「只有成員」。
 - 頁面：`/teams`（隊伍列表）、`/teams/:id`（隊伍頁）、`/pairs/:id`（搭檔頁）、我的帳號多一段「我的隊伍與搭檔」。
@@ -71,9 +73,9 @@ depends_on: [E1]
 
 **M1**
 
-- [ ] `e2-t01` `Team`、`Partnership` 型別與 Worker 儲存、索引、人數上限；`tests/worker/teams.test.ts` · AC-2.1、AC-2.2 · M
-- [ ] `e2-t02` 隊伍 API：建立（管理員／`bookEdit`）、改名、換隊長、加減隊員、封存；建立時自動開制度集 · AC-2.1 · S · ← e2-t01
-- [ ] `e2-t03` 搭檔 API：邀請（通知）、接受、拒絕、結束；自動開制度集；一人多搭檔 · AC-2.2 · M · ← e2-t01
+- [x] `e2-t01` `Team`、`Partnership` 型別與 Worker 儲存、索引、人數上限；`tests/worker/teams.test.ts` · AC-2.1、AC-2.2 · #29（牌桌 #122）
+- [x] `e2-t02` 隊伍 API：建立（管理員／`bookEdit`）、改名、換隊長、加減隊員、封存；建立時自動開制度集 · AC-2.1 · #29（牌桌 #122）
+- [x] `e2-t03` 搭檔 API：邀請（通知）、接受、拒絕、結束；自動開制度集；一人多搭檔 · AC-2.2 · #29（牌桌 #122）
 - [ ] `e2-t04` 制度集權限改成成員制（取代 E1 的 `bookEdit` 暫行），可見範圍欄位 · AC-2.3 · S · ← e2-t01, e1-t10
 - [ ] `e2-t05` `/teams` 列表與 `/teams/:id` 隊伍頁（隊員、搭檔、差異數、入口）· AC-2.4 · M · ← e2-t02, e1-t15
 - [ ] `e2-t06` `/pairs/:id` 搭檔頁與「我的帳號 › 我的隊伍與搭檔」· AC-2.5 · S · ← e2-t03
