@@ -3,6 +3,9 @@ import type { Auction, AuctionCall } from '../types/convention.ts'
 import { strings } from '../strings.ts'
 import { CallLabel } from './Suit.tsx'
 
+/** The handouts write a pass as --- (or --); drawn as a line, the content keeps the text */
+const isDash = (call: string) => /^-{2,}$/.test(call.trim())
+
 /** A four-column bidding diagram, filled row by row in the source document's seat order */
 export function AuctionTable({ auction }: { auction: Auction }) {
   const rows: AuctionCall[][] = []
@@ -29,7 +32,11 @@ export function AuctionTable({ auction }: { auction: Auction }) {
               const note = typeof entry === 'object' ? entry.note : undefined
               return (
                 <Cell key={c} $decide={call === '?'}>
-                  {call ? <CallLabel call={call} /> : null}
+                  {call && isDash(call) ? (
+                    <PassLine role="img" aria-label={strings.auctionDash} title={strings.auctionDash} />
+                  ) : call ? (
+                    <CallLabel call={call} />
+                  ) : null}
                   {note && <CallNote>（{note}）</CallNote>}
                 </Cell>
               )
@@ -62,6 +69,13 @@ const Table = styled.table`
     color: ${({ theme }) => theme.colors.textMuted};
     border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   }
+`
+
+const PassLine = styled.span`
+  display: inline-block;
+  width: 1.5em;
+  vertical-align: middle;
+  border-top: 2px solid currentColor;
 `
 
 const CallNote = styled.span`
