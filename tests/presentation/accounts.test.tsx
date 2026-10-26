@@ -6,6 +6,7 @@ import { conventions } from '../../src/content/index.ts'
 import type { BookEntry, Me } from '../../src/lib/api.ts'
 import { conventionMeta } from '../../src/lib/sections.ts'
 import type { Convention } from '../../src/types/convention.ts'
+import { warmPages } from './warmPages.ts'
 
 /**
  * The account, editing and import pages against a fake API: each test lists the answers it
@@ -40,6 +41,7 @@ beforeAll(() => {
     removeEventListener() {},
   })) as unknown as typeof window.matchMedia
 })
+beforeAll(warmPages, 60_000)
 
 beforeEach(() => {
   // The admin page's team panel (e2-t07) reads these whenever it opens
@@ -122,11 +124,11 @@ describe('signing in and registering', () => {
 describe('what a member sees', () => {
   it('offers only what the permissions allow', async () => {
     signedIn({ permissions: ['bookEdit'] })
-    renderAt('/')
+    renderAt('/book')
     await userEvent.click(await screen.findByRole('button', { name: 'amy 的帳號選單' }))
     const menu = screen.getByRole('menu')
     expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['新增特約', '社團管理', '我的帳號', '登出'])
-    expect(screen.getAllByRole('link', { name: /^編輯：/ }).length).toBe(conventions.length)
+    expect((await screen.findAllByRole('link', { name: /^編輯：/ })).length).toBe(conventions.length)
   })
 
   it('gives admins everything, with the registrations waiting', async () => {
@@ -163,7 +165,8 @@ describe('what a member sees', () => {
     expect(await screen.findByText(/線上修改：amy，2026\/10\/23/)).toBeInTheDocument()
     expect(sent.map((r) => r.path)).toContain('/api/book/content/lebensohl')
     // Jacoby 2NT is hidden online; the old version of the same name stays
-    const slamAsks = screen.getAllByRole('button', { name: /^開叫高花之滿貫詢問叫/ })
+    const catalogue = within(screen.getByRole('navigation', { name: '特約目錄' }))
+    const slamAsks = catalogue.getAllByRole('link', { name: /^開叫高花之滿貫詢問叫/ })
     expect(slamAsks.map((b) => b.textContent)).toEqual([expect.stringContaining('舊版')])
   })
 })
@@ -283,7 +286,7 @@ describe('categories', () => {
       { id: 'slam', label: '滿貫', description: '', order: 2 },
     ]
     routes['GET /api/book/manifest'] = { body: { version: 1, entries: [], categories: online } }
-    renderAt('/')
+    renderAt('/book')
     expect((await screen.findAllByRole('heading', { name: /^競叫（線上）/ })).length).toBeGreaterThan(0)
     const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.id).filter((id) => id.startsWith('cat-'))
     // Online order first; the bundled ones the list left out still have conventions, so they follow
