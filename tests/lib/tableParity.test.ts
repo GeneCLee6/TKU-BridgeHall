@@ -42,3 +42,14 @@ describe.skipIf(!tableDir)('constants shared with TKU-BridgeTable', () => {
     expect(api.PAIR_STATUSES).toEqual(PAIR_STATUSES)
   })
 })
+
+describe.skipIf(!tableDir)('files shared with TKU-BridgeTable', () => {
+  it('has the same toSystemSpec as the table (e7-t02)', async () => {
+    const local = (await import('../../src/lib/systemSpec.ts?raw')).default
+    const table = (
+      await import(/* @vite-ignore */ `${tableDir!.replaceAll('\\', '/')}/shared/systemSpec.ts?raw`)
+    ).default as string
+    // Line endings may differ between checkouts
+    expect(local.replaceAll('\r\n', '\n')).toBe(table.replaceAll('\r\n', '\n'))
+  })
+})

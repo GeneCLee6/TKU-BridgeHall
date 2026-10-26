@@ -1,7 +1,7 @@
 ---
 title: E7 — 與淡江牌桌整合
 date: 2026-10-24
-status: planned
+status: in progress
 epic: E7
 owner: GeneCLee6
 milestones: [M2]
@@ -57,8 +57,8 @@ depends_on: [E1, E2]
 
 **M2**
 
-- [ ] `e7-t01` 研究牌桌 `shared/robot/system` 的 `Rule` 形狀，寫轉換對照表（文件）與意義文字啟發式清單 · AC-7.1 · S
-- [ ] `e7-t02` `toSystemSpec` 純函式（放牌桌 `shared/`，橋譜對拍）與測試快照 · AC-7.1 · M · ← e7-t01, e1-t08
+- [x] `e7-t01` 研究牌桌 `shared/robot/system` 的 `Rule` 形狀，寫轉換對照表（文件）與意義文字啟發式清單 · AC-7.1 · S — `docs/SYSTEM-SPEC.md`
+- [x] `e7-t02` `toSystemSpec` 純函式（放牌桌 `shared/`，橋譜對拍）與測試快照 · AC-7.1 · M · ← e7-t01, e1-t08 — 牌桌 `shared/systemSpec.ts`（牌桌 #123），橋譜 `src/lib/systemSpec.ts` 逐字複本＋快照
 - [ ] `e7-t03` Worker `GET /api/book/system-spec`；牌桌 `ClubConfig.systemProfileId` 與載入（牌桌 task）· AC-7.1 · M · ← e7-t02
 - [ ] `e7-t04` 差異報告頁 `/integrations/table` · AC-7.2 · M · ← e7-t03
 - [ ] `e7-t05` `bookRef`：牌桌 Alert／叫牌盒提示的書圖示；橋譜 `?profile=` 支援 · AC-7.3 · S · ← e7-t03
