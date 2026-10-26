@@ -397,5 +397,14 @@ export const strings = {
   profiles: {
     /** The club profile's name when the Worker has not sent one (lib/profiles.ts) */
     club: '社團預設',
+    /** The header's profile menu (e1-t12) */
+    label: '制度集',
+    scopes: { club: '社團', team: '隊伍', partnership: '搭檔' },
+    loading: '正在載入制度集…',
+    failed: '制度集載入失敗，暫時顯示社團版內容',
+    showing: (name: string) => `目前顯示「${name}」`,
+    /** Next to whatever a profile changed (e1-t13); text, not only colour */
+    overridden: { club: '社團覆寫', team: '隊伍覆寫', partnership: '搭檔覆寫' },
+    notes: { club: '社團備忘', team: '隊伍備忘', partnership: '搭檔備忘' },
   },
 } as const

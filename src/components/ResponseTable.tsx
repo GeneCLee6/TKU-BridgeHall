@@ -1,11 +1,15 @@
 import styled from 'styled-components'
-import type { ResponseRow } from '../types/convention.ts'
+import type { Origin, ResolvedRow } from '../lib/profiles.ts'
 import { strings } from '../strings.ts'
+import { originColor, OriginMark } from './ProfileMarks.tsx'
 import { PendingNote } from './PendingNote.tsx'
 import { CallLabel, RichText } from './Suit.tsx'
 
-/** The call → meaning table under an auction diagram */
-export function ResponseTable({ rows }: { rows: ResponseRow[] }) {
+/**
+ * The call → meaning table under an auction diagram. A row the reader's profile overrode
+ * (`origin`, e1-t13) has a line down its meaning and says whose it is.
+ */
+export function ResponseTable({ rows }: { rows: ResolvedRow[] }) {
   return (
     <Table>
       <thead>
@@ -20,15 +24,16 @@ export function ResponseTable({ rows }: { rows: ResponseRow[] }) {
             <th scope="row">
               <CallLabel call={row.call} />
             </th>
-            <td>
+            <Meaning $origin={row.origin}>
               <RichText text={row.meaning} />
+              <OriginMark origin={row.origin} />
               {row.note && (
                 <Note>
                   <RichText text={row.note} />
                 </Note>
               )}
               {row.pending && <PendingNote text={row.pending} />}
-            </td>
+            </Meaning>
           </tr>
         ))}
       </tbody>
@@ -68,4 +73,8 @@ const Table = styled.table`
 const Note = styled.div`
   font-size: 0.875rem;
   color: ${({ theme }) => theme.colors.textMuted};
+`
+
+const Meaning = styled.td<{ $origin?: Origin }>`
+  ${({ theme, $origin }) => $origin && `box-shadow: inset 3px 0 0 ${originColor(theme, $origin)};`}
 `

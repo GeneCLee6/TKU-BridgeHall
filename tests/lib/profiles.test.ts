@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { conventions as bundled } from '../../src/content/index.ts'
-import type { ProfileOverride, SystemProfile } from '../../src/lib/api.ts'
-import { emptyClubProfile, profileChain, resolveProfile, type ResolvedBlock } from '../../src/lib/profiles.ts'
+import type { ProfileOverride, ProfileSummary, SystemProfile } from '../../src/lib/api.ts'
+import {
+  emptyClubProfile,
+  loadProfileView,
+  profileChain,
+  profileView,
+  resolveProfile,
+  unchanged,
+  type ResolvedBlock,
+} from '../../src/lib/profiles.ts'
+import { conventionMeta } from '../../src/lib/sections.ts'
 import type { Convention } from '../../src/types/convention.ts'
 
 const convention = (slug: string): Convention => ({
@@ -289,5 +298,91 @@ describe('resolveProfile: notes', () => {
     const result = resolveProfile(profiles, 'team', CONTENT)
     expect(result.notes).toHaveLength(1)
     expect(result.problems).toEqual([])
+  })
+})
+
+describe('profileView: one convention at a time, as the handbook page reads it (e1-t11)', () => {
+  const profiles = [
+    club(),
+    team({ adopted: { bergen: 'off' }, overrides: [row('隊伍的意義')] }),
+    pair({
+      adopted: { bergen: 'on', lebensohl: 'off' },
+      overrides: [
+        row('搭檔的意義'),
+        { kind: 'section', slug: 'stayman', sectionId: 'other', section: { id: 'x', title: '換掉的段', children: [{ id: 'new', title: '新段' }] } },
+        { kind: 'meta', slug: 'stayman', summary: '搭檔的摘要' },
+      ],
+      notes: [{ slug: 'stayman', text: '備忘', by: 'u1', at: 1 }],
+    }),
+  ]
+
+  it('resolves each convention the same way as resolveProfile', () => {
+    const view = profileView(profiles, 'pair')
+    const whole = resolveProfile(profiles, 'pair', CONTENT)
+    expect(CONTENT.filter((c) => view.plays(c.slug)).map(view.convention)).toEqual(whole.conventions)
+    expect(view.notes('stayman')).toEqual(whole.notes)
+    expect(view.chain.map((p) => p.id)).toEqual(['club', 'team', 'pair'])
+  })
+
+  it('plays what the deepest profile says and knows which conventions it changes', () => {
+    const view = profileView(profiles, 'pair')
+    expect(['stayman', 'bergen', 'lebensohl'].map(view.plays)).toEqual([true, true, false])
+    expect(profileView(profiles, 'team').plays('bergen')).toBe(false)
+    expect(view.changes('stayman')).toBe(true)
+    expect(view.changes('bergen')).toBe(false)
+  })
+
+  it('gives the same object for a convention it does not change, and the same resolved one again', () => {
+    const view = profileView(profiles, 'pair')
+    const [stayman, bergen] = CONTENT
+    expect(view.convention(bergen!)).toBe(bergen)
+    expect(view.convention(stayman!)).toBe(view.convention(stayman!))
+    expect(view.convention(stayman!).origin).toBe('partnership')
+  })
+
+  it('applies the summary, tags and replaced sections to the catalogue entry', () => {
+    const view = profileView(profiles, 'pair')
+    const meta = conventionMeta(CONTENT[0]!)
+    const shown = view.meta(meta)
+    expect(shown.summary).toBe('搭檔的摘要')
+    expect(shown.outline).toEqual([
+      { id: 'top', title: '上層', children: [{ id: 'inner', title: '下層' }] },
+      { id: 'other', title: '換掉的段', children: [{ id: 'new', title: '新段' }] },
+    ])
+    expect(shown.pending).toBe(meta.pending)
+    expect(view.meta(meta)).toBe(shown)
+    expect(view.meta(conventionMeta(CONTENT[1]!))).toEqual(conventionMeta(CONTENT[1]!))
+  })
+
+  it('shows the club for a profile that is gone', () => {
+    const view = profileView(profiles, 'gone')
+    expect(view.profile.id).toBe('club')
+    expect(view.problems).toEqual([{ kind: 'missingProfile', profileId: 'gone' }])
+  })
+})
+
+describe('unchanged and loadProfileView', () => {
+  const summary = (p: SystemProfile): ProfileSummary => {
+    const { adopted, overrides, notes, ...rest } = p
+    return { ...rest, counts: { adopted: Object.keys(adopted).length, overrides: overrides.length, notes: notes.length } }
+  }
+  const profiles = [club(), team(), pair({ notes: [{ slug: 'stayman', text: 'x', by: 'u1', at: 1 }] }), profile({ id: 'solo', scope: 'partnership' })]
+  const summaries = profiles.map(summary)
+  const fetchProfile = vi.fn(async (id: string) => profiles.find((p) => p.id === id)!)
+
+  it('tells whether the chain down to a profile changes anything', () => {
+    expect(unchanged(summaries, 'club')).toBe(true)
+    expect(unchanged(summaries, 'team')).toBe(true)
+    expect(unchanged(summaries, 'solo')).toBe(true)
+    expect(unchanged(summaries, 'pair')).toBe(false)
+    expect(unchanged([summary(club({ adopted: { bergen: 'off' } })), summaries[3]!], 'solo')).toBe(false)
+  })
+
+  it('fetches the chain only, and nothing when it changes nothing', async () => {
+    expect(await loadProfileView(summaries, 'team', fetchProfile)).toBeUndefined()
+    expect(fetchProfile).not.toHaveBeenCalled()
+    const view = await loadProfileView(summaries, 'pair', fetchProfile)
+    expect(fetchProfile.mock.calls.map(([id]) => id).sort()).toEqual(['club', 'pair', 'team'])
+    expect(view?.profile.id).toBe('pair')
   })
 })

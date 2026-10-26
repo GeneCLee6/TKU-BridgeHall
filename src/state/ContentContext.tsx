@@ -17,7 +17,7 @@ import type { Category, Convention, ConventionMeta } from '../types/convention.t
 
 type Status = 'loading' | 'live' | 'offline'
 
-interface Content {
+export interface Content {
   /** The catalogue: every convention shown, without content */
   conventions: ConventionMeta[]
   bySlug: (slug: string) => ConventionMeta | undefined
@@ -36,6 +36,12 @@ interface Content {
   loadAll: () => Promise<Convention[]>
   loadBundled: (slug: string) => Promise<Convention | undefined>
   online: Map<string, OnlineInfo>
+  /**
+   * A key that changes with a convention's content when that content differs from what the site
+   * was built with (changed online, or by the reader's profile); undefined when it does not, so the
+   * search can use the built index for it
+   */
+  changed: (slug: string) => string | undefined
   skipped: Skipped[]
   status: Status
   /** Fetches the online changes again, e.g. after a save */
@@ -62,7 +68,9 @@ function remember(manifest: BookManifest) {
   }
 }
 
-const ContentContext = createContext<Content | null>(null)
+// Exported for ProfileContext, which gives the handbook page the profile's view of the same content
+// oxlint-disable-next-line react/only-export-components
+export const ContentContext = createContext<Content | null>(null)
 
 export function ContentProvider({
   children,
@@ -161,6 +169,10 @@ export function ContentProvider({
         ),
       loadBundled,
       online: merged.online,
+      changed: (slug) => {
+        const info = merged.online.get(slug)
+        return info && `${slug}@${info.version}`
+      },
       skipped: [...merged.skipped, ...broken],
       status,
       reload,

@@ -17,13 +17,14 @@
   - **G4 牌例元件**（PR #14）：`lib/board.ts`（型別對應牌桌 `shared/board.ts`，牌桌沒有 `Deal` 型別，橋譜端先定義）與 `components/board/` 的 `DealDiagram`、`DealInput`、`AuctionInput`、`HandInput`，還沒有頁面使用；叫牌型別改名 `TableAuction`，叫牌盒用牌桌同色的 `callPass`／`callDouble`／`callRedouble` token（PR #17）。
 - **A4 分類改為資料**（PR #20，牌桌 #81）：分類存在 Worker（`GET`／`PUT /api/book/categories`、版本衝突、使用中不可刪），內建分類仍是離線與未登入的預設；管理頁新增分類面板，`bookEdit` 權限即可進 `/admin` 管分類。
 - **A5 制度集型別**（PR #18，牌桌 #80）：`SystemProfile` 在牌桌 `shared/protocol.ts` 與 `src/lib/api.ts` 各一份並有對拍測試；`lib/profiles.ts` 的 `resolveProfile` 處理繼承、覆寫、`origin` 與壞參照。覆寫的叫品列會拿掉原本的 `pending`（使用者確認）。
-- **牌桌 Deploy workflow 要 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 兩個 secret**；在設好之前合併牌桌 PR 不會上線（10/23 之後牌桌 Worker 沒部署過）。
+- **牌桌 Deploy workflow 的兩個 Cloudflare secret 已設好**：牌桌合併到 `main` 就部署 Worker。
 - **A6 制度集儲存與角色**（PR #23，牌桌 #90）：Worker CRUD、版本衝突、上限、`club` 不可刪；權限集中在牌桌 `worker/roles.ts`。**角色規則（使用者 2026-10-25 決定）**：管理員管所有事（含帳號）；編輯者（`bookEdit`）管帳號以外的一切（內容、分類、制度集、`/admin` 非帳號面板）；位階名稱之後再改。AI 匯入、精選牌局仍是個別權限。
 - **D2 填制度卡**（PR #24）：`src/cards/fill.ts` 的 `fillCard`；WBF 版型改照 2.19；內建 18 個特約共 90 條 `cardSlots` 對應，表在 `CONTENT_GUIDE.md` §2.2，使用者暫定核可（PR #26，有問題再改）；原文有疑義的格子留空，等制度編寫好再補；WBF 卡先填中文。`cardSlots` 不進 manifest，以免撐大首頁。
 - **L3 備份與型別對拍**（PR #22，牌桌 #89 **未合併**）：牌桌每日備份 `book*`／`profile*`／`article*` 到 R2（保留 30 天）與還原 API；橋譜 CI 的「Table type parity」比對兩邊型別。上線前要人做：建 R2 bucket（`npx wrangler r2 bucket create tku-bridge-backups`）後才合併牌桌 #89；設 secret `TABLE_REPO_TOKEN`（牌桌 Contents 唯讀）；部署後照牌桌 `DEPLOY.md` §4.3 演練還原再勾 AC-10.5。
+- **A7 讀者的制度集**（PR #30，牌桌 #121）：登入後頁首可切換制度集（有兩個以上才出現；手機在目錄抽屜），選擇存在帳號（`Me.bookProfile`），離線時暫存 localStorage；目錄、內容、列印、搜尋都跟著制度集；覆寫處有「隊伍覆寫」等文字標與色線，備忘顯示在特約或段落開頭。未登入不抓制度集 API。`lib/profiles.ts` 與選單都 lazy。
 - **C2 隊伍與搭檔的模型與 API**（PR #29，牌桌 #122）：牌桌 `worker/teams.ts`（`ClubTeam`、`Partnership`，`/api/club/teams*`、`/api/club/pairs*`），隊伍建立時、搭檔接受時各開一個制度集；邀請、接受、婉拒、結束有通知（牌桌鈴鐺，連到橋譜 `/pairs/:id`，C4 做頁面）；一隊 8 人、每人 10 個搭檔（含等回覆）；隊長與編輯者管隊伍。橋譜只有 `api.club` 型別與呼叫，還沒有畫面。還沒處理：帳號刪除時的隊伍與搭檔、成員制權限（C3）。
-- **首頁 JS 148.3／150 kB**：之後的功能一律 lazy。
-- **下一批**：A7（`ProfileContext`、頁首切換、覆寫標記、帳號偏好；前提 A6、A1）。C2 已完成，C3（成員制權限）可以接著做；D3 等 B3，G 期等 B2。
+- **首頁 JS 148.7／150 kB**：之後的功能一律 lazy。
+- **下一批**：A 期做完。B2（頁首 v2、拆頁；前提 B1、A7）；C3（成員制權限；前提 C2）可以平行；D3 等 B3，G 期等 B2。
 - **已拍板**（2026-10-24）：網站改名**淡江橋館 · TKU BridgeHall**，「橋譜」保留為制度區塊名；新標誌（屋簷＋拱門＋四花色）在 `design/logo/`，改名是 ROADMAP B0（`e9-t18`）。介面預設「一般」＝現行配色與圓角，另五種風格、四種版面、字體、字級、花色顏色、密度都放個人設定，不投票（E9，展示頁 `design/pitch.html`）；首頁保留第一版視覺稿的版面並加社團新聞與最新討論（`DESIGN-V2.md` §5.3）；制度卡以 WBF 卡為主力、內容寫進格子、輸出 .docx 與 PDF，簡易卡與棕標申報表也要能生成（E3）；**新增 E11 社群與討論**（頭像、板面、牌例友善的貼文與留言、通知、管理），先給社內測試，型別與 Worker 模組放牌桌 repo 以便日後搬到牌桌 E13（ROADMAP Phase G）。
 - **等人決定的事**（不卡 A 期）：程度名稱（E4）、制度負責人（E8）、WBF 卡英文濃縮文字由誰定稿（E3）。見 `docs/PRD/00-prd.md` §14。
 

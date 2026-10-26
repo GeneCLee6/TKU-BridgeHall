@@ -29,7 +29,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | [x] A4 #20 | `e1-t05` `e1-t06` | 分類改為資料：Worker 儲存、API、管理 UI | A3 |
 | [x] A5 #18 | `e1-t07` `e1-t08` | `SystemProfile` 型別進 `shared/protocol.ts`、`resolveProfile` 解析與測試 | A3 |
 | [x] A6 #23 | `e1-t09` `e1-t10` | Worker 制度集儲存、版本、衝突、上限；暫行權限 | A5 |
-| [ ] A7 | `e1-t11` `e1-t12` `e1-t13` `e1-t16` | `ProfileContext`、頁首切換、覆寫標記、帳號偏好 | A6, A1 |
+| [x] A7 #30 | `e1-t11` `e1-t12` `e1-t13` `e1-t16` | `ProfileContext`、頁首切換、覆寫標記、帳號偏好 | A6, A1 |
 
 ## Phase B · M1 介面 v2（E9，集中一條線做完）
 

@@ -24,6 +24,8 @@ export interface Me {
   permissions: Permission[]
   /** Admins only: registrations waiting for approval */
   applications?: number
+  /** The system profile the member reads with, kept with the account (e1-t16); absent for the club's */
+  bookProfile?: string
 }
 
 export type RegisterResult = { user: Me } | { pending: true; username: string }
@@ -318,6 +320,8 @@ export const api = {
     post<{ ok: true }>('/api/password/reset', { username, inviteCode, password }),
   changePassword: (current: string, next: string) =>
     post<{ ok: true }>('/api/account/password', { current, next }),
+  /** Keeps the member's system profile with the account; '' for the club's (e1-t16) */
+  setPreferences: (preferences: { bookProfile: string }) => post<{ user: Me }>('/api/account/preferences', preferences),
 
   admin: {
     users: () => request<{ users: AdminUser[] }>('/api/admin/users'),

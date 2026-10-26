@@ -7,12 +7,12 @@ export const SEARCH_INDEX_URL = '/search-index.json'
 /**
  * The search box's search. Nothing is downloaded until `prepare` (the box is focused): then the
  * search code (Fuse) and the index built with the site, plus the content of the conventions
- * changed online, whose records replace the index's (lib/search.ts `mergeIndex`). Until the index
- * arrives, and if it cannot be fetched at all, the search falls back to what is loaded here:
+ * changed online or by the reader's profile, whose records replace the index's (lib/search.ts
+ * `mergeIndex`). Until the index arrives, and if it cannot be fetched at all, the search falls back to what is loaded here:
  * section titles at first, and every convention's content once `loadAll` brings it.
  */
 export function useSearch(): { search: SearchFn; prepare: () => void } {
-  const { conventions, online, loaded, load, loadAll } = useContent()
+  const { conventions, changed: changedKeyOf, loaded, load, loadAll } = useContent()
   const [lib, setLib] = useState<typeof import('../lib/search.ts')>()
   // undefined while not fetched yet, null when fetching failed
   const [index, setIndex] = useState<SearchIndex | null>()
@@ -36,9 +36,9 @@ export function useSearch(): { search: SearchFn; prepare: () => void } {
       .finally(() => (fetching.current = false))
   }
 
-  // With the index, only conventions changed online need their content
-  const changed = conventions.filter((c) => online.has(c.slug))
-  const changedKey = changed.map((c) => `${c.slug}@${online.get(c.slug)?.version}`).join(' ')
+  // With the index, only conventions changed online or by the profile need their content
+  const changed = conventions.filter((c) => changedKeyOf(c.slug))
+  const changedKey = changed.map((c) => changedKeyOf(c.slug)).join(' ')
   useEffect(() => {
     if (!index) return
     for (const c of changed) void load(c.slug).catch(() => {})
@@ -52,10 +52,10 @@ export function useSearch(): { search: SearchFn; prepare: () => void } {
     if (!lib) return () => []
     let built: SearchFn | undefined
     const records = () =>
-      index ? lib.mergeIndex(index, searchable, (slug) => !online.has(slug)) : lib.buildRecords(searchable)
+      index ? lib.mergeIndex(index, searchable, (slug) => !changedKeyOf(slug)) : lib.buildRecords(searchable)
     return (query, limit) => (built ??= lib.searchRecords(records()))(query, limit)
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- rebuilt when the catalogue or what is loaded changes
-  }, [lib, index, conventions, online, searchKey])
+  }, [lib, index, conventions, changedKey, searchKey])
 
   return { search, prepare }
 }

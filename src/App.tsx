@@ -6,6 +6,7 @@ import { AuthProvider } from './state/AuthContext.tsx'
 import { ContentProvider } from './state/ContentContext.tsx'
 import { ExpansionProvider } from './state/ExpansionContext.tsx'
 import { PreferencesProvider } from './state/PreferencesContext.tsx'
+import { ProfiledContent, ProfileProvider } from './state/ProfileContext.tsx'
 import { GlobalStyle } from './styles/GlobalStyle.ts'
 import { strings } from './strings.ts'
 
@@ -17,6 +18,13 @@ const ImportPage = lazy(() => import('./pages/ImportPage.tsx').then((m) => ({ de
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
 const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ default: m.AccountPage })))
 
+// The handbook reads the reader's system profile; the editor and the admin page keep the club's content
+const handbook = (
+  <ProfiledContent>
+    <HandbookPage />
+  </ProfiledContent>
+)
+
 export function App() {
   return (
     <PreferencesProvider>
@@ -24,22 +32,24 @@ export function App() {
       <UpdatePrompt />
       <AuthProvider>
         <ContentProvider>
-          <ExpansionProvider>
-            <Suspense fallback={<p role="status">{strings.loading}</p>}>
-              <Routes>
-                <Route path="/" element={<HandbookPage />} />
-                <Route path="/c/:slug" element={<HandbookPage />} />
-                <Route path="/c/:slug/:sectionId" element={<HandbookPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/account" element={<AccountPage />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/new" element={<EditorPage />} />
-                <Route path="/edit/:slug" element={<EditorPage />} />
-                <Route path="/import" element={<ImportPage />} />
-                <Route path="*" element={<HandbookPage />} />
-              </Routes>
-            </Suspense>
-          </ExpansionProvider>
+          <ProfileProvider>
+            <ExpansionProvider>
+              <Suspense fallback={<p role="status">{strings.loading}</p>}>
+                <Routes>
+                  <Route path="/" element={handbook} />
+                  <Route path="/c/:slug" element={handbook} />
+                  <Route path="/c/:slug/:sectionId" element={handbook} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/account" element={<AccountPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/new" element={<EditorPage />} />
+                  <Route path="/edit/:slug" element={<EditorPage />} />
+                  <Route path="/import" element={<ImportPage />} />
+                  <Route path="*" element={handbook} />
+                </Routes>
+              </Suspense>
+            </ExpansionProvider>
+          </ProfileProvider>
         </ContentProvider>
       </AuthProvider>
     </PreferencesProvider>
