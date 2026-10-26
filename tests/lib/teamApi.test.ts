@@ -73,4 +73,13 @@ describe('team and partnership API (e2-t02, e2-t03)', () => {
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({ status: 409, code: 'pairLimit', params: { max: 10 } })
   })
+
+  it("reads the member directory and opens a team's profile to its members (e2-t10)", async () => {
+    answer.body = { members: [{ id: 'u1', username: 'amy' }] }
+    expect(await api.club.members()).toEqual([{ id: 'u1', username: 'amy' }])
+    answer.body = { team: { ...team, membersEdit: true } }
+    expect(await api.club.updateTeam('t1', { membersEdit: true })).toMatchObject({ membersEdit: true })
+    expect(sent.map((s) => `${s.method} ${s.path}`)).toEqual(['GET /api/club/members', 'PATCH /api/club/teams/t1'])
+    expect(sent[1].body).toEqual({ membersEdit: true })
+  })
 })

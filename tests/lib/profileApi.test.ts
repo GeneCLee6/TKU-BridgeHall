@@ -51,6 +51,14 @@ describe('system profile API', () => {
     ])
   })
 
+  it('reads a profile with what the member may do with it (e2-t04)', async () => {
+    const access = { notes: true, edit: true, share: false }
+    answer.body = { profile: { ...profile, visibility: 'members' }, access }
+    expect(await api.book.profileWithAccess('ab12')).toEqual({ profile: { ...profile, visibility: 'members' }, access })
+    answer = { status: 403, body: { error: '沒有權限', code: 'noPermission' } }
+    await expect(api.book.profile('ab12')).rejects.toMatchObject({ status: 403, code: 'noPermission' })
+  })
+
   it('creates, saves with baseVersion and deletes', async () => {
     answer.body = { profile }
     await api.book.createProfile(input, '開隊')

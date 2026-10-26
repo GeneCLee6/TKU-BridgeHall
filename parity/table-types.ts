@@ -69,6 +69,9 @@ export type Checks = [
   Check<Same<Book.ProfileSummary, Protocol.ProfileSummary>>,
   Check<Same<Omit<Book.ProfileRevision, 'profile'>, Omit<Protocol.ProfileRevision, 'profile'>>>,
   Check<Same<Omit<Book.ProfileInput, 'overrides'>, Omit<Protocol.ProfileInput, 'overrides'>>>,
+  Check<Same<Book.ProfileVisibility, Protocol.ProfileVisibility>>,
+  Check<Same<Book.ProfileAccess, Protocol.ProfileAccess>>,
+  Check<Same<typeof Book.PROFILE_VISIBILITIES, typeof Protocol.PROFILE_VISIBILITIES>>,
   Check<Same<typeof Book.CLUB_PROFILE_ID, typeof Protocol.CLUB_PROFILE_ID>>,
   Check<Same<typeof Book.PROFILE_SCOPES, typeof Protocol.PROFILE_SCOPES>>,
   Check<Same<typeof Book.PROFILE_LIMITS, typeof Protocol.PROFILE_LIMITS>>,
@@ -80,6 +83,7 @@ export type Checks = [
   Check<Same<Book.TeamInput, Protocol.TeamInput>>,
   Check<Same<Book.TeamPatch, Protocol.TeamPatch>>,
   Check<Same<Book.PairInvite, Protocol.PairInvite>>,
+  Check<Same<Book.ClubMember, Protocol.ClubMember>>,
   Check<Same<typeof Book.TEAM_LIMITS, typeof Protocol.TEAM_LIMITS>>,
   Check<Same<typeof Book.PAIR_STATUSES, typeof Protocol.PAIR_STATUSES>>,
 ]
