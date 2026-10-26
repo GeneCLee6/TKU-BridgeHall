@@ -84,8 +84,8 @@
 | PendingNote | `components/PendingNote.tsx` | 「待確認」標記與說明。 |
 | SearchBar | `components/SearchBar.tsx` | 頁首搜尋框，下拉結果為深層連結；Esc 清除。 |
 | Sidebar（TOC） | `components/Sidebar.tsx` | 樹狀目錄，箭頭一律在左側、每層往內縮並有引導線。兩層下拉：分類（預設展開，顯示特約數量）→ 特約（點特約名稱展開，再點一次收起；箭頭只是狀態圖示、不能單獨點；預設收合，網址所在的特約自動展開）。目前位置高亮。行動版為抽屜。 |
-| AppHeader | `components/AppHeader.tsx` | 桌機：Logo、搜尋、ViewActions。手機：只有選單按鈕、Logo 圖示、搜尋，不超出螢幕寬度。 |
-| ViewActions | `components/ViewActions.tsx` | 全部展開／收合、主題、列印。桌機放頁首（圖示按鈕），手機放進選單抽屜頂端（含文字的列）。 |
+| AppHeader | `components/AppHeader.tsx` | 頁首 v2（e9-t03）只有四件事：Logo、制度集（只有社團的時候是不能點的膠囊 `ProfilePill`，可選時是 `ProfileSwitch` 下拉）、搜尋、帳號。手機：選單按鈕、Logo 圖示、搜尋、帳號；制度集下拉在目錄抽屜。 |
+| ReadingSettings | `components/ReadingSettingsButton.tsx`、`ReadingSettings.tsx` | 「閱讀設定」按鈕在每個閱讀頁頂端右側（e9-t05 移到右欄），面板 lazy 載入：主題（跟隨系統／淺色／深色）、字級、本頁全部展開／收合、列印本頁（全書頁為「印整本」）、安裝 App。Esc、×、點外面關閉；Esc 與 × 把焦點還給按鈕。 |
 | AccountMenu | `components/AccountMenu.tsx` | 頁首右端：未登入時是「登入」膠囊按鈕；登入後是名字＋選單（新增特約、匯入檔案、社團管理、我的帳號、登出，依權限顯示），有待審核申請時顯示朱紅數字。 |
 | 表單元件 | `components/ui.tsx` | Button（一般／主要／危險／ghost）、Input、TextArea、Select、Field（標籤＋提示）、Panel、PasswordInput（右側眼睛按鈕切換顯示密碼）、ErrorText、Notice。 |
 | 編輯器 | `components/editor/` | Outline（段落樹，手機為下拉選單）、MetaForm、SectionForm、BlockEditor（各區塊表單，左框宮燈金）、Preview（完整展開的卡片）、RevisionsPanel、SuitPalette（插入 ♠♥♦♣，不搶走輸入框焦點）。桌機版是剛好填滿視窗的工作區：段落樹、表單、預覽三欄上下緣對齊、各自捲動，整頁不捲動；手機版單欄隨頁面捲動。 |

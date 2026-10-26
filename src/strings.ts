@@ -12,9 +12,25 @@ export const strings = {
   expandConvention: '展開本特約',
   collapseConvention: '收合本特約',
   print: '列印',
-  themeToLight: '切換為淺色模式',
-  themeToDark: '切換為深色模式',
-  viewOptions: '顯示選項',
+  /** The 閱讀設定 panel (e9-t03) that holds what the header used to: theme, 字級, expand, print */
+  reading: {
+    open: '閱讀設定',
+    close: '關閉閱讀設定',
+    theme: '主題',
+    themes: { system: '跟隨系統', light: '淺色', dark: '深色' },
+    thisPage: '本頁',
+    printPage: '列印本頁',
+    printBook: '印整本',
+  },
+  /** The pages split out of the one-page handbook (e9-t04) */
+  pages: {
+    home: '首頁',
+    book: '全書目錄',
+    bookIntro: '整本橋譜在同一頁：每個特約都可以展開，也可以一次印整本。',
+    toBook: '看全書目錄（整本一頁）',
+    homeIntro: '從左邊的目錄或下面的分類挑一個特約開始讀；每個段落都有可分享的連結。',
+    trail: '目前位置',
+  },
   textSize: '字級',
   textSizeNames: { small: '小', medium: '中', large: '大' },
   openMenu: '開啟目錄',

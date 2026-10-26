@@ -10,15 +10,17 @@ import { LogoMark } from './Logo.tsx'
 import { SearchBar } from './SearchBar.tsx'
 
 /**
- * Desktop: brand, search, the view actions and the account menu. Mobile: menu button, logo mark,
- * search and the account menu; the view actions move into the menu drawer (HandbookPage passes
- * `actions` only on desktop). Pages other than the handbook leave out the search and the menu.
+ * The header v2 (e9-t03, DESIGN-V2 §5.1): four things only, the logo, the system profile, search
+ * and the account. Theme, 字級, expand / collapse and print live in the 閱讀設定 panel. On phones
+ * a menu button opens the catalogue drawer (where the profile menu goes too). Pages other than the
+ * handbook leave out the search and the menu, and may add `actions` of their own.
  */
 export function AppHeader({
   search,
   onSearchFocus,
   menuOpen = false,
   onToggleMenu,
+  profile,
   actions,
   account,
 }: {
@@ -26,6 +28,8 @@ export function AppHeader({
   onSearchFocus?: () => void
   menuOpen?: boolean
   onToggleMenu?: () => void
+  /** The system profile pill or menu, next to the logo */
+  profile?: ReactNode
   actions?: ReactNode
   account?: ReactNode
 }) {
@@ -42,7 +46,7 @@ export function AppHeader({
           {menuOpen ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
         </MenuButton>
       )}
-      <Brand to="/" aria-label={`${strings.appNameEn} ${strings.appNameZh} 首頁`}>
+      <Brand to="/" aria-label={`${strings.appNameEn} ${strings.appNameZh} ${strings.pages.home}`}>
         <LogoMark size={40} />
         <BrandText>
           <strong lang="en">{strings.appNameEn}</strong>
@@ -52,6 +56,7 @@ export function AppHeader({
           </span>
         </BrandText>
       </Brand>
+      {profile}
       {search ? <SearchBar search={search} onFocus={onSearchFocus} /> : <Spacer />}
       {actions}
       {account}
