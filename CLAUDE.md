@@ -38,6 +38,7 @@
 - **「待確認」數量寫在測試裡**（`tests/content/conventions.test.ts`），新增或解決時要同步更新。
 - **`cfb` 是 CommonJS**：Node 只給 default export，打包工具給具名 export，用 `docText.ts` 開頭的寫法取得。
 - **捲動框裡的 `.visually-hidden` 要有定位的祖先。** 它是 `position: absolute`；沒有定位祖先時會跑出 `overflow: auto` 的框，把整頁撐長（編輯器的預覽曾因此在下方多出幾千 px 空白）。捲動框加 `position: relative`。
+- **手冊頁讀的是制度集套用後的內容**：`ProfiledContent`（`App.tsx`）只包手冊頁，裡面的 `useContent()` 已濾掉不採用的特約並套好覆寫；編輯器、管理頁在它外面，讀社團版原文。新頁面要顯示讀者的制度集就包一層 `ProfiledContent`（ARCHITECTURE.md §3.1）。
 - **元件測試裡 fetch 會失敗**：`AuthContext`、`ContentContext` 抓不到 API 時退回「未登入、內建內容」；要測登入或線上內容，用 `vi.stubGlobal('fetch', …)`（見 `tests/presentation/accounts.test.tsx`）。
 
 ## 指令

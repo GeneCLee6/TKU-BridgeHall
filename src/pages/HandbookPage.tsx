@@ -1,5 +1,5 @@
 import { FilePlus2, FileUp } from 'lucide-react'
-import { startTransition, useEffect, useState } from 'react'
+import { lazy, startTransition, Suspense, useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { AppHeader } from '../components/AppHeader.tsx'
@@ -21,16 +21,23 @@ import {
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
+import { useProfiles } from '../state/ProfileContext.tsx'
 import { useSearch } from '../state/useSearch.ts'
 import { strings } from '../strings.ts'
 import { mobile, mobileQuery } from '../styles/tokens.ts'
 import { AccountCorner } from './Frame.tsx'
 
+// Only signed-in readers with more than one profile see the menu (e1-t12)
+const ProfileSwitch = lazy(() =>
+  import('../components/ProfileSwitch.tsx').then((m) => ({ default: m.ProfileSwitch })),
+)
+
 /**
  * The whole handbook on one page, Swagger style. The route only decides what to open and scroll
  * to: /c/:slug opens a convention, /c/:slug/:sectionId opens the path down to that section.
  * The conventions are the bundled ones with the online changes laid over them (ContentContext);
- * the page starts from the manifest and each card loads its content when it opens.
+ * the page starts from the manifest and each card loads its content when it opens. Inside
+ * ProfiledContent (App.tsx) all of it is the reader's system profile's view (e1-t11).
  */
 export function HandbookPage() {
   const { conventions, categories, bySlug: conventionBySlug, loadAll, online, status, skipped } = useContent()
@@ -58,6 +65,13 @@ export function HandbookPage() {
     return (info.added ? strings.online.added : strings.online.edited)(info.updatedBy, formatDateTime(info.updatedAt))
   }
   const isMobile = useMediaQuery(mobileQuery)
+  const profiles = useProfiles()
+  const profileSwitch = (variant: 'bar' | 'menu') =>
+    profiles.list.length > 1 && (
+      <Suspense fallback={null}>
+        <ProfileSwitch variant={variant} />
+      </Suspense>
+    )
 
   const convention = slug ? conventionBySlug(slug) : undefined
   // The linked convention's content: the scroll waits for it, as the section is not there before
@@ -117,7 +131,15 @@ export function HandbookPage() {
         onToggleMenu={() => setMenuOpen((o) => !o)}
         actions={
           !isMobile && (
-            <ViewActions variant="bar" onExpandAll={expandAll} onCollapseAll={collapseAll} onPrint={print} />
+            <>
+              {profileSwitch('bar')}
+              <ViewActions
+                variant="bar"
+                onExpandAll={expandAll}
+                onCollapseAll={collapseAll}
+                onPrint={print}
+              />
+            </>
           )
         }
         account={<AccountCorner />}
@@ -131,22 +153,25 @@ export function HandbookPage() {
           onNavigate={() => setMenuOpen(false)}
           actions={
             isMobile && (
-              <ViewActions
-                variant="menu"
-                onExpandAll={() => {
-                  expandAll()
-                  setMenuOpen(false)
-                }}
-                onCollapseAll={() => {
-                  collapseAll()
-                  setMenuOpen(false)
-                }}
-              />
+              <>
+                {profileSwitch('menu')}
+                <ViewActions
+                  variant="menu"
+                  onExpandAll={() => {
+                    expandAll()
+                    setMenuOpen(false)
+                  }}
+                  onCollapseAll={() => {
+                    collapseAll()
+                    setMenuOpen(false)
+                  }}
+                />
+              </>
             )
           }
         />
         {menuOpen && <Scrim aria-hidden onClick={() => setMenuOpen(false)} data-print="hide" />}
-        <Main id="main" tabIndex={-1}>
+        <Main id="main" tabIndex={-1} aria-busy={profiles.status === 'loading'} $busy={profiles.status === 'loading'}>
           <Intro>
             <h1>
               {strings.appNameZh} <span lang="en">{strings.appNameEn}</span>
@@ -170,6 +195,7 @@ export function HandbookPage() {
             )}
           </Intro>
           {status === 'offline' && <Status role="status">{strings.online.offline}</Status>}
+          {profiles.status === 'failed' && <Status role="status">{strings.profiles.failed}</Status>}
           {canEdit && skipped.length > 0 && <Status role="status">{strings.online.skipped(skipped.length)}</Status>}
           {notFound && <NotFound role="alert">{strings.notFound}</NotFound>}
           {categories.map((category) => {
@@ -226,8 +252,14 @@ const Scrim = styled.div`
   }
 `
 
-const Main = styled.main`
+const Main = styled.main<{ $busy: boolean }>`
   flex: 1;
+  /* Switching profiles dims the page until the new one has loaded */
+  opacity: ${({ $busy }) => ($busy ? 0.55 : 1)};
+  transition: opacity 150ms ease;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
   min-width: 0;
   max-width: ${({ theme }) => theme.layout.contentMax};
   padding: ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(6)}

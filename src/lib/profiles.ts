@@ -1,7 +1,8 @@
 /**
  * System profiles (制度集, PRD E1): resolving a profile's layers into the conventions its readers
- * see. Pure functions, no storage and no React; ProfileContext (e1-t11) will call resolveProfile
- * with the profiles from the Worker and the content ContentContext already merged.
+ * see. Pure functions, no storage and no React. `resolveProfile` resolves a whole handbook at once
+ * (the compare page, e1-t15); ProfileContext (e1-t11) uses `profileView`, which applies the same
+ * rules one convention at a time as the content loads.
  *
  * The rules (ARCHITECTURE.md §3, 制度集):
  * - The chain runs from the club down to the chosen profile: club ← team ← partnership. The club is
@@ -24,10 +25,12 @@ import {
   type ProfileNote,
   type ProfileOverride,
   type ProfileScope,
+  type ProfileSummary,
   type SystemProfile,
 } from './api.ts'
+import { outline } from './sections.ts'
 import { strings } from '../strings.ts'
-import type { Block, Convention, ResponseRow, Section } from '../types/convention.ts'
+import type { Block, Convention, ConventionMeta, ResponseRow, Section } from '../types/convention.ts'
 
 /** Which layer an overridden part comes from */
 export type Origin = ProfileScope
@@ -280,4 +283,92 @@ export function resolveProfile(
   }
 
   return { profile: chain[chain.length - 1]!, chain, conventions, notes, problems }
+}
+
+/**
+ * A profile as the handbook page reads it, one convention at a time (ProfileContext, e1-t11): the
+ * content arrives in pieces, so instead of resolving the whole handbook at once this applies the
+ * same rules as `resolveProfile` to each catalogue entry and each convention as it loads. Results
+ * are kept per object, so a convention that did not change gives the same resolved object again.
+ */
+export interface ProfileView {
+  profile: SystemProfile
+  chain: SystemProfile[]
+  /** Only the chain's problems; the ones that need the content are on the compare page (e1-t15) */
+  problems: ProfileProblem[]
+  /** Whether the profile plays the convention */
+  plays: (slug: string) => boolean
+  /** Whether some profile in the chain overrides part of the convention */
+  changes: (slug: string) => boolean
+  convention: (convention: Convention) => ResolvedConvention
+  /** A catalogue entry with the summary, tags and section outline the profile shows */
+  meta: (meta: ConventionMeta) => ConventionMeta
+  /** The chain's notes on the convention, club first */
+  notes: (slug: string) => ResolvedNote[]
+}
+
+export function profileView(profiles: readonly SystemProfile[], id: string): ProfileView {
+  const { chain, problems } = profileChain(profiles, id)
+  const adopted = new Map<string, 'on' | 'off'>()
+  const overrides = new Map<string, [SystemProfile, ProfileOverride[]][]>()
+  for (const profile of chain) {
+    for (const [slug, value] of Object.entries(profile.adopted)) adopted.set(slug, value)
+    const mine = new Map<string, ProfileOverride[]>()
+    for (const override of profile.overrides) mine.set(override.slug, [...(mine.get(override.slug) ?? []), override])
+    for (const [slug, list] of mine) overrides.set(slug, [...(overrides.get(slug) ?? []), [profile, list]])
+  }
+  const apply = (convention: ResolvedConvention) =>
+    (overrides.get(convention.slug) ?? []).reduce((c, [profile, list]) => applyOverrides(c, profile, list, []), convention)
+  const cache = new WeakMap<object, unknown>()
+  const once = <T extends object, R>(value: T, make: (value: T) => R): R => {
+    if (!cache.has(value)) cache.set(value, make(value))
+    return cache.get(value) as R
+  }
+  return {
+    profile: chain[chain.length - 1]!,
+    chain,
+    problems,
+    plays: (slug) => adopted.get(slug) !== 'off',
+    changes: (slug) => overrides.has(slug),
+    convention: (convention) => (overrides.has(convention.slug) ? once(convention, apply) : convention),
+    // The outline stands in for the sections: section and meta overrides apply to it the same
+    // way, and row overrides, which change no title, find no rows and leave it as it is
+    meta: (meta) =>
+      overrides.has(meta.slug)
+        ? once(meta, () => {
+            const { sections, ...rest } = apply({ ...meta, sections: meta.outline })
+            return { ...(rest as Omit<ConventionMeta, 'outline'>), outline: outline(sections as Section[]) }
+          })
+        : meta,
+    notes: (slug) =>
+      chain.flatMap((p) => p.notes.filter((n) => n.slug === slug).map((n) => ({ ...n, profileId: p.id, origin: p.scope }))),
+  }
+}
+
+/** The summaries from `id` up to the club (the club last, when the list has it) */
+function summaryChain(summaries: readonly ProfileSummary[], id: string): ProfileSummary[] {
+  const byId = new Map(summaries.map((s) => [s.id, s]))
+  const chain: ProfileSummary[] = []
+  for (let s = byId.get(id); s && !chain.includes(s); s = byId.get(s.parentId ?? CLUB_PROFILE_ID)) chain.push(s)
+  const club = byId.get(CLUB_PROFILE_ID)
+  if (club && !chain.includes(club)) chain.push(club)
+  return chain
+}
+
+/** Whether the profiles from the club down to `id` change nothing, so the handbook shows as it is */
+export const unchanged = (summaries: readonly ProfileSummary[], id: string): boolean =>
+  summaryChain(summaries, id).every((s) => !s.counts.adopted && !s.counts.overrides && !s.counts.notes)
+
+/**
+ * Fetches the profiles from the club down to `id` (the list has summaries only) and makes their
+ * view; undefined, with nothing fetched, when they change nothing. ProfileContext loads this
+ * module for signed-in readers only
+ */
+export async function loadProfileView(
+  summaries: readonly ProfileSummary[],
+  id: string,
+  fetchProfile: (id: string) => Promise<SystemProfile>,
+): Promise<ProfileView | undefined> {
+  if (unchanged(summaries, id)) return undefined
+  return profileView(await Promise.all(summaryChain(summaries, id).map((s) => fetchProfile(s.id))), id)
 }

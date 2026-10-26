@@ -80,7 +80,7 @@ M0 的 `Convention` 只有一種身分：「社團的一份特約」，分類是
 - [x] AC-1.3 — `SystemProfile` 型別在 `shared/protocol.ts`，橋譜與牌桌的型別對拍測試通過；`club` 制度集永遠存在且不可刪。（解析時缺 `club` 會補一個空的；Worker 沒存過時回空的、版本 0，刪除回 403 `profileProtected`。）
 - [x] AC-1.4 — `resolveProfile` 純函式：三層繼承、子層覆寫勝、不採用隱藏整個特約、覆寫指到不存在的列會回報；每個內建特約在空制度集下解析結果與原本完全相同。
 - [x] AC-1.5 — API：列表、讀取、儲存（`baseVersion` 衝突 409）、版本列表與載入舊版；JSON 大小與覆寫數上限；未登入只拿得到 `club`。（Worker 與 `lib/api.ts` 的 client；編輯畫面是 `e1-t14`。）
-- [ ] AC-1.6 — 頁首可切換制度集；切換後目錄、內容、搜尋結果都跟著變；覆寫處有文字標記；選擇記在帳號或 localStorage。
+- [x] AC-1.6 — 頁首可切換制度集；切換後目錄、內容、搜尋結果都跟著變；覆寫處有文字標記；選擇記在帳號或 localStorage。
 - [ ] AC-1.7 — 「與母制度集比較」列出不採用的特約與每條覆寫（原文 vs 覆寫後），點一條跳到該段。
 
 ## Task 拆分
@@ -102,12 +102,12 @@ M0 的 `Convention` 只有一種身分：「社團的一份特約」，分類是
 - [x] `e1-t08` `lib/profiles.ts`：`resolveProfile` 與 `origin` 標記；`tests/lib/profiles.test.ts`（繼承、覆寫、不採用、壞參照、空制度集等同原內容）· AC-1.4 · #18
 - [x] `e1-t09` Worker：`profile:` 儲存、版本、`baseVersion` 衝突、大小與數量上限、`club` 保護；`GET/PUT /api/book/profiles[/:id]`、`/revisions` · AC-1.5 · #23（牌桌 #90）
 - [x] `e1-t10` 權限：`club` 由 `bookEdit` 改；其他制度集暫時也 `bookEdit`（E2 接手改成成員權限）；未登入只回 `club` · AC-1.5 · #23；同時落實角色規則（下方「權限」）
-- [ ] `e1-t11` 前端 `ProfileContext`：載入清單、目前選擇（帳號偏好或 localStorage）、`resolved`；`HandbookPage`、`Sidebar`、搜尋改讀 `resolved` · AC-1.6 · M · ← e1-t08, e1-t09
-- [ ] `e1-t12` 頁首制度集選單（桌機下拉、手機進目錄抽屜）；切換動畫與可及性 · AC-1.6 · S · ← e1-t11
-- [ ] `e1-t13` 覆寫標記元件：段落標題旁的來源標、叫品列的來源線、備忘區塊（只有成員看到）· AC-1.6 · S · ← e1-t11
+- [x] `e1-t11` 前端 `ProfileContext`：載入清單、目前選擇（帳號偏好或 localStorage）、`resolved`；`HandbookPage`、`Sidebar`、搜尋改讀 `resolved` · AC-1.6 · M · ← e1-t08, e1-t09 · #30（實作：`ProfiledContent` 以同一個 `ContentContext` 提供制度集看到的內容，元件不用改讀別的；localStorage 只暫存存不進帳號的選擇）
+- [x] `e1-t12` 頁首制度集選單（桌機下拉、手機進目錄抽屜）；切換動畫與可及性 · AC-1.6 · S · ← e1-t11 · #30（動畫只做切換時內容區變淡；頁首 v2 在 B2 重做）
+- [x] `e1-t13` 覆寫標記元件：段落標題旁的來源標、叫品列的來源線、備忘區塊（只有成員看到）· AC-1.6 · S · ← e1-t11 · #30（E1 期間登入的社員都能讀全部制度集，所以「成員」暫時＝登入的社員，E2 接手）
 - [ ] `e1-t14` 制度集編輯 UI（第一版）：採用／不採用開關（特約列表）、對某一叫品列「改成…」、對某段「換成…」（開段落編輯器）、備忘；儲存帶 `baseVersion` · AC-1.5、AC-1.6 · M · ← e1-t11
 - [ ] `e1-t15` 「與母制度集比較」頁：覆寫與不採用清單、原文 vs 覆寫後、跳轉 · AC-1.7 · S · ← e1-t11
-- [ ] `e1-t16` 帳號偏好 `profilePreference` 存在牌桌（`PATCH /api/account/preferences`），跨裝置一致 · AC-1.6 · S · ← e1-t11
+- [x] `e1-t16` 帳號偏好 `profilePreference` 存在牌桌（`PATCH /api/account/preferences`），跨裝置一致 · AC-1.6 · S · ← e1-t11 · #30（牌桌 #121；沿用既有的 `POST /api/account/preferences`，欄位名 `bookProfile`，因為牌桌的 `profile` 是個人檔案）
 
 ## 風險與對策
 

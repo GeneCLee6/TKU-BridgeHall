@@ -35,7 +35,7 @@ TKU-BridgeBook/
 │  ├─ lib/                  calls（叫品解析）、sections（走訪、key、深層連結）、search、content（線上內容合併與檢查）、
 │  │                        editing（編輯器的樹與文字轉換）、docText（讀 .doc/.docx）、importResult、sse、api（唯一有網路的模組）、
 │  │                        profiles（制度集解析，E1）
-│  ├─ state/                ExpansionContext（展開狀態）、PreferencesContext（主題）、AuthContext（帳號）、ContentContext（線上內容）
+│  ├─ state/                ExpansionContext（展開狀態）、PreferencesContext（主題）、AuthContext（帳號）、ContentContext（線上內容）、ProfileContext（讀者的制度集）
 │  ├─ components/           展示元件
 │  ├─ pages/                HandbookPage、LoginPage、AccountPage、AdminPage、EditorPage、ImportPage、Frame（頁首與權限閘門）
 │  ├─ styles/               tokens、GlobalStyle、styled-components 型別
@@ -131,7 +131,12 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - **空制度集等於原內容**：沒有覆寫時回傳的就是傳入的物件（同一個參照），所以每個內建特約在空制度集下 `toEqual` 也 `toBe` 原內容。只複製被改到的路徑，傳入的參數一律不改。
 - **壞參照不靜默消失**：覆寫或備忘指到不存在的特約、段落、區塊或列（或那個區塊不是答叫表），略過並放進 `problems`（`brokenOverride`、`brokenNote`、`unknownAdoption`），給「與母制度集比較」頁列出失效的覆寫（e1-t15）。
 
-網站程式目前不 import `lib/profiles.ts`；`ProfileContext`（e1-t11）接上時才用。
+**網站怎麼用**（A7：e1-t11、e1-t12、e1-t13、e1-t16）：
+- `state/ProfileContext.tsx` 的 `ProfileProvider`（在 `ContentProvider` 裡面）：未登入只有 `club`，**不抓任何制度集 API**，手冊照原樣顯示。登入後抓 `GET /api/book/profiles` 的摘要清單；目前選擇是帳號的 `Me.bookProfile`（牌桌 `POST /api/account/preferences` 的 `bookProfile`，空字串＝`club`），存不進帳號時（離線）暫存在 localStorage（`tku-bridgebook:profile`，`{ user, id }`），下次載入再送一次、送成功就清掉。選的制度集已不存在時顯示 `club`。
+- `lib/profiles.ts` 只在登入後才動態載入（首頁 JS 預算）；`loadProfileView` 先看摘要的數量，整條鏈什麼都沒改（全部 0）就不抓制度集本體、直接照原樣顯示，否則只抓鏈上的制度集，做出 `profileView`。`profileView` 套用和 `resolveProfile` 同一套規則，但一次一個特約（內容是分片載入的）：`plays`、`changes`、`convention`（套覆寫，依物件快取）、`meta`（目錄項目：摘要、標籤與被換掉的段落大綱；`outline` 代替段落套用同一組覆寫）、`notes`。
+- `ProfiledContent` 只包住手冊頁（`App.tsx`），用同一個 `ContentContext` 提供制度集看到的內容：不採用的特約從目錄、`bySlug`、`load`、`loadAll`（列印）消失，其餘套覆寫。編輯器、管理頁仍讀社團版原文。`Content.changed(slug)` 對被覆寫的特約回傳含制度集版本的鍵，搜尋就改用載入後的內容建索引（與線上改過的特約同一條路）。
+- 頁首選單 `components/ProfileSwitch.tsx`（lazy；有兩個以上制度集才出現）：桌機在頁首，手機在目錄抽屜；原生 `<select>` 依社團／隊伍／搭檔分組，`role="status"` 報讀「目前顯示…」；切換時內容區變淡（`aria-busy`，減少動態時不做過場），舊內容留到新的載好，載入失敗顯示提示並退回社團版。
+- 覆寫標記 `components/ProfileMarks.tsx`：段落標題與特約名稱旁的「社團覆寫／隊伍覆寫／搭檔覆寫」，答叫表被覆寫的列在意義欄左側一條色線並加同一個文字標（顏色借 `structure`／`accent`／`seal`）；備忘（`notes`）在特約或段落開頭，只有登入讀得到制度集的人看得到，列印不印。
 
 **儲存與 API**（牌桌 `worker/profiles.ts`，e1-t09／e1-t10；橋譜的 client 在 `lib/api.ts` 的 `api.book.profiles` 等）：
 

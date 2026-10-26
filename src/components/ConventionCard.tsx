@@ -13,10 +13,12 @@ import {
 import { useConvention } from '../state/ContentContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
+import type { ResolvedConvention } from '../lib/profiles.ts'
 import type { Convention, ConventionMeta } from '../types/convention.ts'
 import { CopyLinkButton, IconButton } from './CopyLinkButton.tsx'
 import { KindLevel } from './KindLevel.tsx'
 import { Badge } from './PendingNote.tsx'
+import { OriginMark, ProfileNotes } from './ProfileMarks.tsx'
 import { SectionAccordion } from './SectionAccordion.tsx'
 import { RichText } from './Suit.tsx'
 import { Tag, TagList } from './Tag.tsx'
@@ -60,6 +62,7 @@ export function ConventionCard({
                 <NameZh>{convention.nameZh}</NameZh>
                 <NameEn lang="en">{convention.nameEn}</NameEn>
                 <KindLevel kind={convention.kind} level={convention.level} />
+                <OriginMark origin={(convention as ResolvedConvention).origin} />
               </Names>
             </Trigger>
             {editPath && (
@@ -99,6 +102,7 @@ export function ConventionCard({
               {strings.collapseConvention}
             </TextButton>
           </Toolbar>
+          <ProfileNotes slug={convention.slug} />
           {loaded ? (
             <SectionAccordion slug={convention.slug} sections={loaded.sections} />
           ) : failed ? (

@@ -4,10 +4,11 @@ import styled from 'styled-components'
 import { sectionDomId, sectionKey, sectionPath } from '../lib/sections.ts'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
-import type { Section } from '../types/convention.ts'
+import type { ResolvedSection } from '../lib/profiles.ts'
 import { BlockView } from './BlockView.tsx'
 import { CopyLinkButton } from './CopyLinkButton.tsx'
 import { PendingNote } from './PendingNote.tsx'
+import { OriginMark, ProfileNotes } from './ProfileMarks.tsx'
 import { RichText } from './Suit.tsx'
 
 type HeadingTag = 'h3' | 'h4' | 'h5' | 'h6'
@@ -22,7 +23,8 @@ export function SectionAccordion({
   depth = 0,
 }: {
   slug: string
-  sections: Section[]
+  /** With `origin` where the reader's profile replaced a section (e1-t13) */
+  sections: ResolvedSection[]
   depth?: number
 }) {
   const { openAmong, setLevel } = useExpansion()
@@ -46,6 +48,7 @@ export function SectionAccordion({
                 <TitleBlock>
                   <Title>
                     <RichText text={section.title} />
+                    <OriginMark origin={section.origin} />
                   </Title>
                   {section.summary && (
                     <Summary>
@@ -63,6 +66,7 @@ export function SectionAccordion({
                 {strings.originalTitle}：{section.originalTitle}
               </Original>
             )}
+            <ProfileNotes slug={slug} sectionId={section.id} />
             {section.pending && <PendingNote text={section.pending} />}
             {section.blocks?.map((block, i) => (
               <BlockView key={i} block={block} />
