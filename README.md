@@ -29,7 +29,7 @@
 
 舊講義是 2010 年 13 點開叫的版本；現行為 12 點開叫、1NT 15-17、2NT 20-21、2♣ 22+、1NT forcing、2/1 迫叫成局。網站上以「現行制度」標出差異，與特約衝突時以特約為準。
 
-原始 Word 檔都放在 [`docs/`](docs/README.md)。
+原始 Word 檔不放在 repo；檔名與特約的對照見 [`docs/README.md`](docs/README.md)。
 
 內容逐字轉錄自原始文件；原文有疑義之處在網站上以「待確認」標示，清單見 [`CONTENT_GUIDE.md`](CONTENT_GUIDE.md#目前的待確認清單)。
 

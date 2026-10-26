@@ -4,7 +4,7 @@
 
 ## 這是什麼
 
-淡江橋藝社的制度與特約手冊網站（2026-10-24 由「淡江橋譜 · TKU BridgeBook」改名；「橋譜」現在是館內制度區塊的名字，repo 名稱 `TKU-BridgeBook` 與 `/book` 路由不改）。React 19 + TypeScript（strict）+ styled-components + Vite，靜態網站（Vercel）。介面參考 Swagger UI：每個特約是可收合的卡片，內含多層可收合段落。帳號、線上編輯的內容與 AI 匯入的後端是姊妹站淡江牌桌的 Worker（`C:\dev\TKU-BridgeTable`），`vercel.json` 把 `/api/*` 轉過去（ARCHITECTURE.md §4.1–4.4）。
+淡江橋藝社的制度與特約手冊網站（2026-10-24 由「淡江橋譜 · TKU BridgeBook」改名；「橋譜」現在是館內制度區塊的名字，`/book` 路由不改；GitHub repo 2026-10-26 重建為 `GeneCLee6/TKU-BridgeHall`，本機資料夾仍是 `C:devTKU-BridgeBook`）。React 19 + TypeScript（strict）+ styled-components + Vite，靜態網站（Vercel）。介面參考 Swagger UI：每個特約是可收合的卡片，內含多層可收合段落。帳號、線上編輯的內容與 AI 匯入的後端是姊妹站淡江牌桌的 Worker（`C:\dev\TKU-BridgeTable`），`vercel.json` 把 `/api/*` 轉過去（ARCHITECTURE.md §4.1–4.4）。
 
 ## 先讀
 
@@ -19,7 +19,7 @@
 ## 硬性規則
 
 1. **內容正確性第一。** 特約內容逐字轉錄自社團的 Word 檔。不得依一般橋牌知識補充、刪減或修正叫品意義、點力範圍或例子。有疑義時保留原文、加 `pending`（網站顯示「待確認」），並更新 `CONTENT_GUIDE.md` 的清單。
-2. **原始 Word 檔與轉檔輸出不得 commit。**（`.gitignore` 已排除 `*.doc`、`*.docx`、`*.htm`、`tmp/`。）
+2. **原始 Word 檔與轉檔輸出不得 commit。**（`.gitignore` 已排除 `*.doc`、`*.docx`、`*.htm`、`tmp/`。）原檔只存在本機 `C:淡江橋藝社制度原檔`；repo 是公開的，舊歷史裡的 .doc 已清掉，不要再放回來。
 3. **新增特約不改元件**：只新增 `src/content/conventions/<slug>.ts`（檔名＝slug）、在 `src/content/index.ts` 登記，再跑 `npm run manifest`。網站程式不要 import `content/index.ts`（只給測試與 manifest 腳本用，見 ARCHITECTURE.md §4）。
 4. **顏色只來自 `styles/tokens.ts`**，介面文字只來自 `strings.ts`。
 5. **線上版本優先**：網站上改過的特約，改 `.ts` 檔不會顯示（ARCHITECTURE.md §4.1）。改內容前先確認那個特約沒有線上版本，或在編輯器還原為內建版本。
