@@ -25,7 +25,7 @@
 | Epic | 名稱 | Task 完成 | AC 完成 | 里程碑 | 狀態 |
 | --- | --- | --- | --- | --- | --- |
 | [E1](e1-content-model-system-profiles.md) | 內容模型與制度集 | 14／16 | 6／7 | M1 | in progress |
-| [E2](e2-teams-partnerships.md) | 隊伍與搭檔 | 3／10 | 0／7 | M1 | in progress |
+| [E2](e2-teams-partnerships.md) | 隊伍與搭檔 | 6／10 | 1／7 | M1 | in progress |
 | [E3](e3-convention-card-generator.md) | 制度卡產生器 | 4／13 | 1／8 | M1（t13 M2） | in progress |
 | [E4](e4-levels-learning-path.md) | 分級與學習路徑 | 0／12 | 0／6 | M2 | planned |
 | [E5](e5-library-articles-ebooks.md) | 橋藝叢書 | 0／15 | 0／8 | M2 | planned |

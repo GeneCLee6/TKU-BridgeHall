@@ -42,7 +42,8 @@ beforeAll(() => {
 })
 
 beforeEach(() => {
-  routes = {}
+  // The admin page's team panel (e2-t07) reads these whenever it opens
+  routes = { 'GET /api/club/teams': { body: { teams: [] } }, 'GET /api/club/members': { body: { members: [] } } }
   sent = []
   vi.stubGlobal(
     'fetch',
@@ -478,5 +479,51 @@ describe('importing a file', () => {
     await userEvent.upload(await screen.findByLabelText(/^選擇檔案/), new File(['x'], 'a.txt', { type: 'text/plain' }))
     await userEvent.click(await screen.findByRole('button', { name: '開始分析' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('ANTHROPIC_API_KEY')
+  })
+})
+
+describe('teams on the admin page (e2-t07, e2-t10)', () => {
+  const team = { id: 't1', name: 'A 隊', captainId: 'u1', memberIds: ['u1', 'u2'], profileId: 'p1', createdAt: 1 }
+  const people = [
+    { id: 'u1', username: 'amy' },
+    { id: 'u2', username: 'ben' },
+    { id: 'u3', username: 'cat' },
+  ]
+
+  it('lists the teams for editors: captain, members, members editing the profile, partnerships, and a new team', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    routes['GET /api/book/categories'] = { body: { version: 0, categories: [] } }
+    routes['GET /api/club/teams'] = { body: { teams: [team] } }
+    routes['GET /api/club/members'] = { body: { members: people } }
+    routes['GET /api/club/teams/t1'] = {
+      body: { team, pairs: [{ id: 'q1', userIds: ['u1', 'u2'], teamId: 't1', profileId: 'p2', createdAt: 1, status: 'active', acceptedAt: 2 }] },
+    }
+    routes['PATCH /api/club/teams/t1'] = { body: { team } }
+    routes['POST /api/club/teams/t1/members'] = { body: { team } }
+    routes['POST /api/club/teams'] = { body: { team } }
+    const user = userEvent.setup()
+    renderAt('/admin')
+
+    const list = await screen.findByRole('list', { name: '隊伍' }, { timeout: 5000 })
+    expect(within(list).getByText('A 隊')).toBeInTheDocument()
+    expect(within(list).getByRole('combobox', { name: 'A 隊 的隊長' })).toHaveValue('u1')
+
+    await user.click(within(list).getByRole('checkbox', { name: '隊員可編輯制度集' }))
+    await waitFor(() => expect(sent.find((s) => s.method === 'PATCH')?.body).toEqual({ membersEdit: true }))
+
+    await user.selectOptions(within(list).getByRole('combobox', { name: '加入 A 隊 的社員' }), 'u3')
+    await user.click(within(list).getByRole('button', { name: '加入' }))
+    await waitFor(() => expect(sent.find((s) => s.path === '/api/club/teams/t1/members')?.body).toEqual({ userId: 'u3' }))
+
+    await user.click(within(list).getByRole('button', { name: 'A 隊 的搭檔' }))
+    expect(await screen.findByText('amy＋ben')).toBeInTheDocument()
+
+    const form = screen.getByRole('form', { name: '建立隊伍' })
+    await user.type(within(form).getByLabelText('隊名'), 'B 隊')
+    await user.selectOptions(within(form).getByLabelText('隊長'), 'u3')
+    await user.click(within(form).getByRole('button', { name: '建立隊伍' }))
+    await waitFor(() =>
+      expect(sent.find((s) => s.method === 'POST' && s.path === '/api/club/teams')?.body).toEqual({ name: 'B 隊', captainId: 'u3' }),
+    )
   })
 })

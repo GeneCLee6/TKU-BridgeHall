@@ -142,32 +142,34 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 
 | 呼叫 | 路由 | 權限 |
 | --- | --- | --- |
-| `profiles()` | `GET /api/book/profiles` → `ProfileSummary[]`（不含內容，只有 `counts`；`club` 在前） | 社員；未登入只回 `club` |
-| `profile(id)` | `GET /api/book/profiles/:id` → `SystemProfile` | 社員；未登入只能讀 `club`，且不含 `notes` |
+| `profiles()` | `GET /api/book/profiles` → `ProfileSummary[]`（不含內容，只有 `counts`；`club` 在前） | 社員，只列看得到的（下面成員權限）；未登入只回 `club` |
+| `profile(id)`、`profileWithAccess(id)` | `GET /api/book/profiles/:id` → `{ profile, access }`（`access`：`notes`、`edit`、`share`，自己能做什麼） | 看得到的社員（看不到 403 `noPermission`）；未登入只能讀 `club`，且不含 `notes` |
 | `createProfile(input, note?)` | `POST /api/book/profiles`，id 由 Worker 產生 | bookEdit |
-| `saveProfile(id, input, baseVersion, note?)` | `PUT /api/book/profiles/:id`；`baseVersion` 不符 409 `profileConflict` | bookEdit |
+| `saveProfile(id, input, baseVersion, note?)` | `PUT /api/book/profiles/:id`；`baseVersion` 不符 409 `profileConflict` | 能編輯的人（下面） |
 | `deleteProfile(id, baseVersion)` | `DELETE /api/book/profiles/:id`；`club` 403 `profileProtected`，有子制度集 409 `profileInUse` | bookEdit |
-| `profileRevisions(id)`、`profileRevision(id, version)` | `GET /api/book/profiles/:id/revisions[/:version]` | bookEdit |
+| `profileRevisions(id)`、`profileRevision(id, version)` | `GET /api/book/profiles/:id/revisions[/:version]` | bookEdit；隊伍或搭檔的成員 |
 
-- `ProfileInput` 只有可編輯的欄位（`name`、`scope`、`parentId`、`adopted`、`overrides`、`notes`）；id、版本、`updatedAt`、`updatedBy`（使用者 id）由 Worker 填。`club` 沒存過時是空的、版本 0，第一次存 `baseVersion` 給 0。
+- `ProfileInput` 只有可編輯的欄位（`name`、`scope`、`parentId`、`visibility`、`adopted`、`overrides`、`notes`）；id、版本、`updatedAt`、`updatedBy`（使用者 id）由 Worker 填。`club` 沒存過時是空的、版本 0，第一次存 `baseVersion` 給 0。
 - 層次：隊伍繼承 `club`，搭檔繼承 `club` 或隊伍；不給 `parentId` 就是 `club`。有搭檔繼承的隊伍不能刪，也不能改成搭檔。
 - 上限 `PROFILE_LIMITS`（兩邊一致）：JSON 200,000 bytes（UTF-8，413 `contentTooLarge`）、覆寫 500 條、`club` 以外 100 個、名稱 40 字、每則備忘 2,000 字。Worker 只檢查形狀（整段覆寫的段落用跟特約一樣的檢查），覆寫指到的段落或列不存在由 `resolveProfile` 回報。
-- 讀取暫時是登入的社員都能看全部，寫入都要 `bookEdit`；E2 改成依隊伍、搭檔成員。未登入的讀者照 PRD 不抓這支 API（只有 `club`）。
+- **成員權限**（e2-t04、e2-t10，AC-2.3；C3，牌桌 `worker/roles.ts` 的 `profileAccess`，Worker 每次都查，前端只決定顯示）：編輯者（`bookEdit`）與管理員什麼都能做。`club`：社員都能讀、看備忘，只有編輯者能存。隊伍的：隊長能存、改可見範圍；隊長打開 `ClubTeam.membersEdit`（「隊員可編輯制度集」）後隊員也能存，但不能改可見範圍；封存後唯讀。搭檔的：兩人都能存、改可見範圍，結束後唯讀。成員才看得到備忘與版本紀錄。`visibility: 'members'` 的只有成員（與編輯者）讀得到，母制度集讀不到時子制度集也讀不到；不是成員的人看到的 `notes` 是空的、`counts.notes` 是 0。編輯者以外的人存檔時不能改 `scope`、`parentId`。沒有隊伍或搭檔擁有的制度集（編輯者手動建的）只有編輯者能改。未登入的讀者照 PRD 不抓這支 API（只有 `club`）。
 
 **隊伍與搭檔**（E2，`api.club`；型別 `ClubTeam`、`Partnership`、`TEAM_LIMITS` 對應牌桌 `shared/protocol.ts`，`parity/table-types.ts` 檢查，路由 `tests/lib/teamApi.test.ts`）：
 
 | 呼叫 | 路由 | 誰能用 |
 | --- | --- | --- |
+| `members()` | `GET /api/club/members` → `ClubMember[]`（id 與帳號名稱，依名稱）；選隊員、邀搭檔用 | 社員 |
 | `teams()`、`team(id)` | `GET /api/club/teams[/:id]`；單一隊伍連同它現役的搭檔 `{ team, pairs }` | 社員 |
 | `createTeam(input)` | `POST /api/club/teams`；同時開隊伍的制度集（繼承 `club`） | bookEdit |
-| `updateTeam(id, patch)` | `PATCH /api/club/teams/:id`：改名、換隊長、封存（封存後只能取消封存） | 隊長／bookEdit |
+| `updateTeam(id, patch)` | `PATCH /api/club/teams/:id`：改名、換隊長、開放隊員編輯制度集（`membersEdit`）、封存（封存後只能取消封存） | 隊長／bookEdit |
 | `addMember`、`removeMember` | `POST /api/club/teams/:id/members`、`DELETE …/members/:userId` | 隊長／bookEdit；本人可退出（隊長不行） |
 | `pairs()`、`pair(id)` | `GET /api/club/pairs[/:id]`；`pairs()` 是自己的（含已結束） | 社員 |
 | `invite({ partnerId, teamId? })` | `POST /api/club/pairs`，通知對方 | 社員 |
 | `accept`、`decline`、`end` | `POST /api/club/pairs/:id/accept|decline|end`；接受時開搭檔的制度集（繼承隊伍或 `club`），結束後制度集保留 | 受邀者；`end` 兩人之一 |
 
 - 上限 `TEAM_LIMITS`：一隊 8 人（409 `teamFull`）、每人等回覆加現役的搭檔 10 個（409 `pairLimit`）、隊名 40 字；同兩人同隊伍不能重複（409 `pairExists`）。邀請到接受之前 `profileId` 是空字串。
-- 搭檔通知（`pairInvited` 等）在牌桌的鈴鐺，連到這裡的 `/pairs/:id`（C4 做頁面）。成員制的制度集權限與可見範圍是 e2-t04（C3）。
+- 搭檔通知（`pairInvited` 等）在牌桌的鈴鐺，連到這裡的 `/pairs/:id`（C4 做頁面）。
+- 管理頁的「隊伍」面板（`components/admin/TeamsPanel.tsx`，e2-t07，在 lazy 的管理頁裡）：編輯者看全部隊伍，建立隊伍、換隊長、加減隊員、開關「隊員可編輯制度集」、封存，展開看各隊現役搭檔。隊長自己的隊伍頁是 C4。
 
 **填制度卡**（`src/cards/fill.ts`，純函式，`tests/cards/fill.test.ts`）：`fillCard(template, resolveProfile(...) 的結果, edits?)` 回傳 `{ cells, notes, problems }`。
 
@@ -187,7 +189,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/c/:slug/:sectionId` | 展開特約與該段落的所有祖先段落，捲動並聚焦到段落標題 |
 | `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
 | `/account` | 我的帳號：權限、修改密碼 |
-| `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（分類）編輯者也看得到（§4.2） |
+| `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（分類、隊伍）編輯者也看得到（§4.2） |
 | `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約 |
 | `/import` | 匯入檔案（bookImport） |
 | 其他 | 顯示首頁；找不到的 slug／段落顯示提示 |
@@ -232,7 +234,8 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | 編輯、還原特約，版本紀錄 | | ✓ | ✓ |
 | 隱藏特約（原本只限管理員） | | ✓ | ✓ |
 | 分類、制度集（新增、儲存、刪除、版本） | | ✓ | ✓ |
-| `/admin` 的非帳號面板（目前是「分類」） | | ✓ | ✓ |
+| 自己隊伍或搭檔的制度集（儲存、版本；成員權限見 §3.1「成員權限」，e2-t04） | 隊長；隊員要隊長開放；搭檔兩人 | ✓ | ✓ |
+| `/admin` 的非帳號面板（「分類」「隊伍」） | | ✓ | ✓ |
 | 關閉卡住的牌桌（牌桌 API；牌桌管理頁畫面仍只給管理員） | | ✓ | ✓ |
 | 帳號：申請核准、新增／刪除、重設密碼、管理員身分、權限、社團設定（人數上限、邀請碼） | | | ✓ |
 | AI 匯入（`bookImport`） | 個別勾選 | 個別勾選 | ✓ |
