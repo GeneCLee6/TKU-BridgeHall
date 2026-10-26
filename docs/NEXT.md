@@ -21,8 +21,9 @@
 - **A6 制度集儲存與角色**（PR #23，牌桌 #90）：Worker CRUD、版本衝突、上限、`club` 不可刪；權限集中在牌桌 `worker/roles.ts`。**角色規則（使用者 2026-10-25 決定）**：管理員管所有事（含帳號）；編輯者（`bookEdit`）管帳號以外的一切（內容、分類、制度集、`/admin` 非帳號面板）；位階名稱之後再改。AI 匯入、精選牌局仍是個別權限。
 - **D2 填制度卡**（PR #24）：`src/cards/fill.ts` 的 `fillCard`；WBF 版型改照 2.19；內建 18 個特約共 90 條 `cardSlots` 對應，表在 `CONTENT_GUIDE.md` §2.2，使用者暫定核可（PR #26，有問題再改）；原文有疑義的格子留空，等制度編寫好再補；WBF 卡先填中文。`cardSlots` 不進 manifest，以免撐大首頁。
 - **L3 備份與型別對拍**（PR #22，牌桌 #89 **未合併**）：牌桌每日備份 `book*`／`profile*`／`article*` 到 R2（保留 30 天）與還原 API；橋譜 CI 的「Table type parity」比對兩邊型別。上線前要人做：建 R2 bucket（`npx wrangler r2 bucket create tku-bridge-backups`）後才合併牌桌 #89；設 secret `TABLE_REPO_TOKEN`（牌桌 Contents 唯讀）；部署後照牌桌 `DEPLOY.md` §4.3 演練還原再勾 AC-10.5。
+- **C2 隊伍與搭檔的模型與 API**（PR #29，牌桌 #122）：牌桌 `worker/teams.ts`（`ClubTeam`、`Partnership`，`/api/club/teams*`、`/api/club/pairs*`），隊伍建立時、搭檔接受時各開一個制度集；邀請、接受、婉拒、結束有通知（牌桌鈴鐺，連到橋譜 `/pairs/:id`，C4 做頁面）；一隊 8 人、每人 10 個搭檔（含等回覆）；隊長與編輯者管隊伍。橋譜只有 `api.club` 型別與呼叫，還沒有畫面。還沒處理：帳號刪除時的隊伍與搭檔、成員制權限（C3）。
 - **首頁 JS 148.3／150 kB**：之後的功能一律 lazy。
-- **下一批**：A7（`ProfileContext`、頁首切換、覆寫標記、帳號偏好；前提 A6、A1）。C2（隊伍與搭檔模型）前提 A6 也滿足，可以平行；D3 等 B3，G 期等 B2。
+- **下一批**：A7（`ProfileContext`、頁首切換、覆寫標記、帳號偏好；前提 A6、A1）。C2 已完成，C3（成員制權限）可以接著做；D3 等 B3，G 期等 B2。
 - **已拍板**（2026-10-24）：網站改名**淡江橋館 · TKU BridgeHall**，「橋譜」保留為制度區塊名；新標誌（屋簷＋拱門＋四花色）在 `design/logo/`，改名是 ROADMAP B0（`e9-t18`）。介面預設「一般」＝現行配色與圓角，另五種風格、四種版面、字體、字級、花色顏色、密度都放個人設定，不投票（E9，展示頁 `design/pitch.html`）；首頁保留第一版視覺稿的版面並加社團新聞與最新討論（`DESIGN-V2.md` §5.3）；制度卡以 WBF 卡為主力、內容寫進格子、輸出 .docx 與 PDF，簡易卡與棕標申報表也要能生成（E3）；**新增 E11 社群與討論**（頭像、板面、牌例友善的貼文與留言、通知、管理），先給社內測試，型別與 Worker 模組放牌桌 repo 以便日後搬到牌桌 E13（ROADMAP Phase G）。
 - **等人決定的事**（不卡 A 期）：程度名稱（E4）、制度負責人（E8）、WBF 卡英文濃縮文字由誰定稿（E3）。見 `docs/PRD/00-prd.md` §14。
 

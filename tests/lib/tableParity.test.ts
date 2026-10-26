@@ -35,4 +35,10 @@ describe.skipIf(!tableDir)('constants shared with TKU-BridgeTable', () => {
     expect(api.PROFILE_SCOPES).toEqual(PROFILE_SCOPES)
     expect(api.PROFILE_LIMITS).toEqual(PROFILE_LIMITS)
   })
+
+  it('has the same team and partnership constants', async () => {
+    const { TEAM_LIMITS, PAIR_STATUSES } = await protocol()
+    expect(api.TEAM_LIMITS).toEqual(TEAM_LIMITS)
+    expect(api.PAIR_STATUSES).toEqual(PAIR_STATUSES)
+  })
 })

@@ -72,4 +72,14 @@ export type Checks = [
   Check<Same<typeof Book.CLUB_PROFILE_ID, typeof Protocol.CLUB_PROFILE_ID>>,
   Check<Same<typeof Book.PROFILE_SCOPES, typeof Protocol.PROFILE_SCOPES>>,
   Check<Same<typeof Book.PROFILE_LIMITS, typeof Protocol.PROFILE_LIMITS>>,
+
+  // ── Teams and partnerships (shared/protocol.ts, E2) ──────────────────────────────────────────
+  Check<Same<Book.ClubTeam, Protocol.ClubTeam>>,
+  Check<Same<Book.PairStatus, Protocol.PairStatus>>,
+  Check<Same<Book.Partnership, Protocol.Partnership>>,
+  Check<Same<Book.TeamInput, Protocol.TeamInput>>,
+  Check<Same<Book.TeamPatch, Protocol.TeamPatch>>,
+  Check<Same<Book.PairInvite, Protocol.PairInvite>>,
+  Check<Same<typeof Book.TEAM_LIMITS, typeof Protocol.TEAM_LIMITS>>,
+  Check<Same<typeof Book.PAIR_STATUSES, typeof Protocol.PAIR_STATUSES>>,
 ]
