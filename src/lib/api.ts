@@ -142,6 +142,13 @@ export const isProfileScope = (value: unknown): value is ProfileScope => PROFILE
  */
 export const PROFILE_LIMITS = { bytesMax: 200_000, overridesMax: 500, profilesMax: 100, nameMax: 40, noteMax: 2_000 } as const
 
+/**
+ * Who may read a team's or partnership's profile (e2-t04): the whole club, the default, or only its
+ * members (and the editors). The club's profile is the club's to read.
+ */
+export const PROFILE_VISIBILITIES = ['club', 'members'] as const
+export type ProfileVisibility = (typeof PROFILE_VISIBILITIES)[number]
+
 /** Whether a profile plays a convention; a convention it does not list follows the parent profile */
 export type Adoption = 'on' | 'off'
 
@@ -175,6 +182,8 @@ export interface SystemProfile {
   scope: ProfileScope
   /** The profile this one inherits; absent for the club, and taken as the club when absent on any other */
   parentId?: string
+  /** 'members' when only its members (and the editors) may read it; absent for the whole club */
+  visibility?: ProfileVisibility
   /** slug -> plays it or not; a slug left out follows the parent */
   adopted: Record<string, Adoption>
   overrides: ProfileOverride[]
@@ -191,6 +200,7 @@ export interface ProfileSummary {
   name: string
   scope: ProfileScope
   parentId?: string
+  visibility?: ProfileVisibility
   version: number
   updatedAt: number
   updatedBy: string
@@ -209,7 +219,18 @@ export interface ProfileRevision {
 }
 
 /** What an editor sends to create or save a profile; the Worker sets the id, version and who saved it */
-export type ProfileInput = Pick<SystemProfile, 'name' | 'scope' | 'parentId' | 'adopted' | 'overrides' | 'notes'>
+export type ProfileInput = Pick<SystemProfile, 'name' | 'scope' | 'parentId' | 'visibility' | 'adopted' | 'overrides' | 'notes'>
+
+/**
+ * What the member asking may do with a profile (e2-t04), sent with GET /api/book/profiles/:id so the
+ * handbook knows what to offer; the Worker checks again on every call. `notes`: sees its private
+ * notes; `edit`: may save it; `share`: may change its visibility (a team's captain, not its members)
+ */
+export interface ProfileAccess {
+  notes: boolean
+  edit: boolean
+  share: boolean
+}
 
 // Teams and partnerships (E2 e2-t01): mirrors the "Teams and partnerships" part of TKU-BridgeTable
 // shared/protocol.ts, field for field (parity/table-types.ts). The team type is ClubTeam there
@@ -230,6 +251,8 @@ export interface ClubTeam {
   createdAt: number
   /** Archived teams keep their members and profile but are left off the lists by the handbook */
   archived?: boolean
+  /** The captain lets the members edit the team's profile too (e2-t10); absent when only the captain may */
+  membersEdit?: boolean
 }
 
 export const PAIR_STATUSES = ['pending', 'active', 'ended'] as const
@@ -262,6 +285,13 @@ export interface TeamPatch {
   name?: string
   captainId?: string
   archived?: boolean
+  membersEdit?: boolean
+}
+
+/** GET /api/club/members: who may be put on a team or invited as a partner, by username */
+export interface ClubMember {
+  id: string
+  username: string
 }
 
 /** POST /api/club/pairs: invite `partnerId`, optionally as partners in a team both belong to */
@@ -343,12 +373,17 @@ export const api = {
    * its profile when made, a partnership when accepted.
    */
   club: {
+    /** Every member's id and username, for picking a team's members or a partner */
+    members: () => request<{ members: ClubMember[] }>('/api/club/members').then((r) => r.members),
     teams: () => request<{ teams: ClubTeam[] }>('/api/club/teams').then((r) => r.teams),
     /** A team and its active partnerships; 404 `teamGone` */
     team: (id: string) => request<{ team: ClubTeam; pairs: Partnership[] }>(`/api/club/teams/${encodeURIComponent(id)}`),
     /** bookEdit; 409 `teamFull` past TEAM_LIMITS.membersMax */
     createTeam: (team: TeamInput) => post<{ team: ClubTeam }>('/api/club/teams', team).then((r) => r.team),
-    /** The captain or an editor; an archived team only takes `{ archived: false }` (409 `teamArchived`) */
+    /**
+     * The captain or an editor; `membersEdit` lets the members edit the team's profile (e2-t10). An
+     * archived team only takes `{ archived: false }` (409 `teamArchived`)
+     */
     updateTeam: (id: string, patch: TeamPatch) =>
       send<{ team: ClubTeam }>('PATCH', `/api/club/teams/${encodeURIComponent(id)}`, patch).then((r) => r.team),
     addMember: (teamId: string, userId: string) =>
@@ -395,12 +430,18 @@ export const api = {
       send<BookCategories>('PUT', '/api/book/categories', { categories, baseVersion }),
     /**
      * System profiles. Signed out, the list has the club's only and `profile` reads the club's
-     * without its notes; signed in, every member reads them all. Writes and versions need bookEdit.
+     * without its notes. Signed in, a member reads every profile but the members-only ones of teams
+     * and partnerships they are not in (403 `noPermission`), and sees the notes of their own only.
+     * Editors save any, a team's captain (and its members, when let) the team's, the two partners
+     * theirs while it lasts (e2-t04, ARCHITECTURE.md §4.2); creating and deleting stay the editors'.
      * The club's exists before anyone saves it (version 0) and cannot be deleted.
      */
     profiles: () => request<{ profiles: ProfileSummary[] }>('/api/book/profiles').then((r) => r.profiles),
     profile: (id: string) =>
       request<{ profile: SystemProfile }>(`/api/book/profiles/${encodeURIComponent(id)}`).then((r) => r.profile),
+    /** The same, with what the member may do with it (absent when signed out) */
+    profileWithAccess: (id: string) =>
+      request<{ profile: SystemProfile; access?: ProfileAccess }>(`/api/book/profiles/${encodeURIComponent(id)}`),
     /** A team's or partnership's profile; the Worker picks its id */
     createProfile: (profile: ProfileInput, note?: string) =>
       post<{ profile: SystemProfile }>('/api/book/profiles', { profile, note }).then((r) => r.profile),
