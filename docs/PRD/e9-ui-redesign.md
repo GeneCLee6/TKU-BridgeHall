@@ -71,8 +71,8 @@ M0 的介面是 Swagger UI 的翻版：一整頁卡片堆、每張卡再疊多�
 
 - [x] `e9-t01` v2 tokens（`styles/tokens.ts`）、字體載入（Noto Serif TC 子集）、`GlobalStyle`；舊 token 別名 · AC-9.1 · M · #10
 - [x] `e9-t02` 基礎元件換皮：`ui.tsx`（Button、Input、Panel…）、`Tag`、`PendingNote`（印章式）、`Suit`／`CallLabel` · AC-9.1 · M · ← e9-t01 · #10
-- [ ] `e9-t03` `AppHeader` v2：Logo、制度集切換（E1 `e1-t12`）、搜尋、帳號；`ReadingSettings` 面板（主題、字級、入門版、展開收合、列印）· AC-9.4 · M · ← e9-t01
-- [ ] `e9-t04` 路由拆頁：`/c/:slug` 為單一特約頁、`/book` 全書目錄；`HandbookPage` 拆成 `HomePage`、`ConventionPage`、`BookPage`；深層連結測試遷移 · AC-9.3 · M · ← e10-t01
+- [x] `e9-t03` `AppHeader` v2：Logo、制度集切換（E1 `e1-t12`）、搜尋、帳號；`ReadingSettings` 面板（主題、字級、入門版、展開收合、列印）· AC-9.4 · M · ← e9-t01 · #4（入門版等 E4 有閱讀模式時再加進面板）
+- [x] `e9-t04` 路由拆頁：`/c/:slug` 為單一特約頁、`/book` 全書目錄；`HandbookPage` 拆成 `HomePage`、`ConventionPage`、`BookPage`；深層連結測試遷移 · AC-9.3 · M · ← e10-t01 · #4
 - [ ] `e9-t05` `ConventionPage` 三欄版面：左目錄、中正文（章節編號、來源、程度）、右本頁導覽與上下特約 · AC-9.3 · M · ← e9-t04, e9-t02
 - [ ] `e9-t06` `SectionAccordion`、`ResponseTable`、`AuctionTable`、`BlockView` 換皮（書節樣式、細線表格、覆寫標記位）· AC-9.1 · M · ← e9-t02
 - [ ] `e9-t07` `Sidebar` v2（全書目錄、分類、程度篩選位）· AC-9.3 · S · ← e9-t02
