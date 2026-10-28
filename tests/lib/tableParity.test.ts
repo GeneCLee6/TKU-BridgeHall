@@ -68,6 +68,11 @@ describe.skipIf(!tableDir)('profile, avatar and file constants shared with TKU-B
     expect(account.FILE_LIMITS).toEqual(FILE_LIMITS)
   })
 
+  it('has the same file key pattern (e5-t12)', async () => {
+    const { FILE_KEY } = await shared('files')
+    expect(account.FILE_KEY.source).toBe(FILE_KEY.source)
+  })
+
   it('has the same forum boards, blocks, reactions and limits (e11-t05)', async () => {
     const table = await shared('forum')
     for (const name of [

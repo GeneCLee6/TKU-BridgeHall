@@ -29,7 +29,7 @@ TKU-BridgeHall/
 │  │  ├─ conventions/       每個特約一個檔案（lebensohl.ts、defense-vs-unusual-2nt.ts）
 │  │  ├─ categories.ts      內建分類與顯示順序（線上改過時以線上為準，§4.5）
 │  │  └─ index.ts           特約登記表
-│  ├─ types/convention.ts   內容模型（唯一的 schema）
+│  ├─ types/convention.ts   內容模型（特約的 schema）；types/article.ts 叢書文章（E5，§3.2）
 │  ├─ cards/                制度卡（E3）：types（CardTemplate）、slots（格子 id）、templates/（每個版型一個檔案，檔名＝id）、
 │  │                        cardSlots（特約的格子對應）、fill（fillCard 填卡）、edits（補格）、docx（Word 輸出，`docx` 套件）、
 │  │                        places（段落在卡上的位置）、load（讀制度集）、PrintStyle；網站程式只能 lazy 載入（placesContext 除外）
@@ -190,6 +190,21 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - **段落旁的位置**（`cards/placesContext.tsx`、`cards/places.ts`、`cards/CardPlaces.tsx`）：特約頁用 `CardPlacesContext` 提供 `cardSlots` 與讀者的制度集 id，`SectionAccordion` 每段放 `SectionCardPlaces`；`mentions` 先用字串判斷有沒有 `<- 段落` 的引用，有才 lazy 載入版型算格子名稱。整本一頁、列印沒有 provider，不顯示。雙面簡易卡共用單面卡的格子，只列單面卡。
 - **入口**：`TeamBlocks.tsx` 的 `ProfileEntries` 多「制度卡」（`/cards/:id`）；隊伍頁多「印全隊制度卡」。`cards/load.ts` 的 `fetchCard` 是卡頁與全隊頁共用的讀取（制度集、上層、全部特約）。
 
+### 3.2 文章（`Article`，E5 J1：`src/types/article.ts`、`lib/articles.ts`）
+
+```ts
+type ArticleBlock = Block                                   // 特約的區塊全部可用
+  | { kind: 'heading'; level: 2 | 3; text: string }          // 文章沒有段落樹，用小標題分段
+  | { kind: 'quote'; text: string; cite?: string }
+  | { kind: 'image'; src: string; alt: string; caption?: string } // src 是上傳檔案的 key
+interface Article { slug; title; authors: string[]; series; level?; summary; cover?; blocks: ArticleBlock[]; published; updated; license: 'own' | 'permitted' | 'members-only' }
+```
+
+- **只有文章用的區塊不進 `Block`**：特約的編輯器、制度卡、AI 匯入、牌桌 `checkSections` 都不用認得它們。`BlockView` 收 `ArticleBlock`，三種新區塊在同一個 switch。`deal`、`play` 是 J2（e5-t02、e5-t03）。
+- **內建沒有文章**：文章只存在牌桌（`worker/articles.ts`，`article:entry:<slug>`、`article:rev:<slug>:<id>`、`article:version`，內容分段在 `bookpart:`，每日備份涵蓋），repo 裡不放文章內容，測試用假資料。`articleProblems`（＝牌桌 `checkArticle`）在載入時再檢查一次；區塊檢查共用 `lib/content.ts` 的 `blockProblems`，整理共用 `tidyBlock`／`emptyBlock`。`articleText` 給 e5-t13 的搜尋。
+- **圖片與封面存檔案 key，不存網址**（e5-t12）：key 是 G1 上傳回的 `article/<24 hex>.<ext>`（`isPictureKey`，不收縮圖 key 與外部網址；`uploadArticlePicture`）。牌桌每次讀文章順便簽好網址放在回應的 `files`，頁面用 `ArticleFilesContext` 提供，`image` 區塊查不到網址（R2 bucket 還沒建，牌桌 `filesOff` 時 `files` 是空的）就顯示替代文字框，文章照常讀。上傳遇到 503 `filesOff` 用 `filesOff(error)` 判斷。
+- **API**（`api.book.articles`／`article`／`saveArticle`／`hideArticle`／`articleRevisions`／`articleRevision`）：讀不用登入，未登入看不到 `members-only`（單篇 404 `articleGone`），隱藏的只有 bookEdit 看得到；發布、隱藏是 bookReview（`baseVersion` 不符 409 `articleConflict`），版本是 bookEdit。**目前只有已發布路徑**（同特約沒有草稿時的直接發布）；文章的草稿與送審（AC-5.2「送審走 E8」）跟文章編輯器 e5-t07 一起做。審計動作多 `article:publish`、`article:hide`。
+
 ## 4. 路由、狀態與內容載入
 
 **路由**（`react-router-dom`，BrowserRouter）
@@ -312,6 +327,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - **牌桌名牌**（e11-t19，牌桌 #174）：牌桌大廳的社員與座位帶 `displayName`，牌桌頁從大廳補上頭像與顯示名稱，所以兩站顯示同一個名字與頭像。
 - **頭像**：`Me.avatar`／`ClubMember.avatar` 是版本號，圖片在 `GET /api/avatar/:id?v=<版本>`（牌桌 `avatar:<id>`，瀏覽器裁好的 256×256、≤ 64 KB）。PRD 原寫 512×512 放 R2；牌桌已有這一套（e1-t34），兩站讀同一張，所以沿用。沒有圖片就用字首＋由 id 決定的顏色（`lib/avatar.ts`，和牌桌同一套 FNV 雜湊與十個顏色 `styles/avatarColors.ts`），同一個人在兩站顏色相同。`Avatar` 是裝飾（`aria-hidden`），名字一定在旁邊。「我的帳號」可上傳（`AvatarCropper` 就地裁切）或改回預設。`GET /api/club/members` 多回 `displayName`、`avatar`，給之後的討論區與隊伍頁畫別人的頭像。
 - **圖片檔案**（貼文與文章用）：R2 bucket `bridgebook-files`（牌桌 `worker/files.ts`，ARCHITECTURE.md §5.14）。`uploadImage(file, purpose)` 在瀏覽器縮到長邊 2048 px（≤ 2 MB）與 480 px 縮圖（≤ 256 KB），拿一次性憑證（`POST /api/files/ticket`，每人每天 30 張）、`PUT` 原圖與縮圖；顯示用簽名短效網址 `/api/files/<key>?e=&s=`（一小時，不用登入），過期用 `POST /api/files/urls` 重簽。**bucket 還沒建時**牌桌回 503 `filesOff`（牌桌 DEPLOY.md §4.8）。
+- **文章的圖片**（E5 e5-t12）：見 §3.2。
 - **不進首頁**：這些型別與呼叫在 `lib/account.ts`，不在 `api.ts`；介面文字在 `strings-account.ts`，不在 `strings.ts`（首頁 JS 預算只剩 1 kB 左右）；只有 lazy 的頁面 import 它們。型別對拍在 `parity/table-types.ts`（牌桌 `shared/profile.ts`、`avatar.ts`、`files.ts`）。
 - **討論區型別**（e11-t05）：`lib/forum.ts` 是牌桌 `shared/forum.ts` 的複本（`Board`、`Post`、`PostBlock`、`CommentBlock`、`Comment`、`Reaction`、`Report`、內建四板、`FORUM_LIMITS`），每個型別 `Same` 對拍、常數在 `tests/lib/tableParity.test.ts` 比值；要改先改牌桌。牌與叫牌用 `lib/board.ts` 的型別；`hand` 區塊是 `cards: Card[]`（`HandInput` 的格式），特約的叫品表（`responses`）不放進貼文，引用特約用 `ref`。
 
