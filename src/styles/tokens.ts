@@ -249,6 +249,9 @@ export const layout = {
   wideBreakpoint: '1100px',
 }
 
+/** Print is black on white in every style (DESIGN-V2.md §8; the suits keep their own red) */
+export const printColors = { ink: '#000', paper: '#fff', rule: '#888' }
+
 /** 4px spacing scale: space(2) === '8px' */
 export const space = (n: number) => `${n * 4}px`
 

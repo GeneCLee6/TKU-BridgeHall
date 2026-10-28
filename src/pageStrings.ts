@@ -14,4 +14,14 @@ export const pageStrings = {
   /** The convention page's 本頁 column and, on narrower screens, its fold-out list */
   onThisPage: '本頁',
   sectionCount: (n: number) => `${n} 節`,
+  /** The printed book's cover and contents pages (e9-t10) */
+  print: {
+    club: '淡江橋藝社',
+    book: '橋譜',
+    profile: (name: string) => `制度集：${name}`,
+    printed: (date: string) => `列印日期：${date}`,
+    contents: '目錄',
+    /** The running head of a printed page */
+    head: (app: string, name: string) => `${app} · ${name}`,
+  },
 }

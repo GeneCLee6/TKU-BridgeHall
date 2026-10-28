@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { CategoriesPanel } from '../components/admin/CategoriesPanel.tsx'
 import { TeamsPanel } from '../components/admin/TeamsPanel.tsx'
+import { DataTable, TableScroll } from '../components/DataTable.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import {
   api,
@@ -141,8 +142,8 @@ function AccountPanels() {
         {!applications.length ? (
           <Muted>{t.noApplications}</Muted>
         ) : (
-          <Scroll>
-            <Table>
+          <TableScroll>
+            <DataTable>
               <thead>
                 <tr>
                   <th>{strings.auth.username}</th>
@@ -185,8 +186,8 @@ function AccountPanels() {
                   </tr>
                 ))}
               </tbody>
-            </Table>
-          </Scroll>
+            </DataTable>
+          </TableScroll>
         )}
       </Panel>
 
@@ -194,8 +195,8 @@ function AccountPanels() {
         <PanelTitle id="members">
           {t.members}（{t.memberCount(users.length, settings.maxUsers)}）
         </PanelTitle>
-        <Scroll>
-          <Table>
+        <TableScroll>
+          <DataTable>
             <thead>
               <tr>
                 <th>{strings.auth.username}</th>
@@ -256,8 +257,8 @@ function AccountPanels() {
                 </tr>
               ))}
             </tbody>
-          </Table>
-        </Scroll>
+          </DataTable>
+        </TableScroll>
       </Panel>
 
       <Panel aria-labelledby="settings">
@@ -292,28 +293,6 @@ function AccountPanels() {
   )
 }
 
-const Scroll = styled.div`
-  overflow-x: auto;
-`
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9375rem;
-
-  th,
-  td {
-    padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
-    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-    text-align: left;
-    vertical-align: middle;
-  }
-  th {
-    color: ${({ theme }) => theme.colors.textMuted};
-    font-size: 0.8125rem;
-    white-space: nowrap;
-  }
-`
 
 const NoWrap = styled.td`
   white-space: nowrap;

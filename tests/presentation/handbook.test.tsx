@@ -207,6 +207,14 @@ describe('convention page', () => {
     expect((await screen.findAllByText('待確認')).length).toBeGreaterThan(0)
   })
 
+  it('prints as a book page headed with the convention’s name (e9-t10)', async () => {
+    renderAt('/c/lebensohl')
+    await findTitle('雷本索特約')
+    const print = document.querySelector('style[media="print"]')
+    expect(print?.textContent).toContain('@top-left { content: "淡江橋館 · 雷本索特約"')
+    expect(print?.textContent).toContain('counter(page)')
+  })
+
   it('says so when the section in the address does not exist', async () => {
     renderAt('/c/lebensohl/no-such-section')
     expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toHaveTextContent('找不到這個特約或段落')
@@ -249,6 +257,21 @@ describe('the whole book', () => {
     expect(trigger(/^淡江自然制總覽/)).toHaveTextContent('程度：入門')
     const menu = within(screen.getByRole('navigation', { name: '特約目錄' }))
     expect(menu.getByRole('link', { name: /^開叫高花之滿貫詢問叫s*Jacoby 2NT/ })).toHaveTextContent('種類：特約程度：高階')
+  })
+
+  it('prints with a cover, a contents page and each convention headed by its name (e9-t10)', async () => {
+    renderAt('/book')
+    await findTrigger(/^雷本索特約/)
+    // The cover and contents are print-only: hidden on screen and from screen readers
+    const front = document.querySelector<HTMLElement>('[data-print-only]')!
+    expect(front).toHaveAttribute('hidden')
+    expect(front).toHaveTextContent('淡江橋藝社')
+    expect(front).toHaveTextContent('制度集：社團預設')
+    expect(within(front).getByText('雷本索特約', { selector: 'li', exact: false })).toBeInTheDocument()
+    const print = document.querySelector('style[media="print"]')!.textContent!
+    expect(print).toMatch(/@page (c\d+) \{ @top-left \{ content: "淡江橋館 · 雷本索特約"/)
+    const page = print.match(/@page (c\d+) \{ @top-left \{ content: "淡江橋館 · 雷本索特約"/)![1]
+    expect(print).toContain(`[id="c-lebensohl"] { page: ${page}; }`)
   })
 
   it('links each card’s 待確認 count to its first note', async () => {

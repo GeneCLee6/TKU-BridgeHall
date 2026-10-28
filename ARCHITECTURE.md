@@ -262,7 +262,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 
 **搜尋**：`lib/search.ts` 為每個特約與每個段落各建一筆紀錄（名稱、別名、標籤、叫品、內文），以 Fuse.js 搜尋（`ignoreLocation`、threshold 0.3）。內建特約的紀錄在建置時算好：`scripts/search-index.ts` 產生 `{ version, records }`，`vite.config.ts` 的 `searchIndex` plugin 在 build 時寫進 `dist/search-index.json`、dev server 則每次請求用目前內容現算，所以索引不會過期、也不 commit。之後的文章與名詞加成同一份 records 即可。所有文字與查詢都先經過 `toAsciiSuits`，因此「2♦」與「2D」結果相同。
 
-**列印**：Accordion Content 一律 `forceMount`，關閉時以 CSS（`[data-state='closed']`）隱藏；列印樣式覆寫成全部顯示。
+**列印**：Accordion Content 一律 `forceMount`，關閉時以 CSS（`[data-state='closed']`）隱藏；列印樣式覆寫成全部顯示。列印 v2（e9-t10）在 `components/PrintSheet.tsx`，只有特約頁與全書目錄掛上（都是 lazy，不進首頁）：一段 `<style media="print">`（不經 styled-components，因為它的 CSS 解析器不保留 `@page` 裡的 `@top-left` 頁邊框）設 A4、頁尾頁碼、黑白（顏色來自 `tokens.ts` 的 `printColors`），特約頁加頁眉。印整本時每個特約是一個具名頁面（`@page c0 { @top-left { content: "淡江橋館 · 名稱" } }`，以 `[id="c-<slug>"]` 指定），分類標題併入它的第一個特約；封面與目錄是 `hidden` 的區塊（螢幕與報讀器都看不到），列印時以 `[data-print-only]` 顯示，所在的 `front` 頁不印頁碼。
 
 ### 4.5 分類（`lib/categories.ts`、`components/admin/CategoriesPanel.tsx`）
 

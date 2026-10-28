@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+import { DataTable, TableScroll } from '../components/DataTable.tsx'
 import {
   Button,
   ErrorText,
@@ -291,7 +292,7 @@ function Report() {
               <summary>
                 {t.reason[reason]}（{t.rows(rows.length)}）
               </summary>
-              <Scroll>
+              <TableScroll>
                 <Table>
                   <thead>
                     <tr>
@@ -320,7 +321,7 @@ function Report() {
                     ))}
                   </tbody>
                 </Table>
-              </Scroll>
+              </TableScroll>
             </details>
           ))}
         </Panel>
@@ -337,7 +338,7 @@ function MismatchTable({
   conventionName: (slug: string) => string
 }) {
   return (
-    <Scroll>
+    <TableScroll>
       <Table>
         <thead>
           <tr>
@@ -368,7 +369,7 @@ function MismatchTable({
           ))}
         </tbody>
       </Table>
-    </Scroll>
+    </TableScroll>
   )
 }
 
@@ -410,27 +411,15 @@ function showsText(shows: SpecShows): string {
   return parts.join(' · ')
 }
 
-const Scroll = styled.div`
-  overflow-x: auto;
-  position: relative;
-`
 
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
+/** Smaller and top-aligned: a row's meaning can run to several lines */
+const Table = styled(DataTable)`
   font-size: 0.875rem;
 
   th,
   td {
     padding: ${({ theme }) => theme.space(2)};
-    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-    text-align: left;
     vertical-align: top;
-  }
-  th {
-    color: ${({ theme }) => theme.colors.textMuted};
-    font-size: 0.8125rem;
-    white-space: nowrap;
   }
 `
 

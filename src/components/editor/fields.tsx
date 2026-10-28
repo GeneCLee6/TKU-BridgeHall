@@ -70,8 +70,8 @@ const Palette = styled.div`
 const SuitKey = styled.button<{ $red: boolean }>`
   width: 32px;
   height: 32px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme, $red }) => ($red ? theme.suits.H : theme.suits.S)};
   font-size: 1.05rem;
@@ -93,8 +93,8 @@ export const MiniButton = styled.button`
   place-items: center;
   width: 30px;
   height: 30px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.textMuted};
   cursor: pointer;
