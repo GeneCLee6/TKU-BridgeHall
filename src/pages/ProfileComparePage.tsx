@@ -101,7 +101,10 @@ function Compare() {
         </Facts>
         <Muted>{t.intro}</Muted>
         <Muted>{t.linkNote}</Muted>
-        {canEdit && <Link to={`/profiles/${profile.id}/edit`}>{t.edit}</Link>}
+        <Links>
+          {canEdit && <Link to={`/profiles/${profile.id}/edit`}>{t.edit}</Link>}
+          <Link to={`/cards/${encodeURIComponent(profile.id)}/wbf`}>{t.card}</Link>
+        </Links>
       </Panel>
 
       {changesNothing(comparison) && <Notice role="status">{t.empty}</Notice>}
@@ -336,6 +339,13 @@ function Place({
     </>
   )
 }
+
+const Links = styled.p`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.space(4)};
+  margin: 0;
+`
 
 const Facts = styled.dl`
   display: grid;

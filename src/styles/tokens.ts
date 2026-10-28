@@ -235,6 +235,27 @@ export const layout = {
 /** Print is black on white in every style (DESIGN-V2.md §8; the suits keep their own red) */
 export const printColors = { ink: '#000', paper: '#fff', rule: '#888' }
 
+/**
+ * The convention card sheet (E3, DESIGN-V2.md §5.10): white paper, black rules and grey shading
+ * in every style and mode, like the official form. On screen a team's override or edit has a
+ * pale blue ground and a partnership's a pale vermilion one (printed as an underline instead);
+ * `flag` marks a cell for the partnership to look at, `pending` a cell with 待確認 source text
+ */
+export const cardColors = {
+  ink: '#000',
+  paper: '#fff',
+  rule: '#000',
+  shade: '#d9d9d9',
+  muted: '#4b4b4b',
+  red: '#c00000',
+  team: '#e2ecf8',
+  partnership: '#fbe3da',
+  flag: '#b45309',
+  pending: '#8a6100',
+  link: '#1d4ed8',
+  selected: '#1d4ed8',
+}
+
 /** 4px spacing scale: space(2) === '8px' */
 export const space = (n: number) => `${n * 4}px`
 /** 緊湊: a 3px scale */
