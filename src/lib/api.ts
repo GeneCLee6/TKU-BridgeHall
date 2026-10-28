@@ -141,13 +141,15 @@ export type AuditAction =
   | 'profile:delete'
   | 'quiz:fix'
   | 'quiz:unfix'
+  | 'card:publish'
+  | 'card:delete'
 
 export interface AuditEntry {
   id: string
   at: number
   by: string
   action: AuditAction
-  /** A convention's or an article's slug, a profile's id, or 'categories' */
+  /** A convention's or an article's slug, a profile's id, `<profile>/<template>` for a card, or 'categories' */
   target: string
   version?: number
   /** The saved version's id (BookRevision.id), for publishing, hiding and resets */
@@ -383,6 +385,44 @@ export interface ProfileAccess {
   notes: boolean
   edit: boolean
   share: boolean
+}
+
+// Convention card versions (E3 e3-t09): mirrors the "Convention card versions" part of
+// TKU-BridgeTable shared/protocol.ts. `card` is this site's FilledCard (src/cards/fill.ts), kept
+// by the Worker as sent.
+
+export const CARD_SNAPSHOT_LIMITS = { perProfile: 200, cardBytesMax: 800_000, docxBytesMax: 600_000, noteMax: 200 } as const
+
+/** GET /api/book/cards/:profileId: a version without its card */
+export interface CardSnapshotMeta {
+  profileId: string
+  templateId: string
+  /** 1, 2, … for each profile and template */
+  n: number
+  at: number
+  by: string
+  byName?: string
+  note: string
+  profileName: string
+  profileVersion: number
+  /** Anyone with the link may read it, signed in or not */
+  shared: boolean
+  /** Has the Word file */
+  docx: boolean
+}
+
+export interface CardSnapshot extends CardSnapshotMeta {
+  card: Record<string, unknown>
+}
+
+/** POST /api/book/cards/:profileId */
+export interface CardSnapshotInput {
+  templateId: string
+  profileVersion: number
+  note?: string
+  card: Record<string, unknown>
+  /** The Word file, base64 */
+  docx?: string
 }
 
 // Teams and partnerships (E2 e2-t01): mirrors the "Teams and partnerships" part of TKU-BridgeTable

@@ -9,6 +9,7 @@ import { OriginMark, ProfileNotes } from '../components/ProfileMarks.tsx'
 import { PrintConventionStyle } from '../components/PrintSheet.tsx'
 import { ReadingSettingsButton, type ReadingActions } from '../components/ReadingSettingsButton.tsx'
 import { SectionAccordion } from '../components/SectionAccordion.tsx'
+import { CardPlacesContext, SectionCardPlaces } from '../cards/placesContext.tsx'
 import { RichText } from '../components/Suit.tsx'
 import { Tag, TagList } from '../components/Tag.tsx'
 import { basicHiddenIds } from '../lib/levels.ts'
@@ -33,6 +34,7 @@ import type { ResolvedConvention } from '../lib/profiles.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
+import { useProfiles } from '../state/ProfileContext.tsx'
 import { strings } from '../strings.ts'
 import { layout, mobileQuery } from '../styles/tokens.ts'
 import type { ConventionKind, ConventionMeta } from '../types/convention.ts'
@@ -59,6 +61,7 @@ const tabletQuery = `(min-width: calc(${layout.mobileBreakpoint} + 1px))`
 export function ConventionPage() {
   const { bySlug, categories, conventions } = useContent()
   const { can } = useAuth()
+  const { activeId } = useProfiles()
   const { slug = '', sectionId } = useParams()
   const [searchParams] = useSearchParams()
   const pendingIndex = searchParams.get('pending')
@@ -80,6 +83,8 @@ export function ConventionPage() {
   const ready = Boolean(loaded) || target.failed
   // 練這個特約 (e6-t09): only when the convention has a table questions can be made from
   const practice = useMemo(() => Boolean(loaded && hasQuestions(loaded)), [loaded])
+  // 在制度卡的位置 (e3-t10): the cells this convention fills on the reader's profile's cards
+  const cardPlaces = useMemo(() => ({ cardSlots: loaded?.cardSlots, profileId: activeId }), [loaded, activeId])
   const path = convention && sectionId ? findSectionPath(convention, sectionId) : []
   // 入門版 (e4-t02): 「這頁顯示全部」 shows this convention in full until the reader moves on; a link
   // to a section 入門版 hides shows the page in full too, or there would be nothing to scroll to
@@ -165,6 +170,7 @@ export function ConventionPage() {
   const current = path[0]?.id
 
   return (
+    <CardPlacesContext.Provider value={cardPlaces}>
     <Columns $wide={wide}>
       <PrintConventionStyle name={convention.nameZh} />
       <Article aria-labelledby={`${conventionDomId(convention.slug)}-title`}>
@@ -247,6 +253,7 @@ export function ConventionPage() {
           <RichText text={convention.summary} />
         </Lede>
         <ProfileNotes slug={convention.slug} />
+        <SectionCardPlaces target="*" />
 
         {loaded ? (
           <SectionAccordion
@@ -318,6 +325,7 @@ export function ConventionPage() {
         </Rail>
       )}
     </Columns>
+    </CardPlacesContext.Provider>
   )
 }
 

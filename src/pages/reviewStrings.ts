@@ -74,6 +74,8 @@ export const review = {
     'article:hide': '隱藏文章',
     'quiz:fix': '修改練習題',
     'quiz:unfix': '刪除練習題的修正',
+    'card:publish': '發布制度卡版本',
+    'card:delete': '刪除制度卡版本',
   } satisfies Record<AuditAction, string>,
   categories: '分類',
 }
