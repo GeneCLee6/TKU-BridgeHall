@@ -11,7 +11,7 @@
 | 牌桌 `tests/engine/system-spec.test.ts` | 每條啟發式的單元測試；型別檢查 `SpecShows` 可指派給機器人的 `Spec`、名稱都在 `CONVENTIONS` 裡、`SPEC_ANY` 等於 `ANY`、產生的 `after` 通過 `patternProblem` |
 | 橋譜 `tests/lib/systemSpec.test.ts` | 22 個內建特約（`club` 制度集、內建內容）的轉換快照：每條規則、每列 `unresolved` 各一行；改內容或改啟發式時 PR 的快照差異就是審查清單 |
 
-檔案不 import 任何東西，所以同一份原始碼在兩個 repo 都能編譯。只有 lazy 的牌桌整合頁（`/integrations/table`，e7-t04）import 它（不進首頁 bundle）：轉換在瀏覽器做、結果同步到牌桌（e7-t03，ARCHITECTURE.md §4.6）。
+檔案不 import 任何東西，所以同一份原始碼在兩個 repo 都能編譯。只有 lazy 的牌桌整合頁（`/integrations/table`，e7-t04）import 它（不進首頁 bundle）：轉換在瀏覽器做、結果同步到牌桌（e7-t03，ARCHITECTURE.md §4.7）。
 
 ## 2. 牌桌的規則形狀（`shared/robot/system/spec.ts`，2026-10-25 版）
 

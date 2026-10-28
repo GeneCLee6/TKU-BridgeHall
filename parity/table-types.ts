@@ -15,6 +15,10 @@
 
 import type * as Book from '../src/lib/api.ts'
 import type * as Sync from '../src/lib/tableSync.ts'
+import type * as Account from '../src/lib/account.ts'
+import type * as TableProfile from '@table/shared/profile.ts'
+import type * as TableAvatar from '@table/shared/avatar.ts'
+import type * as TableFiles from '@table/shared/files.ts'
 import type * as Handbook from '../src/types/convention.ts'
 import type * as Protocol from '@table/shared/protocol.ts'
 import type * as Worker from '@table/worker/book.ts'
@@ -98,4 +102,17 @@ export type Checks = [
   Check<Same<Book.RobotMeaningsItem, Protocol.RobotMeaningsItem>>,
   Check<Same<Book.RobotMeanings, Protocol.RobotMeanings>>,
   Check<Same<typeof Sync.SYSTEM_SPEC_LIMITS, typeof Protocol.SYSTEM_SPEC_LIMITS>>,
+
+  // ── Profiles, avatars and files (shared/profile.ts, avatar.ts, files.ts; E11) ──────────────────
+  Check<Same<Account.Profile, TableProfile.Profile>>,
+  Check<Same<Account.ProfileLevel, TableProfile.ProfileLevel>>,
+  Check<Same<typeof Account.PROFILE_FIELD_LIMITS, typeof TableProfile.PROFILE_LIMITS>>,
+  Check<Same<typeof Account.AVATAR_PIXELS, typeof TableAvatar.AVATAR_PIXELS>>,
+  Check<Same<Account.FileType, TableFiles.FileType>>,
+  Check<Same<Account.FilePurpose, TableFiles.FilePurpose>>,
+  Check<Same<typeof Account.FILE_LIMITS, typeof TableFiles.FILE_LIMITS>>,
+  Check<Same<Account.FileTicketRequest, TableFiles.FileTicketRequest>>,
+  Check<Same<Account.FileTicket, TableFiles.FileTicket>>,
+  Check<Same<Account.UploadedFile, TableFiles.UploadedFile>>,
+  Check<Same<Account.FileUrls, TableFiles.FileUrls>>,
 ]

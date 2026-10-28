@@ -6,6 +6,7 @@
  */
 
 import type { ConventionMeta, Section } from '../types/convention.ts'
+import type { Profile } from './account.ts'
 import type { SpecShows, SystemSpec } from './systemSpec.ts'
 
 /** TKU BridgeTable (淡江牌桌), whose Worker holds the accounts */
@@ -27,6 +28,10 @@ export interface Me {
   applications?: number
   /** The system profile the member reads with, kept with the account (e1-t16); absent for the club's */
   bookProfile?: string
+  /** Their uploaded picture's version (`avatarUrl` in lib/account.ts); none means the default avatar (e11-t03) */
+  avatar?: number
+  /** Their own profile (e11-t01), the same on both sites; empty until they fill it in */
+  profile?: Profile
 }
 
 export type RegisterResult = { user: Me } | { pending: true; username: string }
@@ -293,6 +298,10 @@ export interface TeamPatch {
 export interface ClubMember {
   id: string
   username: string
+  /** Their profile's display name, when they set one (e11-t01) */
+  displayName?: string
+  /** Their uploaded picture's version; none means the default avatar (e11-t03) */
+  avatar?: number
 }
 
 /** POST /api/club/pairs: invite `partnerId`, optionally as partners in a team both belong to */
