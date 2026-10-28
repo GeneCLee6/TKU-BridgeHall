@@ -54,13 +54,13 @@ M0 的介面是 Swagger UI 的翻版：一整頁卡片堆、每張卡再疊多�
 
 ## 驗收條件
 
-- [ ] AC-9.1 — v2 token 與字體上線；所有元件改用新 token；舊 token 別名移除；淺／深色對比 AA。
+- [x] AC-9.1 — v2 token 與字體上線；所有元件改用新 token；舊 token 別名移除；淺／深色對比 AA。
 - [ ] AC-9.2 — 首頁：社團新聞、我的制度集、第一次來、分類入口、最新討論、最近更新依登入狀態與權限顯示；未登入與新生各有合理的第一畫面；手機底部工具列為「目錄、討論、搜尋、我的」。
 - [x] AC-9.3 — 特約頁：三欄版面、章節編號、本頁導覽、上一／下一特約、深層連結與複製連結行為不變；`/book` 全書目錄可印整本。
 - [ ] AC-9.4 — 頁首只有四件事；閱讀設定面板包含主題、字級、入門版、展開／收合、列印；鍵盤可操作。
 - [x] AC-9.5 — 手機：單欄、底部工具列、抽屜；觸控目標 ≥ 44px；無橫向捲動（表格除外）。
 - [x] AC-9.6 — 列印：書頁樣式、頁眉頁碼、黑白；制度卡列印不受影響。
-- [ ] AC-9.7 — 無障礙回歸：既有 `tests/presentation` 全過；新增鍵盤巡覽測試；Lighthouse a11y ≥ 95。
+- [x] AC-9.7 — 無障礙回歸：既有 `tests/presentation` 全過；新增鍵盤巡覽測試；Lighthouse a11y ≥ 95。
 - [x] AC-9.8 — 編輯器、管理、登入、帳號、匯入頁換皮；流程與測試不變。
 - [ ] AC-9.10 — 改名：網站名稱、PWA 名稱與圖示、頁首與 favicon 都是「淡江橋館 · TKU BridgeHall」與新標誌；「橋譜」只出現在制度區塊；兩站主畫面圖示仍一眼可分（橋館＝藍底拱門、牌桌＝米底宮燈）。
 - [ ] AC-9.9 — 個人設定：風格（一般／中國風／圓潤／夜讀／四色／極簡）、版面（整本一頁／三欄閱讀／專注單欄／卡片總覽）、明暗、字體、字級、花色顏色、閱讀模式、密度、預設制度集都由使用者自選並記在帳號；預設是「一般」風格（現行配色與圓角不變）＋「整本一頁」；手機底部工具列四個入口有圖示。
@@ -80,9 +80,9 @@ M0 的介面是 Swagger UI 的翻版：一整頁卡片堆、每張卡再疊多�
 - [x] `e9-t09` 手機版面：頂列、底部工具列、抽屜；觸控目標；表格捲動 · AC-9.5 · M · ← e9-t05 · #12（工具列：目錄、本頁／我的、搜尋、閱讀設定；「討論」等 G6）
 - [x] `e9-t10` 列印樣式 v2（書頁、頁眉頁碼、黑白）與 `/book` 印整本 · AC-9.6 · S · ← e9-t05 · #11（頁眉頁碼用 CSS 頁邊框，Chrome 131 以上）
 - [x] `e9-t11` 編輯器、管理、登入、帳號、匯入頁換皮 · AC-9.8 · M · ← e9-t02 · #11（牌桌報告頁一併；頁首字級鈕改為閱讀設定）
-- [ ] `e9-t12` 視覺回歸（Playwright 截圖 ×4 頁 ×2 寬 ×2 主題）進 CI · AC-9.7 · S · ← e9-t05
-- [ ] `e9-t13` 無障礙回歸：鍵盤巡覽測試、Lighthouse a11y、對比檢查腳本 · AC-9.7 · S · ← e9-t09
-- [ ] `e9-t14` 移除舊 token 別名與死樣式；`DESIGN.md` 以 `DESIGN-V2.md` 取代 · AC-9.1 · S · ← e9-t11
+- [x] `e9-t12` 視覺回歸（Playwright 截圖 ×4 頁 ×2 寬 ×2 主題）進 CI · AC-9.7 · S · ← e9-t05 · #14（另加五種風格、三種版面、手機工具列，共 37 張；CI `browser` job，基準圖在 `tests/browser/__screenshots__`）
+- [x] `e9-t13` 無障礙回歸：鍵盤巡覽測試、Lighthouse a11y、對比檢查腳本 · AC-9.7 · S · ← e9-t09 · #14（axe 掃新頁面與六種風格當實頁對比檢查；Lighthouse 加 `/settings`）
+- [x] `e9-t14` 移除舊 token 別名與死樣式；`DESIGN.md` 以 `DESIGN-V2.md` 取代 · AC-9.1 · S · ← e9-t11 · #14（`radius.md` 的 10px 改名 `shape.popover`；`DESIGN-V2.md` 標註為已實作）
 - [x] `e9-t15` 個人設定：`PreferencesContext` 加 `style`（六選一）、`layout`（四選一）、`font`（跟隨風格／襯線標題／無襯線／系統字型）、`textSize`（小中大特大）、`suitColors`（四色／雙色，與牌桌同步）、`density`（舒適／緊湊）；設定面板（頁面「設定」按鈕與我的帳號 › 顯示）；登入記帳號、未登入記 localStorage · AC-9.9 · M · ← e9-t03, e9-t04 · #13（先只存 localStorage；記在帳號要牌桌 `POST /api/account/preferences` 加欄位，另開牌桌 PR）
 - [x] `e9-t16` 六種風格的 token 檔：一般（現行 token，圓角不變）、中國風、圓潤、夜讀、四色、極簡；`createTheme(mode, textSize, style, …)`；視覺回歸截圖 · AC-9.9 · M · ← e9-t15 · #13（非預設風格各一個 lazy chunk；截圖併入 B7 的 e9-t12）
 - [x] `e9-t18` 改名與新標誌：`strings.ts`（appNameZh 淡江橋館、appNameEn TKU BridgeHall、tagline「橋藝社的制度與牌局」；「橋譜」改為制度區塊的名稱）、`index.html` 標題、`manifest.webmanifest`（名稱與圖示）、`public/` 的 logo.svg／logo-mark.svg／favicon.svg 換成 `docs/design/logo/` 的檔案、`icon-192/512/maskable/apple-touch` 由 `favicon.svg` 與 `icon-maskable.svg` 重新輸出、`components/Logo.tsx` 改畫新標誌、README／CLAUDE／DESIGN 文件名稱、smoke test 的 logo 檢查；牌桌端 `DESIGN.md` §6 與 README 提到橋譜的地方同步（牌桌 PR）· AC-9.10 · #12（牌桌 #77）
