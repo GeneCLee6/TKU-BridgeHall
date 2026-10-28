@@ -168,4 +168,11 @@ export type Checks = [
   Check<Same<typeof Forum.REPORT_STATUSES, typeof TableForum.REPORT_STATUSES>>,
   Check<Same<Forum.Report, TableForum.Report>>,
   Check<Same<typeof Forum.FORUM_LIMITS, typeof TableForum.FORUM_LIMITS>>,
+  // Requests and answers of worker/forum.ts (e11-t06, e11-t07)
+  Check<Same<Forum.BoardInput, TableForum.BoardInput>>,
+  Check<Same<Forum.PostInput, TableForum.PostInput>>,
+  Check<Same<Forum.CommentInput, TableForum.CommentInput>>,
+  Check<Same<Forum.BoardPage, TableForum.BoardPage>>,
+  Check<Same<Forum.PostThread, TableForum.PostThread>>,
+  Check<Same<Forum.ForumLatest, TableForum.ForumLatest>>,
 ]
