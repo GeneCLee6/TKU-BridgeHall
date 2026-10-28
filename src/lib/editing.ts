@@ -120,6 +120,8 @@ export function blankBlock(kind: Block['kind']): Block {
       return { kind: 'note', tone: 'info', text: '' }
     case 'hand':
       return { kind: 'hand', hand: { spades: '', hearts: '', diamonds: '', clubs: '' } }
+    case 'intro':
+      return { kind: 'intro', why: '', when: '', pitfalls: [] }
   }
 }
 

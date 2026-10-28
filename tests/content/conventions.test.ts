@@ -1,6 +1,7 @@
 import { categories, conventions } from '../../src/content/index.ts'
 import { splitCall } from '../../src/lib/calls.ts'
 import { conventionProblems } from '../../src/lib/content.ts'
+import { basicHiddenIds } from '../../src/lib/levels.ts'
 import { pendingNotes, walkSections } from '../../src/lib/sections.ts'
 import { conventionKinds, levels } from '../../src/types/convention.ts'
 
@@ -91,6 +92,15 @@ describe('convention content', () => {
         expect(p).not.toBe(c.slug)
       }
       expect(conventionProblems(c, categories.map((x) => x.id))).toEqual([])
+    },
+  )
+
+  // 入門版 must not empty a 入門 convention (PRD E4 risks; e4-t02)
+  it.each(conventions.filter((c) => c.level === 'basic').map((c) => [c.slug, c] as const))(
+    '%s keeps a section in 入門版',
+    (_, c) => {
+      const hidden = basicHiddenIds(c.sections, c.level)
+      expect(c.sections.some((s) => !hidden.has(s.id))).toBe(true)
     },
   )
 

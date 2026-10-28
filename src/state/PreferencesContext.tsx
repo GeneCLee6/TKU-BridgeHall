@@ -41,6 +41,11 @@ export type LayoutName = 'whole' | 'three' | 'focus' | 'cards'
 // oxlint-disable-next-line react/only-export-components
 export const layoutNames: readonly LayoutName[] = ['whole', 'three', 'focus', 'cards']
 
+/** 入門版 hides 進階 and 高階 sections (e4-t02); 完整版 shows everything */
+export type ReadingMode = 'full' | 'basic'
+// oxlint-disable-next-line react/only-export-components
+export const readingModes: readonly ReadingMode[] = ['full', 'basic']
+
 export interface DisplayPrefs {
   theme: ThemeChoice
   style: StyleName
@@ -49,6 +54,9 @@ export interface DisplayPrefs {
   textSize: TextSize
   suitColors: SuitColors
   density: Density
+  reading: ReadingMode
+  /** 「你是新生嗎？」 has been answered or closed (e4-t03); 個人設定's reset keeps it */
+  newcomerAsked: boolean
 }
 
 // oxlint-disable-next-line react/only-export-components
@@ -60,6 +68,8 @@ export const defaultPrefs: DisplayPrefs = {
   textSize: 'medium',
   suitColors: 'four',
   density: 'comfortable',
+  reading: 'full',
+  newcomerAsked: false,
 }
 
 interface Preferences extends DisplayPrefs {
@@ -93,6 +103,8 @@ const valid: { [K in keyof DisplayPrefs]: (value: unknown) => boolean } = {
   textSize: (value) => typeof value === 'string' && Object.hasOwn(textSizes, value),
   suitColors: oneOf(suitColorChoices),
   density: oneOf(densities),
+  reading: oneOf(readingModes),
+  newcomerAsked: (value) => typeof value === 'boolean',
 }
 
 /** The stored settings, each checked; `mode` is how light/dark was stored before 跟隨系統 existed */
@@ -103,6 +115,8 @@ export function readStoredPrefs(): DisplayPrefs {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     const parsed: unknown = raw ? JSON.parse(raw) : {}
     if (parsed && typeof parsed === 'object') stored = parsed as Record<string, unknown>
+    // Settings stored before 「你是新生嗎？」 existed belong to someone who has been here before
+    if (raw && !('newcomerAsked' in stored)) stored = { ...stored, newcomerAsked: true }
   } catch {
     // Unreadable: the defaults
   }
@@ -112,7 +126,17 @@ export function readStoredPrefs(): DisplayPrefs {
     if (valid[key](value)) prefs[key] = value as DisplayPrefs[K]
   }
   pick('theme', theme)
-  for (const key of ['style', 'layout', 'font', 'textSize', 'suitColors', 'density'] as const) pick(key, stored[key])
+  for (const key of [
+    'style',
+    'layout',
+    'font',
+    'textSize',
+    'suitColors',
+    'density',
+    'reading',
+    'newcomerAsked',
+  ] as const)
+    pick(key, stored[key])
   return prefs
 }
 
@@ -186,7 +210,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setTextSize: (textSize) => update({ textSize }),
       setStyle: (style) => update({ style }),
       update,
-      reset: () => setPrefs(defaultPrefs),
+      reset: () => setPrefs((now) => ({ ...defaultPrefs, newcomerAsked: now.newcomerAsked })),
     }
   }, [prefs, theme.mode])
 

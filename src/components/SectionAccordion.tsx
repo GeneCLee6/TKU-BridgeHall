@@ -1,12 +1,15 @@
 import * as Accordion from '@radix-ui/react-accordion'
 import styled, { useTheme } from 'styled-components'
+import { sectionLevel, shownInBasic } from '../lib/levels.ts'
 import { sectionNumber } from '../lib/sectionNumber.ts'
+import { pageStrings } from '../pageStrings.ts'
 import { sectionDomId, sectionKey, sectionPath } from '../lib/sections.ts'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
 import type { Origin, ResolvedSection } from '../lib/profiles.ts'
 import { BlockView } from './BlockView.tsx'
 import { CopyLinkButton } from './CopyLinkButton.tsx'
+import { KindLevel } from './KindLevel.tsx'
 import { PendingNote } from './PendingNote.tsx'
 import { originColor, OriginMark, ProfileNotes } from './ProfileMarks.tsx'
 import { RichText } from './Suit.tsx'
@@ -26,68 +29,147 @@ export function SectionAccordion({
   slug,
   sections,
   depth = 0,
+  basic = false,
+  level,
+  onShowAll,
 }: {
   slug: string
   /** With `origin` where the reader's profile replaced a section (e1-t13) */
   sections: ResolvedSection[]
   depth?: number
+  /**
+   * 入門版 (e4-t02): 進階 and 高階 sections are hidden (`hidden`, so screen readers skip them too)
+   * and a line says how many there are, with a button to show this page in full
+   */
+  basic?: boolean
+  /** The level these sections inherit: their parent section's, or the convention's */
+  level?: string
+  onShowAll?: () => void
 }) {
   const { openAmong, setLevel } = useExpansion()
   const theme = useTheme()
   const keys = sections.map((s) => sectionKey(slug, s.id))
   const heading = (['h3', 'h4', 'h5', 'h6'] as const)[Math.min(depth, 3)] as HeadingTag
+  const levelOf = (section: ResolvedSection) => sectionLevel(section, level)
+  const hidden = basic ? sections.filter((s) => !shownInBasic(levelOf(s))).length : 0
 
   return (
-    <Root $depth={depth} type="multiple" value={openAmong(keys)} onValueChange={(open) => setLevel(keys, open)}>
-      {sections.map((section, index) => (
-        <Item
-          key={section.id}
-          value={sectionKey(slug, section.id)}
-          id={sectionDomId(slug, section.id)}
-          data-section
-          $depth={depth}
-          $origin={section.origin}
-        >
-          <Accordion.Header asChild>
-            <HeaderRow as={heading}>
-              <Trigger $depth={depth}>
-                {depth === 0 && <SectionNo aria-hidden>{sectionNumber(theme.sectionNumbers, index + 1)}</SectionNo>}
-                <TitleBlock>
-                  <Title>
-                    <RichText text={section.title} />
-                    <OriginMark origin={section.origin} />
-                  </Title>
-                  {section.summary && (
-                    <Summary>
-                      <RichText text={section.summary} />
-                    </Summary>
+    <>
+      <Root
+        $depth={depth}
+        type="multiple"
+        value={openAmong(keys)}
+        onValueChange={(open) => setLevel(keys, open)}
+      >
+        {sections.map((section, index) => (
+          <Item
+            key={section.id}
+            value={sectionKey(slug, section.id)}
+            id={sectionDomId(slug, section.id)}
+            data-section
+            hidden={basic && !shownInBasic(levelOf(section))}
+            $depth={depth}
+            $origin={section.origin}
+          >
+            <Accordion.Header asChild>
+              <HeaderRow as={heading}>
+                <Trigger $depth={depth}>
+                  {depth === 0 && (
+                    <SectionNo aria-hidden>
+                      {sectionNumber(theme.sectionNumbers, index + 1)}
+                    </SectionNo>
                   )}
-                </TitleBlock>
-                <Caret aria-hidden />
-              </Trigger>
-              <CopyLinkButton path={sectionPath(slug, section.id)} label={section.title} />
-            </HeaderRow>
-          </Accordion.Header>
-          <Content forceMount data-accordion-content>
-            {section.originalTitle && (
-              <Original>
-                {strings.originalTitle}：{section.originalTitle}
-              </Original>
-            )}
-            <ProfileNotes slug={slug} sectionId={section.id} />
-            {section.pending && <PendingNote text={section.pending} />}
-            {section.blocks?.map((block, i) => (
-              <BlockView key={i} block={block} />
-            ))}
-            {section.children && (
-              <SectionAccordion slug={slug} sections={section.children} depth={depth + 1} />
-            )}
-          </Content>
-        </Item>
-      ))}
-    </Root>
+                  <TitleBlock>
+                    <Title>
+                      <RichText text={section.title} />
+                      {/* A section aimed at another level than what it inherits says so (e4-t01) */}
+                      {section.level && section.level !== level && (
+                        <LevelMark>
+                          <KindLevel level={section.level} levelOnly $small />
+                        </LevelMark>
+                      )}
+                      <OriginMark origin={section.origin} />
+                    </Title>
+                    {section.summary && (
+                      <Summary>
+                        <RichText text={section.summary} />
+                      </Summary>
+                    )}
+                  </TitleBlock>
+                  <Caret aria-hidden />
+                </Trigger>
+                <CopyLinkButton path={sectionPath(slug, section.id)} label={section.title} />
+              </HeaderRow>
+            </Accordion.Header>
+            <Content forceMount data-accordion-content>
+              {section.originalTitle && (
+                <Original>
+                  {strings.originalTitle}：{section.originalTitle}
+                </Original>
+              )}
+              <ProfileNotes slug={slug} sectionId={section.id} />
+              {section.pending && <PendingNote text={section.pending} />}
+              {section.blocks?.map((block, i) => (
+                <BlockView key={i} block={block} />
+              ))}
+              {section.children && (
+                <SectionAccordion
+                  slug={slug}
+                  sections={section.children}
+                  depth={depth + 1}
+                  // Inside a hidden section nothing more is hidden or counted
+                  basic={basic && shownInBasic(levelOf(section))}
+                  level={levelOf(section)}
+                  onShowAll={onShowAll}
+                />
+              )}
+            </Content>
+          </Item>
+        ))}
+      </Root>
+      {hidden > 0 && (
+        <More data-level-more>
+          {pageStrings.levels.more(hidden)}
+          {onShowAll && (
+            <button type="button" onClick={onShowAll} data-print="hide">
+              {pageStrings.levels.showAll}
+            </button>
+          )}
+        </More>
+      )}
+    </>
   )
 }
+
+const LevelMark = styled.span`
+  margin-left: ${({ theme }) => theme.space(2)};
+  vertical-align: 0.1em;
+`
+
+/** 入門版's 「還有 n 段」 line, where the hidden sections would be */
+const More = styled.p`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(2)};
+  margin: ${({ theme }) => theme.space(2)} 0 0;
+  padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
+  border: 1px dashed ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.note};
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.875rem;
+
+  button {
+    min-height: 32px;
+    padding: 0 ${({ theme }) => theme.space(2)};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.shape.badge};
+    background: ${({ theme }) => theme.colors.surface};
+    color: ${({ theme }) => theme.colors.primary};
+    font: inherit;
+    cursor: pointer;
+  }
+`
 
 const Root = styled(Accordion.Root)<{ $depth: number }>`
   display: flex;
@@ -100,7 +182,11 @@ const Item = styled(Accordion.Item)<{ $depth: number; $origin?: Origin }>`
   padding-left: ${({ theme, $depth }) => theme.space($depth === 0 ? 3.5 : 3)};
   border-left: ${({ $depth }) => ($depth === 0 ? 2 : 1)}px solid
     ${({ theme, $depth, $origin }) =>
-      $origin ? originColor(theme, $origin) : $depth === 0 ? theme.colors.structure : theme.colors.border};
+      $origin
+        ? originColor(theme, $origin)
+        : $depth === 0
+          ? theme.colors.structure
+          : theme.colors.border};
   scroll-margin-top: calc(${({ theme }) => theme.layout.headerHeight} + 16px);
 `
 

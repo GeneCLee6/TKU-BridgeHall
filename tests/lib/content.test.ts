@@ -150,6 +150,23 @@ describe('checking a convention', () => {
     ])
   })
 
+  it('checks and tidies the 導讀 block (e4-t04)', () => {
+    const withIntro = (block: unknown) => ({ ...lebensohl, sections: [{ id: 'a', title: 'A', blocks: [block] }] })
+    expect(conventionProblems(withIntro({ kind: 'intro', why: 'w', pitfalls: ['p'] }), ids)).toEqual([])
+    expect(conventionProblems(withIntro({ kind: 'intro' }), ids)).toEqual([])
+    expect(conventionProblems(withIntro({ kind: 'intro', why: 1 }), ids)).toEqual(['A：導讀格式不正確'])
+    expect(conventionProblems(withIntro({ kind: 'intro', pitfalls: 'p' }), ids)).toEqual(['A：導讀格式不正確'])
+
+    const tidy = (block: unknown) => tidyConvention(withIntro(block) as Convention).sections[0]
+    expect(tidy({ kind: 'intro', why: 'w', when: ' ', pitfalls: ['p', ' ', ''] })).toEqual({
+      id: 'a',
+      title: 'A',
+      blocks: [{ kind: 'intro', why: 'w', pitfalls: ['p'] }],
+    })
+    // What the editor's 導讀 button adds, left empty, is dropped
+    expect(tidy({ kind: 'intro', why: '', when: '', pitfalls: [] })).toEqual({ id: 'a', title: 'A' })
+  })
+
   it('drops empty optional fields when tidying', () => {
     const messy: Convention = {
       ...lebensohl,
