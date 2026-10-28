@@ -140,50 +140,77 @@ describe('header v2 and 閱讀設定', () => {
 })
 
 describe('convention page', () => {
-  it('shows only the linked convention, open, under the way back to the book', async () => {
+  /** The convention page's title, once the lazy page has loaded */
+  const findTitle = (name: string) => screen.findByRole('heading', { level: 1, name }, { timeout: 5000 })
+
+  it('shows only the linked convention as the page, under the way back to the book', async () => {
     renderAt('/c/lebensohl')
-    expect(await findTrigger(/^雷本索特約/)).toHaveAttribute('aria-expanded', 'true')
+    expect(await findTitle('雷本索特約')).toBeInTheDocument()
     const main = within(screen.getByRole('main'))
     expect(main.queryByRole('button', { name: /^對抗不尋常2NT/ })).toBeNull()
-    expect(within(main.getByRole('navigation', { name: '目前位置' })).getByRole('link', { name: '全書目錄' })).toHaveAttribute(
-      'href',
-      '/book',
-    )
+    const trail = main.getByRole('navigation', { name: '目前位置' })
+    expect(within(trail).getByRole('link', { name: '全書目錄' })).toHaveAttribute('href', '/book')
+    // Where it sits: 全書目錄 › category › kind
+    expect(trail).toHaveTextContent('全書目錄 › 無王開叫後續 › 特約')
     expect(document.title).toMatch(/^雷本索特約/)
+  })
+
+  it('numbers the top-level sections, opens them, and leaves the deeper ones closed', async () => {
+    renderAt('/c/lebensohl')
+    const first = await screen.findByRole('button', { name: /^遭自然牌組插叫/ }, { timeout: 5000 })
+    expect(first).toHaveAttribute('aria-expanded', 'true')
+    // The number is shown but not read: the heading's name stays the title
+    expect(first).toHaveTextContent(/^§1/)
+    expect(trigger(/^其他運用/)).toHaveTextContent(/^§3/)
+    expect(screen.getAllByRole('button', { name: /^答叫原則/ })[0]).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('lists the sections under 本頁 and links the conventions before and after', async () => {
+    renderAt('/c/lebensohl')
+    await findTitle('雷本索特約')
+    const main = within(screen.getByRole('main'))
+    expect(main.getByText('本頁', { selector: 'summary' })).toBeInTheDocument()
+    expect(main.getByRole('link', { name: /遭非自然牌組插叫/ })).toHaveAttribute('href', '/c/lebensohl/artificial')
+    const neighbours = within(main.getByRole('navigation', { name: '上一個與下一個特約' }))
+    expect(neighbours.getByRole('link', { name: /^上一個特約：/ })).toHaveAttribute('href', expect.stringMatching(/^\/c\//))
+    const next = neighbours.getByRole('link', { name: /^下一個特約：/ })
+    const nextName = next.getAttribute('aria-label')!.replace('下一個特約：', '')
+    await userEvent.click(next)
+    expect(await findTitle(nextName)).toBeInTheDocument()
   })
 
   it('opens the whole path down to a deep-linked section', async () => {
     renderAt('/c/defense-vs-unusual-2nt/vs-1s-after-3c-3d')
-    expect(await findTrigger(/^對抗不尋常2NT/)).toHaveAttribute('aria-expanded', 'true')
+    await findTitle('對抗不尋常2NT')
     // The sections appear once the convention's content has loaded
     expect(await screen.findByRole('button', { name: /^[原文已移除]/ }, { timeout: 5000 })).toHaveAttribute('aria-expanded', 'true')
+    // Both top-level sections, and the path under the second down to the linked one
     expect(within(screen.getByRole('main')).getAllByRole('button', { expanded: true }).length).toBe(4)
   })
 
   it('expands and collapses this convention from 閱讀設定', async () => {
     renderAt('/c/lebensohl')
-    await findTrigger(/^雷本索特約/)
+    await findTitle('雷本索特約')
     let panel = await openSettings()
     expect(panel.getByRole('button', { name: '列印本頁' })).toBeInTheDocument()
     await userEvent.click(panel.getByRole('button', { name: '全部展開' }))
-    expect(await screen.findByRole('button', { name: /^遭非自然牌組插叫/ }, { timeout: 5000 })).toHaveAttribute('aria-expanded', 'true')
+    expect(await screen.findByRole('button', { name: /^例外原則/ }, { timeout: 5000 })).toHaveAttribute('aria-expanded', 'true')
     panel = await openSettings()
     await userEvent.click(panel.getByRole('button', { name: '全部收合' }))
-    // The convention stays open on its own page; its sections fold
-    expect(trigger(/^雷本索特約/)).toHaveAttribute('aria-expanded', 'true')
     expect(trigger(/^遭非自然牌組插叫/)).toHaveAttribute('aria-expanded', 'false')
+    expect(trigger(/^例外原則/)).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('shows 待確認 notes in the page', async () => {
     renderAt('/c/defense-vs-unusual-2nt')
-    await findTrigger(/^對抗不尋常2NT/)
+    await findTitle('對抗不尋常2NT')
     expect((await screen.findAllByText('待確認')).length).toBeGreaterThan(0)
   })
 
   it('says so when the section in the address does not exist', async () => {
     renderAt('/c/lebensohl/no-such-section')
-    expect(await screen.findByRole('alert')).toHaveTextContent('找不到這個特約或段落')
-    expect(trigger(/^雷本索特約/)).toBeInTheDocument()
+    expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toHaveTextContent('找不到這個特約或段落')
+    expect(screen.getByRole('heading', { level: 1, name: '雷本索特約' })).toBeInTheDocument()
   })
 })
 
@@ -236,30 +263,35 @@ describe('the whole book', () => {
 })
 
 describe('catalogue', () => {
-  it('folds the catalogue: clicking a convention title opens and closes its sections', async () => {
+  it('lists categories and conventions, marks the one on screen, and lists no sections', async () => {
     renderAt('/c/lebensohl')
-    const menu = screen.getByRole('navigation', { name: '特約目錄' })
-    expect(within(menu).getByRole('button', { name: /^無王開叫後續/ })).toHaveAttribute('aria-expanded', 'true')
-    // The convention in the URL shows its sections; the others stay folded
-    expect(within(menu).getByRole('link', { name: '遭自然牌組插叫' })).toBeInTheDocument()
-    expect(within(menu).queryByRole('link', { name: '合約選擇方式' })).toBeNull()
+    const menu = within(screen.getByRole('navigation', { name: '特約目錄' }))
+    expect(menu.getByRole('link', { name: '全書目錄' })).toHaveAttribute('href', '/book')
+    expect(menu.getByRole('button', { name: /^無王開叫後續/ })).toHaveAttribute('aria-expanded', 'true')
+    expect(menu.getByRole('link', { name: /^雷本索特約/ })).toHaveAttribute('aria-current', 'page')
+    // Sections are in the page's 本頁 now, not in the catalogue
+    expect(menu.queryByRole('link', { name: '遭自然牌組插叫' })).toBeNull()
 
-    // The chevrons are only indicators, not separate controls
-    expect(within(menu).queryByRole('button', { name: /小節/ })).toBeNull()
+    await userEvent.click(menu.getByRole('link', { name: /^1NT的答叫/ }))
+    expect(await screen.findByRole('heading', { level: 1, name: '1NT的答叫' }, { timeout: 5000 })).toBeInTheDocument()
+    expect(menu.getByRole('link', { name: /^1NT的答叫/ })).toHaveAttribute('aria-current', 'page')
+    expect(menu.getByRole('link', { name: /^雷本索特約/ })).not.toHaveAttribute('aria-current')
 
-    const title = () => within(menu).getByRole('link', { name: /^1NT的答叫/ })
-    await userEvent.click(title())
-    expect(title()).toHaveAttribute('aria-expanded', 'true')
-    expect(within(menu).getByRole('link', { name: '合約選擇方式' })).toBeInTheDocument()
-    // The link also opened that convention's own page
-    expect(await findTrigger(/^1NT的答叫/)).toHaveAttribute('aria-expanded', 'true')
+    await userEvent.click(menu.getByRole('button', { name: /^無王開叫後續/ }))
+    expect(menu.queryByRole('link', { name: /^1NT的答叫/ })).toBeNull()
+  })
 
-    await userEvent.click(title())
-    expect(title()).toHaveAttribute('aria-expanded', 'false')
-    expect(within(menu).queryByRole('link', { name: '合約選擇方式' })).toBeNull()
-
-    await userEvent.click(within(menu).getByRole('button', { name: /^無王開叫後續/ }))
-    expect(within(menu).queryByRole('link', { name: /^1NT的答叫/ })).toBeNull()
+  it('filters the conventions by level', async () => {
+    renderAt('/')
+    const menu = within(screen.getByRole('navigation', { name: '特約目錄' }))
+    expect(menu.getByRole('button', { name: '全部' })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(menu.getByRole('button', { name: '高階' }))
+    expect(menu.getByRole('button', { name: '高階' })).toHaveAttribute('aria-pressed', 'true')
+    // Lebensohl is 進階; the Jacoby 2NT slam asks are 高階
+    expect(menu.queryByRole('link', { name: /^雷本索特約/ })).toBeNull()
+    expect(menu.getAllByRole('link', { name: /^開叫高花之滿貫詢問叫/ }).length).toBeGreaterThan(0)
+    await userEvent.click(menu.getByRole('button', { name: '全部' }))
+    expect(menu.getByRole('link', { name: /^雷本索特約/ })).toBeInTheDocument()
   })
 
   it('lists every 待確認 note in the catalogue and jumps straight to it', async () => {
@@ -273,7 +305,7 @@ describe('catalogue', () => {
     const link = within(menu).getByRole('link', { name: /^嘗試滿貫/ })
     expect(link).toHaveAttribute('href', '/c/notrump-responses/slam-try?pending=0')
     await userEvent.click(link)
-    expect(await findTrigger(/^1NT的答叫/)).toHaveAttribute('aria-expanded', 'true')
+    expect(await screen.findByRole('heading', { level: 1, name: '1NT的答叫' }, { timeout: 5000 })).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: /^合約選擇方式/ }, { timeout: 5000 })).toHaveAttribute('aria-expanded', 'true')
     expect(trigger(/^嘗試滿貫/)).toHaveAttribute('aria-expanded', 'true')
   })
