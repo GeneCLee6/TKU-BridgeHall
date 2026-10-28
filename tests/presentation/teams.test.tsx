@@ -121,6 +121,9 @@ describe('the team pages (e2-t05, AC-2.4)', () => {
 
     expect(screen.getByRole('link', { name: '與母制度集比較：甲隊' })).toHaveAttribute('href', '/profiles/tp/compare')
     expect(screen.getByRole('link', { name: '編輯制度集：甲隊' })).toHaveAttribute('href', '/profiles/tp/edit')
+    // 制度卡 (e3-t11): the team's card, and every partnership's card to print in one go
+    expect(screen.getByRole('link', { name: '制度卡：甲隊' })).toHaveAttribute('href', '/cards/tp')
+    expect(screen.getByRole('link', { name: '印全隊制度卡' })).toHaveAttribute('href', '/teams/t1/cards')
 
     const pair = screen.getByRole('row', { name: 'amy＋bob 相對隊伍的差異' })
     const cells = within(pair).getAllByRole('cell')
@@ -135,6 +138,16 @@ describe('the team pages (e2-t05, AC-2.4)', () => {
     expect(screen.queryByRole('link', { name: '編輯制度集：甲隊' })).not.toBeInTheDocument()
     expect(screen.getByText('你可以讀這個制度集，但不能修改。')).toBeInTheDocument()
   })
+
+  it('puts every partnership’s card on one page to print (e3-t11)', async () => {
+    open('/teams/t1/cards')
+    expect(await screen.findByRole('heading', { name: '全隊制度卡 · 甲隊', level: 1 }, { timeout: 15_000 })).toBeInTheDocument()
+    const set = await screen.findByRole('region', { name: 'amy＋bob' }, { timeout: 15_000 })
+    expect(set.querySelectorAll('[data-card-paper]').length).toBeGreaterThan(1)
+    expect(within(set).getByRole('link', { name: '打開這張卡' })).toHaveAttribute('href', '/cards/pp/wbf')
+    expect(screen.getByRole('button', { name: '列印全隊' })).toBeEnabled()
+    expect(screen.getByRole('link', { name: /單面/ })).toHaveAttribute('href', '/teams/t1/cards/ctcba-simple')
+  })
 })
 
 describe('the partnership page (e2-t06, AC-2.5)', () => {
@@ -148,6 +161,7 @@ describe('the partnership page (e2-t06, AC-2.5)', () => {
     expect(screen.getByRole('link', { name: '甲隊' })).toHaveAttribute('href', '/teams/t1')
     expect(screen.getByRole('link', { name: '與母制度集比較：amy＋bob' })).toHaveAttribute('href', '/profiles/pp/compare')
     expect(screen.getByRole('button', { name: '讀制度：amy＋bob' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '制度卡：amy＋bob' })).toHaveAttribute('href', '/cards/pp')
   })
 
   it('answers an invitation', async () => {

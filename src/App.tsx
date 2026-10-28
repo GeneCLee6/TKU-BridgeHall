@@ -40,6 +40,10 @@ const PracticeFixesPage = lazy(() => import('./pages/PracticeFixesPage.tsx').the
 const MemberPage = lazy(() => import('./pages/MemberPage.tsx').then((m) => ({ default: m.MemberPage })))
 // Kept out of the first download too, which has a size budget (scripts/check-budget.mjs)
 const CardPage = lazy(() => import('./pages/CardPage.tsx').then((m) => ({ default: m.CardPage })))
+const CardSnapshotPage = lazy(() =>
+  import('./pages/CardSnapshotPage.tsx').then((m) => ({ default: m.CardSnapshotPage })),
+)
+const TeamCardsPage = lazy(() => import('./pages/TeamCardsPage.tsx').then((m) => ({ default: m.TeamCardsPage })))
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
 const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ default: m.AccountPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage.tsx').then((m) => ({ default: m.SettingsPage })))
@@ -105,8 +109,11 @@ export function App() {
                   <Route path="/profiles/:id/compare" element={<ProfileComparePage />} />
                   <Route path="/cards/:profileId" element={<CardPage />} />
                   <Route path="/cards/:profileId/:templateId" element={<CardPage />} />
+                  <Route path="/cards/:profileId/:templateId/v/:n" element={<CardSnapshotPage />} />
                   <Route path="/teams" element={<TeamsPage />} />
                   <Route path="/teams/:id" element={<TeamPage />} />
+                  <Route path="/teams/:id/cards" element={<TeamCardsPage />} />
+                  <Route path="/teams/:id/cards/:templateId" element={<TeamCardsPage />} />
                   <Route path="/pairs/:id" element={<PairPage />} />
                   <Route path="/u/:id" element={<MemberPage />} />
                 </Routes>

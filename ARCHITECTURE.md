@@ -31,7 +31,8 @@ TKU-BridgeHall/
 │  │  └─ index.ts           特約登記表
 │  ├─ types/convention.ts   內容模型（特約的 schema）；types/article.ts 叢書文章（E5，§3.2）
 │  ├─ cards/                制度卡（E3）：types（CardTemplate）、slots（格子 id）、templates/（每個版型一個檔案，檔名＝id）、
-│  │                        cardSlots（特約的格子對應）、fill（fillCard 填卡）；網站程式只能 lazy 載入
+│  │                        cardSlots（特約的格子對應）、fill（fillCard 填卡）、edits（補格）、docx（Word 輸出，`docx` 套件）、
+│  │                        places（段落在卡上的位置）、load（讀制度集）、PrintStyle；網站程式只能 lazy 載入（placesContext 除外）
 │  ├─ lib/                  calls（叫品解析）、sections（走訪、key、深層連結）、search、content（線上內容合併與檢查）、
 │  │                        editing（編輯器的樹與文字轉換）、docText（讀 .doc/.docx）、importResult、sse、api（唯一有網路的模組）、
 │  │                        profiles（制度集解析，E1）
@@ -183,6 +184,12 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 
 **制度卡頁**（`/cards/:profileId/:templateId`，D3，lazy；`pages/CardPage.tsx`、字串 `pages/cardStrings.ts`）：讀制度集與上層（同比較頁），用 `cards/edits.ts` 的 `fillProfileCard` 填卡——人工補格 `SystemProfile.cardEdits`（格子 id → `ProfileCardEdit`，型別與牌桌 `shared/protocol.ts` 對拍）沿制度集繼承：社團→隊伍→搭檔，近的那層整格蓋過遠的，重設＝刪掉這層的補格；雙面簡易卡的補格存在單面卡的格子 id 下（兩張共用）。`cards/CardSheet.tsx` 照版型的點數寬度與字級畫卡（顏色只用 `tokens.ts` 的 `cardColors`，任何風格與深色模式都是白紙黑線），每格是按鈕（hover 顯示 Guide 說明、點了在右欄看來源與補格），右上「§」連回段落；隊伍／搭檔層的內容淡色底，列印改底線。存檔送整份制度集（`toInput` 帶著 `cardEdits`，所以制度集編輯器存檔也不會清掉補格）＋`baseVersion`，409 要重新載入；要 `access.edit` 且看得到備忘才能補。列印：`<style media="print">` 設 A4 橫式、每頁一張、附頁另起，`nUp` 的其他份只在列印時畫出；「下載 PDF」＝瀏覽器列印。連不到 Worker 時社團的卡用內建內容、唯讀。
 
+**制度卡的輸出、版本與位置**（D4，`e3-t08`～`t11`）：
+- **Word**（`cards/docx.ts`，只能動態 `import()`；`docx` 套件約 425 kB，獨立 chunk）：`cardDocument(template, card, { font, title, notesTitle })` 把版型重建成表格——欄寬、列高全用 twips 固定（`tblLayout fixed`，沒有 auto），每個版型頁一節（A4、邊界同列印），`nUp` 的版型並排 n 份，最後一節是補充說明。列高是 `EXACT`：卡面跟紙本一樣不會長高、不會跨頁，比格子長的字在 Word 會被截掉。字型 `CARD_FONTS`：Arial 或 Gill Sans MT（只給 WBF 卡選），中文微軟正黑體，勾選框用 Segoe UI Symbol。卡頁、版本頁的「下載 Word」都在瀏覽器產生（`pages/cardOutput.ts` 的 `makeDocx`）。
+- **版本與分享**（`lib/cardApi.ts`，不進首頁；型別 `CardSnapshotMeta`／`CardSnapshot`／`CardSnapshotInput`／`CARD_SNAPSHOT_LIMITS` 在 `api.ts`，與牌桌對拍）：`GET /api/book/cards/:profileId` 列表；`POST` 發布（能編輯制度集的人；送 `FilledCard` 原樣＋Word 檔 base64）；`GET …/:templateId/:n[/docx]`；`PATCH …/:n { shared }`（有 `share` 的人）；`DELETE …/:n`。分享中的版本 Worker 在登入檢查之前就回。卡頁的「版本與分享」（`pages/CardOutputs.tsx` 的 `CardVersions`）有未存的補格時不給發布。版本頁用當下的版型畫快照的格子；版型後來改過、有對不上的格子時會提示以當時的 Word 檔為準。
+- **段落旁的位置**（`cards/placesContext.tsx`、`cards/places.ts`、`cards/CardPlaces.tsx`）：特約頁用 `CardPlacesContext` 提供 `cardSlots` 與讀者的制度集 id，`SectionAccordion` 每段放 `SectionCardPlaces`；`mentions` 先用字串判斷有沒有 `<- 段落` 的引用，有才 lazy 載入版型算格子名稱。整本一頁、列印沒有 provider，不顯示。雙面簡易卡共用單面卡的格子，只列單面卡。
+- **入口**：`TeamBlocks.tsx` 的 `ProfileEntries` 多「制度卡」（`/cards/:id`）；隊伍頁多「印全隊制度卡」。`cards/load.ts` 的 `fetchCard` 是卡頁與全隊頁共用的讀取（制度集、上層、全部特約）。
+
 ### 3.2 文章（`Article`，E5 J1：`src/types/article.ts`、`lib/articles.ts`）
 
 ```ts
@@ -221,6 +228,9 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/profiles/:id/edit` | 編輯制度集（e1-t14，社員；沒有 `access.edit` 唯讀）：採用、叫品改寫、段落替換、備忘（§3.1） |
 | `/profiles/:id/compare` | 與母制度集比較（e1-t15，社員）：這一層的採用、覆寫（原文 vs 覆寫後）、失效的覆寫 |
 | `/teams` | 隊伍列表（e2-t05，社員）：隊長、人數，自己的隊伍在前，已封存另列 |
+| `/cards/:profileId/:templateId` | 制度卡（E3，lazy）：見 §4 的「制度卡頁」；`?cell=<格子 id>` 打開時選好那一格（段落旁的位置連結用） |
+| `/cards/:profileId/:templateId/v/:n` | 制度卡的第 n 版（e3-t09，lazy）：發布時的卡，唯讀；讀得到制度集的人，或分享中時任何人（不用登入） |
+| `/teams/:id/cards[/:templateId]` | 全隊制度卡（e3-t11，社員，lazy）：每對搭檔的卡接著畫，一次列印 |
 | `/teams/:id` | 隊伍頁（e2-t05，社員）：隊員、隊伍制度集入口（讀制度、比較、有 `access.edit` 時編輯）、各搭檔相對隊伍的覆寫／不採用／另採用數 |
 | `/u/:id` | 社員檔案頁（e11-t04，社員）：頭像、顯示名稱與帳號名稱、自評程度、常用制度、自我介紹、隊伍（含封存）與現役搭檔；自己的頁連到我的帳號（§4.6） |
 | `/pairs/:id` | 搭檔頁（e2-t06，社員）：兩人、所屬隊伍、接受／婉拒／收回／結束、這對的制度摘要與入口、從隊伍或另一對搭檔複製採用與覆寫（e2-t09，在瀏覽器組好 `ProfileInput` 用 `saveProfile` 存，備忘不複製；Worker 不需改動）。我的帳號的「我的隊伍與搭檔」列自己的隊伍、搭檔、邀請並可邀請搭檔 |

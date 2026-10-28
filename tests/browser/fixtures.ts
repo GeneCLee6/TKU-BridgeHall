@@ -47,5 +47,7 @@ export async function open(page: Page, path: string, size: Size, prefs: Partial<
   // The handbook pages have the phone toolbar; 個人設定 and 練習 do not
   if (path !== '/settings' && !path.startsWith('/practice') && size.width < 900)
     await expect(page.getByRole('navigation', { name: '工具列' })).toBeVisible()
+  // A convention page's 「在制度卡的位置」 lines are a lazy chunk (e3-t10)
+  await expect(page.locator('[data-card-places-pending]')).toHaveCount(0)
   await page.evaluate(() => document.fonts.ready)
 }

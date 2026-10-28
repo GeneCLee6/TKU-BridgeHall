@@ -4,6 +4,7 @@ import { sectionLevel, shownInBasic } from '../lib/levels.ts'
 import { sectionNumber } from '../lib/sectionNumber.ts'
 import { pageStrings } from '../pageStrings.ts'
 import { sectionDomId, sectionKey, sectionPath } from '../lib/sections.ts'
+import { SectionCardPlaces } from '../cards/placesContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
 import type { Origin, ResolvedSection } from '../lib/profiles.ts'
@@ -108,6 +109,7 @@ export function SectionAccordion({
                 </Original>
               )}
               <ProfileNotes slug={slug} sectionId={section.id} />
+              <SectionCardPlaces target={section.id} />
               {section.pending && <PendingNote text={section.pending} />}
               {section.blocks?.map((block, i) => (
                 <BlockView key={i} block={block} />

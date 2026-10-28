@@ -120,6 +120,11 @@ export type Checks = [
   Check<Same<typeof Book.CLUB_PROFILE_ID, typeof Protocol.CLUB_PROFILE_ID>>,
   Check<Same<typeof Book.PROFILE_SCOPES, typeof Protocol.PROFILE_SCOPES>>,
   Check<Same<typeof Book.PROFILE_LIMITS, typeof Protocol.PROFILE_LIMITS>>,
+  // Convention card versions (e3-t09)
+  Check<Same<Book.CardSnapshotMeta, Protocol.CardSnapshotMeta>>,
+  Check<Same<Book.CardSnapshot, Protocol.CardSnapshot>>,
+  Check<Same<Book.CardSnapshotInput, Protocol.CardSnapshotInput>>,
+  Check<Same<typeof Book.CARD_SNAPSHOT_LIMITS, typeof Protocol.CARD_SNAPSHOT_LIMITS>>,
 
   // ── Teams and partnerships (shared/protocol.ts, E2) ──────────────────────────────────────────
   Check<Same<Book.ClubTeam, Protocol.ClubTeam>>,
