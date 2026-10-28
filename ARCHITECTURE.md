@@ -35,7 +35,7 @@ TKU-BridgeHall/
 │  ├─ lib/                  calls（叫品解析）、sections（走訪、key、深層連結）、search、content（線上內容合併與檢查）、
 │  │                        editing（編輯器的樹與文字轉換）、docText（讀 .doc/.docx）、importResult、sse、api（唯一有網路的模組）、
 │  │                        profiles（制度集解析，E1）
-│  ├─ state/                ExpansionContext（展開狀態）、PreferencesContext（主題、字級）、AuthContext（帳號）、ContentContext（線上內容）、ProfileContext（讀者的制度集）
+│  ├─ state/                ExpansionContext（展開狀態）、PreferencesContext（個人設定）、AuthContext（帳號）、ContentContext（線上內容）、ProfileContext（讀者的制度集）
 │  ├─ components/           展示元件
 │  ├─ pages/                HandbookShell、HomePage、ConventionPage、BookPage、LoginPage、AccountPage、AdminPage、EditorPage、ImportPage、Frame（頁首與權限閘門）
 │  ├─ styles/               tokens、GlobalStyle、styled-components 型別
@@ -189,7 +189,8 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/c/:slug` | 特約頁 `ConventionPage`：只有這個特約，展開並捲動到它；上方有回全書目錄的位置列 |
 | `/c/:slug/:sectionId` | 同上，再展開該段落的所有祖先段落，捲動並聚焦到段落標題；`?pending=k` 跳到該段的第 k 個待確認 |
 | `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
-| `/account` | 我的帳號：權限、修改密碼 |
+| `/account` | 我的帳號：權限、頭像、顯示（個人設定）、修改密碼 |
+| `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
 | `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（分類、隊伍）編輯者也看得到（§4.2） |
 | `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約 |
 | `/import` | 匯入檔案（bookImport） |
@@ -198,12 +199,12 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 
 管理、編輯、匯入三頁用 `React.lazy` 分開打包，讀者不會下載。
 
-**閱讀頁拆頁**（e9-t04，2026-10-26）：`/`、`/book`、`/c/*` 是同一個版面路由 `HandbookShell`（`pages/HandbookShell.tsx`，包在 `ProfiledContent` 裡）的子路由：頁首、目錄、主欄留在畫面上，換頁時目錄的展開狀態不會重設，頁面本身在 `<Outlet>`。`ConventionPage`、`BookPage` 用 `React.lazy` 載入，所以卡片、段落、叫牌表的程式不在首頁的 bundle 裡。每頁頂端的 `PageBar` 放位置列與「閱讀設定」按鈕，頁面以 props 告訴面板能不能展開、收合、列印。個人設定的「版面」（整本一頁為預設，e9-t15）之後由這一層決定 `/c/:slug` 用哪一種殼。
+**閱讀頁拆頁**（e9-t04，2026-10-26）：`/`、`/book`、`/c/*` 是同一個版面路由 `HandbookShell`（`pages/HandbookShell.tsx`，包在 `ProfiledContent` 裡）的子路由：頁首、目錄、主欄留在畫面上，換頁時目錄的展開狀態不會重設，頁面本身在 `<Outlet>`。`ConventionPage`、`BookPage` 用 `React.lazy` 載入，所以卡片、段落、叫牌表的程式不在首頁的 bundle 裡。每頁頂端的 `PageBar` 放位置列與「閱讀設定」按鈕，頁面以 props 告訴面板能不能展開、收合、列印。個人設定的「版面」（e9-t15）由這一層與頁面決定：整本一頁（預設）＝目錄在左、≥ 1100px 特約頁有右欄「本頁」；三欄閱讀＝900px 起就有右欄；專注單欄＝桌機不顯示目錄、主欄置中；卡片總覽＝桌機不顯示目錄，首頁 `/` 換成 lazy 的 `CardOverview`（分類頁籤、磁貼、右側預覽）。手機一律單欄＋底部工具列。
 
 **狀態**
 
 - `ExpansionContext`：一個 `Set<string>` 記錄所有打開的項目（特約 key 為 `slug`，段落為 `slug/sectionId`）。每一層 Radix Accordion 以 `openAmong(keys)` 取得 value、以 `setLevel(keys, open)` 回寫。全部展開／收合與深層連結因此能控制不屬於它們的收合元件。
-- `PreferencesContext`：主題（跟隨系統／淺／深，`themeChoice`；`mode` 是實際生效的淺或深，跟隨時監聽 `prefers-color-scheme`；舊版存的 `mode` 讀成固定選擇）與字級（小／中／大，`GlobalStyle` 依此設定根字級），存在 localStorage（失敗時忽略）。花色固定四色牌。
+- `PreferencesContext`：個人設定（e9-t15）——主題（跟隨系統／淺／深，`themeChoice`；`mode` 是實際生效的淺或深，跟隨時監聽 `prefers-color-scheme`，夜讀風格跟隨時一律深色；舊版存的 `mode` 讀成固定選擇）、風格、版面、字體、字級（小／中／大／特大，`GlobalStyle` 依此設定根字級）、花色顏色（四色／雙色）、密度（舒適／緊湊），存在 localStorage `tku-bridgebook:prefs`（失敗時忽略；`readStoredPrefs` 逐欄檢查，未知值退回預設）。還沒存帳號（要牌桌 API 加欄位）。風格 token 除了「一般」都在 `styles/themes/` 各自一個 chunk，`loadStyle()` 選到才下載，沒載到前顯示「一般」；`main.tsx` 在第一次渲染前先載入存好的風格。
 - `useMediaQuery(mobileQuery)`：決定制度集下拉放在頁首（桌機）或目錄抽屜（手機），同一時間只渲染一組。
 - 不使用狀態管理函式庫；兩個 Context 就夠了。
 
