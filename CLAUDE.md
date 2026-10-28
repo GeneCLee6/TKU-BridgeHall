@@ -14,7 +14,8 @@
 | 改介面、顏色、元件 | `DESIGN.md` |
 | 改資料模型、路由、搜尋、線上內容、帳號、編輯器、匯入 | `ARCHITECTURE.md` |
 | 產品範圍與 Roadmap | `docs/PRD/00-prd.md`（總 PRD）、`docs/PRD/e*.md`（epic 與 task）、`docs/ROADMAP.md`（批次順序）、`docs/NEXT.md`（現在的位置與開工規則） |
-| 介面 v2（E9）| `docs/DESIGN-V2.md` 與視覺稿 `docs/design/mockup-v2.html`；核准前 `DESIGN.md` 仍是現行樣式 |
+| 介面 v2 的決策過程、還沒做的頁面（文章、制度卡、討論區）| `docs/DESIGN-V2.md` 與視覺稿 `docs/design/mockup-v2.html`（E9 已上線，現行樣式以 `DESIGN.md` 為準） |
+| 改了外觀（截圖會變）| `playwright.config.ts` 開頭：更新 `tests/browser/__screenshots__` 基準圖的做法 |
 
 ## 硬性規則
 
@@ -39,6 +40,7 @@
 - **`cfb` 是 CommonJS**：Node 只給 default export，打包工具給具名 export，用 `docText.ts` 開頭的寫法取得。
 - **捲動框裡的 `.visually-hidden` 要有定位的祖先。** 它是 `position: absolute`；沒有定位祖先時會跑出 `overflow: auto` 的框，把整頁撐長（編輯器的預覽曾因此在下方多出幾千 px 空白）。捲動框加 `position: relative`。
 - **手冊頁讀的是制度集套用後的內容**：`ProfiledContent`（`App.tsx`）只包手冊頁，裡面的 `useContent()` 已濾掉不採用的特約並套好覆寫；編輯器、管理頁在它外面，讀社團版原文。新頁面要顯示讀者的制度集就包一層 `ProfiledContent`（ARCHITECTURE.md §3.1）。
+- **視覺回歸的基準圖只能在 Linux 的 Playwright 容器產生**（CI 的 `browser` job）：本機（Windows）截的圖字型不同，不要 commit。改了外觀就從失敗的 CI 下載 `browser` artifact 換上新基準圖（`playwright.config.ts` 開頭有指令）。
 - **元件測試裡 fetch 會失敗**：`AuthContext`、`ContentContext` 抓不到 API 時退回「未登入、內建內容」；要測登入或線上內容，用 `vi.stubGlobal('fetch', …)`（見 `tests/presentation/accounts.test.tsx`）。
 
 ## 指令
@@ -48,5 +50,6 @@ npm run dev        # http://localhost:5174（牌桌是 5173）；/api 轉給 TAB
 npm run build      # tsc -b + vite build
 npm run lint       # oxlint
 npm test           # vitest run
+npm run test:browser  # Playwright：截圖比對＋axe＋鍵盤（本機可加 PW_CHANNEL=msedge 用已安裝的 Edge）
 npm run preview    # http://localhost:4173
 ```

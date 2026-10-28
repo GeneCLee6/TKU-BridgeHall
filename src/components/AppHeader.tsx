@@ -29,7 +29,8 @@ export function AppHeader({
 }) {
   return (
     <Bar data-print="hide">
-      <Brand to="/" aria-label={`${strings.appNameEn} ${strings.appNameZh} ${strings.pages.home}`}>
+      {/* Named by its visible words (WCAG 2.5.3), plus 首頁 for screen readers */}
+      <Brand to="/">
         <LogoMark size={40} />
         <BrandText>
           <strong lang="en">{strings.appNameEn}</strong>
@@ -37,6 +38,7 @@ export function AppHeader({
             {strings.appNameZh}
             <Tagline>・{strings.tagline}</Tagline>
           </span>
+          <span className="visually-hidden">{` ${strings.pages.home}`}</span>
         </BrandText>
       </Brand>
       {profile}
@@ -92,8 +94,14 @@ const BrandText = styled.span`
     color: ${({ theme }) => theme.colors.text};
     font-weight: 600;
   }
+  /* Off screen but still read: on a phone the logo link is named by these words too */
   ${mobile} {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 `
 

@@ -27,8 +27,8 @@ const before = {
       primaryStrong: '#0a2b57',
       primarySoft: '#e3ecf8',
       onPrimary: '#ffffff',
-      lantern: '#d9a330',
-      vermilion: '#b8321f',
+      accent: '#d9a330',
+      seal: '#b8321f',
       focus: '#2f6fd6',
       pendingBg: '#fff4d6',
       pendingBorder: '#d79a00',
@@ -52,8 +52,8 @@ const before = {
       primaryStrong: '#b5d0ff',
       primarySoft: '#1b2c4a',
       onPrimary: '#0d1320',
-      lantern: '#e7b850',
-      vermilion: '#ff8a70',
+      accent: '#e7b850',
+      seal: '#ff8a70',
       focus: '#8db8ff',
       pendingBg: '#3a2f10',
       pendingBorder: '#c99a2e',
@@ -89,9 +89,12 @@ describe('style tokens', () => {
     expect(theme.style).toBe('general')
     expect(theme.colors).toMatchObject(before[mode].colors)
     expect(theme.suits).toEqual(before[mode].suits)
-    expect(theme.shadow).toBe(before[mode].shadow)
-    expect(theme.radius).toEqual({ sm: '6px', md: '10px', lg: '14px', pill: '999px' })
-    expect(theme.shape).toMatchObject({ control: '6px', panel: '14px', tag: '999px', badge: '999px' })
+    expect(theme.shadows.panel).toBe(before[mode].shadow)
+    // The old radius.sm / md / lg / pill (removed in e9-t14) are control / popover / panel / tag
+    expect(theme.shape).toEqual({ control: '6px', panel: '14px', popover: '10px', tag: '999px', badge: '999px', note: '6px' })
+    expect(theme).not.toHaveProperty('radius')
+    expect(theme).not.toHaveProperty('shadow')
+    expect(theme.colors).not.toHaveProperty('lantern')
     expect(theme.fonts.heading).toBe(theme.fonts.body)
     expect(usesSerif('general')).toBe(false)
   })

@@ -31,7 +31,7 @@ const Group = styled.div`
   display: inline-flex;
   padding: 2px;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.pill};
+  border-radius: ${({ theme }) => theme.shape.tag};
   background: ${({ theme }) => theme.colors.surface};
 `
 
@@ -42,7 +42,7 @@ const Option = styled.button<{ $size: TextSize }>`
   width: 30px;
   height: 28px;
   border: 0;
-  border-radius: ${({ theme }) => theme.radius.pill};
+  border-radius: ${({ theme }) => theme.shape.tag};
   background: transparent;
   color: ${({ theme }) => theme.colors.textMuted};
   font-size: ${({ $size }) => ({ small: '12px', medium: '14px', large: '16px', xlarge: '18px' })[$size]};

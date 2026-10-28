@@ -51,7 +51,7 @@ const Note = styled.aside<{ $origin: Origin }>`
   margin: 0 0 ${({ theme }) => theme.space(3)};
   padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
   border-left: 3px solid ${({ theme, $origin }) => originColor(theme, $origin)};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.surfaceAlt};
   font-size: 0.875rem;
 

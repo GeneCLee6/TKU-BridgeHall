@@ -192,14 +192,14 @@ const Segments = styled.div`
   display: inline-flex;
   padding: 2px;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.pill};
+  border-radius: ${({ theme }) => theme.shape.tag};
   background: ${({ theme }) => theme.colors.surface};
 
   button {
     height: 28px;
     padding: 0 ${({ theme }) => theme.space(2)};
     border: 0;
-    border-radius: ${({ theme }) => theme.radius.pill};
+    border-radius: ${({ theme }) => theme.shape.tag};
     background: transparent;
     color: ${({ theme }) => theme.colors.textMuted};
     font: inherit;
@@ -232,7 +232,7 @@ const Item = styled.button`
   min-height: 44px;
   padding: 0 ${({ theme }) => theme.space(2)};
   border: none;
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
   font: inherit;

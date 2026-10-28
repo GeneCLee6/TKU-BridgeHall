@@ -79,7 +79,7 @@ const Wrap = styled.div<{ $bar: boolean }>`
     max-width: ${({ $bar }) => ($bar ? '12rem' : '100%')};
     padding: 0 ${({ theme }) => theme.space(2)};
     border: ${({ $bar, theme }) => ($bar ? '0' : `1px solid ${theme.colors.border}`)};
-    border-radius: ${({ theme }) => theme.radius.sm};
+    border-radius: ${({ theme }) => theme.shape.control};
     background: ${({ theme }) => theme.colors.surface};
     color: ${({ theme }) => theme.colors.text};
     font: inherit;

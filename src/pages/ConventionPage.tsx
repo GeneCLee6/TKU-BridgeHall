@@ -255,23 +255,23 @@ export function ConventionPage() {
         {(previous || next) && (
           <Neighbours aria-label={pageStrings.neighbours} data-print="hide">
             {previous ? (
-              <Link
-                to={conventionPath(previous.slug)}
-                aria-label={pageStrings.previousLabel(previous.nameZh)}
-              >
-                <small>← {pageStrings.previous}</small>
+              // The visible words are the link's name (WCAG 2.5.3); the arrows are decoration
+              <Link to={conventionPath(previous.slug)}>
+                <small>
+                  <span aria-hidden>← </span>
+                  {pageStrings.previous}
+                </small>
                 {previous.nameZh}
               </Link>
             ) : (
               <span />
             )}
             {next && (
-              <Link
-                to={conventionPath(next.slug)}
-                aria-label={pageStrings.nextLabel(next.nameZh)}
-                data-next
-              >
-                <small>{pageStrings.next} →</small>
+              <Link to={conventionPath(next.slug)} data-next>
+                <small>
+                  {pageStrings.next}
+                  <span aria-hidden> →</span>
+                </small>
                 {next.nameZh}
               </Link>
             )}
@@ -302,7 +302,10 @@ function SectionList({ convention, current }: { convention: ConventionMeta; curr
             aria-current={s.id === current ? 'location' : undefined}
           >
             <span aria-hidden>{sectionNumber(theme.sectionNumbers, i + 1)}</span>
-            <RichText text={s.title} />
+            {/* One flex item, or the title's text and suit symbols would each be a column */}
+            <span>
+              <RichText text={s.title} />
+            </span>
           </Link>
         </li>
       ))}

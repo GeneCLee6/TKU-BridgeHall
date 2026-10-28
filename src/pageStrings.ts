@@ -9,8 +9,6 @@ export const pageStrings = {
   neighbours: '上一個與下一個特約',
   previous: '上一個',
   next: '下一個',
-  previousLabel: (name: string) => `上一個特約：${name}`,
-  nextLabel: (name: string) => `下一個特約：${name}`,
   /** The convention page's 本頁 column and, on narrower screens, its fold-out list */
   onThisPage: '本頁',
   sectionCount: (n: number) => `${n} 節`,
