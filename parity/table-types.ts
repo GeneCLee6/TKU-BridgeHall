@@ -19,6 +19,8 @@ import type * as Account from '../src/lib/account.ts'
 import type * as TableProfile from '@table/shared/profile.ts'
 import type * as TableAvatar from '@table/shared/avatar.ts'
 import type * as TableFiles from '@table/shared/files.ts'
+import type * as Forum from '../src/lib/forum.ts'
+import type * as TableForum from '@table/shared/forum.ts'
 import type * as Handbook from '../src/types/convention.ts'
 import type * as Protocol from '@table/shared/protocol.ts'
 import type * as Worker from '@table/worker/book.ts'
@@ -124,4 +126,31 @@ export type Checks = [
   Check<Same<Account.FileTicket, TableFiles.FileTicket>>,
   Check<Same<Account.UploadedFile, TableFiles.UploadedFile>>,
   Check<Same<Account.FileUrls, TableFiles.FileUrls>>,
+  // The handbook leaves out `recent` (the member's latest boards)
+  Check<Reads<Account.MemberProfile, TableProfile.MemberProfile>>,
+  Check<Same<Account.MemberProfile, Omit<TableProfile.MemberProfile, 'recent'>>>,
+  Check<Same<Account.MemberTeams, Protocol.MemberTeams>>,
+
+  // ── The forum (shared/forum.ts, E11 e11-t05): a copy, so every type is the same ─────────────
+  Check<Same<Forum.BoardPostPolicy, TableForum.BoardPostPolicy>>,
+  Check<Same<typeof Forum.BOARD_POST_POLICIES, typeof TableForum.BOARD_POST_POLICIES>>,
+  Check<Same<Forum.Board, TableForum.Board>>,
+  Check<Same<typeof Forum.BUILTIN_BOARDS, typeof TableForum.BUILTIN_BOARDS>>,
+  Check<Same<typeof Forum.NEWS_BOARD_ID, typeof TableForum.NEWS_BOARD_ID>>,
+  Check<Same<Forum.ForumDeal, TableForum.ForumDeal>>,
+  Check<Same<Forum.ForumAuctionCall, TableForum.ForumAuctionCall>>,
+  Check<Same<Forum.ForumAuction, TableForum.ForumAuction>>,
+  Check<Same<Forum.ForumRuleItem, TableForum.ForumRuleItem>>,
+  Check<Same<Forum.PostBlock, TableForum.PostBlock>>,
+  Check<Same<typeof Forum.POST_BLOCK_KINDS, typeof TableForum.POST_BLOCK_KINDS>>,
+  Check<Same<Forum.CommentBlock, TableForum.CommentBlock>>,
+  Check<Same<typeof Forum.COMMENT_BLOCK_KINDS, typeof TableForum.COMMENT_BLOCK_KINDS>>,
+  Check<Same<typeof Forum.REACTION_EMOJIS, typeof TableForum.REACTION_EMOJIS>>,
+  Check<Same<Forum.Reactions, TableForum.Reactions>>,
+  Check<Same<Forum.Reaction, TableForum.Reaction>>,
+  Check<Same<Forum.Post, TableForum.Post>>,
+  Check<Same<Forum.Comment, TableForum.Comment>>,
+  Check<Same<typeof Forum.REPORT_STATUSES, typeof TableForum.REPORT_STATUSES>>,
+  Check<Same<Forum.Report, TableForum.Report>>,
+  Check<Same<typeof Forum.FORUM_LIMITS, typeof TableForum.FORUM_LIMITS>>,
 ]
