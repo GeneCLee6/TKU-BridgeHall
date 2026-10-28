@@ -19,6 +19,13 @@ const AdminPage = lazy(() => import('./pages/AdminPage.tsx').then((m) => ({ defa
 const EditorPage = lazy(() => import('./pages/EditorPage.tsx').then((m) => ({ default: m.EditorPage })))
 const ImportPage = lazy(() => import('./pages/ImportPage.tsx').then((m) => ({ default: m.ImportPage })))
 const TableReportPage = lazy(() => import('./pages/TableReportPage.tsx').then((m) => ({ default: m.TableReportPage })))
+// System profiles: editing (e1-t14) and comparing with the parent (e1-t15)
+const ProfileEditorPage = lazy(() =>
+  import('./pages/ProfileEditorPage.tsx').then((m) => ({ default: m.ProfileEditorPage })),
+)
+const ProfileComparePage = lazy(() =>
+  import('./pages/ProfileComparePage.tsx').then((m) => ({ default: m.ProfileComparePage })),
+)
 // Kept out of the first download too, which has a size budget (scripts/check-budget.mjs)
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
 const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ default: m.AccountPage })))
@@ -57,6 +64,8 @@ export function App() {
                   <Route path="/edit/:slug" element={<EditorPage />} />
                   <Route path="/import" element={<ImportPage />} />
                   <Route path="/integrations/table" element={<TableReportPage />} />
+                  <Route path="/profiles/:id/edit" element={<ProfileEditorPage />} />
+                  <Route path="/profiles/:id/compare" element={<ProfileComparePage />} />
                 </Routes>
               </Suspense>
             </ExpansionProvider>
