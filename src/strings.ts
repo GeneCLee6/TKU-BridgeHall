@@ -140,7 +140,7 @@ export const strings = {
     toTable: '到淡江牌桌打牌',
   },
 
-  permission: { bookEdit: '線上編輯', bookImport: '匯入檔案' },
+  permission: { bookEdit: '線上編輯', bookReview: '審核發布', bookImport: '匯入檔案' },
 
   // 社團管理
   admin: {
@@ -238,11 +238,7 @@ export const strings = {
     allSaved: '已儲存',
     saveNote: '修改說明（選填）',
     saveNoteHint: '例如：依社團 10/23 決議修正 1NT 點力',
-    save: '儲存並發布',
-    saveShort: '儲存',
-    saving: '儲存中…',
-    savedVersion: (n: number) => `已儲存並發布（第 ${n} 版）。`,
-    conflict: '儲存失敗：有人剛剛修改了這個特約。',
+    conflict: '儲存失敗：有人剛剛發布了這個特約的新版本。',
     loadTheirs: '放棄我的修改，載入最新版本',
     overwrite: '仍然用我的版本覆蓋（對方的版本會留在版本紀錄）',
     restoreLocal: (time: string) => `這台裝置上有 ${time} 還沒儲存的修改。`,
@@ -257,10 +253,10 @@ export const strings = {
     preview: '預覽',
     form: '編輯',
     history: '版本紀錄',
-    hidden: '這個特約已經從橋譜隱藏。儲存後會重新顯示。',
+    hidden: '這個特約已經從橋譜隱藏。發布後會重新顯示。',
     notFound: '找不到這個特約。',
     draftNote: 'AI 給審核者的說明',
-    draftReplaces: (name: string) => `AI 判斷這份文件是「${name}」的新版本，儲存後會取代目前的內容（舊版留在版本紀錄）。`,
+    draftReplaces: (name: string) => `AI 判斷這份文件是「${name}」的新版本，發布後會取代目前的內容（舊版留在版本紀錄）。`,
     draftNew: 'AI 判斷這是一個新的特約。',
     // Convention fields
     nameZh: '中文名稱',

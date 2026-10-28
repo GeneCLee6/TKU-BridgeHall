@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { CategoriesPanel } from '../components/admin/CategoriesPanel.tsx'
 import { ProfilesPanel } from '../components/admin/ProfilesPanel.tsx'
+import { AuditPanel, DraftsPanel } from '../components/admin/ReviewPanels.tsx'
 import { TeamsPanel } from '../components/admin/TeamsPanel.tsx'
 import { DataTable, TableScroll } from '../components/DataTable.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
@@ -28,8 +29,8 @@ import { tableReport } from './tableReportStrings.ts'
  * 社團管理. Admins manage everything, accounts included; editors (bookEdit) everything else
  * (ARCHITECTURE.md §4.2, decided 2026-10-25). So the account panels (registrations waiting for
  * approval, members' permissions and passwords, the account limit and invite code) are admins';
- * every other panel (the handbook's categories, the teams, and the system profiles) is for editors
- * too. The accounts are TKU BridgeTable's; adding or deleting members, admins and tables stay on
+ * every other panel (the drafts waiting for review, the handbook's categories, the teams, the system
+ * profiles and the audit log) is for editors too. The accounts are TKU BridgeTable's; adding or deleting members, admins and tables stay on
  * its admin page.
  */
 export function AdminPage() {
@@ -50,9 +51,11 @@ function AdminOrEditor() {
     <>
       {user?.admin ? <AccountPanels /> : <Muted>{t.editorIntro}</Muted>}
       {/* Not about accounts: editors' too */}
+      <DraftsPanel />
       <CategoriesPanel />
       <TeamsPanel />
       <ProfilesPanel />
+      <AuditPanel />
       <Muted>
         <Link to="/integrations/table">{tableReport.adminLink}</Link>
       </Muted>
@@ -117,9 +120,18 @@ function AccountPanels() {
     }
   }
 
+  // A reviewer is always an editor (e8-t01): reviewing brings editing, and no editing means no reviewing
   const toggle = (u: AdminUser, permission: Permission, on: boolean) =>
     void run(() =>
-      api.admin.setPermissions(u.id, PERMISSIONS.filter((p) => (p === permission ? on : u.permissions.includes(p)))),
+      api.admin.setPermissions(
+        u.id,
+        PERMISSIONS.filter((p) => {
+          if (p === permission) return on
+          if (p === 'bookEdit' && permission === 'bookReview' && on) return true
+          if (p === 'bookReview' && permission === 'bookEdit' && !on) return false
+          return u.permissions.includes(p)
+        }),
+      ),
     )
 
   const saveSettings = (event: FormEvent) => {

@@ -196,8 +196,8 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
 | `/account` | 我的帳號：權限、頭像、顯示（個人設定）、修改密碼 |
 | `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
-| `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（分類、隊伍、制度集）編輯者也看得到（§4.2） |
-| `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約 |
+| `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（草稿與送審、分類、隊伍、制度集、審計紀錄）編輯者也看得到（§4.2、§4.3.1） |
+| `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約；`?rev=<id>` 打開版本紀錄並標出那一版（審計紀錄的連結） |
 | `/import` | 匯入檔案（bookImport） |
 | `/integrations/table` | 牌桌整合（bookEdit）：同步制度集到牌桌機器人、差異報告（§4.7） |
 | `/profiles/:id/edit` | 編輯制度集（e1-t14，社員；沒有 `access.edit` 唯讀）：採用、叫品改寫、段落替換、備忘（§3.1） |
@@ -228,7 +228,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 
 ### 4.1 線上修改的內容（`ContentContext`、`lib/content.ts`）
 
-- 每個特約在伺服器最多一筆「線上版本」（`BookEntry`）：取代同 slug 的內建特約、新增一個特約，或 `convention: null` 隱藏它。
+- 每個特約在伺服器最多一筆「線上版本」（`BookEntry`）：取代同 slug 的內建特約、新增一個特約，或 `convention: null` 隱藏它。`BookEntry` 一律是**已發布**的（E8 之前存的沒有 `status`，也是已發布）；草稿另外存（`BookDraft`，§4.3.1），manifest 與內容 API 永遠不含草稿，所以讀者只看得到已發布的。
 - 開頁面時先顯示內建 manifest（或這台裝置上次看到的線上 manifest，存在 localStorage），再抓 `GET /api/book/manifest`（每筆線上版本不含內容，`meta` 是牌桌 Worker 算好的 `ConventionMeta`，隱藏的為 `null`；`categories` 是線上的分類，見 §4.5；`ETag`）。`mergeManifest` 依內建順序替換，新增的排在後面（依建立時間）；抓不到就維持現狀並顯示離線提示。
 - 線上改過的特約，打開時抓 `GET /api/book/content/:slug`（`ETag`；沒有線上版本回 404），用 `onlineConvention`（`conventionProblems`）檢查形狀，壞掉的略過並列入提示，不會讓頁面掛掉。載入的內容以 `slug@版本` 存在 `ContentContext`，線上版本更新後自然換新。
 - 舊的 `GET /api/book/content`（整本一次）牌桌仍保留給舊版前端，這裡已不使用。Service worker 對這兩支 API 走「先網路、離線用快取」，其他 `/api` 一律不快取。
@@ -237,15 +237,15 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 
 ### 4.2 帳號與權限（`AuthContext`、`lib/api.ts`）
 
-帳號在淡江牌桌（`TKU-BridgeTable` ARCHITECTURE.md §5.2）：註冊送出申請、管理員核准；忘記密碼用帳號＋邀請碼重設（管理員除外）。`Me.permissions`：`bookEdit`（線上編輯）、`bookImport`（匯入檔案），管理員兩者都有。閱讀不需要登入。`api.ts` 的型別要和牌桌的 `shared/protocol.ts`、`worker/book.ts` 一致。
+帳號在淡江牌桌（`TKU-BridgeTable` ARCHITECTURE.md §5.2）：註冊送出申請、管理員核准；忘記密碼用帳號＋邀請碼重設（管理員除外）。`Me.permissions`：`bookEdit`（線上編輯：草稿、送審）、`bookReview`（審核發布，e8-t01）、`bookImport`（匯入檔案），管理員全部都有。審核者一定也是編輯者：牌桌存權限時自動補上 `bookEdit`，管理頁勾「審核發布」會一起勾「線上編輯」、取消「線上編輯」會一起取消「審核發布」。閱讀不需要登入。`api.ts` 的型別要和牌桌的 `shared/protocol.ts`、`worker/book.ts` 一致。
 
-**角色**（使用者決定，2026-10-25；名稱暫時沿用）：**管理員**什麼都能管，包括使用者帳號；**編輯者**（有 `bookEdit`）能管帳號以外的所有東西。
+**角色**（使用者決定，2026-10-25；名稱暫時沿用）：**管理員**什麼都能管，包括使用者帳號；**編輯者**（有 `bookEdit`）能管帳號以外的所有東西，**但發布特約要審核者**（有 `bookReview`，E8 e8-t01，2026-10-28 起）。
 
 | 功能 | 社員 | 編輯者 | 管理員 |
 | --- | --- | --- | --- |
 | 閱讀；登入後讀制度集 | ✓ | ✓ | ✓ |
-| 編輯、還原特約，版本紀錄 | | ✓ | ✓ |
-| 隱藏特約（原本只限管理員） | | ✓ | ✓ |
+| 編輯特約：存草稿、送審、捨棄草稿，版本紀錄、審計紀錄 | | ✓ | ✓ |
+| 發布特約（從草稿或直接發布）、退回草稿、隱藏、還原為內建（`bookReview`） | | 審核者 | ✓ |
 | 分類、制度集（新增、儲存、刪除、版本） | | ✓ | ✓ |
 | 自己隊伍或搭檔的制度集（儲存、版本；成員權限見 §3.1「成員權限」，e2-t04） | 隊長；隊員要隊長開放；搭檔兩人 | ✓ | ✓ |
 | `/admin` 的非帳號面板（「分類」「隊伍」） | | ✓ | ✓ |
@@ -254,7 +254,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | AI 匯入（`bookImport`） | 個別勾選 | 個別勾選 | ✓ |
 
 - 牌桌的 `worker/roles.ts` 決定每條 API 要什麼（`bookRouteNeed`、`adminRouteNeed`），`tests/worker/roles.test.ts` 逐條列出。
-- 橋譜：`/admin` 給 `bookEdit` 進（`Gate need="bookEdit"`）。帳號面板（申請、社員、社團設定、到牌桌管理頁的連結）只有管理員看得到，也只有管理員才會呼叫 `/api/admin/*`；其他面板編輯者都看得到。帳號選單的「社團管理」對編輯者也顯示。編輯器的「從橋譜隱藏這個特約」編輯者也有。
+- 橋譜：`/admin` 給 `bookEdit` 進（`Gate need="bookEdit"`）。帳號面板（申請、社員、社團設定、到牌桌管理頁的連結）只有管理員看得到，也只有管理員才會呼叫 `/api/admin/*`；其他面板編輯者都看得到。帳號選單的「社團管理」對編輯者也顯示。編輯器的「直接發布」「退回」、版本紀錄的「從橋譜隱藏這個特約」「還原為網站內建的版本」只給審核者。
 - **新增管理功能時**：不是帳號相關的，就開給編輯者（Worker 用 `bookEdit`、`/admin` 放在帳號面板外面）。
 
 ### 4.3 線上編輯器（`pages/EditorPage.tsx`、`components/editor/`、`lib/editing.ts`）
@@ -262,7 +262,15 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - 左邊段落樹、中間表單、右邊預覽（寬螢幕；窄螢幕用切換）。預覽用自己的 `ExpansionProvider`，全部展開。
 - 條列以縮排文字編輯（`rulesToText`／`textToRules`，行尾〔待確認：…〕），叫牌過程是四欄格子（`2C（註記）`），叫品表可整批貼上「2H=P/C」。這些轉換對所有內建特約都能來回不變（`tests/lib/editing.test.ts`）。
 - 儲存前 `tidyConvention` 去掉空欄位與空區塊，`conventionProblems` 擋下格式錯誤，`conventionWarnings` 提醒（看不懂的叫品、沒換成符號的花色字母）。
-- 儲存帶 `baseVersion`（開始編輯時的版本），別人先存了會得到 409，可以載入對方的版本或覆蓋（對方的版本留在版本紀錄）。未儲存的修改存在這台裝置的 localStorage，離開前會提醒。
+- 儲存帶 `baseVersion`（開始編輯時已發布的版本），別人先發布了會得到 409，可以載入對方的版本或覆蓋（對方的版本留在版本紀錄）。未儲存的修改存在這台裝置的 localStorage，離開前會提醒。
+
+#### 4.3.1 草稿、送審與審計紀錄（E8 e8-t01、e8-t02、e8-t09；牌桌 `worker/book.ts`、`worker/audit.ts`）
+
+- **狀態機**：每個特約最多一份草稿（`BookDraft`，牌桌 `book:wip:<slug>`，編輯者共用）：`draft` →（送審）`in-review` →（審核者發布）成為新的 `BookEntry` 版本；審核者退回時回到 `draft`，附理由（`reviewNote`，再送審時清掉）。送審中的草稿再存一次（不送審）就撤回成 `draft`。
+- **編輯器**按鈕：「儲存草稿」「送審」（所有編輯者）；審核者多「直接發布」（有送審中的草稿時叫「發布」）。打開 `/edit/:slug` 時先抓 `GET /api/book/conventions/:slug/draft`，有草稿就編草稿（只有草稿、還沒發布過的新特約也能打開）。草稿的存檔帶 `draftRevision`（草稿的第幾次儲存），別人先存了回 409 `bookDraftConflict`，按「重新載入」接著對方的改；第一次存草稿也檢查 `baseVersion`。從草稿發布時帶 `draftRevision`，草稿用掉，送審者記在版本上（`reviewRequestedBy`、`reviewedBy`）。草稿起點比目前已發布的舊時，編輯器提醒「發布草稿會取代它」。送審中時審核者看得到「退回理由」欄與「退回」鈕；草稿可以「捨棄」。
+- **管理頁**：「草稿與送審」面板（`GET /api/book/reviews`，送審中的在前，連到編輯器；F2 的 `/review` 審核頁之後取代它），「審計紀錄」面板（`GET /api/book/audit`，最近 200 筆：存草稿、送審、退回、捨棄、發布、隱藏、還原、改分類、制度集新增／儲存／刪除；發布類連到編輯器 `?rev=<版本 id>`）。
+- 呼叫在 `lib/reviewApi.ts`、文字在 `pages/reviewStrings.ts`，只有編輯器與管理頁（都 lazy）import，不進首頁；型別在 `lib/api.ts`，`parity/table-types.ts` 對拍。
+- **還沒做**：隊伍與搭檔制度集照舊直接儲存；`club` 制度集也還是編輯者直接儲存（PRD 目標要走送審，之後再排）。差異、審核頁、通知是 F2、F4。
 
 ### 4.4 匯入檔案（`pages/ImportPage.tsx`、`lib/docText.ts`、`lib/sse.ts`、`lib/importResult.ts`）
 
