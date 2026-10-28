@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      SITE_URL: https://tku-bridge-book.vercel.app
+      SITE_URL: https://tku-bridge-hall.vercel.app
       EXPECTED_SHA: ${{ github.event.sha || github.sha }}
     steps:
       - name: Wait for production to serve this commit

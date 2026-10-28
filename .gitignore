@@ -41,3 +41,5 @@ source-docs/
 
 # Local Claude Code session data; never committed
 .claude/
+.vercel
+.env*
