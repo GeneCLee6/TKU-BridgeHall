@@ -140,7 +140,7 @@ describe('what a member sees', () => {
     renderAt('/book')
     await userEvent.click(await screen.findByRole('button', { name: 'amy 的帳號選單' }))
     const menu = screen.getByRole('menu')
-    expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['新增特約', '社團管理', '我的帳號', '登出'])
+    expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['新增特約', '社團管理', '我的帳號', '隊伍與搭檔', '登出'])
     expect((await screen.findAllByRole('link', { name: /^編輯：/ })).length).toBe(conventions.length)
   })
 
@@ -153,6 +153,7 @@ describe('what a member sees', () => {
       '匯入檔案',
       '社團管理（2 筆待審核）',
       '我的帳號',
+      '隊伍與搭檔',
       '登出',
     ])
   })
