@@ -4,7 +4,7 @@
 
 ## 這是什麼
 
-淡江橋藝社的制度與特約手冊網站（2026-10-24 由「淡江橋譜 · TKU BridgeBook」改名；「橋譜」現在是館內制度區塊的名字，`/book` 路由不改；GitHub repo 2026-10-26 重建為 `GeneCLee6/TKU-BridgeHall`，本機資料夾仍是 `C:devTKU-BridgeBook`）。React 19 + TypeScript（strict）+ styled-components + Vite，靜態網站（Vercel）。介面參考 Swagger UI：每個特約是可收合的卡片，內含多層可收合段落。帳號、線上編輯的內容與 AI 匯入的後端是姊妹站淡江牌桌的 Worker（`C:\dev\TKU-BridgeTable`），`vercel.json` 把 `/api/*` 轉過去（ARCHITECTURE.md §4.1–4.4）。
+淡江橋藝社的制度與特約手冊網站（2026-10-24 由「淡江橋譜 · TKU BridgeBook」改名；「橋譜」現在是館內制度區塊的名字，`/book` 路由不改；GitHub repo 2026-10-26 重建為 `GeneCLee6/TKU-BridgeHall`，本機資料夾 2026-10-28 改為 `C:\dev\TKU-BridgeHall`；npm 套件名 `tku-bridgehall`；localStorage key 仍是 `tku-bridgebook:*`，刻意不改以免清掉讀者設定）。React 19 + TypeScript（strict）+ styled-components + Vite，靜態網站（Vercel）。介面參考 Swagger UI：每個特約是可收合的卡片，內含多層可收合段落。帳號、線上編輯的內容與 AI 匯入的後端是姊妹站淡江牌桌的 Worker（`C:\dev\TKU-BridgeTable`），`vercel.json` 把 `/api/*` 轉過去（ARCHITECTURE.md §4.1–4.4）。
 
 ## 先讀
 
