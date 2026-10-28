@@ -24,7 +24,7 @@
 
 | Epic | 名稱 | Task 完成 | AC 完成 | 里程碑 | 狀態 |
 | --- | --- | --- | --- | --- | --- |
-| [E1](e1-content-model-system-profiles.md) | 內容模型與制度集 | 14／16 | 6／7 | M1 | in progress |
+| [E1](e1-content-model-system-profiles.md) | 內容模型與制度集 | 16／16 | 7／7 | M1 | done |
 | [E2](e2-teams-partnerships.md) | 隊伍與搭檔 | 6／10 | 1／7 | M1 | in progress |
 | [E3](e3-convention-card-generator.md) | 制度卡產生器 | 4／13 | 1／8 | M1（t13 M2） | in progress |
 | [E4](e4-levels-learning-path.md) | 分級與學習路徑 | 0／12 | 0／6 | M2 | planned |
@@ -35,7 +35,7 @@
 | [E9](e9-ui-redesign.md) | 介面重新設計（v2） | 18／18 | 6／10 | M1 | in progress |
 | [E10](e10-platform-performance-ops.md) | 平台、效能與維運 | 7／11 | 2／6 | M1、M2、M3 | in progress |
 | [E11](e11-community-forum.md) | 社群與討論 | 5／21 | 0／9 | M1（t21 M2） | in progress |
-| | **合計** | **48／147** | **14／78** | | |
+| | **合計** | **50／147** | **15／78** | | |
 
 里程碑分布：M1 約 90 個 task、M2 約 54 個、M3 2 個（概數，以 ROADMAP 為準）。M0 的功能（F1–F18）在 2026-10-21～23 完成，沒有拆成 task。
 

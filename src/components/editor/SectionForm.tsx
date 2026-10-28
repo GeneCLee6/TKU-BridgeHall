@@ -21,6 +21,7 @@ export function SectionForm({
   takenIds,
   onChange,
   onAction,
+  replacing,
 }: {
   section: Section
   /** Which tree moves make sense here */
@@ -29,6 +30,11 @@ export function SectionForm({
   takenIds: string[]
   onChange: (section: Section) => void
   onAction: (action: SectionAction) => void
+  /**
+   * Editing a replacement for this one section (a system profile's 換成…, e1-t14): no tree moves,
+   * new sections or delete, and the id stays the section's
+   */
+  replacing?: boolean
 }) {
   const [confirming, setConfirming] = useState(false)
   const [idText, setIdText] = useState(section.id)
@@ -51,41 +57,43 @@ export function SectionForm({
 
   return (
     <Form aria-label={section.title || t.untitled}>
-      <Toolbar>
-        <Row>
-          {tools.map(({ action, label, icon: Icon, enabled }) => (
-            <MiniButton key={action} type="button" disabled={!enabled} onClick={() => onAction(action)} aria-label={label} title={label}>
-              <Icon size={16} aria-hidden />
-            </MiniButton>
-          ))}
-        </Row>
-        <Row>
-          <Button type="button" $small onClick={() => onAction('addAfter')}>
-            <Plus size={14} aria-hidden />
-            {t.addSectionAfter}
-          </Button>
-          <Button type="button" $small onClick={() => onAction('addChild')}>
-            <Plus size={14} aria-hidden />
-            {t.addChild}
-          </Button>
-          {confirming ? (
-            <>
-              <span>{t.confirmDeleteSection(section.title || t.untitled)}</span>
-              <Button type="button" $small $variant="danger" onClick={() => onAction('delete')}>
-                {strings.confirm}
-              </Button>
-              <Button type="button" $small onClick={() => setConfirming(false)}>
-                {strings.cancel}
-              </Button>
-            </>
-          ) : (
-            <Button type="button" $small $variant="danger" onClick={() => setConfirming(true)}>
-              <Trash2 size={14} aria-hidden />
-              {t.deleteSection}
+      {!replacing && (
+        <Toolbar>
+          <Row>
+            {tools.map(({ action, label, icon: Icon, enabled }) => (
+              <MiniButton key={action} type="button" disabled={!enabled} onClick={() => onAction(action)} aria-label={label} title={label}>
+                <Icon size={16} aria-hidden />
+              </MiniButton>
+            ))}
+          </Row>
+          <Row>
+            <Button type="button" $small onClick={() => onAction('addAfter')}>
+              <Plus size={14} aria-hidden />
+              {t.addSectionAfter}
             </Button>
+            <Button type="button" $small onClick={() => onAction('addChild')}>
+              <Plus size={14} aria-hidden />
+              {t.addChild}
+            </Button>
+            {confirming ? (
+              <>
+                <span>{t.confirmDeleteSection(section.title || t.untitled)}</span>
+                <Button type="button" $small $variant="danger" onClick={() => onAction('delete')}>
+                  {strings.confirm}
+                </Button>
+                <Button type="button" $small onClick={() => setConfirming(false)}>
+                  {strings.cancel}
+                </Button>
+              </>
+            ) : (
+              <Button type="button" $small $variant="danger" onClick={() => setConfirming(true)}>
+                <Trash2 size={14} aria-hidden />
+                {t.deleteSection}
+              </Button>
           )}
         </Row>
       </Toolbar>
+      )}
 
       <Columns>
         <Field>
@@ -118,22 +126,24 @@ export function SectionForm({
         </Select>
         <small>{t.sectionLevelHint}</small>
       </Field>
-      <Advanced>
-        <summary>{t.sectionId}</summary>
-        <Field>
-          {t.sectionId}
-          <Input
-            value={idText}
-            aria-invalid={idProblem}
-            onChange={(e) => {
-              const value = e.target.value.trim().toLowerCase()
-              setIdText(value)
-              if (SECTION_ID_PATTERN.test(value) && !takenIds.includes(value)) onChange({ ...section, id: value })
-            }}
-          />
-          <small>{t.sectionIdHint}</small>
-        </Field>
-      </Advanced>
+      {!replacing && (
+        <Advanced>
+          <summary>{t.sectionId}</summary>
+          <Field>
+            {t.sectionId}
+            <Input
+              value={idText}
+              aria-invalid={idProblem}
+              onChange={(e) => {
+                const value = e.target.value.trim().toLowerCase()
+                setIdText(value)
+                if (SECTION_ID_PATTERN.test(value) && !takenIds.includes(value)) onChange({ ...section, id: value })
+              }}
+            />
+            <small>{t.sectionIdHint}</small>
+          </Field>
+        </Advanced>
+      )}
 
       <BlocksTitle>{t.blocks}</BlocksTitle>
       {blocks.map((block, i) => (
