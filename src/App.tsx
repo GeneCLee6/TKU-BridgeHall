@@ -33,6 +33,7 @@ const PairPage = lazy(() => import('./pages/PairPage.tsx').then((m) => ({ defaul
 // 練習 (E6): the questions and the code that makes them load only here
 const PracticePage = lazy(() => import('./pages/PracticePage.tsx').then((m) => ({ default: m.PracticePage })))
 // Kept out of the first download too, which has a size budget (scripts/check-budget.mjs)
+const CardPage = lazy(() => import('./pages/CardPage.tsx').then((m) => ({ default: m.CardPage })))
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
 const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ default: m.AccountPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage.tsx').then((m) => ({ default: m.SettingsPage })))
@@ -80,6 +81,8 @@ export function App() {
                   <Route path="/integrations/table" element={<TableReportPage />} />
                   <Route path="/profiles/:id/edit" element={<ProfileEditorPage />} />
                   <Route path="/profiles/:id/compare" element={<ProfileComparePage />} />
+                  <Route path="/cards/:profileId" element={<CardPage />} />
+                  <Route path="/cards/:profileId/:templateId" element={<CardPage />} />
                   <Route path="/teams" element={<TeamsPage />} />
                   <Route path="/teams/:id" element={<TeamPage />} />
                   <Route path="/pairs/:id" element={<PairPage />} />

@@ -62,5 +62,7 @@ export function copyProfile(target: SystemProfile, source: Pick<SystemProfile, '
   }
   if (target.parentId !== undefined) input.parentId = target.parentId
   if (target.visibility !== undefined) input.visibility = target.visibility
+  // The convention cards' hand edits are the target's own, like its notes (e3-t06)
+  if (target.cardEdits !== undefined) input.cardEdits = target.cardEdits
   return input
 }
