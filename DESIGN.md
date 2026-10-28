@@ -87,7 +87,8 @@
 | AppHeader | `components/AppHeader.tsx` | 頁首 v2（e9-t03）只有四件事：Logo、制度集（只有社團的時候是不能點的膠囊 `ProfilePill`，可選時是 `ProfileSwitch` 下拉）、搜尋、帳號。手機：選單按鈕、Logo 圖示、搜尋、帳號；制度集下拉在目錄抽屜。 |
 | ReadingSettings | `components/ReadingSettingsButton.tsx`、`ReadingSettings.tsx` | 「閱讀設定」按鈕在每個閱讀頁頂端右側（e9-t05 移到右欄），面板 lazy 載入：主題（跟隨系統／淺色／深色）、字級、本頁全部展開／收合、列印本頁（全書頁為「印整本」）、安裝 App。Esc、×、點外面關閉；Esc 與 × 把焦點還給按鈕。 |
 | AccountMenu | `components/AccountMenu.tsx` | 頁首右端：未登入時是「登入」膠囊按鈕；登入後是名字＋選單（新增特約、匯入檔案、社團管理、我的帳號、登出，依權限顯示），有待審核申請時顯示朱紅數字。 |
-| 表單元件 | `components/ui.tsx` | Button（一般／主要／危險／ghost）、Input、TextArea、Select、Field（標籤＋提示）、Panel、PasswordInput（右側眼睛按鈕切換顯示密碼）、ErrorText、Notice。 |
+| 表單元件 | `components/ui.tsx` | Button（一般／主要／危險／ghost）、Input、TextArea、Select、Field（標籤＋提示）、Panel、PasswordInput（右側眼睛按鈕切換顯示密碼）、ErrorText、Notice。全部讀風格 token（e9-t11）：輸入框 `surface` 底、聚焦框 `structure`；危險按鈕 `seal`；面板、編輯器各欄用風格的框線（`borders`）、圓角（`shape`）與陰影。登入、帳號、管理、編輯器、匯入、牌桌報告頁的頁首沒有字級鈕，與閱讀頁一樣收在「閱讀設定」。 |
+| 資料表 | `components/DataTable.tsx` | 管理頁的成員／邀請碼與牌桌報告的表格：上下細線、表頭下一條線、列間淡線，不做斑馬紋（同叫牌表）。只在 lazy 頁面用，不進首頁 bundle。 |
 | 編輯器 | `components/editor/` | Outline（段落樹，手機為下拉選單）、MetaForm、SectionForm、BlockEditor（各區塊表單，左框宮燈金）、Preview（完整展開的卡片）、RevisionsPanel、SuitPalette（插入 ♠♥♦♣，不搶走輸入框焦點）。桌機版是剛好填滿視窗的工作區：段落樹、表單、預覽三欄上下緣對齊、各自捲動，整頁不捲動；手機版單欄隨頁面捲動。 |
 
 ## 6. 版面（Swagger 式）
@@ -116,7 +117,7 @@
 - **花色**：符號形狀本身即可區分；`Suit` 以 `role="img"` 與中文 `aria-label`（黑桃、紅心、方塊、梅花）讓螢幕閱讀器念出。
 - **對比**：所有文字色在對應背景上達 WCAG AA（4.5:1）。
 - **動態**：尊重 `prefers-reduced-motion`。
-- **列印**：所有段落展開；隱藏頁首、側邊欄與按鈕；表格避免跨頁斷開。
+- **列印**（v2，e9-t10）：A4 書頁；所有段落展開；隱藏頁首、側邊欄與按鈕；任何風格都印成黑白（花色仍是紅黑），標題字體跟隨風格；表格避免跨頁斷開。特約頁每頁頁眉「淡江橋館 · 特約名」、頁尾頁碼。全書目錄的「印整本」：封面（社團、淡江橋館、橋譜、制度集、列印日期）＋目錄頁＋每個特約從新的一頁開始、頁眉是該特約名稱（分類標題跟著它的第一個特約）。頁眉頁碼靠 CSS 頁邊框（Chrome 131 以上；不支援的瀏覽器照樣印，只是沒有頁眉頁碼）。
 
 ## 8. Logo
 

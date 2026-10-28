@@ -6,6 +6,7 @@ import { CopyLinkButton, IconButton } from '../components/CopyLinkButton.tsx'
 import { KindLevel } from '../components/KindLevel.tsx'
 import { Badge } from '../components/PendingNote.tsx'
 import { OriginMark, ProfileNotes } from '../components/ProfileMarks.tsx'
+import { PrintConventionStyle } from '../components/PrintSheet.tsx'
 import { ReadingSettingsButton, type ReadingActions } from '../components/ReadingSettingsButton.tsx'
 import { SectionAccordion } from '../components/SectionAccordion.tsx'
 import { RichText } from '../components/Suit.tsx'
@@ -136,6 +137,7 @@ export function ConventionPage() {
 
   return (
     <Columns $wide={wide}>
+      <PrintConventionStyle name={convention.nameZh} />
       <Article aria-labelledby={`${conventionDomId(convention.slug)}-title`}>
         <TopBar>
           <Trail aria-label={strings.pages.trail}>

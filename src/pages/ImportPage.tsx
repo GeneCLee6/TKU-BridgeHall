@@ -346,7 +346,7 @@ const Extract = styled.pre`
   overflow: auto;
   margin: ${({ theme }) => theme.space(2)} 0 0;
   padding: ${({ theme }) => theme.space(3)};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.surfaceAlt};
   font-family: ${({ theme }) => theme.fonts.body};
   font-size: 0.875rem;
@@ -357,7 +357,7 @@ const Progress = styled.div`
   display: grid;
   gap: ${({ theme }) => theme.space(1)};
   padding: ${({ theme }) => theme.space(3)};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.primarySoft};
 `
 

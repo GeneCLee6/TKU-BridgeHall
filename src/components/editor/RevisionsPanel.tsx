@@ -120,10 +120,10 @@ const Panel = styled.aside`
   gap: ${({ theme }) => theme.space(3)};
   align-content: start;
   padding: ${({ theme }) => theme.space(4)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.lg};
+  border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.panel};
   background: ${({ theme }) => theme.colors.surface};
-  box-shadow: ${({ theme }) => theme.shadow};
+  box-shadow: ${({ theme }) => theme.shadows.panel};
 `
 
 const Head = styled.div`
