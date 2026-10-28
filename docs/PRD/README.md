@@ -30,7 +30,7 @@
 | [E4](e4-levels-learning-path.md) | 分級與學習路徑 | 0／12 | 0／6 | M2 | planned |
 | [E5](e5-library-articles-ebooks.md) | 橋藝叢書 | 0／15 | 0／8 | M2 | planned |
 | [E6](e6-quiz-practice.md) | 練習與測驗 | 0／9 | 0／6 | M2 | planned |
-| [E7](e7-bridgetable-integration.md) | 與淡江牌桌整合 | 4／8 | 2／5 | M2 | in progress |
+| [E7](e7-bridgetable-integration.md) | 與淡江牌桌整合 | 5／8 | 2／5 | M2 | in progress |
 | [E8](e8-content-governance.md) | 內容治理 | 0／14 | 0／6 | M1、M2 | planned |
 | [E9](e9-ui-redesign.md) | 介面重新設計（v2） | 18／18 | 6／10 | M1 | in progress |
 | [E10](e10-platform-performance-ops.md) | 平台、效能與維運 | 7／11 | 2／6 | M1、M2、M3 | in progress |
