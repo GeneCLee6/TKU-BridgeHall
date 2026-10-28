@@ -11,6 +11,7 @@ import { ReadingSettingsButton, type ReadingActions } from '../components/Readin
 import { SectionAccordion } from '../components/SectionAccordion.tsx'
 import { RichText } from '../components/Suit.tsx'
 import { Tag, TagList } from '../components/Tag.tsx'
+import { basicHiddenIds } from '../lib/levels.ts'
 import { sectionNumber } from '../lib/sectionNumber.ts'
 import {
   allKeys,
@@ -63,7 +64,7 @@ export function ConventionPage() {
   const { open, close } = useExpansion()
   const onlineNote = useOnlineNote()
   // 版面 (e9-t15): 專注單欄 and 卡片總覽 fold 本頁 above the text like a narrow screen
-  const { layout: shell } = usePreferences()
+  const { layout: shell, reading } = usePreferences()
   const roomy = useMediaQuery(wideQuery)
   const tablet = useMediaQuery(tabletQuery)
   const wide = shell === 'three' ? tablet : shell === 'whole' && roomy
@@ -77,6 +78,18 @@ export function ConventionPage() {
   const loaded = target.convention
   const ready = Boolean(loaded) || target.failed
   const path = convention && sectionId ? findSectionPath(convention, sectionId) : []
+  // 入門版 (e4-t02): 「這頁顯示全部」 shows this convention in full until the reader moves on; a link
+  // to a section 入門版 hides shows the page in full too, or there would be nothing to scroll to
+  const [shownAll, setShownAll] = useState<string | null>(null)
+  if (
+    reading === 'basic' &&
+    loaded &&
+    sectionId &&
+    shownAll !== slug &&
+    basicHiddenIds(loaded.sections, convention?.level).has(sectionId)
+  )
+    setShownAll(slug)
+  const basic = reading === 'basic' && shownAll !== slug
   usePageTitle(convention?.nameZh)
 
   // Arriving at a convention opens its top-level sections. It depends on the manifest entry,
@@ -233,7 +246,13 @@ export function ConventionPage() {
         <ProfileNotes slug={convention.slug} />
 
         {loaded ? (
-          <SectionAccordion slug={convention.slug} sections={loaded.sections} />
+          <SectionAccordion
+            slug={convention.slug}
+            sections={loaded.sections}
+            basic={basic}
+            level={convention.level}
+            onShowAll={() => setShownAll(convention.slug)}
+          />
         ) : target.failed ? (
           <Loading role="alert">
             {strings.online.loadFailed}
