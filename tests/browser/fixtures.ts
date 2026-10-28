@@ -44,7 +44,8 @@ export async function open(page: Page, path: string, size: Size, prefs: Partial<
   // The home page's blocks are lazy too
   if (path === '/' && prefs.layout !== 'cards') await expect(page.getByText('第一次來？從這裡開始')).toBeVisible()
   if (path === '/' && prefs.layout === 'cards') await expect(page.getByText(/^\d+ 個特約$/)).toBeVisible()
-  if (path !== '/settings' && size.width < 900)
+  // The handbook pages have the phone toolbar; 個人設定 and 練習 do not
+  if (path !== '/settings' && !path.startsWith('/practice') && size.width < 900)
     await expect(page.getByRole('navigation', { name: '工具列' })).toBeVisible()
   await page.evaluate(() => document.fonts.ready)
 }

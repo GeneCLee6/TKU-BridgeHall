@@ -76,6 +76,7 @@ export type Checks = [
   Check<Same<Book.ProfileScope, Protocol.ProfileScope>>,
   Check<Same<Book.Adoption, Protocol.Adoption>>,
   Check<Same<Book.ProfileNote, Protocol.ProfileNote>>,
+  Check<Same<Book.ProfileCardEdit, Protocol.ProfileCardEdit>>,
   Check<Same<Exclude<Book.ProfileOverride, { kind: 'section' }>, Exclude<Protocol.ProfileOverride, { kind: 'section' }>>>,
   Check<Same<keyof Extract<Book.ProfileOverride, { kind: 'section' }>, keyof Extract<Protocol.ProfileOverride, { kind: 'section' }>>>,
   Check<Same<Omit<Book.SystemProfile, 'overrides'>, Omit<Protocol.SystemProfile, 'overrides'>>>,

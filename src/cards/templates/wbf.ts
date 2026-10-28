@@ -54,6 +54,7 @@ export const wbf: CardTemplate = {
   pages: [
     {
       id: 'p1',
+      lineHeight: 12.16,
       columns: [
         {
           id: 'defence',
@@ -375,6 +376,7 @@ export const wbf: CardTemplate = {
     },
     {
       id: 'p2',
+      lineHeight: 15.1,
       columns: [
         {
           id: 'openings',

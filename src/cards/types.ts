@@ -56,6 +56,8 @@ export interface CardPage {
    * the columns); the columns plus the gutters add up to 100
    */
   gaps?: number[]
+  /** Height of one printed line, in points, measured from the source file (default 1.5 × `fontSize`) */
+  lineHeight?: number
 }
 
 export interface CardColumn {
