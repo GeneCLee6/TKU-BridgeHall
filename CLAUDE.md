@@ -28,7 +28,7 @@
 7. **不要直接推送到 `main`，也不要 force-push。** 功能走分支＋PR。合併一律用 `gh pr merge <號> --squash --delete-branch`，遠端與本地分支一起刪；分支在 worktree 裡的話先 `git worktree remove` 再刪分支。GitHub 已開「合併後自動刪除分支」，但關掉不合併的 PR 不會自動刪，要手動 `git push origin --delete <分支>`。
 8. **合併到 `main` 就會自動上線**（Vercel 部署橋譜；牌桌 `main` 也會自動部署 Worker）。所以 PR 要 CI 全綠、看過預覽站才合併；牽涉牌桌 API 的變更，牌桌 PR 先合併並部署完成，再合併橋譜（ARCHITECTURE.md §7）。不要另外手動部署，除非使用者要求。
 9. 程式碼、註解、commit、**PR 標題**用英文（標題不能有中文，PR 本文可以用繁中）；文件與介面用繁體中文（台灣用語）。
-10. **與淡江牌桌的介面要一起改**：`src/lib/api.ts` 的型別對應牌桌的 `shared/protocol.ts`、`worker/book.ts`；`src/lib/importResult.ts` 對應牌桌 `worker/importer.ts` 的扁平 schema。
+10. **與淡江牌桌的介面要一起改**：`src/lib/api.ts` 的型別對應牌桌的 `shared/protocol.ts`、`worker/book.ts`、`worker/articles.ts`（文章）；`src/lib/importResult.ts` 對應牌桌 `worker/importer.ts` 的扁平 schema。
 
 ## 已知陷阱
 

@@ -1,7 +1,7 @@
 ---
 title: E5 — 橋藝叢書
 date: 2026-10-24
-status: planned
+status: in progress
 epic: E5
 owner: GeneCLee6
 milestones: [M2]
@@ -71,10 +71,10 @@ depends_on: [E1, E9, E10]
 
 **M2**
 
-- [ ] `e5-t01` `Article` 型別、`heading`／`quote`／`image` 區塊、`BlockView`、內容測試 · AC-5.1 · M
+- [x] `e5-t01` `Article` 型別、`heading`／`quote`／`image` 區塊、`BlockView`、內容測試 · AC-5.1 · M
 - [ ] `e5-t02` `deal` 區塊接 E11 的 `DealDiagram`／`DealInput`（`e11-t11`）；文章用的 caption 與版面 · AC-5.3 · S · ← e11-t11
 - [ ] `e5-t03` `play` 區塊：出牌序列顯示（逐墩、可展開）· AC-5.3 · M · ← e5-t02
-- [ ] `e5-t04` Worker：`article:` 儲存、版本、API（與 `BookEntry` 同法）；R2 bucket 與簽名 URL 沿用 E11 `e11-t02` · AC-5.2、AC-5.6 · M · ← e11-t02
+- [x] `e5-t04` Worker：`article:` 儲存、版本、API（與 `BookEntry` 同法）；R2 bucket 與簽名 URL 沿用 E11 `e11-t02` · AC-5.2、AC-5.6 · M · ← e11-t02
 - [ ] `e5-t05` 文章頁 `/library/:slug` 與叢書頁 `/library`（書架版面、系列、篩選）· AC-5.7 · M · ← e5-t01, e9-t09
 - [ ] `e5-t06` 系列資料模型與線上管理 · AC-5.7 · S · ← e5-t04
 - [ ] `e5-t07` 文章編輯器：沿用 `components/editor/`，新區塊表單；四家牌輸入元件 · AC-5.2 · M · ← e5-t01, e5-t02
@@ -82,7 +82,7 @@ depends_on: [E1, E9, E10]
 - [ ] `e5-t09` 電子書上傳（憑證直傳、授權必填、封面、大小限制）與書頁 · AC-5.4 · M · ← e5-t04
 - [ ] `e5-t10` PDF 閱讀器（`pdf.js` lazy chunk、頁碼、全螢幕、手機）· AC-5.5 · M · ← e5-t09
 - [ ] `e5-t11` 可見範圍：`members-only` 的列表過濾與檔案保護 · AC-5.6 · S · ← e5-t09
-- [ ] `e5-t12` `image` 區塊與封面接 E11 的圖片上傳（`e11-t02`）· AC-5.1 · S · ← e11-t02
+- [x] `e5-t12` `image` 區塊與封面接 E11 的圖片上傳（`e11-t02`）· AC-5.1 · S · ← e11-t02
 - [ ] `e5-t13` 搜尋索引加文章（E10 `e10-t04`）；叢書頁搜尋框 · AC-5.7 · S · ← e10-t04
 - [ ] `e5-t14` 閱讀進度（段落／頁碼）與「繼續閱讀」· AC-5.8 · S · ← e5-t05, e5-t10
 - [ ] `e5-t15` R2 用量提醒（接近 8 GB 通知幹部）· AC-5.4 · S · ← e5-t09

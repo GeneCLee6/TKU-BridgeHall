@@ -1,4 +1,5 @@
 import { accountApi, FILE_LIMITS, FILE_TYPES, type FilePurpose, type FileType, type UploadedFile } from './account.ts'
+import { ApiError } from './api.ts'
 import { canvasEncoder, encodeAvatar, type Size } from './avatarImage.ts'
 
 /**
@@ -54,3 +55,18 @@ export async function uploadImage(file: File, purpose: FilePurpose): Promise<Upl
     image.close()
   }
 }
+
+/**
+ * A picture for an article's `image` block or its cover (e5-t12): uploaded like a post's, and kept
+ * in the article by its key, never its address (addresses are signed and short-lived; the Worker
+ * signs fresh ones with every read, `ArticleResponse.files`)
+ */
+export async function uploadArticlePicture(file: File): Promise<string> {
+  return (await uploadImage(file, 'article')).key
+}
+
+/**
+ * True when uploads are not set up yet (503 `filesOff`: no R2 bucket): the editor then says so and
+ * keeps the rest of the article, instead of treating it as a failed upload to retry
+ */
+export const filesOff = (error: unknown) => error instanceof ApiError && error.code === 'filesOff'
