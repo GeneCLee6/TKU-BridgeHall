@@ -59,11 +59,13 @@ function RuleList({ items, ordered }: { items: RuleItem[]; ordered?: boolean }) 
 }
 
 const Paragraph = styled.p`
-  margin: ${({ theme }) => theme.space(2)} 0;
+  margin: ${({ theme }) => theme.space(3)} 0;
+  line-height: 1.75;
 `
 
 const listStyle = `
-  margin: 8px 0;
+  margin: 12px 0;
+  line-height: 1.75;
   padding-left: 1.75em;
   li { margin: 4px 0; }
   li > ul { margin: 4px 0; }
@@ -80,9 +82,9 @@ const Unordered = styled.ul`
 const Callout = styled.div<{ $tone: 'info' | 'warning' }>`
   margin: ${({ theme }) => theme.space(3)} 0;
   padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
-  border-left: 4px solid
-    ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warningBorder : theme.colors.primary)};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-left: 2px solid
+    ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warningBorder : theme.colors.structure)};
+  border-radius: ${({ theme }) => theme.shape.note};
   background: ${({ theme, $tone }) =>
     $tone === 'warning' ? theme.colors.warningBg : theme.colors.primarySoft};
   font-size: 0.9375rem;

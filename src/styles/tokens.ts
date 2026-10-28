@@ -75,6 +75,8 @@ interface StyleTokens {
   shadows: Record<ThemeMode, { panel: string }>
   /** The 「待確認」 badge: a pill in 「一般」, a slightly turned seal in 中國風 */
   pendingBadge: { borderWidth: string; rotate: string; serif: boolean }
+  /** How top-level sections are numbered: 「§1」 or 「一、」 (DESIGN-V2.md §10.5) */
+  sectionNumbers: 'sign' | 'han'
 }
 
 /**
@@ -160,6 +162,7 @@ const general: StyleTokens = {
     dark: { panel: '0 1px 2px rgba(0, 0, 0, 0.4)' },
   },
   pendingBadge: { borderWidth: '1px', rotate: '0deg', serif: false },
+  sectionNumbers: 'sign',
 }
 
 /** 中國風: rice paper, ink, vermilion, blue-and-white and gold; double-line frames, serif headings */
@@ -228,6 +231,7 @@ const chinese: StyleTokens = {
   borders: { control: '1px solid', panel: '3px double' },
   shadows: { light: { panel: 'none' }, dark: { panel: 'none' } },
   pendingBadge: { borderWidth: '2px', rotate: '-3deg', serif: true },
+  sectionNumbers: 'han',
 }
 
 const styles: Record<StyleName, StyleTokens> = { general, chinese }
@@ -241,6 +245,8 @@ export const layout = {
   sidebarWidth: '19rem',
   contentMax: '60rem',
   mobileBreakpoint: '900px',
+  /** From this width the convention page shows its 本頁 column (DESIGN-V2.md §4) */
+  wideBreakpoint: '1100px',
 }
 
 /** 4px spacing scale: space(2) === '8px' */
@@ -267,6 +273,7 @@ export function createTheme(mode: ThemeMode, textSize: TextSize = 'medium', styl
     borders: tokens.borders,
     shadows,
     pendingBadge: tokens.pendingBadge,
+    sectionNumbers: tokens.sectionNumbers,
     layout,
     space,
     /** Old names, removed in e9-t14 once every component reads `shape` and `shadows` */

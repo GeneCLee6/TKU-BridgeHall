@@ -79,8 +79,8 @@ export function HandbookShell() {
 }
 
 /**
- * The line at the top of a reading page: where the reader is on the left, the 閱讀設定 button on
- * the right (it moves to the right-hand column in e9-t05).
+ * The line at the top of the whole book: where the reader is on the left, the 閱讀設定 button on
+ * the right. The convention page has its own (e9-t05), with the button in its 本頁 column.
  */
 export function PageBar({ lead, ...actions }: ReadingActions & { lead?: ReactNode }) {
   return (
