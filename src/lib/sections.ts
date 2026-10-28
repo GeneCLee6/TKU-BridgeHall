@@ -90,6 +90,8 @@ export function blockText(block: Block): string {
       return block.rows.map((r) => `${r.meaning} ${r.note ?? ''}`).join(' ')
     case 'hand':
       return block.label ?? ''
+    case 'intro':
+      return [block.why, block.when, ...(block.pitfalls ?? [])].filter(Boolean).join(' ')
   }
 }
 

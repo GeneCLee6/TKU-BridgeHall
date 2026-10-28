@@ -43,6 +43,15 @@ export const pageStrings = {
     mine: '我的',
     closeOnThisPage: '關閉本頁清單',
   },
+  /** 導讀, the intro block (e4-t04) */
+  intro: {
+    name: '導讀',
+    why: '為什麼用它',
+    when: '什麼時候用',
+    pitfalls: '常見錯誤',
+    pitfallsHint: '一行一項。',
+    hint: '給新生看的導讀，由社團撰寫（不是原文轉錄）；三項都可以只填一部分。',
+  },
   /** The printed book's cover and contents pages (e9-t10) */
   print: {
     club: '淡江橋藝社',

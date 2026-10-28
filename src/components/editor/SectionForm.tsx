@@ -6,13 +6,13 @@ import { SECTION_ID_PATTERN } from '../../lib/content.ts'
 import { strings } from '../../strings.ts'
 import { levels, type Block, type Level, type Section } from '../../types/convention.ts'
 import { Button, Field, Input, Row, Select } from '../ui.tsx'
-import { BlockEditor, PendingField } from './BlockEditor.tsx'
+import { BlockEditor, blockName, PendingField } from './BlockEditor.tsx'
 import { AutoTextArea, MiniButton } from './fields.tsx'
 
 export type SectionAction = 'up' | 'down' | 'indent' | 'outdent' | 'addAfter' | 'addChild' | 'delete'
 
 const t = strings.editor
-const KINDS: Block['kind'][] = ['paragraph', 'responses', 'rules', 'note', 'hand']
+const KINDS: Block['kind'][] = ['paragraph', 'responses', 'rules', 'note', 'hand', 'intro']
 
 /** The fields and content blocks of one section, with the buttons that move it in the tree */
 export function SectionForm({
@@ -162,7 +162,7 @@ export function SectionForm({
         {KINDS.map((kind) => (
           <Button key={kind} type="button" $small onClick={() => setBlocks([...blocks, blankBlock(kind)])}>
             <Plus size={14} aria-hidden />
-            {t.blockNames[kind]}
+            {blockName(kind)}
           </Button>
         ))}
       </Row>

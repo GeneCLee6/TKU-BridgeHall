@@ -122,6 +122,10 @@ export function conventionProblems(value: unknown, categories: string[]): string
           add(`${where}：牌例要有四門花色`)
         return
       }
+      case 'intro':
+        if (!optionalString(b.why) || !optionalString(b.when) || (b.pitfalls !== undefined && !isStrings(b.pitfalls)))
+          add(`${where}：導讀格式不正確`)
+        return
       case 'responses': {
         if (!Array.isArray(b.rows)) return add(`${where}：叫品表缺少列`)
         for (const row of b.rows)
@@ -278,6 +282,8 @@ function emptyBlock(b: Block) {
       return !b.items.some((i) => i.text.trim() || i.children?.length)
     case 'hand':
       return !Object.values(b.hand).some((cards) => cards.trim())
+    case 'intro':
+      return !b.why?.trim() && !b.when?.trim() && !b.pitfalls?.some((p) => p.trim())
     case 'responses':
       return !b.rows.some((r) => r.call.trim() || r.meaning.trim()) && !b.auction?.calls.some((c) => c !== '' && c !== '?')
   }
@@ -307,6 +313,15 @@ export function tidyConvention(convention: Convention): Convention {
         return { kind: 'note', tone: b.tone, text: b.text }
       case 'hand':
         return { kind: 'hand', ...(text(b.label) && { label: b.label }), hand: { ...b.hand } }
+      case 'intro': {
+        const pitfalls = b.pitfalls?.filter((p) => p.trim())
+        return {
+          kind: 'intro',
+          ...(text(b.why) && { why: b.why }),
+          ...(text(b.when) && { when: b.when }),
+          ...(pitfalls?.length && { pitfalls }),
+        }
+      }
       case 'responses':
         return {
           kind: 'responses',
