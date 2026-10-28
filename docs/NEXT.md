@@ -1,6 +1,6 @@
 # NEXT — 接下來怎麼做（給 AI 協作者與自己的交接手冊）
 
-最後更新 2026-10-26。**完整順序在 [`ROADMAP.md`](ROADMAP.md)**（一批一個 PR）；這份只記「現在的位置」與工作方式。每完成一批就更新「現在的位置」；每個 AI session 開頭只需要讀 `CLAUDE.md` 和這一份。
+最後更新 2026-10-28。**完整順序在 [`ROADMAP.md`](ROADMAP.md)**（一批一個 PR）；這份只記「現在的位置」與工作方式。每完成一批就更新「現在的位置」；每個 AI session 開頭只需要讀 `CLAUDE.md` 和這一份。
 
 ## 1. 現在的位置
 
@@ -27,8 +27,9 @@
 - **repo 重建為 `TKU-BridgeHall`**（2026-10-26）：repo 是公開的，舊 repo 歷史裡有社團的 Word 原檔，所以用 git filter-repo 把 `*.doc` 從每個 commit 挖掉、刪掉舊 repo、以新名稱重建（PR #1–#32 的頁面因此消失，commit 訊息裡的 PR 號保留）。原檔只存在本機 `C:淡江橋藝社制度原檔`。
 - **C3 制度集成員制權限**（PR #3，牌桌 #132，2026-10-26）：規則在牌桌 `worker/roles.ts` 的 `profileAccess`：編輯者與管理員全部；隊伍制度集隊長能存、改可見範圍，隊長打開「隊員可編輯制度集」（`ClubTeam.membersEdit`）後隊員也能存，封存後唯讀；搭檔兩人現役時能存，結束後唯讀；成員才看得到備忘與版本紀錄；`visibility: 'members'` 只給成員讀，母制度集讀不到的人子制度集也讀不到。`GET /api/book/profiles/:id` 多回 `access`（`notes`／`edit`／`share`），新增 `GET /api/club/members`（id 與帳號名稱）。管理頁多「隊伍」面板（建立、換隊長、加減隊員、開關、封存、看搭檔）。
 - **B2 頁首 v2 與拆頁**（PR #4，2026-10-26）：頁首只剩 Logo、制度集（只有社團時是不能點的膠囊，可選時是下拉）、搜尋、帳號；「閱讀設定」按鈕在每個閱讀頁頂端右側，面板 lazy（主題 跟隨系統／淺／深、字級、本頁展開收合、列印本頁／印整本、安裝 App）。路由：`/` 首頁（分類與特約連結，完整版是 B4）、`/c/:slug[/:sectionId]` 單一特約頁、`/book` 全書整本一頁；三頁共用版面路由 `HandbookShell`，特約頁與全書頁 lazy。入門版切換等 E4。**整本一頁現在在 `/book`**；預設版面的設定（e9-t15）之後由 `HandbookShell` 決定 `/c/:slug` 的殼。
+- **G1 個人檔案、圖片上傳、頭像**（PR #8，牌桌 #167，2026-10-28）：個人檔案與頭像沿用牌桌 e1-t15／e1-t34（頭像 256×256、≤ 64 KB 存牌桌 `avatar:`，不放 R2；兩站讀同一張 `/api/avatar/:id?v=`）；`Avatar`（字首＋和牌桌同一套顏色）、`AvatarCropper`，「我的帳號」可上傳與改回預設；`ClubMember` 多回 `displayName`、`avatar`。圖片檔案在牌桌 `worker/files.ts`（R2 `bridgebook-files`、一次性憑證、每天 30 張、簽名短效網址 `/api/files/<key>?e=&s=`），橋譜 `lib/imageUpload.ts` 縮圖與上傳，還沒有頁面用。型別與呼叫在 `lib/account.ts`、介面文字在 `strings-account.ts`，都不進首頁。**要人做**：`npx wrangler r2 bucket create bridgebook-files`，再在牌桌開小 PR 把 `wrangler.jsonc` 的 `FILES` binding 取消註解（牌桌 DEPLOY.md §4.8）；之前圖片上傳一律回 503 `filesOff`，其他功能不受影響。
 - **首頁 JS 148.8／150 kB**（B2 後；拆頁讓卡片程式離開首頁）：之後的功能一律 lazy，`strings.ts` 也算在首頁裡。
-- **下一批**：A 期做完。B3（特約頁三欄、換皮、目錄 v2；前提 B2）；C3 已完成；C4（隊伍頁、搭檔頁）等 C1；D3 等 B3；G 期前提 B2 已滿足。
+- **下一批**：A 期做完。B3（特約頁三欄、換皮、目錄 v2；前提 B2）；C3 已完成；C4（隊伍頁、搭檔頁）等 C1；D3 等 B3；G1 已完成，下一個 G2（我的帳號編輯檔案、他人檔案頁、`shared/forum.ts`）。
 - **已拍板**（2026-10-24）：網站改名**淡江橋館 · TKU BridgeHall**，「橋譜」保留為制度區塊名；新標誌（屋簷＋拱門＋四花色）在 `design/logo/`，改名是 ROADMAP B0（`e9-t18`）。介面預設「一般」＝現行配色與圓角，另五種風格、四種版面、字體、字級、花色顏色、密度都放個人設定，不投票（E9，展示頁 `design/pitch.html`）；首頁保留第一版視覺稿的版面並加社團新聞與最新討論（`DESIGN-V2.md` §5.3）；制度卡以 WBF 卡為主力、內容寫進格子、輸出 .docx 與 PDF，簡易卡與棕標申報表也要能生成（E3）；**新增 E11 社群與討論**（頭像、板面、牌例友善的貼文與留言、通知、管理），先給社內測試，型別與 Worker 模組放牌桌 repo 以便日後搬到牌桌 E13（ROADMAP Phase G）。
 - **等人決定的事**（不卡 A 期）：程度名稱（E4）、制度負責人（E8）、WBF 卡英文濃縮文字由誰定稿（E3）。見 `docs/PRD/00-prd.md` §14。
 

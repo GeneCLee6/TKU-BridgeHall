@@ -1,12 +1,16 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import styled from 'styled-components'
+import { Avatar } from '../components/Avatar.tsx'
+import { AvatarCropper } from '../components/AvatarCropper.tsx'
 import { Button, ErrorText, Field, Muted, Notice, PageTitle, Panel, PanelTitle, PasswordInput } from '../components/ui.tsx'
-import { api, errorText, LIMITS, TABLE_SITE } from '../lib/api.ts'
+import { accountApi, AVATAR_INPUT_TYPES } from '../lib/account.ts'
+import { api, errorText, LIMITS, type Me, TABLE_SITE } from '../lib/api.ts'
 import { useAuth } from '../state/AuthContext.tsx'
+import { accountStrings } from '../strings-account.ts'
 import { strings } from '../strings.ts'
 import { Frame, Gate } from './Frame.tsx'
 
-/** 我的帳號: what this member may do here, and changing the password (shared with 淡江牌桌) */
+/** 我的帳號: what this member may do here, their avatar, and changing the password (shared with 淡江牌桌) */
 export function AccountPage() {
   return (
     <Frame title={strings.me.title}>
@@ -43,7 +47,10 @@ function AccountBody() {
   return (
     <>
       <Panel>
-        <PanelTitle>{user.username}</PanelTitle>
+        <Who>
+          <Avatar id={user.id} name={user.profile?.displayName || user.username} size={48} avatar={user.avatar} />
+          <PanelTitle>{user.profile?.displayName || user.username}</PanelTitle>
+        </Who>
         <Muted>
           {strings.me.permissions}：
           {user.admin
@@ -57,6 +64,7 @@ function AccountBody() {
           {strings.opensInNewTab}
         </TableLink>
       </Panel>
+      <AvatarPanel user={user} />
       <Panel>
         <PanelTitle>{strings.me.changePassword}</PanelTitle>
         <Form onSubmit={change} aria-label={strings.me.changePassword}>
@@ -87,6 +95,90 @@ function AccountBody() {
     </>
   )
 }
+
+/**
+ * 頭像 (e11-t03): pick a picture and crop it (`AvatarCropper`), or go back to the default avatar.
+ * The same picture as on 淡江牌桌: both sites read `/api/avatar/:id`
+ */
+function AvatarPanel({ user }: { user: Me }) {
+  const { refresh } = useAuth()
+  const input = useRef<HTMLInputElement>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+
+  const choose = (e: ChangeEvent<HTMLInputElement>) => {
+    const picked = e.target.files?.[0]
+    // The same file can be picked again after a cancel
+    e.target.value = ''
+    setError('')
+    setNotice('')
+    if (!picked) return
+    if (!(AVATAR_INPUT_TYPES as readonly string[]).includes(picked.type)) return setError(accountStrings.avatarBadFormat)
+    setFile(picked)
+  }
+
+  const saved = async () => {
+    setFile(null)
+    await refresh()
+    setNotice(accountStrings.avatarSaved)
+  }
+
+  const remove = async () => {
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      await accountApi.removeAvatar()
+      await refresh()
+      setNotice(accountStrings.avatarRemoved)
+    } catch (e) {
+      setError(errorText(e))
+    }
+    setBusy(false)
+  }
+
+  return (
+    <Panel>
+      <PanelTitle>{accountStrings.avatar}</PanelTitle>
+      <Muted>{accountStrings.avatarHint}</Muted>
+      <AvatarRow>
+        <Avatar id={user.id} name={user.profile?.displayName || user.username} size={64} avatar={user.avatar} />
+        <Button type="button" onClick={() => input.current?.click()}>
+          {accountStrings.avatarChoose}
+        </Button>
+        {user.avatar ? (
+          <Button type="button" $variant="ghost" disabled={busy} onClick={() => void remove()}>
+            {accountStrings.avatarRemove}
+          </Button>
+        ) : null}
+        <input ref={input} type="file" accept={AVATAR_INPUT_TYPES.join(',')} hidden onChange={choose} />
+      </AvatarRow>
+      {error && <ErrorText role="alert">{error}</ErrorText>}
+      {notice && <Notice role="status">{notice}</Notice>}
+      {file && <AvatarCropper file={file} onClose={() => setFile(null)} onSaved={() => void saved()} />}
+    </Panel>
+  )
+}
+
+const Who = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(3)};
+
+  & > h2 {
+    margin: 0;
+  }
+`
+
+const AvatarRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(3)};
+  margin-top: ${({ theme }) => theme.space(3)};
+`
 
 const Form = styled.form`
   display: grid;

@@ -85,9 +85,10 @@ depends_on: [E1, E9, E10]
 
 **M1 · 地基（個人檔案、R2、型別）**
 
-- [ ] `e11-t01` 個人檔案模型 `StoredUser.profile`（顯示名稱、自我介紹、常用制度、自評等級）與 `PATCH /api/account/profile`；輸入驗證與測試（牌桌 `e1-t15` 由此完成）· AC-11.1 · S
-- [ ] `e11-t02` R2 bucket `bridgebook-files`、一次性憑證直傳、圖片大小與格式檢查、縮圖；`GET /_file/:key` 簽名短效網址（E5 `e5-t04`／`e5-t12` 沿用）· AC-11.1、AC-11.3 · M
-- [ ] `e11-t03` 頭像：前端裁切 512×512、上傳、預設字首頭像元件 `Avatar`（兩站共用，牌桌 `e1-t18`／`e1-t34` 由此完成）· AC-11.1 · M · ← e11-t02
+- [x] `e11-t01` 個人檔案模型 `StoredUser.profile`（顯示名稱、自我介紹、常用制度、自評等級）與 `PATCH /api/account/profile`；輸入驗證與測試（牌桌 `e1-t15` 由此完成）· AC-11.1 · S
+- [x] `e11-t02` R2 bucket `bridgebook-files`、一次性憑證直傳、圖片大小與格式檢查、縮圖；`GET /_file/:key` 簽名短效網址（E5 `e5-t04`／`e5-t12` 沿用）· AC-11.1、AC-11.3 · M
+- [x] `e11-t03` 頭像：前端裁切 512×512、上傳、預設字首頭像元件 `Avatar`（兩站共用，牌桌 `e1-t18`／`e1-t34` 由此完成）· AC-11.1 · M · ← e11-t02
+  - G1 實作備註（2026-10-28）：個人檔案與頭像沿用牌桌 e1-t15／e1-t34（頭像 256×256、≤ 64 KB 存在牌桌 `avatar:`，不放 R2；兩站讀同一張）；`ClubMember` 多回 `displayName`、`avatar`。圖片網址放在 `/api/files/<key>?e=&s=`（不是 `/_file/:key`，兩站的 `/api/*` 已轉給 Worker）；縮圖由瀏覽器做。bucket `bridgebook-files` 要人建立後才在 `wrangler.jsonc` 打開 binding，之前上傳回 503（見 `docs/NEXT.md`）。
 - [ ] `e11-t04` 「我的帳號」編輯個人檔案與頭像；他人檔案頁 `/u/:id`（頭像、介紹、隊伍與搭檔、最近貼文）· AC-11.1 · S · ← e11-t01, e11-t03
 - [ ] `e11-t05` `shared/forum.ts` 型別（`Board`、`Post`、`PostBlock`、`Comment`、`Reaction`、`Report`）；與牌桌 E13 規格對齊；橋譜 `lib/api.ts` 對拍 · AC-11.8 · S
 

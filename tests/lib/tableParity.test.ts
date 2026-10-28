@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
+import * as account from '../../src/lib/account.ts'
 import * as api from '../../src/lib/api.ts'
 
 /**
@@ -40,6 +41,30 @@ describe.skipIf(!tableDir)('constants shared with TKU-BridgeTable', () => {
     const { TEAM_LIMITS, PAIR_STATUSES } = await protocol()
     expect(api.TEAM_LIMITS).toEqual(TEAM_LIMITS)
     expect(api.PAIR_STATUSES).toEqual(PAIR_STATUSES)
+  })
+})
+
+describe.skipIf(!tableDir)('profile, avatar and file constants shared with TKU-BridgeTable (E11)', () => {
+  const shared = (name: string) => import(/* @vite-ignore */ `${tableDir!.replaceAll('\\', '/')}/shared/${name}.ts`)
+
+  it('has the same profile levels and limits', async () => {
+    const { PROFILE_LEVELS, PROFILE_LIMITS } = await shared('profile')
+    expect(account.PROFILE_LEVELS).toEqual(PROFILE_LEVELS)
+    expect(account.PROFILE_FIELD_LIMITS).toEqual(PROFILE_LIMITS)
+  })
+
+  it('has the same avatar size, limit and address', async () => {
+    const { AVATAR_PIXELS, AVATAR_MAX_BYTES, avatarUrl } = await shared('avatar')
+    expect(account.AVATAR_PIXELS).toBe(AVATAR_PIXELS)
+    expect(account.AVATAR_MAX_BYTES).toBe(AVATAR_MAX_BYTES)
+    expect(account.avatarUrl('u 1', 7)).toBe(avatarUrl('u 1', 7))
+  })
+
+  it('has the same file types and limits', async () => {
+    const { FILE_TYPES, FILE_PURPOSES, FILE_LIMITS } = await shared('files')
+    expect(account.FILE_TYPES).toEqual(FILE_TYPES)
+    expect(['post', 'article']).toEqual(FILE_PURPOSES)
+    expect(account.FILE_LIMITS).toEqual(FILE_LIMITS)
   })
 })
 
