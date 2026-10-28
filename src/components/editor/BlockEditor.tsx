@@ -369,8 +369,8 @@ const Box = styled.section`
   gap: ${({ theme }) => theme.space(3)};
   padding: ${({ theme }) => theme.space(3)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-left: 4px solid ${({ theme }) => theme.colors.lantern};
-  border-radius: ${({ theme }) => theme.radius.md};
+  border-left: 4px solid ${({ theme }) => theme.colors.accent};
+  border-radius: ${({ theme }) => theme.shape.panel};
   background: ${({ theme }) => theme.colors.surface};
 `
 
@@ -402,7 +402,7 @@ const RowBox = styled.div`
   display: grid;
   gap: ${({ theme }) => theme.space(2)};
   padding: ${({ theme }) => theme.space(2)};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.surfaceAlt};
 `
 
@@ -443,8 +443,8 @@ const Fieldset = styled.fieldset`
   gap: ${({ theme }) => theme.space(2)};
   margin: 0;
   padding: ${({ theme }) => theme.space(3)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.control};
 
   legend {
     padding: 0 ${({ theme }) => theme.space(1)};

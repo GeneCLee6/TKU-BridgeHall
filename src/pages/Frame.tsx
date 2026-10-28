@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AccountMenu } from '../components/AccountMenu.tsx'
 import { AppHeader } from '../components/AppHeader.tsx'
-import { TextSizeControl } from '../components/TextSizeControl.tsx'
+import { ReadingSettingsButton } from '../components/ReadingSettingsButton.tsx'
 import { ErrorText, Muted, PageMain } from '../components/ui.tsx'
 import type { Permission } from '../lib/api.ts'
 import { useAuth } from '../state/AuthContext.tsx'
@@ -17,13 +17,14 @@ export function AccountCorner() {
 
 /**
  * The header and page frame for everything except the handbook itself. Pages whose title changes
- * (the editor) leave out `title` and set it themselves.
+ * (the editor) leave out `title` and set it themselves. Like the handbook's header v2 the bar has
+ * no 字級 control: theme and 字級 are in 閱讀設定 (e9-t11, DESIGN-V2.md §5.1).
  */
 export function Frame({ title, children, wide }: { title?: string; children: ReactNode; wide?: boolean }) {
   usePageTitle(title)
   return (
     <>
-      <AppHeader actions={<TextSizeControl />} account={<AccountCorner />} />
+      <AppHeader actions={<ReadingSettingsButton />} account={<AccountCorner />} />
       {wide ? children : <PageMain id="main">{children}</PageMain>}
     </>
   )

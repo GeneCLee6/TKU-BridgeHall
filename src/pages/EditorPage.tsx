@@ -553,10 +553,10 @@ const Bar = styled.div`
   align-items: center;
   gap: ${({ theme }) => theme.space(2)};
   padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.md};
+  border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.panel};
   background: ${({ theme }) => theme.colors.surface};
-  box-shadow: ${({ theme }) => theme.shadow};
+  box-shadow: ${({ theme }) => theme.shadows.panel};
 `
 
 const Heading = styled.div`
@@ -630,7 +630,7 @@ const Notices = styled.div`
 const Warnings = styled.details`
   padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
   border-left: 4px solid ${({ theme }) => theme.colors.pendingBorder};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.pendingBg};
   color: ${({ theme }) => theme.colors.pendingText};
 
@@ -655,6 +655,7 @@ const Columns = styled.div<{ $wide: boolean; $history: boolean }>`
   gap: ${({ theme }) => theme.space(4)};
 
   & > aside {
+    position: relative;
     overflow: auto;
   }
 
@@ -671,11 +672,12 @@ const Side = styled.div`
   grid-template-rows: minmax(0, 1fr) auto;
   gap: ${({ theme }) => theme.space(2)};
   padding: ${({ theme }) => theme.space(2)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.lg};
+  border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.panel};
   background: ${({ theme }) => theme.colors.surface};
 
   & > nav {
+    position: relative;
     overflow: auto;
   }
 `
@@ -691,11 +693,13 @@ const MainCol = styled.div`
   }
 `
 
+/** Positioned, so visually hidden labels inside stay in the scroll box (CLAUDE.md 已知陷阱) */
 const FormBox = styled.div`
+  position: relative;
   overflow: auto;
   padding: ${({ theme }) => theme.space(4)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.lg};
+  border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.panel};
   background: ${({ theme }) => theme.colors.surface};
 
   ${mobile} {
@@ -710,8 +714,8 @@ const PreviewCol = styled.section`
   grid-template-rows: minmax(0, 1fr);
   min-width: 0;
   overflow: hidden;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.lg};
+  border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.panel};
   background: ${({ theme }) => theme.colors.surface};
 
   ${mobile} {

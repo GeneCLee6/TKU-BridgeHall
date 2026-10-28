@@ -5,7 +5,9 @@ import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 
 /**
- * Form controls and page frames for the account, admin, editor and import pages. Controls are
+ * Form controls and page frames for the account, admin, editor and import pages, drawn from the
+ * style's tokens (DESIGN-V2.md §5.9, e9-t11): fields on the panel's surface with the structure
+ * colour on focus, panels with the style's frame, corners and shadow. Controls are
  * sized in rem so they follow the 字級; on phones they stay at least 40px tall with 16px text
  * (smaller text makes iOS zoom into the field).
  */
@@ -55,11 +57,11 @@ export const Button = styled.button<{ $variant?: 'primary' | 'danger' | 'ghost';
   ${({ $variant, theme }) =>
     $variant === 'danger' &&
     css`
-      border-color: ${theme.colors.warningBorder};
+      border-color: ${theme.colors.seal};
       color: ${theme.colors.seal};
       &:hover:not(:disabled) {
         background: ${theme.colors.warningBg};
-        border-color: ${theme.colors.warningBorder};
+        border-color: ${theme.colors.seal};
         color: ${theme.colors.seal};
       }
     `}
@@ -82,7 +84,7 @@ const control = css`
   padding: 0.3125rem 0.625rem;
   border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.shape.control};
-  background: ${({ theme }) => theme.colors.bg};
+  background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   font: inherit;
   font-size: 0.9375rem;
@@ -90,7 +92,7 @@ const control = css`
   line-height: 1.5;
 
   &:focus {
-    border-color: ${({ theme }) => theme.colors.primary};
+    border-color: ${({ theme }) => theme.colors.structure};
   }
 
   ${mobile} {

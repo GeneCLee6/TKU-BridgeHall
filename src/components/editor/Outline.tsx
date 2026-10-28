@@ -97,7 +97,7 @@ const Item = styled.button<{ $depth: number }>`
   padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(2)};
   padding-left: ${({ theme, $depth }) => theme.space(2 + $depth * 4)};
   border: 0;
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
   font: inherit;
@@ -119,8 +119,8 @@ const SelectBox = styled.select`
   width: 100%;
   min-height: 40px;
   padding: 0 ${({ theme }) => theme.space(2)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   font: inherit;

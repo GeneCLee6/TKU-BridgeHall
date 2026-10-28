@@ -90,6 +90,15 @@ describe('signing in and registering', () => {
     expect(sent.find((s) => s.path === '/api/login')!.body).toEqual({ username: 'amy', password: 'secret1' })
   })
 
+  it('keeps theme and 字級 in 閱讀設定, not in the header (e9-t11)', async () => {
+    renderAt('/login')
+    await screen.findByLabelText(/^密碼/)
+    const header = within(screen.getByRole('banner'))
+    expect(header.queryByRole('group', { name: '字級' })).toBeNull()
+    await userEvent.click(header.getByRole('button', { name: '閱讀設定' }))
+    expect(await screen.findByRole('dialog', {}, { timeout: 5000 })).toHaveTextContent('字級')
+  })
+
   it('sends a registration from this site for approval', async () => {
     routes['POST /api/register'] = { status: 202, body: { pending: true, username: 'amy' } }
     renderAt('/login')
