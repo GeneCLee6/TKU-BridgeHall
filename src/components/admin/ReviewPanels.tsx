@@ -79,6 +79,9 @@ function targetLink(entry: AuditEntry) {
   if (entry.action.startsWith('profile:'))
     return entry.action === 'profile:delete' ? null : `/profiles/${encodeURIComponent(entry.target)}/edit`
   if (entry.action === 'book:categories') return null
+  // A convention card version (e3-t09): `<profile>/<template>`, the version's number
+  if (entry.action === 'card:publish' && entry.version) return `/cards/${entry.target}/v/${entry.version}`
+  if (entry.action === 'card:delete') return null
   return entry.revisionId ? `/edit/${entry.target}?rev=${encodeURIComponent(entry.revisionId)}` : `/edit/${entry.target}`
 }
 

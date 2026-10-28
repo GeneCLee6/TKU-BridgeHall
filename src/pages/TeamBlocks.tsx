@@ -10,7 +10,7 @@ import { teamStrings as t } from './teamStrings.ts'
 /**
  * The ways into a team's or partnership's profile (AC-2.4, AC-2.5): read the handbook with it
  * (it becomes the reader's profile), compare it with its parent (e1-t15), and edit it (e1-t14)
- * when the Worker says the member may. 制度卡 joins them with E3 (D4, e3-t11).
+ * when the Worker says the member may, and its convention card (E3 e3-t11).
  */
 export function ProfileEntries({ profileId, name, access }: { profileId: string; name: string; access?: ProfileAccess }) {
   const { choose } = useProfiles()
@@ -39,9 +39,11 @@ export function ProfileEntries({ profileId, name, access }: { profileId: string;
             {t.edit}
           </Link>
         )}
+        <Link to={`/cards/${id}`} aria-label={`${t.card}：${name}`}>
+          {t.card}
+        </Link>
       </Row>
       {access && !access.edit && <Muted>{t.readOnly}</Muted>}
-      <Muted>{t.cardsLater}</Muted>
     </>
   )
 }

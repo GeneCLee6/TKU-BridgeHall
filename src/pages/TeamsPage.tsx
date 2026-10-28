@@ -212,6 +212,13 @@ function Team() {
         <PanelTitle id="team-pairs">{t.pairsTitle}</PanelTitle>
         <Stack>
           <Muted>{t.pairsIntro}</Muted>
+          {pairs.length > 0 && (
+            <Muted>
+              <Link to={`/teams/${encodeURIComponent(team.id)}/cards`} title={t.teamCardsHint}>
+                {t.teamCards}
+              </Link>
+            </Muted>
+          )}
           {pairs.length ? (
             <TableScroll>
               <DataTable aria-label={t.pairsTitle}>

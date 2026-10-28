@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { CardSheet, Ink } from '../cards/CardSheet.tsx'
 import { cellSummary, describeSlots, PAPER_WIDTH, type SlotInfo } from '../cards/describe.ts'
@@ -7,27 +7,20 @@ import { fillProfileCard, setCardEdit, storedSlot } from '../cards/edits.ts'
 import type { CardEdit, FillProblem, FilledCard, FilledCell } from '../cards/fill.ts'
 import { cardTemplates } from '../cards/templates/index.ts'
 import type { CardTemplate } from '../cards/types.ts'
+import { fetchCard, type LoadedCard as Loaded } from '../cards/load.ts'
+import { PrintStyle } from '../cards/PrintStyle.tsx'
 import { OriginMark } from '../components/ProfileMarks.tsx'
 import { Button, ErrorText, Field, Muted, Row, Select, TextArea } from '../components/ui.tsx'
-import {
-  ApiError,
-  api,
-  CLUB_PROFILE_ID,
-  errorText,
-  type ProfileAccess,
-  type ProfileCardEdit,
-  type ProfileSummary,
-  type SystemProfile,
-} from '../lib/api.ts'
+import { ApiError, api, CLUB_PROFILE_ID, errorText, type ProfileCardEdit } from '../lib/api.ts'
 import { toInput } from '../lib/profileEdit.ts'
-import { emptyClubProfile, resolveProfile, summaryChain } from '../lib/profiles.ts'
+import { resolveProfile } from '../lib/profiles.ts'
 import { conventionPath, findSectionPath, sectionPath } from '../lib/sections.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
 import { cardColors, layout, mobile } from '../styles/tokens.ts'
-import type { Convention } from '../types/convention.ts'
+import { CardTabs, CardVersions, WordDownload } from './CardOutputs.tsx'
 import { cardStrings as t } from './cardStrings.ts'
 import { Frame } from './Frame.tsx'
 
@@ -65,42 +58,15 @@ function NotFound() {
   )
 }
 
-interface Loaded {
-  /** From the club down to the profile */
-  chain: SystemProfile[]
-  summaries: ProfileSummary[]
-  access?: ProfileAccess
-  content: Convention[]
-  /** The Worker could not be reached: the club's card from the handbook's own content, not editable */
-  offline?: true
-}
-
-/** The profile, the profiles above it (one that cannot be read is left out) and every convention */
-async function fetchCard(profileId: string, loadAll: () => Promise<Convention[]>): Promise<Loaded | { error: string }> {
-  const all = await loadAll()
-  try {
-    const [summaries, { profile, access }] = await Promise.all([api.book.profiles(), api.book.profileWithAccess(profileId)])
-    const above = profile.id === CLUB_PROFILE_ID ? [] : summaryChain(summaries, profile.parentId ?? CLUB_PROFILE_ID)
-    const parents = await Promise.all(above.map((s) => api.book.profile(s.id).catch(() => null)))
-    return {
-      chain: [...parents.filter((p): p is SystemProfile => !!p), profile],
-      summaries,
-      ...(access && { access }),
-      content: all,
-    }
-  } catch (e) {
-    if (profileId !== CLUB_PROFILE_ID) return { error: errorText(e) }
-    return { chain: [emptyClubProfile()], summaries: [], content: all, offline: true }
-  }
-}
-
 function Card({ profileId, template }: { profileId: string; template: CardTemplate }) {
   const content = useContent()
   const { user, can } = useAuth()
   const navigate = useNavigate()
   const [loaded, setLoaded] = useState<Loaded | { error: string } | null>(null)
   const [own, setOwn] = useState<Record<string, ProfileCardEdit> | undefined>(undefined)
-  const [selected, setSelected] = useState<string | undefined>(undefined)
+  // A link from a section's 「在制度卡的位置」 (e3-t10) selects its cell
+  const [searchParams] = useSearchParams()
+  const [selected, setSelected] = useState<string | undefined>(() => searchParams.get('cell') ?? undefined)
   const [saving, setSaving] = useState(false)
   const [conflict, setConflict] = useState(false)
   const [notice, setNotice] = useState('')
@@ -221,20 +187,7 @@ function Card({ profileId, template }: { profileId: string; template: CardTempla
           </Muted>
         </Head>
         <Controls>
-          <nav aria-label={t.templates}>
-            <Tabs>
-              {cardTemplates.map((x) => (
-                <li key={x.id}>
-                  <Tab
-                    to={`/cards/${encodeURIComponent(profile.id)}/${x.id}`}
-                    aria-current={x.id === template.id ? 'page' : undefined}
-                  >
-                    {x.nameZh ?? x.name}
-                  </Tab>
-                </li>
-              ))}
-            </Tabs>
-          </nav>
+          <CardTabs current={template.id} to={(x) => `/cards/${encodeURIComponent(profile.id)}/${x}`} />
           <Row>
             {ready.summaries.length > 1 && (
               <Field>
@@ -257,6 +210,7 @@ function Card({ profileId, template }: { profileId: string; template: CardTempla
             <Button type="button" onClick={() => window.print()}>
               {t.print}
             </Button>
+            <WordDownload template={template} card={card} profileName={profile.name} />
             <Button type="button" $variant="primary" onClick={() => window.print()} aria-describedby="card-pdf-hint">
               {t.pdf}
             </Button>
@@ -300,6 +254,16 @@ function Card({ profileId, template }: { profileId: string; template: CardTempla
           </Problems>
         )}
       </Toolbar>
+
+      <CardVersions
+        template={template}
+        profile={profile}
+        card={card}
+        signedIn={!!user && !ready.offline}
+        canPublish={canEdit}
+        dirty={dirty}
+        canShare={!!access?.share || (profile.id === CLUB_PROFILE_ID && can('bookEdit'))}
+      />
 
       <Layout>
         <SheetScroll aria-label={name} role="region" tabIndex={0} data-card-scroll>
@@ -531,30 +495,6 @@ function CellPanel({
   )
 }
 
-/**
- * Printing prints the sheets alone: A4 in the form's orientation, margins that leave the form at
- * its own size, each sheet (and the supplementary notes) on a page of its own, the n-up copies
- * drawn, and the site's marks (grounds, links, the selected cell) left out.
- */
-function PrintStyle({ template }: { template: CardTemplate }) {
-  const orientation = template.paper === 'A4-landscape' ? 'landscape' : 'portrait'
-  const side = template.paper === 'A4-landscape' ? (842 - PAPER_WIDTH['A4-landscape']) / 2 : (595 - PAPER_WIDTH['A4-portrait']) / 2
-  return (
-    <style media="print">{`
-@page { size: A4 ${orientation}; margin: 20pt ${side}pt; }
-html, body { background: ${cardColors.paper} !important; }
-#main { padding: 0 !important; margin: 0 !important; max-width: none !important; display: block !important; }
-[data-card-scroll] { overflow: visible !important; border: 0 !important; padding: 0 !important; background: none !important; }
-[data-card-paper] { margin: 0 !important; box-shadow: none !important; break-after: page; }
-[data-card-paper]:last-child { break-after: auto; }
-[data-card-extra] { display: block !important; }
-[data-card-slot] { background-color: transparent !important; box-shadow: none !important; outline: none !important; }
-[data-card-slot][data-origin] { text-decoration: underline; }
-[data-card-slot] button { cursor: default; }
-`}</style>
-  )
-}
-
 // Frame pieces: the site's own tokens around the sheet
 
 const Main = styled.main`
@@ -590,32 +530,6 @@ const Controls = styled.div`
   gap: ${({ theme }) => theme.space(3)};
   align-items: end;
   justify-content: space-between;
-`
-
-const Tabs = styled.ul`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${({ theme }) => theme.space(1)};
-  margin: 0;
-  padding: 0;
-  list-style: none;
-`
-
-const Tab = styled(Link)`
-  display: inline-block;
-  padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(3)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.shape.control};
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 0.9375rem;
-  text-decoration: none;
-
-  &[aria-current='page'] {
-    border-color: ${({ theme }) => theme.colors.primary};
-    background: ${({ theme }) => theme.colors.primary};
-    color: ${({ theme }) => theme.colors.onPrimary};
-    font-weight: 600;
-  }
 `
 
 const PendingWord = styled.strong`

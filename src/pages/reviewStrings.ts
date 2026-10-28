@@ -70,6 +70,8 @@ export const review = {
     'profile:create': '新增制度集',
     'profile:save': '儲存制度集',
     'profile:delete': '刪除制度集',
+    'card:publish': '發布制度卡版本',
+    'card:delete': '刪除制度卡版本',
   } satisfies Record<AuditAction, string>,
   categories: '分類',
 }
