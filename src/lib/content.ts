@@ -131,6 +131,8 @@ export function conventionProblems(value: unknown, categories: string[]): string
         for (const row of b.rows)
           if (!isObject(row) || !isString(row.call) || !isString(row.meaning) || !optionalString(row.note) || !optionalString(row.pending))
             add(`${where}：叫品表的每一列要有叫品與意義`)
+          // The table's Worker checks hand conditions in full (lib/systemSpec.ts conditionsProblem)
+          else if (row.conditions !== undefined && !isObject(row.conditions)) add(`${where}：叫品表的手牌條件格式不正確`)
         const auction = b.auction
         if (auction === undefined) return
         if (!isObject(auction) || !isStrings(auction.seats) || (auction.seats as string[]).length !== 4 || !Array.isArray(auction.calls))
@@ -332,6 +334,7 @@ export function tidyConvention(convention: Convention): Convention {
             meaning: r.meaning,
             ...(text(r.note) && { note: r.note }),
             ...(text(r.pending) && { pending: r.pending }),
+            ...(r.conditions && { conditions: structuredClone(r.conditions) }),
           })),
         }
     }

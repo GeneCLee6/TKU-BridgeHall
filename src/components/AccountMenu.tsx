@@ -91,6 +91,9 @@ export function AccountMenu({
           <Item role="menuitem" to="/account">
             {strings.account.mine}
           </Item>
+          <Item role="menuitem" to="/teams">
+            {strings.account.teams}
+          </Item>
           <ItemButton
             role="menuitem"
             type="button"

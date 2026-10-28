@@ -8,6 +8,8 @@
  *   - **bold** for emphasis that was bold in the source document
  */
 
+import type { SpecConditions } from '../lib/systemSpec.ts'
+
 /**
  * A call in compact ASCII notation, rendered with suit symbols by formatCall:
  * '1NT', '2D', '3S', 'X' (double), 'XX' (redouble), 'P' (pass), '?' (the call being decided),
@@ -37,7 +39,16 @@ export interface ResponseRow {
   note?: string
   /** Present when the source is ambiguous: rendered as a visible 待確認 note */
   pending?: string
+  /**
+   * The hand for the table's robot, as an editor filled it in on the report page (e7-t08,
+   * docs/SYSTEM-SPEC.md §8): high cards, lengths, forcing. Not part of the words, which it never
+   * changes, and not shown in the handbook; the bundled conventions leave it out (CLAUDE.md rule 1).
+   */
+  conditions?: RowConditions
 }
+
+/** A row's hand conditions, in `toSystemSpec`'s shape (lib/systemSpec.ts) */
+export type RowConditions = SpecConditions
 
 export interface RuleItem {
   text: string
