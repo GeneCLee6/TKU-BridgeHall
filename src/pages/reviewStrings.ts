@@ -70,6 +70,8 @@ export const review = {
     'profile:create': '新增制度集',
     'profile:save': '儲存制度集',
     'profile:delete': '刪除制度集',
+    'quiz:fix': '修改練習題',
+    'quiz:unfix': '刪除練習題的修正',
   } satisfies Record<AuditAction, string>,
   categories: '分類',
 }

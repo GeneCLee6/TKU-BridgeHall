@@ -193,7 +193,9 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/book` | 全書目錄 `BookPage`：整本一頁，全部特約皆收合（拆頁前的手冊）；閱讀設定的「印整本」先載入全部再列印 |
 | `/c/:slug` | 特約頁 `ConventionPage`：只有這個特約，展開並捲動到它；上方有回全書目錄的位置列 |
 | `/c/:slug/:sectionId` | 同上，再展開該段落的所有祖先段落，捲動並聚焦到段落標題；`?pending=k` 跳到該段的第 k 個待確認 |
-| `/practice` | 練習（E6，lazy，包在 `ProfiledContent`）：依制度集、特約、程度、題數抽意義題，答完顯示原文叫牌表與深層連結；`?c=<slug>` 只選這個特約（「練這個特約」）。題目由 `lib/quiz.ts` 的 `generateQuizzes` 在瀏覽器從解析後的內容產生，只用原文逐字，`pending` 不出題 |
+| `/practice` | 練習（E6，lazy，包在 `ProfiledContent`）：依制度集、特約、程度、題數抽意義題，答完顯示原文叫牌表與深層連結；`?c=<slug>` 只選這個特約（「練這個特約」）。題目由 `lib/quiz.ts` 的 `generateQuizzes` 在瀏覽器從解析後的內容產生，只用原文逐字，`pending` 不出題；套上幹部的修題，答完存成績（§4.8）。`?wrong=1` 只練錯題 |
+| `/practice/scores` | 成績與錯題本（E6 e6-t05，lazy，包在 `ProfiledContent`）：總答對率、各特約答對率、錯題本、最近的練習、清除 |
+| `/practice/fixes` | 修題（E6 e6-t06，bookEdit，lazy，包在 `ProfiledContent`）：停用、改正解或選項、手動出題；`?id=<題目 id>` 開一題 |
 | `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
 | `/account` | 我的帳號：權限、頭像、顯示（個人設定）、修改密碼 |
 | `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
@@ -311,6 +313,14 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - **差異報告**：每個叫牌過程（`meaningQueries`）分批問 `POST /api/book/robot-meanings`（一次 10 個，`SYSTEM_SPEC_LIMITS`），`compareSpec` 列出牌桌規則讀法不同（只比原文寫到的點力、張數、平均、迫叫、特約名；開放上限一律視為相同）與牌桌沒有規則的叫品；`unresolvedByReason` 依原因列出轉不出來的列。頁面不改任何制度原文。
 - **補手牌條件**（e7-t08，`lib/handConditions.ts`、`pages/HandConditionsForm.tsx`）：叫牌過程與叫品讀得出來、意義讀不出來的列可「補條件」（點力、張數、迫叫），存成社團版那一列的 `ResponseRow.conditions`（`findRows` 以段落、叫品、文字、叫牌過程找列），走 §4.1 的 `PUT /api/book/conventions/:slug`（`baseVersion`、`bundledUpdated`）；存好 `reload` 後重新轉換，牌桌回答過的叫牌過程記在頁面裡不重問。`toSystemSpec` 把有條件的列轉成 `filled` 規則（`docs/SYSTEM-SPEC.md` §8）。`tidyConvention` 保留 `conditions`，所以編輯器存檔不會弄丟。
 - 型別（`SyncedSystemSpec`、`SystemSpecStatus`、`RobotMeaningsQuery`、`RobotShows` …）在 `lib/api.ts`，呼叫與上限在 `lib/tableSync.ts`、頁面文字在 `pages/tableReportStrings.ts`（都不進首頁 bundle）；對拍在 `parity/table-types.ts`。
+
+### 4.8 練習：成績與修題（`lib/quizRecords.ts`、`pages/practiceData.ts`，E6 e6-t04～t06）
+
+- 型別對應牌桌 `shared/quiz.ts`（`QuizRound`、`QuizFix` …、`QUIZ_LIMITS`），對拍在 `parity/table-types.ts`；呼叫在 `quizApi`。頁面文字在 `pages/practiceStrings.ts`（lazy，不進首頁 bundle）。
+- **成績**：練完一次 `roundOf` 轉成 `{ profileId, answers: { id, slug, right }[] }`。登入 → `POST /api/book/quiz/rounds`（牌桌 `quizlog:<userId>:<時間>-<id>`，每人最新 100 次）；未登入 → localStorage `tku-bridgebook:quizRounds`（同樣上限，讀寫都 try/catch）。兩邊不合併，登入後只看帳號的。`useQuizRounds` 依登入狀態選一邊。
+- **錯題本與統計**：`quizStats(rounds)` 純函式：總數、各特約（答對率低的在前）、錯題（每題最後一次的答案是錯的）。錯題 id 在目前制度集已不出題時，成績頁顯示「已不在目前的制度集」。
+- **修題**：`GET /api/book/quiz/fixes`（不需登入）→ `applyFixes(made, fixes, conventions, profileId)`：自動題的修正只在 `basis`（叫品、正解，比較時忽略空白與句尾句號）與現在產生的題目相同時套用（停用、換正解——在選項裡取代原正解——或整組選項）；手動題只加進同一個制度集、且段落還在的。不套用的回在 `stale`，修題頁標出。`PUT`／`DELETE /api/book/quiz/fixes` 要 bookEdit，牌桌只檢查形狀（`worker/quiz.ts`），存在 `book:quizfix:<id>`（每日備份）。
+- 題目的 `kind: 'call'`（手動的叫品題）在練習頁顯示牌（`Hand`）與「你叫什麼？」，選項是叫品。自動的叫品題是 e6-t07。
 
 ## 5. UI 函式庫選擇
 
