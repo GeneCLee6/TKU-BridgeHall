@@ -55,4 +55,20 @@ export const pageStrings = {
     /** The running head of a printed page */
     head: (app: string, name: string) => `${app} · ${name}`,
   },
+  /** 卡片總覽, the fourth 版面 (e9-t17) */
+  overview: {
+    title: '卡片總覽',
+    intro: '點一張卡片在右側預覽，再打開整頁。',
+    tabs: '依分類',
+    all: '全部',
+    tiles: (n: number) => `${n} 個特約`,
+    overrides: (n: number) => `${n} 處覆寫`,
+    preview: '預覽',
+    pick: '點選左邊的特約，這裡會顯示摘要與段落。',
+    sections: '段落',
+    tags: '標籤',
+    open: '打開特約',
+    close: '關閉預覽',
+    toBook: '全書目錄',
+  },
 }

@@ -1,4 +1,17 @@
-import { createTheme, styleNames, usesSerif, type ThemeMode } from '../../src/styles/tokens.ts'
+import {
+  createTheme,
+  isStyleLoaded,
+  loadStyle,
+  styleNames,
+  textSizes,
+  usesSerif,
+  type ThemeMode,
+} from '../../src/styles/tokens.ts'
+
+// Only 「一般」 is in the first download; createTheme shows it until a style has been loaded
+expect(isStyleLoaded('general')).toBe(true)
+expect(createTheme('light', 'medium', 'soft').style).toBe('general')
+await Promise.all(styleNames.map(loadStyle))
 
 /** The tokens before styles existed: 「一般」 must keep every one of them (DESIGN-V2.md §10.5) */
 const before = {
@@ -99,6 +112,38 @@ describe('style tokens', () => {
     expect(theme.fonts.heading).toMatch(/^'Noto Serif TC'/)
     expect(theme.shape.panel).toBe('2px')
     expect(theme.pendingBadge.rotate).toBe('-3deg')
+  })
+
+  it('gives each style its own look (docs/design/pitch.html)', () => {
+    const light = (style: (typeof styleNames)[number]) => createTheme('light', 'medium', style)
+    expect(light('soft').shape.panel).toBe('22px')
+    expect(light('soft').borders.panel).toBe('0 solid')
+    expect(light('night').prefersDark).toBe(true)
+    expect(light('suits').borders.panel).toBe('2px solid')
+    expect(light('suits').shadows.panel).toBe('4px 4px 0 #141416')
+    expect(light('suits').headingWeight).toBe(800)
+    expect(light('plain').shape).toMatchObject({ panel: '0px', control: '0px', tag: '0px' })
+    expect(light('plain').lineHeight).toBeLessThan(light('general').lineHeight)
+    expect(new Set(styleNames.map((s) => light(s).colors.primary)).size).toBe(styleNames.length)
+  })
+
+  it('applies 字體, 花色顏色, 密度 and 特大 on any style', () => {
+    const general = createTheme('light')
+    expect(createTheme('light', 'medium', 'general', { font: 'serif' }).fonts.heading).toMatch(/^'Noto Serif TC'/)
+    expect(createTheme('light', 'medium', 'chinese', { font: 'sans' }).fonts.heading).toBe(general.fonts.body)
+    const system = createTheme('light', 'medium', 'general', { font: 'system' }).fonts
+    expect(system.body).toMatch(/^system-ui/)
+    expect(system.body).not.toMatch(/Noto/)
+    const two = createTheme('light', 'medium', 'general', { suitColors: 'two' }).suits
+    expect(two).toEqual({ S: general.suits.S, H: general.suits.H, D: general.suits.H, C: general.suits.S })
+    const compact = createTheme('light', 'medium', 'general', { density: 'compact' })
+    expect(compact.space(4)).toBe('12px')
+    expect(general.space(4)).toBe('16px')
+    expect(compact.lineHeight).toBeLessThan(general.lineHeight)
+    expect(textSizes.xlarge).toBe('125%')
+    // The defaults are today's look
+    expect(createTheme('light', 'medium', 'general', {})).toEqual(general)
+    expect(general.lineHeight).toBe(1.7)
   })
 
   describe.each(styleNames.flatMap((style) => modes.map((mode) => [style, mode] as const)))(

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 import { AppHeader } from '../components/AppHeader.tsx'
 import { ProfilePill } from '../components/ProfilePill.tsx'
@@ -10,6 +10,7 @@ import { formatDateTime } from '../lib/format.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent } from '../state/ContentContext.tsx'
+import { usePreferences } from '../state/PreferencesContext.tsx'
 import { useProfiles } from '../state/ProfileContext.tsx'
 import { useSearch } from '../state/useSearch.ts'
 import { strings } from '../strings.ts'
@@ -38,6 +39,12 @@ export function HandbookShell() {
   // Focusing the search box downloads the search code and index (state/useSearch.ts)
   const { search, prepare: prepareSearch } = useSearch()
   const isMobile = useMediaQuery(mobileQuery)
+  // 版面 (e9-t15): 專注單欄 and 卡片總覽 have no catalogue column; phones keep their drawer
+  const { layout } = usePreferences()
+  const catalogue = isMobile || layout === 'whole' || layout === 'three'
+  const home = useLocation().pathname === '/'
+  // Without the catalogue the column is centred: a book's measure for a page, room for the tiles at home
+  const measure = catalogue ? undefined : home ? (layout === 'cards' ? '84rem' : undefined) : '48rem'
   const profiles = useProfiles()
   const choosable = profiles.list.length > 1
   const profileSwitch = (variant: 'bar' | 'menu') => (
@@ -56,20 +63,24 @@ export function HandbookShell() {
         account={<AccountCorner />}
       />
       <Layout>
-        <Sidebar
-          categories={categories}
-          conventions={conventions}
-          references={references}
-          open={menuOpen}
-          onNavigate={() => setMenuOpen(false)}
-          actions={isMobile && choosable && profileSwitch('menu')}
-        />
+        {catalogue && (
+          <Sidebar
+            categories={categories}
+            conventions={conventions}
+            references={references}
+            open={menuOpen}
+            onNavigate={() => setMenuOpen(false)}
+            actions={isMobile && choosable && profileSwitch('menu')}
+          />
+        )}
         {menuOpen && <Scrim aria-hidden onClick={() => setMenuOpen(false)} data-print="hide" />}
         <Main
           id="main"
           tabIndex={-1}
           aria-busy={profiles.status === 'loading'}
           $busy={profiles.status === 'loading'}
+          $centred={!catalogue}
+          $measure={measure}
         >
           {status === 'offline' && <Status role="status">{strings.online.offline}</Status>}
           {profiles.status === 'failed' && <Status role="status">{strings.profiles.failed}</Status>}
@@ -160,8 +171,9 @@ const Scrim = styled.div`
   }
 `
 
-const Main = styled.main<{ $busy: boolean }>`
+const Main = styled.main<{ $busy: boolean; $centred: boolean; $measure?: string }>`
   flex: 1;
+  ${({ $centred }) => ($centred ? 'margin: 0 auto;' : '')}
   /* Switching profiles dims the page until the new one has loaded */
   opacity: ${({ $busy }) => ($busy ? 0.55 : 1)};
   transition: opacity 150ms ease;
@@ -169,7 +181,7 @@ const Main = styled.main<{ $busy: boolean }>`
     transition: none;
   }
   min-width: 0;
-  max-width: ${({ theme }) => theme.layout.contentMax};
+  max-width: ${({ theme, $measure }) => $measure ?? theme.layout.contentMax};
   padding: ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(6)}
     ${({ theme }) => theme.space(16)};
   outline: none;

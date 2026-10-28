@@ -22,6 +22,7 @@ const TableReportPage = lazy(() => import('./pages/TableReportPage.tsx').then((m
 // Kept out of the first download too, which has a size budget (scripts/check-budget.mjs)
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
 const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ default: m.AccountPage })))
+const SettingsPage = lazy(() => import('./pages/SettingsPage.tsx').then((m) => ({ default: m.SettingsPage })))
 
 // The reading pages read the reader's system profile; the editor and the admin page keep the club's content
 const handbook = (
@@ -50,6 +51,7 @@ export function App() {
                   </Route>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/account" element={<AccountPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/admin" element={<AdminPage />} />
                   <Route path="/new" element={<EditorPage />} />
                   <Route path="/edit/:slug" element={<EditorPage />} />
