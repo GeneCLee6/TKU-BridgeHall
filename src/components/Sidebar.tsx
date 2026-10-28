@@ -3,7 +3,13 @@ import { ChevronRight, ExternalLink } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, NavLink, useParams } from 'react-router-dom'
 import styled from 'styled-components'
-import { levels, type Category, type ConventionMeta, type Level, type Reference } from '../types/convention.ts'
+import {
+  levels,
+  type Category,
+  type ConventionMeta,
+  type Level,
+  type Reference,
+} from '../types/convention.ts'
 import { conventionPath, pendingPath } from '../lib/sections.ts'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
@@ -59,7 +65,8 @@ export function Sidebar({
   if (slug !== seenSlug) {
     setSeenSlug(slug)
     const current = conventions.find((c) => c.slug === slug)
-    if (current && !openGroups.includes(current.category)) setOpenGroups((g) => [...g, current.category])
+    if (current && !openGroups.includes(current.category))
+      setOpenGroups((g) => [...g, current.category])
   }
 
   const shown = level === 'all' ? conventions : conventions.filter((c) => c.level === level)
@@ -218,13 +225,29 @@ const Nav = styled.nav<{ $open: boolean }>`
     list-style: none;
   }
 
+  /* Phones: a drawer that slides up above the bottom toolbar (DESIGN-V2.md §7) */
   ${mobile} {
     position: fixed;
     z-index: 40;
+    top: auto;
     left: 0;
-    width: min(85vw, 320px);
+    right: 0;
+    bottom: ${({ theme }) => theme.layout.toolbarHeight};
+    width: auto;
+    height: min(
+      75vh,
+      calc(
+        100vh - ${({ theme }) => theme.layout.headerHeight} -
+          ${({ theme }) => theme.layout.toolbarHeight}
+      )
+    );
+    border-right: none;
+    border-top: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.shape.panel} ${({ theme }) => theme.shape.panel} 0 0;
     box-shadow: ${({ theme }) => theme.shadow};
-    transform: translateX(${({ $open }) => ($open ? '0' : '-100%')});
+    transform: translateY(
+      ${({ $open, theme }) => ($open ? '0' : `calc(100% + ${theme.layout.toolbarHeight})`)}
+    );
     visibility: ${({ $open }) => ($open ? 'visible' : 'hidden')};
     transition:
       transform 200ms ease,
@@ -268,6 +291,9 @@ const GroupTrigger = styled(Accordion.Trigger)`
   gap: ${({ theme }) => theme.space(1)};
   width: 100%;
   min-height: 32px;
+  ${mobile} {
+    min-height: 44px;
+  }
   padding: 0 ${({ theme }) => theme.space(1)} 0 0;
   border: none;
   border-radius: ${({ theme }) => theme.radius.sm};
@@ -304,6 +330,9 @@ const ConventionLink = styled(NavLink)`
   display: flex;
   align-items: flex-start;
   min-height: 36px;
+  ${mobile} {
+    min-height: 44px;
+  }
   padding: ${({ theme }) => theme.space(1.5)} ${({ theme }) => theme.space(2)}
     ${({ theme }) => theme.space(1.5)} ${({ theme }) => theme.space(4)};
   border-radius: ${({ theme }) => theme.shape.control};
@@ -357,6 +386,9 @@ const Filter = styled.div`
   button {
     flex: 1;
     min-height: 32px;
+    ${mobile} {
+      min-height: 44px;
+    }
     padding: 0 ${({ theme }) => theme.space(1)};
     border: none;
     background: transparent;

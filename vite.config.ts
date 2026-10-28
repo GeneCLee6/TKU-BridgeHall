@@ -71,7 +71,15 @@ const tableUrl = process.env.TABLE_URL ?? 'http://localhost:5173'
 export default defineConfig({
   plugins: [react(), appVersion(), searchIndex(), stampServiceWorker()],
   // dist/.vite/manifest.json maps chunks to source modules for scripts/check-budget.mjs
-  build: { manifest: true },
+  build: {
+    manifest: true,
+    // Everything the first page loads goes in one chunk. Left to itself the bundler cuts it into a
+    // dozen pieces by which lazy page shares which module, and each piece costs its own request and
+    // compresses worse; the home page has a JS budget (scripts/check-budget.mjs).
+    rolldownOptions: {
+      output: { codeSplitting: { groups: [{ name: 'app', tags: ['$initial'] }] } },
+    },
+  },
   server: {
     // 5173 is TKU BridgeTable's dev server
     port: 5174,

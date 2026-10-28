@@ -20,6 +20,10 @@ import { AccountCorner } from './Frame.tsx'
 const ProfileSwitch = lazy(() =>
   import('../components/ProfileSwitch.tsx').then((m) => ({ default: m.ProfileSwitch })),
 )
+// Phones only (e9-t09)
+const MobileToolbar = lazy(() =>
+  import('../components/MobileToolbar.tsx').then((m) => ({ default: m.MobileToolbar })),
+)
 
 /**
  * The frame the reading pages share (e9-t04): header, catalogue and the main column, with the
@@ -48,8 +52,6 @@ export function HandbookShell() {
       <AppHeader
         search={search}
         onSearchFocus={prepareSearch}
-        menuOpen={menuOpen}
-        onToggleMenu={() => setMenuOpen((o) => !o)}
         profile={!isMobile && (choosable ? profileSwitch('bar') : <ProfilePill />)}
         account={<AccountCorner />}
       />
@@ -63,7 +65,12 @@ export function HandbookShell() {
           actions={isMobile && choosable && profileSwitch('menu')}
         />
         {menuOpen && <Scrim aria-hidden onClick={() => setMenuOpen(false)} data-print="hide" />}
-        <Main id="main" tabIndex={-1} aria-busy={profiles.status === 'loading'} $busy={profiles.status === 'loading'}>
+        <Main
+          id="main"
+          tabIndex={-1}
+          aria-busy={profiles.status === 'loading'}
+          $busy={profiles.status === 'loading'}
+        >
           {status === 'offline' && <Status role="status">{strings.online.offline}</Status>}
           {profiles.status === 'failed' && <Status role="status">{strings.profiles.failed}</Status>}
           {can('bookEdit') && skipped.length > 0 && (
@@ -74,6 +81,11 @@ export function HandbookShell() {
           </Suspense>
         </Main>
       </Layout>
+      {isMobile && (
+        <Suspense fallback={null}>
+          <MobileToolbar catalogueOpen={menuOpen} onCatalogue={setMenuOpen} />
+        </Suspense>
+      )}
     </>
   )
 }
@@ -86,7 +98,7 @@ export function PageBar({ lead, ...actions }: ReadingActions & { lead?: ReactNod
   return (
     <Bar>
       <div>{lead}</div>
-      <ReadingSettingsButton {...actions} />
+      <ReadingSettingsButton toolbar {...actions} />
     </Bar>
   )
 }
@@ -98,7 +110,10 @@ export function useOnlineNote() {
   return (slug: string) => {
     const info = online.get(slug)
     if (!info || info.hidden) return undefined
-    return (info.added ? strings.online.added : strings.online.edited)(info.updatedBy, formatDateTime(info.updatedAt))
+    return (info.added ? strings.online.added : strings.online.edited)(
+      info.updatedBy,
+      formatDateTime(info.updatedAt),
+    )
   }
 }
 
@@ -139,7 +154,7 @@ const Scrim = styled.div`
   ${mobile} {
     display: block;
     position: fixed;
-    inset: ${({ theme }) => theme.layout.headerHeight} 0 0 0;
+    inset: 0 0 ${({ theme }) => theme.layout.toolbarHeight} 0;
     z-index: 35;
     background: ${({ theme }) => theme.colors.overlay};
   }
@@ -161,7 +176,7 @@ const Main = styled.main<{ $busy: boolean }>`
 
   ${mobile} {
     padding: ${({ theme }) => theme.space(4)} ${({ theme }) => theme.space(4)}
-      ${({ theme }) => theme.space(12)};
+      calc(${({ theme }) => theme.space(12)} + ${({ theme }) => theme.layout.toolbarHeight});
   }
 `
 

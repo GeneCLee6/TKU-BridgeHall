@@ -241,6 +241,8 @@ export const usesSerif = (style: StyleName) => styles[style].fonts.heading === s
 
 export const layout = {
   headerHeight: '60px',
+  /** The phone's bottom toolbar (DESIGN-V2.md §7) */
+  toolbarHeight: '56px',
   /** In rem so a larger 字級 widens the catalogue instead of wrapping more names */
   sidebarWidth: '19rem',
   contentMax: '60rem',

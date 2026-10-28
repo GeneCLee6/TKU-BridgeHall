@@ -42,6 +42,27 @@ describe('home page', () => {
     expect(main.queryByRole('button', { name: /^雷本索特約/ })).toBeNull()
   })
 
+  it('shows the club profile, 第一次來 and 最近更新 to a signed-out reader (e9-t08)', async () => {
+    renderAt('/')
+    const card = within(await screen.findByRole('region', { name: '社團預設制度' }, { timeout: 5000 }))
+    expect(card.getByText('目前的制度集 · 社團')).toBeInTheDocument()
+    expect(card.getByRole('link', { name: '讀制度' })).toHaveAttribute('href', '/book')
+    expect(await card.findByRole('link', { name: '登入' })).toHaveAttribute('href', '/login?next=%2F')
+
+    const lessons = within(screen.getByRole('region', { name: '第一次來？從這裡開始' })).getAllByRole('link')
+    expect(lessons).toHaveLength(3)
+    expect(lessons[0]).toHaveAttribute('href', '/c/system-overview')
+    expect(lessons[0]).toHaveTextContent(/^第 1 課淡江自然制總覽/)
+
+    // Newest first; nothing was edited online, so all show their bundled date
+    const recent = within(screen.getByRole('region', { name: '最近更新' })).getAllByRole('listitem')
+    expect(recent).toHaveLength(5)
+    expect(recent[0]).toHaveTextContent('內建版本')
+
+    // Each category is a card with its conventions and how many
+    expect(within(screen.getByRole('region', { name: '無王開叫後續' })).getByText('3 個特約')).toBeInTheDocument()
+  })
+
   it('shows the home page with a note for an unknown address or convention', async () => {
     renderAt('/c/no-such-thing')
     expect(await screen.findByRole('alert')).toHaveTextContent('找不到這個特約或段落')
@@ -114,28 +135,73 @@ describe('header v2 and 閱讀設定', () => {
     expect(screen.getAllByText(/加入主畫面/, { selector: 'li' }).length).toBeGreaterThan(0)
   })
 
-  it('keeps the phone header to menu, logo and search, and 閱讀設定 on the page', async () => {
-    const original = window.matchMedia
-    window.matchMedia = ((query: string) => ({
-      matches: true,
-      media: query,
-      addEventListener() {},
-      removeEventListener() {},
-    })) as unknown as typeof window.matchMedia
-    try {
+  describe('on a phone (e9-t09)', () => {
+    let original: typeof window.matchMedia
+    beforeEach(() => {
+      original = window.matchMedia
+      window.matchMedia = ((query: string) => ({
+        matches: true,
+        media: query,
+        addEventListener() {},
+        removeEventListener() {},
+      })) as unknown as typeof window.matchMedia
+    })
+    afterEach(() => {
+      window.matchMedia = original
+    })
+    const toolbar = async () => within(await screen.findByRole('navigation', { name: '工具列' }, { timeout: 5000 }))
+
+    it('keeps the header to logo and search, and puts 閱讀設定 in the bottom toolbar', async () => {
       renderAt('/book')
       await findTrigger(/^雷本索特約/)
-      const header = screen.getByRole('banner')
-      expect(within(header).queryByText('社團預設')).toBeNull()
-      expect(screen.queryByText('♦♣')).toBeNull()
-      const panel = await openSettings()
+      const header = within(screen.getByRole('banner'))
+      expect(header.queryByText('社團預設')).toBeNull()
+      expect(header.queryByRole('button')).toBeNull()
+      // The page's own 閱讀設定 button gives way to the toolbar's
+      expect(within(screen.getByRole('main')).queryByRole('button', { name: '閱讀設定' })).toBeNull()
+
+      const bar = await toolbar()
+      const reading = bar.getByRole('button', { name: '閱讀設定' })
+      await userEvent.click(reading)
+      const panel = within(await screen.findByRole('dialog', { name: '閱讀設定' }, { timeout: 5000 }))
       await userEvent.click(panel.getByRole('button', { name: '全部展開' }))
       expect(trigger(/^雷本索特約/)).toHaveAttribute('aria-expanded', 'true')
       expect(screen.queryByRole('dialog')).toBeNull()
-      expect(within(header).getByLabelText('開啟目錄')).toHaveAttribute('aria-expanded', 'false')
-    } finally {
-      window.matchMedia = original
-    }
+
+      // Esc closes it and gives the focus back to the toolbar
+      await userEvent.click(reading)
+      await screen.findByRole('dialog', { name: '閱讀設定' })
+      await userEvent.keyboard('{Escape}')
+      expect(screen.queryByRole('dialog')).toBeNull()
+      expect(reading).toHaveFocus()
+      // Off a convention page the second place is 我的
+      expect(bar.getByRole('link', { name: '我的' })).toHaveAttribute('href', '/login')
+    })
+
+    it('opens the catalogue drawer and focuses search from the toolbar', async () => {
+      renderAt('/')
+      const bar = await toolbar()
+      const catalogue = bar.getByRole('button', { name: '目錄' })
+      expect(catalogue).toHaveAttribute('aria-expanded', 'false')
+      expect(catalogue).toHaveAttribute('aria-controls', 'catalogue')
+      await userEvent.click(catalogue)
+      expect(catalogue).toHaveAttribute('aria-expanded', 'true')
+      await userEvent.click(bar.getByRole('button', { name: '搜尋' }))
+      expect(catalogue).toHaveAttribute('aria-expanded', 'false')
+      expect(screen.getByRole('searchbox')).toHaveFocus()
+    })
+
+    it('lists the sections under 本頁 in a pop-up on a convention page', async () => {
+      renderAt('/c/lebensohl')
+      await screen.findByRole('heading', { level: 1, name: '雷本索特約' }, { timeout: 5000 })
+      const button = (await toolbar()).getByRole('button', { name: '本頁' })
+      await userEvent.click(button)
+      const popup = within(screen.getByRole('dialog', { name: '本頁' }))
+      expect(popup.getAllByRole('link')[0].getAttribute('href')).toMatch(/^\/c\/lebensohl\//)
+      await userEvent.click(popup.getByRole('button', { name: '關閉本頁清單' }))
+      expect(screen.queryByRole('dialog', { name: '本頁' })).toBeNull()
+      expect(button).toHaveFocus()
+    })
   })
 })
 
