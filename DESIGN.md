@@ -11,7 +11,7 @@
 
 ## 2. 色彩
 
-本文描述的是預設風格「一般」。`tokens.ts` 有**風格**這個維度（`createTheme(mode, textSize, style)`）：每種風格是一組完整的 token（色彩、`shape` 圓角、`borders` 線、`shadows` 陰影、字體、「待確認」樣式），元件只讀 token、不判斷風格。「一般」的值就是下面這些，有測試鎖住（`tests/styles/tokens.test.ts`）。另一組「中國風」（宣紙、朱紅、青花、襯線標題、雙線框、印章式待確認）已在 token 裡，個人設定面板（e9-t15）做好之前沒有入口；其餘四種在 e9-t16。風格規格見 `docs/DESIGN-V2.md` §10.5，值以 `docs/design/pitch.html` 為準。
+本文描述的是預設風格「一般」。`tokens.ts` 有**風格**這個維度（`createTheme(mode, textSize, style)`）：每種風格是一組完整的 token（色彩、`shape` 圓角、`borders` 線、`shadows` 陰影、字體、「待確認」樣式），元件只讀 token、不判斷風格。「一般」的值就是下面這些，有測試鎖住（`tests/styles/tokens.test.ts`）。另五種風格（中國風、圓潤、夜讀、四色、極簡）在 `styles/themes/`，各是一個 lazy chunk，讀者在個人設定（`/settings`，e9-t15）選了才載入；字體、花色顏色（雙色）、密度（緊湊）是 `createTheme` 的選項，套在任何風格上。風格規格見 `docs/DESIGN-V2.md` §10.5，值以 `docs/design/pitch.html` 為準。
 
 ### 2.1 介面色（淺色／深色）
 

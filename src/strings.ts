@@ -21,6 +21,7 @@ export const strings = {
     thisPage: '本頁',
     printPage: '列印本頁',
     printBook: '印整本',
+    more: '更多顯示設定',
   },
   /** The pages split out of the one-page handbook (e9-t04) */
   pages: {
@@ -32,7 +33,7 @@ export const strings = {
     trail: '目前位置',
   },
   textSize: '字級',
-  textSizeNames: { small: '小', medium: '中', large: '大' },
+  textSizeNames: { small: '小', medium: '中', large: '大', xlarge: '特大' },
   catalogue: '特約目錄',
   levelFilter: '依程度篩選',
   allLevels: '全部',

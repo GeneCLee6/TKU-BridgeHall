@@ -1,5 +1,6 @@
-import { ChevronsDownUp, ChevronsUpDown, Printer, Smartphone, X } from 'lucide-react'
+import { ChevronsDownUp, ChevronsUpDown, Printer, Settings2, Smartphone, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { isStandalone, useInstallOffer } from '../lib/pwa.ts'
 import { themeChoices, usePreferences } from '../state/PreferencesContext.tsx'
@@ -13,7 +14,7 @@ import { TextSizeControl } from './TextSizeControl.tsx'
 /**
  * The 閱讀設定 panel (e9-t03, DESIGN-V2 §5.2): theme, 字級, this page's expand / collapse and
  * print, and installing the app. What the page cannot do (the home page has nothing to expand)
- * is left out. Loaded only when the reader opens it; ReadingSettingsButton owns opening, closing,
+ * is left out; the rest of 個人設定 is a link away. Loaded only when the reader opens it; ReadingSettingsButton owns opening, closing,
  * Esc and clicks outside.
  */
 export function ReadingSettings({
@@ -75,6 +76,13 @@ export function ReadingSettings({
         <span aria-hidden>{strings.textSize}</span>
         <TextSizeControl />
       </Row>
+      {/* 風格、版面、字體、花色顏色、密度 are on the 個人設定 page (e9-t15) */}
+      <Actions>
+        <Item as={Link} to="/settings" onClick={onClose}>
+          <Settings2 size={18} aria-hidden />
+          {strings.reading.more}
+        </Item>
+      </Actions>
       {(onExpandAll || onCollapseAll || onPrint) && (
         <Actions role="group" aria-label={strings.reading.thisPage}>
           {onExpandAll && (
@@ -230,6 +238,7 @@ const Item = styled.button`
   font: inherit;
   font-size: 0.9375rem;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 
   svg {

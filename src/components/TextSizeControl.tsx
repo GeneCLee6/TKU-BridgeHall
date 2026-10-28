@@ -3,9 +3,9 @@ import { usePreferences } from '../state/PreferencesContext.tsx'
 import { strings } from '../strings.ts'
 import type { TextSize } from '../styles/tokens.ts'
 
-const SIZES: TextSize[] = ['small', 'medium', 'large']
+const SIZES: TextSize[] = ['small', 'medium', 'large', 'xlarge']
 
-/** 字級 小／中／大: three buttons that resize all text, remembered on this device */
+/** 字級 小／中／大／特大: four buttons that resize all text, remembered on this device */
 export function TextSizeControl() {
   const { textSize, setTextSize } = usePreferences()
   return (
@@ -45,7 +45,7 @@ const Option = styled.button<{ $size: TextSize }>`
   border-radius: ${({ theme }) => theme.radius.pill};
   background: transparent;
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: ${({ $size }) => ({ small: '12px', medium: '14px', large: '16px' })[$size]};
+  font-size: ${({ $size }) => ({ small: '12px', medium: '14px', large: '16px', xlarge: '18px' })[$size]};
   font-weight: 600;
   line-height: 1;
   cursor: pointer;

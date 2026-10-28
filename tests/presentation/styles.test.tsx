@@ -1,11 +1,13 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { ThemeProvider } from 'styled-components'
 import { PendingNote } from '../../src/components/PendingNote.tsx'
 import { Tag, TagList } from '../../src/components/Tag.tsx'
 import { Button, Panel } from '../../src/components/ui.tsx'
 import { PreferencesProvider } from '../../src/state/PreferencesContext.tsx'
 import { strings } from '../../src/strings.ts'
-import { createTheme, type StyleName } from '../../src/styles/tokens.ts'
+import { createTheme, isStyleLoaded, loadStyle, type StyleName } from '../../src/styles/tokens.ts'
+
+await loadStyle('chinese')
 
 function renderIn(style: StyleName) {
   return render(
@@ -39,14 +41,16 @@ describe('base components read the style tokens', () => {
     expect(screen.getByRole('listitem')).toHaveStyle({ borderRadius: '2px' })
   })
 
-  it('keeps a stored style choice', () => {
-    window.localStorage.setItem('tku-bridgebook:prefs', JSON.stringify({ style: 'chinese' }))
+  it('keeps a stored style choice, loading its tokens on demand', async () => {
+    window.localStorage.setItem('tku-bridgebook:prefs', JSON.stringify({ style: 'plain' }))
+    expect(isStyleLoaded('plain')).toBe(false)
     render(
       <PreferencesProvider>
         <Panel data-testid="panel" />
       </PreferencesProvider>,
     )
-    expect(screen.getByTestId('panel')).toHaveStyle({ borderRadius: '2px' })
+    // 「一般」 until the style's chunk is here
+    await waitFor(() => expect(screen.getByTestId('panel')).toHaveStyle({ borderRadius: '0px' }))
   })
 
   it('ignores an unknown stored style', () => {

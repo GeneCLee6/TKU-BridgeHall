@@ -7,6 +7,7 @@ import { Button } from '../components/ui.tsx'
 import { conventionPath } from '../lib/sections.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent } from '../state/ContentContext.tsx'
+import { usePreferences } from '../state/PreferencesContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 import { NotFound, PageBar } from './HandbookShell.tsx'
@@ -16,6 +17,15 @@ const blocks = () => import('./HomeBlocks.tsx')
 const ProfileCard = lazy(() => blocks().then((m) => ({ default: m.ProfileCard })))
 const FirstSteps = lazy(() => blocks().then((m) => ({ default: m.FirstSteps })))
 const RecentChanges = lazy(() => blocks().then((m) => ({ default: m.RecentChanges })))
+// 卡片總覽 (e9-t17): only readers who picked that 版面 download it
+const CardOverview = lazy(() => import('./CardOverview.tsx').then((m) => ({ default: m.CardOverview })))
+
+/** The home page, or the tiles of 卡片總覽 when the reader picked that 版面 (e9-t15) */
+export function HomePage({ notFound = false }: { notFound?: boolean }) {
+  const { layout } = usePreferences()
+  if (layout === 'cards' && !notFound) return <CardOverview />
+  return <Entrance notFound={notFound} />
+}
 
 /**
  * The entrance (e9-t08, DESIGN-V2 §5.3): what the site is; in the main column the reader's system
@@ -23,7 +33,7 @@ const RecentChanges = lazy(() => blocks().then((m) => ({ default: m.RecentChange
  * right 最近更新 (the club news board takes that place in E11). One column on phones, in the same
  * order. It loads no convention content. Also shown for an unknown address, with a note.
  */
-export function HomePage({ notFound = false }: { notFound?: boolean }) {
+function Entrance({ notFound }: { notFound: boolean }) {
   const { conventions, categories } = useContent()
   const { can } = useAuth()
   const canEdit = can('bookEdit')
