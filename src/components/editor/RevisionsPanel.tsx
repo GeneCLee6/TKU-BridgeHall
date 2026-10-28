@@ -9,20 +9,23 @@ const t = strings.editor
 
 /**
  * The saved versions of a convention, newest first. Loading one puts it in the editor; saving
- * then restores it. Also offers going back to the bundled version and, for admins, hiding.
+ * then restores it. Also offers going back to the bundled version and hiding (reviewers', e8-t01).
+ * `highlight` marks one version (the audit log links to it, e8-t09).
  */
 export function RevisionsPanel({
   load,
   onLoad,
+  highlight,
   onReset,
   onHide,
   onClose,
 }: {
   load: () => Promise<BookRevision[]>
   onLoad: (revision: BookRevision) => Promise<void>
+  highlight?: string
   /** Absent when there is no online version to drop */
   onReset?: () => Promise<void>
-  /** Admins only */
+  /** Reviewers only */
   onHide?: () => Promise<void>
   onClose: () => void
 }) {
@@ -61,7 +64,7 @@ export function RevisionsPanel({
       ) : (
         <List>
           {revisions.map((r) => (
-            <li key={r.id}>
+            <li key={r.id} aria-current={r.id === highlight ? 'true' : undefined}>
               <div>
                 <strong>{formatDateTime(r.at)}</strong> {r.by}・{t.historyActions[r.action]}
                 {r.version > 0 && `（第 ${r.version} 版）`}
@@ -152,6 +155,10 @@ const List = styled.ol`
     padding: ${({ theme }) => theme.space(2)} 0;
     border-bottom: 1px solid ${({ theme }) => theme.colors.border};
     font-size: 0.9375rem;
+  }
+  li[aria-current] {
+    border-left: 3px solid ${({ theme }) => theme.colors.primary};
+    padding-left: ${({ theme }) => theme.space(2)};
   }
 `
 

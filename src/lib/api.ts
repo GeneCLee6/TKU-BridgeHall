@@ -15,8 +15,13 @@ export const TABLE_SITE = 'https://tku-bridge-table.genelee-pro.workers.dev'
 /** Limits the Worker checks too (TKU-BridgeTable shared/protocol.ts LIMITS) */
 export const LIMITS = { usernameMin: 2, usernameMax: 16, passwordMin: 6, noteMax: 60 }
 
-export type Permission = 'bookEdit' | 'bookImport'
-export const PERMISSIONS: Permission[] = ['bookEdit', 'bookImport']
+/**
+ * `bookEdit`: drafts and sending them for review; `bookReview` (e8-t01): publishing, sending drafts
+ * back, hiding, going back to the bundled one. A reviewer is always an editor too (the Worker adds
+ * `bookEdit` when it stores `bookReview`).
+ */
+export type Permission = 'bookEdit' | 'bookReview' | 'bookImport'
+export const PERMISSIONS: Permission[] = ['bookEdit', 'bookReview', 'bookImport']
 
 export interface Me {
   id: string
@@ -61,7 +66,13 @@ export interface ClubSettings {
   inviteCode: string
 }
 
-/** One convention as edited online; `convention` is null when it is hidden from the handbook */
+/** Where a convention's change is (e8-t01): its draft is `draft` or `in-review`; a BookEntry is `published` */
+export type BookEntryStatus = 'draft' | 'in-review' | 'published'
+
+/**
+ * One convention as edited online and published; `convention` is null when it is hidden from the
+ * handbook. Readers only ever get published entries; drafts are BookDraft.
+ */
 export interface BookEntry {
   slug: string
   version: number
@@ -71,6 +82,72 @@ export interface BookEntry {
   updatedBy: string
   /** The `updated` date of the bundled convention the first online edit started from */
   bundledUpdated?: string
+  /** Absent on entries saved before review existed (2026-10-28): they are published too */
+  status?: 'published'
+  /** Who sent the published draft for review; absent when a reviewer published straight away */
+  reviewRequestedBy?: string
+  reviewRequestedAt?: number
+  /** The reviewer who published it */
+  reviewedBy?: string
+  reviewedAt?: number
+}
+
+/**
+ * A convention's change that is not published yet (e8-t02; TKU-BridgeTable worker/book.ts): one per
+ * convention, shared by the editors; only editors and reviewers see it.
+ */
+export interface BookDraft {
+  slug: string
+  status: Exclude<BookEntryStatus, 'published'>
+  /** The published version it started from; 0 for the bundled convention or a new one */
+  baseVersion: number
+  /** Counts the draft's saves, from 1; sent back as `draftRevision` */
+  revision: number
+  convention: unknown
+  bundledUpdated?: string
+  /** What the editor says the change is; becomes the version's note when published */
+  note: string
+  createdAt: number
+  createdBy: string
+  updatedAt: number
+  updatedBy: string
+  /** Set while it is in review */
+  reviewRequestedBy?: string
+  reviewRequestedAt?: number
+  /** Set when a reviewer sent it back, with why; cleared when it goes for review again */
+  reviewedBy?: string
+  reviewedAt?: number
+  reviewNote?: string
+}
+
+/** GET /api/book/reviews: every draft without its content, plus the convention's name */
+export type BookDraftSummary = Omit<BookDraft, 'convention'> & { nameZh: string }
+
+/** TKU-BridgeTable worker/audit.ts: who changed what (e8-t09) */
+export type AuditAction =
+  | 'book:draft'
+  | 'book:submit'
+  | 'book:reject'
+  | 'book:discard'
+  | 'book:publish'
+  | 'book:hide'
+  | 'book:reset'
+  | 'book:categories'
+  | 'profile:create'
+  | 'profile:save'
+  | 'profile:delete'
+
+export interface AuditEntry {
+  id: string
+  at: number
+  by: string
+  action: AuditAction
+  /** A convention's slug, a profile's id, or 'categories' */
+  target: string
+  version?: number
+  /** The saved version's id (BookRevision.id), for publishing, hiding and resets */
+  revisionId?: string
+  note?: string
 }
 
 /** An online entry without its content: `meta` is the manifest entry, null when hidden */
@@ -471,8 +548,12 @@ export const api = {
     manifest: () => request<BookManifest>('/api/book/manifest'),
     /** One convention's online entry; 404 when it was never changed online */
     entry: (slug: string) => request<{ entry: BookEntry }>(`/api/book/content/${slug}`).then((r) => r.entry),
-    /** `baseVersion` is the version the edit started from: 0 for the bundled one or a new one */
-    save: (slug: string, body: { convention: unknown; baseVersion: number; bundledUpdated?: string; note?: string }) =>
+    /**
+     * Publishes (a reviewer's, e8-t01). `baseVersion` is the published version the edit started
+     * from: 0 for the bundled one or a new one. `draftRevision` when the edit started from the
+     * convention's draft, which is then used up.
+     */
+    save: (slug: string, body: { convention: unknown; baseVersion: number; bundledUpdated?: string; note?: string; draftRevision?: number }) =>
       send<{ entry: BookEntry }>('PUT', `/api/book/conventions/${slug}`, body),
     hide: (slug: string, baseVersion: number) =>
       post<{ entry: BookEntry }>(`/api/book/conventions/${slug}/hide`, { baseVersion }),
