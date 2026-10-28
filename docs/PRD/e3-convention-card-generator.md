@@ -88,7 +88,7 @@ depends_on: [E1, E2]
       （D1b：WBF 與簡易卡兩版已對照原始檔，WBF 每個填寫格有 Guide 2017 的說明；簡易卡官方沒有說明文字，所以不填。BSC 兩版待 `e3-t12`，到時才勾。D2：WBF 版型改照 2.19。）
 - [x] AC-3.2 — 填入：`fillCard` 純函式有測試；內建特約透過 `cardSlots` 寫滿 WBF 卡的制度摘要、特殊叫品、開叫表、防守與競叫、首攻與信號、賭倍；長內容自動轉 `[Note n]` 與附頁；不採用不填、覆寫填覆寫值；社團預設制度集的結果由幹部確認。
       （D2：`fillCard` 與測試、內建特約的 `cardSlots`、`[Note n]` 附頁、不採用不填、覆寫填覆寫值都已完成；對應待幹部核對，有疑義的格子沒填（CONTENT_GUIDE.md §2.2），核對完才勾。）
-- [ ] AC-3.3 — 人工補格：每格可編輯、標記、重設；存回制度集。
+- [x] AC-3.3 — 人工補格：每格可編輯、標記、重設；存回制度集。（D3：`profile.cardEdits`，`tests/presentation/cardPage.test.tsx`）
 - [ ] AC-3.4 — PDF：五種版型 A4 列印在三個瀏覽器不跑版，與官方檔的格線、欄寬、字級一致；黑白。
 - [ ] AC-3.5 — `.docx`：WBF 卡（含 Gill Sans 版）、BSC 表可下載 Word 檔，Word 與 LibreOffice 開啟版面一致。
 - [ ] AC-3.6 — 連回：卡上每格連回段落；段落旁顯示在哪張卡的哪一格。
@@ -103,9 +103,9 @@ depends_on: [E1, E2]
 - [x] `e3-t02` 簡易卡版型檔（單面、雙面；對照 `ctcba-simple-card-reference.png`）· AC-3.1 · #13；D1b 依兩份 PDF 定稿欄寬與雙面版的正反面
 - [x] `e3-t03` `fill.ts`：三種來源、濃縮規則、`[Note n]` 與附頁、`origin`；`tests/cards/fill.test.ts` · AC-3.2 · M · #24
 - [x] `e3-t04` 內建特約補 `cardSlots`（WBF 與簡易卡兩套）：1NT／2NT 答叫、Lebensohl、J2N、Bergen、NMF、2♦、弱二、各種賭倍、對抗不尋常 2NT、好壞 2NT、防守信號、制度總覽的開叫表；幹部對照手寫卡 · AC-3.2 · #24、#26（使用者 2026-10-25 暫定核可；原文有疑義的格子留空，等制度編寫好再補）
-- [ ] `e3-t05` `/cards/:profileId/:templateId` 預覽頁：版型切換、格子渲染（含覆寫底色）、hover 說明、來源連結 · AC-3.6 · M · ← e3-t03
-- [ ] `e3-t06` 人工補格（inline 編輯、標記、重設）；存 `profile.cardEdits` · AC-3.3 · S · ← e3-t05
-- [ ] `e3-t07` 列印樣式：WBF 橫式兩頁＋附頁、簡易卡橫式、黑白；三瀏覽器檢查；「下載 PDF」走列印 · AC-3.4 · M · ← e3-t05
+- [x] `e3-t05` `/cards/:profileId/:templateId` 預覽頁：版型切換、格子渲染（含覆寫底色）、hover 說明、來源連結 · AC-3.6 · M · ← e3-t03 · D3（`pages/CardPage.tsx`、`cards/CardSheet.tsx`；點格子在右欄看說明、來源與補格；入口在制度集比較頁）
+- [x] `e3-t06` 人工補格（inline 編輯、標記、重設）；存 `profile.cardEdits` · AC-3.3 · S · ← e3-t05 · D3（牌桌 #170；補格沿制度集繼承、雙面簡易卡與單面共用；`cards/edits.ts`）
+- [x] `e3-t07` 列印樣式：WBF 橫式兩頁＋附頁、簡易卡橫式、黑白；三瀏覽器檢查；「下載 PDF」走列印 · AC-3.4 · M · ← e3-t05 · D3（Edge／Chromium 已檢查；**Safari、Firefox 與實際印紙對官方檔的格線還要人看**，AC-3.4 先不勾）
 - [ ] `e3-t08` `.docx` 輸出（`docx` 套件、lazy chunk）：WBF 卡（含 Gill Sans 版）；Word／LibreOffice 對照 · AC-3.5 · M · ← e3-t05
 - [ ] `e3-t09` 版本快照（含輸出檔）、分享連結（可關）· AC-3.7 · S · ← e3-t05
 - [ ] `e3-t10` 段落旁「在制度卡的位置」標示 · AC-3.6 · S · ← e3-t04

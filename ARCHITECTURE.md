@@ -176,10 +176,12 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 
 **填制度卡**（`src/cards/fill.ts`，純函式，`tests/cards/fill.test.ts`）：`fillCard(template, resolveProfile(...) 的結果, edits?)` 回傳 `{ cells, notes, problems }`。
 
-- 來源：制度集採用的特約的 `cardSlots`（不採用就不填；覆寫過的列與段落填覆寫後的文字），再疊上人工補格 `edits`（之後存 `profile.cardEdits`，e3-t06）。每格帶 `sources`（特約、那一條 `cardSlots`、段落 id，給「§」連回）與 `origin`（覆寫或人工補格的那層；沒有就是橋譜原文）、`pending`（原文有待確認）。
+- 來源：制度集採用的特約的 `cardSlots`（不採用就不填；覆寫過的列與段落填覆寫後的文字），再疊上人工補格 `edits`（存在 `profile.cardEdits`，e3-t06）。每格帶 `sources`（特約、那一條 `cardSlots`、段落 id，給「§」連回）與 `origin`（覆寫或人工補格的那層；沒有就是橋譜原文）、`pending`（原文有待確認）。
 - 濃縮：叫品表成 `叫品=意義`，一行的格子用「; 」相連、多行的格子一條一行。格子能放多少字由版型的 `printWidth`（pt）、`fontSize` 與欄寬估算（中日韓文與花色算兩個半形字）；放不下就從最長的那條起改成「名稱 [Note n]」（名稱也放不下就只寫 `[Note n]`），全文進 `notes`（附頁），編號照列印順序。還是放不下的格子標 `overflow`。
 - 壞的對應不靜默消失：讀不懂、格子不存在、出處找不到、選項不存在、人工補格指到不存在的格子，都放進 `problems`。
 - `ctcba-simple-2p` 的 `sameSlotsAs: 'ctcba-simple'`：寫給單面卡的 `cardSlots` 也填雙面卡。
+
+**制度卡頁**（`/cards/:profileId/:templateId`，D3，lazy；`pages/CardPage.tsx`、字串 `pages/cardStrings.ts`）：讀制度集與上層（同比較頁），用 `cards/edits.ts` 的 `fillProfileCard` 填卡——人工補格 `SystemProfile.cardEdits`（格子 id → `ProfileCardEdit`，型別與牌桌 `shared/protocol.ts` 對拍）沿制度集繼承：社團→隊伍→搭檔，近的那層整格蓋過遠的，重設＝刪掉這層的補格；雙面簡易卡的補格存在單面卡的格子 id 下（兩張共用）。`cards/CardSheet.tsx` 照版型的點數寬度與字級畫卡（顏色只用 `tokens.ts` 的 `cardColors`，任何風格與深色模式都是白紙黑線），每格是按鈕（hover 顯示 Guide 說明、點了在右欄看來源與補格），右上「§」連回段落；隊伍／搭檔層的內容淡色底，列印改底線。存檔送整份制度集（`toInput` 帶著 `cardEdits`，所以制度集編輯器存檔也不會清掉補格）＋`baseVersion`，409 要重新載入；要 `access.edit` 且看得到備忘才能補。列印：`<style media="print">` 設 A4 橫式、每頁一張、附頁另起，`nUp` 的其他份只在列印時畫出；「下載 PDF」＝瀏覽器列印。連不到 Worker 時社團的卡用內建內容、唯讀。
 
 ## 4. 路由、狀態與內容載入
 
