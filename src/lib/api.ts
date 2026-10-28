@@ -6,6 +6,7 @@
  */
 
 import type { ConventionMeta, Section } from '../types/convention.ts'
+import type { Profile } from './account.ts'
 
 /** TKU BridgeTable (淡江牌桌), whose Worker holds the accounts */
 export const TABLE_SITE = 'https://tku-bridge-table.genelee-pro.workers.dev'
@@ -26,6 +27,10 @@ export interface Me {
   applications?: number
   /** The system profile the member reads with, kept with the account (e1-t16); absent for the club's */
   bookProfile?: string
+  /** Their uploaded picture's version (`avatarUrl` in lib/account.ts); none means the default avatar (e11-t03) */
+  avatar?: number
+  /** Their own profile (e11-t01), the same on both sites; empty until they fill it in */
+  profile?: Profile
 }
 
 export type RegisterResult = { user: Me } | { pending: true; username: string }
@@ -292,6 +297,10 @@ export interface TeamPatch {
 export interface ClubMember {
   id: string
   username: string
+  /** Their profile's display name, when they set one (e11-t01) */
+  displayName?: string
+  /** Their uploaded picture's version; none means the default avatar (e11-t03) */
+  avatar?: number
 }
 
 /** POST /api/club/pairs: invite `partnerId`, optionally as partners in a team both belong to */
@@ -319,7 +328,7 @@ export const errorText = (error: unknown) =>
     ? error.message
     : '連不上伺服器，請確認網路後再試一次'
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     credentials: 'same-origin',
     headers: init?.body ? { 'Content-Type': 'application/json' } : undefined,
@@ -336,7 +345,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return data as T
 }
 
-const send = <T>(method: string, path: string, body: unknown = {}) =>
+export const send = <T>(method: string, path: string, body: unknown = {}) =>
   request<T>(path, { method, body: JSON.stringify(body) })
 const post = <T>(path: string, body?: unknown) => send<T>('POST', path, body)
 
