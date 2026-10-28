@@ -139,6 +139,8 @@ export type AuditAction =
   | 'profile:create'
   | 'profile:save'
   | 'profile:delete'
+  | 'quiz:fix'
+  | 'quiz:unfix'
 
 export interface AuditEntry {
   id: string
