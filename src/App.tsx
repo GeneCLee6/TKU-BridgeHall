@@ -32,6 +32,10 @@ const TeamPage = lazy(() => import('./pages/TeamsPage.tsx').then((m) => ({ defau
 const PairPage = lazy(() => import('./pages/PairPage.tsx').then((m) => ({ default: m.PairPage })))
 // 練習 (E6): the questions and the code that makes them load only here
 const PracticePage = lazy(() => import('./pages/PracticePage.tsx').then((m) => ({ default: m.PracticePage })))
+const PracticeScoresPage = lazy(() =>
+  import('./pages/PracticeScoresPage.tsx').then((m) => ({ default: m.PracticeScoresPage })),
+)
+const PracticeFixesPage = lazy(() => import('./pages/PracticeFixesPage.tsx').then((m) => ({ default: m.PracticeFixesPage })))
 // A member's profile page (e11-t04)
 const MemberPage = lazy(() => import('./pages/MemberPage.tsx').then((m) => ({ default: m.MemberPage })))
 // Kept out of the first download too, which has a size budget (scripts/check-budget.mjs)
@@ -70,6 +74,22 @@ export function App() {
                     element={
                       <ProfiledContent>
                         <PracticePage />
+                      </ProfiledContent>
+                    }
+                  />
+                  <Route
+                    path="/practice/scores"
+                    element={
+                      <ProfiledContent>
+                        <PracticeScoresPage />
+                      </ProfiledContent>
+                    }
+                  />
+                  <Route
+                    path="/practice/fixes"
+                    element={
+                      <ProfiledContent>
+                        <PracticeFixesPage />
                       </ProfiledContent>
                     }
                   />

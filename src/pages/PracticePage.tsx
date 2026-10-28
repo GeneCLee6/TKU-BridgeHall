@@ -4,58 +4,52 @@ import { Link, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { AuctionTable } from '../components/AuctionTable.tsx'
 import { BlockView } from '../components/BlockView.tsx'
+import { Hand } from '../components/Hand.tsx'
 import { CallLabel, RichText } from '../components/Suit.tsx'
+import { Tag } from '../components/Tag.tsx'
 import { Button, ErrorText, Field, Muted, Notice, PageTitle, Panel, PanelTitle, Row, Select } from '../components/ui.tsx'
-import { drawQuizzes, filterQuizzes, generateQuizzes, quizBlockIndex, type Quiz } from '../lib/quiz.ts'
+import { drawQuizzes, filterQuizzes, quizBlockIndex, type Quiz } from '../lib/quiz.ts'
+import { fixPath, FIXES_PATH, percent, quizStats, roundOf, SCORES_PATH } from '../lib/quizRecords.ts'
 import { sectionPath, walkSections } from '../lib/sections.ts'
+import { useAuth } from '../state/AuthContext.tsx'
 import { useContent } from '../state/ContentContext.tsx'
 import { useProfiles } from '../state/ProfileContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 import { levels, type Block, type Convention, type Level } from '../types/convention.ts'
 import { Frame } from './Frame.tsx'
+import { usePracticeQuizzes, useQuizRounds } from './practiceData.ts'
 import { practiceStrings as s } from './practiceStrings.ts'
 
 /**
- * 練習 (/practice, E6 e6-t02 e6-t03): meaning questions drawn from the reader's system profile.
- * Inside ProfiledContent, so the content is what the profile resolves to (ARCHITECTURE.md §3.1)
- * and the questions are made from it in the browser (lib/quiz.ts). `?c=<slug>` starts with only
- * that convention chosen (練這個特約, e6-t09). Nothing is recorded yet (e6-t04).
+ * 練習 (/practice, E6 e6-t02 e6-t03 e6-t05): meaning questions drawn from the reader's system
+ * profile. Inside ProfiledContent, so the content is what the profile resolves to (ARCHITECTURE.md
+ * §3.1) and the questions are made from it in the browser (lib/quiz.ts), with the editors' fixes
+ * over them (lib/quizRecords.ts, e6-t06). `?c=<slug>` starts with only that convention chosen
+ * (練這個特約, e6-t09); `?wrong=1` with only the questions last answered wrong (錯題本, e6-t05). A
+ * finished round is kept in the account when signed in, else in this browser (practiceData.ts).
  */
 
 const COUNTS = [5, 10, 20]
 
 type Answer = { quiz: Quiz; picked: string }
+type Mode = 'all' | 'wrong'
 
 export function PracticePage() {
   const content = useContent()
   const { list, activeId, choose } = useProfiles()
+  const { can } = useAuth()
   const [params] = useSearchParams()
   const only = params.get('c')
 
-  // Every convention's content, then its questions; again when the profile or the content changes
-  const { loadAll } = content
-  const contentKey = content.conventions.map((c) => `${c.slug}:${content.changed(c.slug) ?? ''}`).join('|')
-  const total = content.conventions.length
-  const [result, setResult] = useState<{ key: string; all: Convention[]; partial: boolean }>()
-  useEffect(() => {
-    let live = true
-    loadAll().then(
-      (all) => live && setResult({ key: contentKey, all, partial: all.length < total }),
-      () => live && setResult({ key: contentKey, all: [], partial: true }),
-    )
-    return () => {
-      live = false
-    }
-  }, [loadAll, contentKey, total])
-  // What was loaded for other content (another profile) is not shown while the new one loads
-  const loaded = result?.key === contentKey ? result.all : undefined
-  const partial = Boolean(result?.partial)
+  const { loaded, partial, quizzes, fixesFailed, byId } = usePracticeQuizzes()
+  const records = useQuizRounds()
+  const stats = useMemo(() => quizStats(records.rounds ?? []), [records.rounds])
+  const wrongIds = useMemo(() => new Set(stats.wrong.map((w) => w.id)), [stats])
 
-  const quizzes = useMemo(() => (loaded ? generateQuizzes(loaded, activeId).quizzes : []), [loaded, activeId])
   const perConvention = useMemo(() => {
     const counts = new Map<string, number>()
-    quizzes.forEach((q) => counts.set(q.slug, (counts.get(q.slug) ?? 0) + 1))
+    filterQuizzes(quizzes, {}).forEach((q) => counts.set(q.slug, (counts.get(q.slug) ?? 0) + 1))
     return counts
   }, [quizzes])
   const askable = content.conventions.filter((c) => perConvention.has(c.slug))
@@ -64,12 +58,16 @@ export function PracticePage() {
   const picked = chosen ?? new Set(only && perConvention.has(only) ? [only] : askable.map((c) => c.slug))
   const [level, setLevel] = useState<Level | ''>('')
   const [count, setCount] = useState(COUNTS[1])
-  const pool = filterQuizzes(quizzes, { slugs: [...picked], level: level || undefined })
+  const [mode, setMode] = useState<Mode>(params.get('wrong') ? 'wrong' : 'all')
+  const wrongQuizzes = useMemo(() => quizzes.filter((q) => wrongIds.has(q.id)), [quizzes, wrongIds])
+  const pool = filterQuizzes(mode === 'wrong' ? wrongQuizzes : quizzes, { slugs: [...picked], level: level || undefined })
 
   const [round, setRound] = useState<Quiz[]>()
   const [answers, setAnswers] = useState<Answer[]>([])
+  const [saved, setSaved] = useState<'saving' | 'saved' | 'failed'>()
   const start = () => {
     setAnswers([])
+    setSaved(undefined)
     setRound(drawQuizzes(pool, count))
   }
 
@@ -80,7 +78,15 @@ export function PracticePage() {
     setChosen(next)
   }
 
-  const byId = useMemo(() => new Map((loaded ?? []).map((c) => [c.slug, c])), [loaded])
+  // A finished round is kept once, in the account or this browser
+  const answer = (a: Answer) => {
+    const all = [...answers, a]
+    setAnswers(all)
+    if (round && all.length === round.length) {
+      setSaved('saving')
+      void records.add(roundOf(activeId, all)).then((ok) => setSaved(ok ? 'saved' : 'failed'))
+    }
+  }
 
   if (round) {
     const done = answers.length === round.length && round.length > 0
@@ -90,6 +96,8 @@ export function PracticePage() {
           <Summary
             answers={answers}
             names={byId}
+            saved={saved}
+            where={records.where}
             onAgain={start}
             onChange={() => setRound(undefined)}
           />
@@ -101,7 +109,8 @@ export function PracticePage() {
             index={answers.length}
             total={round.length}
             right={answers.filter((a) => a.picked === a.quiz.answer).length}
-            onAnswer={(a) => setAnswers((all) => [...all, a])}
+            canFix={can('bookEdit')}
+            onAnswer={answer}
             onQuit={() => setRound(undefined)}
           />
         )}
@@ -113,6 +122,30 @@ export function PracticePage() {
     <Frame title={s.title}>
       <PageTitle>{s.title}</PageTitle>
       <Muted>{s.intro}</Muted>
+      <Panel aria-labelledby="practice-record">
+        <PanelTitle id="practice-record">{s.record}</PanelTitle>
+        {!records.rounds ? (
+          <Muted role="status">{s.recordLoading}</Muted>
+        ) : (
+          <>
+            <Muted>
+              {stats.answered ? s.recordSummary(stats.rounds, stats.answered, percent(stats.right, stats.answered)) : s.recordNone}
+              {records.where === 'account' ? s.keptInAccount : s.keptOnDevice}
+            </Muted>
+            {records.failed && <ErrorText role="alert">{s.recordFailed}</ErrorText>}
+            <Row>
+              <Button as={Link} to={SCORES_PATH}>
+                {s.scores}
+              </Button>
+              {can('bookEdit') && (
+                <Button as={Link} to={FIXES_PATH}>
+                  {s.fixes}
+                </Button>
+              )}
+            </Row>
+          </>
+        )}
+      </Panel>
       <Panel aria-labelledby="practice-setup">
         <PanelTitle id="practice-setup">{s.setup}</PanelTitle>
         <Settings>
@@ -134,6 +167,13 @@ export function PracticePage() {
               <ProfileName>{list.find((p) => p.id === activeId)?.name ?? s.clubName}</ProfileName>
             </Field>
           )}
+          <Field>
+            {s.mode}
+            <Select value={mode} onChange={(e) => setMode(e.target.value as Mode)}>
+              <option value="all">{s.modeAll}</option>
+              <option value="wrong">{s.modeWrong(filterQuizzes(wrongQuizzes, {}).length)}</option>
+            </Select>
+          </Field>
           <Field>
             {s.level}
             <Select value={level} onChange={(e) => setLevel(e.target.value as Level | '')}>
@@ -164,6 +204,7 @@ export function PracticePage() {
         ) : (
           <>
             {partial && <ErrorText role="alert">{s.loadFailed}</ErrorText>}
+            {fixesFailed && <Muted>{s.fixesFailed}</Muted>}
             <Conventions>
               <legend>{s.conventions}</legend>
               <Row>
@@ -190,7 +231,7 @@ export function PracticePage() {
               <Button type="button" $variant="primary" disabled={!pool.length} onClick={start}>
                 {s.start}
               </Button>
-              <Muted role="status">{pool.length ? s.pool(pool.length) : s.poolEmpty}</Muted>
+              <Muted role="status">{pool.length ? s.pool(pool.length) : mode === 'wrong' ? s.poolNoWrong : s.poolEmpty}</Muted>
             </Row>
           </>
         )}
@@ -215,6 +256,7 @@ function Question({
   index,
   total,
   right,
+  canFix,
   onAnswer,
   onQuit,
 }: {
@@ -223,6 +265,7 @@ function Question({
   index: number
   total: number
   right: number
+  canFix: boolean
   onAnswer: (answer: Answer) => void
   onQuit: () => void
 }) {
@@ -253,15 +296,25 @@ function Question({
           {convention?.nameZh}
           {quiz.trail.length > 0 && ` › ${quiz.trail.join(' › ')}`}
         </Context>
+        {quiz.source === 'manual' && <Tag label={s.manual} />}
         {quiz.caption && <Muted>{quiz.caption}</Muted>}
         {quiz.auction && <AuctionTable auction={quiz.auction} />}
-        <Ask id="practice-question" ref={heading} tabIndex={-1}>
-          <span className="visually-hidden">{s.call}</span>
-          <BigCall>
-            <CallLabel call={quiz.call ?? ''} />
-          </BigCall>
-          {quiz.auction ? s.question : s.questionNoAuction}
-        </Ask>
+        {quiz.kind === 'call' ? (
+          <>
+            {quiz.hand && <Hand hand={quiz.hand} label={s.yourHand} />}
+            <Ask id="practice-question" ref={heading} tabIndex={-1}>
+              {s.callQuestion}
+            </Ask>
+          </>
+        ) : (
+          <Ask id="practice-question" ref={heading} tabIndex={-1}>
+            <span className="visually-hidden">{s.call}</span>
+            <BigCall>
+              <CallLabel call={quiz.call ?? ''} />
+            </BigCall>
+            {quiz.auction ? s.question : s.questionNoAuction}
+          </Ask>
+        )}
         <Choices aria-label={s.choices}>
           {quiz.choices?.map((choice, i) => {
             const state =
@@ -275,9 +328,7 @@ function Question({
                   onClick={() => picked === undefined && setPicked(choice)}
                 >
                   {/* One flex item, so the suit symbols stay inside the sentence */}
-                  <span>
-                    <RichText text={choice} />
-                  </span>
+                  <span>{quiz.kind === 'call' ? <CallLabel call={choice} /> : <RichText text={choice} />}</span>
                   {state === 'right' && (
                     <Mark>
                       <Check size={16} aria-hidden />
@@ -319,6 +370,11 @@ function Question({
             <Button as={Link} to={sectionPath(quiz.slug, quiz.sectionId)}>
               {s.readSource}
             </Button>
+            {canFix && (
+              <Button as={Link} to={fixPath(quiz.id)} $variant="ghost">
+                {s.fixThis}
+              </Button>
+            )}
           </Row>
         </Panel>
       )}
@@ -329,11 +385,15 @@ function Question({
 function Summary({
   answers,
   names,
+  saved,
+  where,
   onAgain,
   onChange,
 }: {
   answers: Answer[]
   names: Map<string, Convention>
+  saved?: 'saving' | 'saved' | 'failed'
+  where: 'account' | 'device'
   onAgain: () => void
   onChange: () => void
 }) {
@@ -347,6 +407,13 @@ function Summary({
       </PageTitle>
       <Panel aria-labelledby="practice-score">
         <PanelTitle id="practice-score">{s.result(answers.length - missed.length, answers.length)}</PanelTitle>
+        {saved === 'failed' ? (
+          <ErrorText role="alert">{s.saveFailed}</ErrorText>
+        ) : (
+          <Muted role="status">
+            {saved === 'saved' ? (where === 'account' ? s.savedAccount : s.savedDevice) : saved === 'saving' ? s.saving : ''}
+          </Muted>
+        )}
         {missed.length ? (
           <>
             <h3>{s.missed}</h3>
@@ -358,7 +425,13 @@ function Summary({
                     {quiz.trail.length > 0 && ` › ${quiz.trail.join(' › ')}`}
                   </Link>
                   <div>
-                    <CallLabel call={quiz.call ?? ''} />：<RichText text={quiz.answer} />
+                    {quiz.kind === 'call' ? (
+                      <CallLabel call={quiz.answer} />
+                    ) : (
+                      <>
+                        <CallLabel call={quiz.call ?? ''} />：<RichText text={quiz.answer} />
+                      </>
+                    )}
                   </div>
                 </li>
               ))}
@@ -373,6 +446,9 @@ function Summary({
           </Button>
           <Button type="button" onClick={onChange}>
             {s.change}
+          </Button>
+          <Button as={Link} to={SCORES_PATH}>
+            {s.scores}
           </Button>
         </Row>
       </Panel>
