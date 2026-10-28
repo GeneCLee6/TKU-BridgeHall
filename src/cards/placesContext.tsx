@@ -33,7 +33,8 @@ export function SectionCardPlaces({ target }: { target: string }) {
   const source = useContext(CardPlacesContext)
   if (!source || !mentions(source.cardSlots, target)) return null
   return (
-    <Suspense fallback={null}>
+    // The marker lets the screenshots wait for the line (tests/browser/fixtures.ts)
+    <Suspense fallback={<span hidden data-card-places-pending />}>
       <CardPlaces cardSlots={source.cardSlots} profileId={source.profileId} target={target} />
     </Suspense>
   )
