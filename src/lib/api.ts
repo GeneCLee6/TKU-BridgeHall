@@ -133,6 +133,8 @@ export type AuditAction =
   | 'book:hide'
   | 'book:reset'
   | 'book:categories'
+  | 'article:publish'
+  | 'article:hide'
   | 'profile:create'
   | 'profile:save'
   | 'profile:delete'
@@ -144,7 +146,7 @@ export interface AuditEntry {
   at: number
   by: string
   action: AuditAction
-  /** A convention's slug, a profile's id, or 'categories' */
+  /** A convention's or an article's slug, a profile's id, or 'categories' */
   target: string
   version?: number
   /** The saved version's id (BookRevision.id), for publishing, hiding and resets */
