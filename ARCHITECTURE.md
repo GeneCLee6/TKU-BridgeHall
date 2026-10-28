@@ -353,7 +353,7 @@ push / PR ──► GitHub Actions「CI」：lint → typecheck → test → bui
                              2. 檢查首頁、深層連結、logo/favicon、所有 /assets 檔案回 200
 ```
 
-- 正式站：https://tku-bridge-book.vercel.app/
+- 正式站：https://tku-bridge-hall.vercel.app/
 - **合併到 `main` 就自動部署正式站**（2026-10-25 起；之前 PR #9 曾關掉）。所以合併前要 CI 全綠、看過預覽站。要暫停自動上線，在 `vercel.json` 加回 `"git": { "deploymentEnabled": { "main": false } }`。牽涉牌桌 API 的變更：牌桌 PR 先合併，等牌桌的 Deploy workflow 完成，再合併橋譜。上線後 Production smoke test 會自動跑（下面）。
 - `app-version` 由 `vite.config.ts` 的 `appVersion` plugin 寫入，取自 Vercel 的 `VERCEL_GIT_COMMIT_SHA`；本機 build 為 `local`。
 - 手動跑部署檢查：GitHub → Actions → Production smoke test → Run workflow。

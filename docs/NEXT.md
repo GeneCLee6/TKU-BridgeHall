@@ -4,7 +4,7 @@
 
 ## 1. 現在的位置
 
-- **M0 手冊** ✅ 已上線（https://tku-bridge-book.vercel.app/）：22 個特約、搜尋、深層連結、線上編輯、AI 匯入、共用帳號、PWA。
+- **M0 手冊** ✅ 已上線（https://tku-bridge-hall.vercel.app/；2026-10-28 前是 tku-bridge-book.vercel.app，舊 Vercel 專案與舊 repo 已刪）：22 個特約、搜尋、深層連結、線上編輯、AI 匯入、共用帳號、PWA。
 - **2026-10-24 健檢與規劃完成**（PR #7）：總 PRD 拆成 11 個 epic、146 個 task、77 條 AC；ROADMAP 排成 Phase A–N；設計規格 `DESIGN-V2.md`、首頁視覺稿 `design/mockup-v2.html`、六種風格×四種版面與討論區展示頁 `design/pitch.html`。健檢結論在 `HEALTH-CHECK.md`。
 - **A1 內容分片完成**（PR #8，牌桌 #60，2026-10-25）：manifest＋每個特約一個 chunk、打開才載入；線上內容改走 `GET /api/book/manifest` 與 `GET /api/book/content/:slug`；CI 有效能預算（`npm run budget`，首頁 JS 141／150 kB）與 Lighthouse（無障礙 ≥ 0.95）。新增特約後要跑 `npm run manifest`。**牌桌 #60 要先合併。**
 - **B1 風格 token 完成**（PR #10，2026-10-25）：`createTheme(mode, textSize, style)`，「一般」＝現行值（測試鎖住）、「中國風」為第二組（e9-t15 前沒有入口）；Noto Serif TC 只在襯線風格時載入；`ui.tsx`、Tag、PendingNote 讀新 token；舊名 `radius`／`shadow`／`lantern`／`vermilion` 到 e9-t14 才移除。與 A2 同時進行。
