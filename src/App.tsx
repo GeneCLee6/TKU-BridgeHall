@@ -26,6 +26,8 @@ const ProfileEditorPage = lazy(() =>
 const ProfileComparePage = lazy(() =>
   import('./pages/ProfileComparePage.tsx').then((m) => ({ default: m.ProfileComparePage })),
 )
+// 練習 (E6): the questions and the code that makes them load only here
+const PracticePage = lazy(() => import('./pages/PracticePage.tsx').then((m) => ({ default: m.PracticePage })))
 // Kept out of the first download too, which has a size budget (scripts/check-budget.mjs)
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
 const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ default: m.AccountPage })))
@@ -56,6 +58,14 @@ export function App() {
                     <Route path="/c/:slug/:sectionId" element={<ConventionPage />} />
                     <Route path="*" element={<HomePage notFound />} />
                   </Route>
+                  <Route
+                    path="/practice"
+                    element={
+                      <ProfiledContent>
+                        <PracticePage />
+                      </ProfiledContent>
+                    }
+                  />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/account" element={<AccountPage />} />
                   <Route path="/settings" element={<SettingsPage />} />

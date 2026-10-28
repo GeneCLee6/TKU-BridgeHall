@@ -190,6 +190,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/book` | 全書目錄 `BookPage`：整本一頁，全部特約皆收合（拆頁前的手冊）；閱讀設定的「印整本」先載入全部再列印 |
 | `/c/:slug` | 特約頁 `ConventionPage`：只有這個特約，展開並捲動到它；上方有回全書目錄的位置列 |
 | `/c/:slug/:sectionId` | 同上，再展開該段落的所有祖先段落，捲動並聚焦到段落標題；`?pending=k` 跳到該段的第 k 個待確認 |
+| `/practice` | 練習（E6，lazy，包在 `ProfiledContent`）：依制度集、特約、程度、題數抽意義題，答完顯示原文叫牌表與深層連結；`?c=<slug>` 只選這個特約（「練這個特約」）。題目由 `lib/quiz.ts` 的 `generateQuizzes` 在瀏覽器從解析後的內容產生，只用原文逐字，`pending` 不出題 |
 | `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
 | `/account` | 我的帳號：權限、頭像、顯示（個人設定）、修改密碼 |
 | `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
