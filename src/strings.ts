@@ -33,8 +33,6 @@ export const strings = {
   },
   textSize: '字級',
   textSizeNames: { small: '小', medium: '中', large: '大' },
-  openMenu: '開啟目錄',
-  closeMenu: '關閉目錄',
   catalogue: '特約目錄',
   levelFilter: '依程度篩選',
   allLevels: '全部',

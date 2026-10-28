@@ -141,6 +141,19 @@ describe('system profiles on the handbook page', () => {
     await waitFor(() => expect(screen.queryByRole('link', { name: new RegExp(`^${dropped.nameZh}`) })).not.toBeInTheDocument())
   })
 
+  it("shows the reader's profile on the home page, with what it inherits and counts (e9-t08)", async () => {
+    signedIn({ bookProfile: 'pair' })
+    renderAt('/')
+    const card = within(await screen.findByRole('region', { name: '小明＋小華' }))
+    expect(card.getByText('目前的制度集 · 搭檔')).toBeInTheDocument()
+    expect(card.getByText('甲隊')).toBeInTheDocument()
+    expect(card.getByText('採用 1 個特約')).toBeInTheDocument()
+    expect(card.getByText('覆寫 1 條')).toBeInTheDocument()
+    expect(card.getByText('備忘 1 則')).toBeInTheDocument()
+    expect(card.getByRole('link', { name: '讀制度' })).toHaveAttribute('href', '/book')
+    expect(card.queryByRole('link', { name: '登入' })).not.toBeInTheDocument()
+  })
+
   it('switches from the header and keeps the choice with the account', async () => {
     signedIn({ bookProfile: 'pair' })
     renderAt('/')

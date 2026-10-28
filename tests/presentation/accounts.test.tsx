@@ -155,7 +155,7 @@ describe('what a member sees', () => {
 
   it('shows no edit buttons to readers, and asks them to sign in on member pages', async () => {
     renderAt('/')
-    expect(await screen.findByRole('link', { name: /登入/ })).toBeInTheDocument()
+    expect(await within(screen.getByRole('banner')).findByRole('link', { name: /登入/ })).toBeInTheDocument()
     expect(screen.queryAllByRole('link', { name: /^編輯：/ })).toEqual([])
   })
 

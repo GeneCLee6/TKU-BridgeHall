@@ -15,7 +15,8 @@ import { RichText } from './Suit.tsx'
 export function SearchBar({ search, onFocus }: { search: SearchFn; onFocus?: () => void }) {
   const [query, setQuery] = useState('')
   const results = useMemo(() => search(query), [search, query])
-  const inputId = useId()
+  // One search box per page; the phone toolbar's 搜尋 focuses it by this id (MobileToolbar)
+  const inputId = 'site-search'
   const listId = useId()
   const showResults = query.trim().length > 0
 

@@ -14,6 +14,37 @@ export const pageStrings = {
   /** The convention page's 本頁 column and, on narrower screens, its fold-out list */
   onThisPage: '本頁',
   sectionCount: (n: number) => `${n} 節`,
+  /** The home page's blocks (e9-t08, DESIGN-V2 §5.3); the categories stay in strings.ts */
+  home: {
+    profileEyebrow: (scope: string) => `目前的制度集 · ${scope}`,
+    clubName: '社團預設制度',
+    signedOutNote: '登入後可以切換到隊伍或搭檔的制度集。',
+    signIn: '登入',
+    inherits: '繼承',
+    adopted: (n: number) => `採用 ${n} 個特約`,
+    overrides: (n: number) => `覆寫 ${n} 條`,
+    notes: (n: number) => `備忘 ${n} 則`,
+    lastUpdated: (date: string, by: string) => `最後更新 ${date}${by ? ` ${by}` : ''}`,
+    read: '讀制度',
+    firstTime: '第一次來？從這裡開始',
+    lesson: (n: number) => `第 ${n} 課`,
+    categories: '全書',
+    recent: '最近更新',
+    recentEdited: '線上修改',
+    recentAdded: '線上新增',
+    recentBundled: '內建版本',
+    recentEmpty: '還沒有更新紀錄。',
+  },
+  /** The phone's bottom toolbar (e9-t09, DESIGN-V2 §7) */
+  toolbar: {
+    label: '工具列',
+    catalogue: '目錄',
+    onThisPage: '本頁',
+    search: '搜尋',
+    reading: '閱讀設定',
+    mine: '我的',
+    closeOnThisPage: '關閉本頁清單',
+  },
   /** The printed book's cover and contents pages (e9-t10) */
   print: {
     club: '淡江橋藝社',
