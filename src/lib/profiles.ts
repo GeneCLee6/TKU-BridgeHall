@@ -346,7 +346,7 @@ export function profileView(profiles: readonly SystemProfile[], id: string): Pro
 }
 
 /** The summaries from `id` up to the club (the club last, when the list has it) */
-function summaryChain(summaries: readonly ProfileSummary[], id: string): ProfileSummary[] {
+export function summaryChain(summaries: readonly ProfileSummary[], id: string): ProfileSummary[] {
   const byId = new Map(summaries.map((s) => [s.id, s]))
   const chain: ProfileSummary[] = []
   for (let s = byId.get(id); s && !chain.includes(s); s = byId.get(s.parentId ?? CLUB_PROFILE_ID)) chain.push(s)

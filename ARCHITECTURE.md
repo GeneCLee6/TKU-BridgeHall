@@ -193,6 +193,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（分類、隊伍）編輯者也看得到（§4.2） |
 | `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約 |
 | `/import` | 匯入檔案（bookImport） |
+| `/integrations/table` | 牌桌整合（bookEdit）：同步制度集到牌桌機器人、差異報告（§4.7） |
 | 其他 | 顯示首頁並提示；找不到的 slug 也是首頁加提示，找不到的段落在特約頁提示 |
 
 管理、編輯、匯入三頁用 `React.lazy` 分開打包，讀者不會下載。
@@ -277,6 +278,14 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - **頭像**：`Me.avatar`／`ClubMember.avatar` 是版本號，圖片在 `GET /api/avatar/:id?v=<版本>`（牌桌 `avatar:<id>`，瀏覽器裁好的 256×256、≤ 64 KB）。PRD 原寫 512×512 放 R2；牌桌已有這一套（e1-t34），兩站讀同一張，所以沿用。沒有圖片就用字首＋由 id 決定的顏色（`lib/avatar.ts`，和牌桌同一套 FNV 雜湊與十個顏色 `styles/avatarColors.ts`），同一個人在兩站顏色相同。`Avatar` 是裝飾（`aria-hidden`），名字一定在旁邊。「我的帳號」可上傳（`AvatarCropper` 就地裁切）或改回預設。`GET /api/club/members` 多回 `displayName`、`avatar`，給之後的討論區與隊伍頁畫別人的頭像。
 - **圖片檔案**（貼文與文章用）：R2 bucket `bridgebook-files`（牌桌 `worker/files.ts`，ARCHITECTURE.md §5.14）。`uploadImage(file, purpose)` 在瀏覽器縮到長邊 2048 px（≤ 2 MB）與 480 px 縮圖（≤ 256 KB），拿一次性憑證（`POST /api/files/ticket`，每人每天 30 張）、`PUT` 原圖與縮圖；顯示用簽名短效網址 `/api/files/<key>?e=&s=`（一小時，不用登入），過期用 `POST /api/files/urls` 重簽。**bucket 還沒建時**牌桌回 503 `filesOff`（牌桌 DEPLOY.md §4.8）。
 - **不進首頁**：這些型別與呼叫在 `lib/account.ts`，不在 `api.ts`；介面文字在 `strings-account.ts`，不在 `strings.ts`（首頁 JS 預算只剩 1 kB 左右）；只有 lazy 的頁面 import 它們。型別對拍在 `parity/table-types.ts`（牌桌 `shared/profile.ts`、`avatar.ts`、`files.ts`）。
+
+### 4.7 牌桌整合（`pages/TableReportPage.tsx`、`lib/specReport.ts`、`lib/tableSync.ts`，E7 e7-t03 e7-t04）
+
+- `/integrations/table`（bookEdit，lazy；管理頁有連結）：選一個制度集，頁面用社團版內容（內建＋線上，不經過 `ProfiledContent`）與該制度集的繼承鏈（`summaryChain`＋`resolveProfile`）算出套用後的特約，再用 `toSystemSpec`（`lib/systemSpec.ts`，牌桌 `shared/systemSpec.ts` 的逐字複本，`docs/SYSTEM-SPEC.md`）轉成規則。
+- **同步**：「重新同步到牌桌」把轉好的 `SystemSpec` 整份送 `PUT /api/book/system-spec/:profileId`，牌桌存起來；`GET /api/book/system-spec?profileId=` 回最後同步的那份、時間與同步者，頁面比對現在轉出來的是否相同（「內容在同步之後改過」）。轉換在瀏覽器做，因為內建特約只在橋館的 bundle，且 22 個特約的轉換超過 Worker 免費方案一次請求的 CPU。
+- **牌桌載入**：TKB 用淡江制度時，叫牌仍照牌桌已驗證的規則；叫出的叫品若在牌桌設定的制度集（`SYSTEM_PROFILE_ID`，預設 `club`）有同一叫牌過程、同一叫品的規則，叫品說明附上那列的原文（牌桌 `AuctionCall.book`，牌桌 ROBOT.md「橋館的文字跟著叫品」）。
+- **差異報告**：每個叫牌過程（`meaningQueries`）分批問 `POST /api/book/robot-meanings`（一次 10 個，`SYSTEM_SPEC_LIMITS`），`compareSpec` 列出牌桌規則讀法不同（只比原文寫到的點力、張數、平均、迫叫、特約名；開放上限一律視為相同）與牌桌沒有規則的叫品；`unresolvedByReason` 依原因列出轉不出來的列。頁面只呈現轉換結果，不改任何內容。
+- 型別（`SyncedSystemSpec`、`SystemSpecStatus`、`RobotMeaningsQuery`、`RobotShows` …）在 `lib/api.ts`，呼叫與上限在 `lib/tableSync.ts`、頁面文字在 `pages/tableReportStrings.ts`（都不進首頁 bundle）；對拍在 `parity/table-types.ts`。
 
 ## 5. UI 函式庫選擇
 
