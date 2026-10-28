@@ -63,7 +63,7 @@ const chinese: StyleTokens = {
   fonts: { body: fontStacks.sans, heading: fontStacks.serif, mono: fontStacks.mono },
   headingWeight: 600,
   lineHeight: 1.7,
-  shape: { control: '2px', panel: '2px', tag: '2px', badge: '3px', note: '2px' },
+  shape: { control: '2px', panel: '2px', popover: '2px', tag: '2px', badge: '3px', note: '2px' },
   borders: { control: '1px solid', panel: '3px double' },
   shadows: { light: { panel: 'none' }, dark: { panel: 'none' } },
   pendingBadge: { borderWidth: '2px', rotate: '-3deg', serif: true },

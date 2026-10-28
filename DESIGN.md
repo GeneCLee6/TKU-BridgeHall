@@ -1,44 +1,52 @@
 # DESIGN — TKU BridgeHall · 淡江橋館
 
-所有數值都定義在 `src/styles/tokens.ts`，元件只透過 styled-components 的 theme 取用，不寫死色碼。
+**這是現行樣式（介面 v2，E9 於 2026-10-28 全部上線）。** 所有數值都定義在 `src/styles/tokens.ts` 與 `src/styles/themes/`，元件只透過 styled-components 的 theme 取用，不寫死色碼。v2 的提案與決策過程在 `docs/DESIGN-V2.md`（已實作；尚未做的文章頁 E5、制度卡頁 E3、討論區 E11 仍以它為規格）。
 
 ## 1. 設計原則
 
-1. **內容優先**：叫牌表要清楚、好掃讀；裝飾退到後面。
-2. **逐層揭露**：先看名稱與摘要，需要時再一層層展開（Swagger UI 的操作方式）。
-3. **不只靠顏色**：花色、狀態都有符號或文字輔助。
-4. **淡江藍為主色**，宮燈金與朱紅作點綴。
+1. **一本可以翻、可以印的橋譜**：一特約一頁，段落像書的節，不是一張張卡片；目錄在左、本頁在右、上一／下一特約在底。
+2. **入口先於內容**：首頁回答「我讀哪一套制度」「新生從哪開始」「最近改了什麼」，再進內容。
+3. **工具退後**：頁首只有 Logo、制度集、搜尋、帳號；其他收進「閱讀設定」與「個人設定」。
+4. **內容優先、逐層揭露**：叫牌表要清楚、好掃讀；第一層段落預設展開，更深層需要時再展開。
+5. **不只靠顏色**：花色、狀態、覆寫都有符號或文字輔助。
+6. **外觀由讀者決定**：預設「一般」（淡江藍為主色，宮燈金與朱紅點綴）；另五種風格、四種版面、字體、字級、花色顏色、密度都在個人設定（§2.3）。
 
-## 2. 色彩
+## 2. 色彩與風格
 
-本文描述的是預設風格「一般」。`tokens.ts` 有**風格**這個維度（`createTheme(mode, textSize, style)`）：每種風格是一組完整的 token（色彩、`shape` 圓角、`borders` 線、`shadows` 陰影、字體、「待確認」樣式），元件只讀 token、不判斷風格。「一般」的值就是下面這些，有測試鎖住（`tests/styles/tokens.test.ts`）。另五種風格（中國風、圓潤、夜讀、四色、極簡）在 `styles/themes/`，各是一個 lazy chunk，讀者在個人設定（`/settings`，e9-t15）選了才載入；字體、花色顏色（雙色）、密度（緊湊）是 `createTheme` 的選項，套在任何風格上。風格規格見 `docs/DESIGN-V2.md` §10.5，值以 `docs/design/pitch.html` 為準。
+風格（`StyleName`）是一組完整的 token：色彩、`shape` 圓角、`borders` 線、`shadows` 陰影、字體、行高、「待確認」樣式（`pendingBadge`）、章節編號樣式（`sectionNumbers`）。`createTheme(mode, textSize, style, { font, suitColors, density })` 回傳 theme；**元件只讀 token、不判斷風格**。「一般」在首頁 bundle 裡；另五種在 `styles/themes/` 各一個 lazy chunk，讀者選了才載入（`loadStyle`，`main.tsx` 先載入再渲染）。
 
-### 2.1 介面色（淺色／深色）
+### 2.1 「一般」的介面色（淺色／深色）
+
+下列值有測試鎖住（`tests/styles/tokens.test.ts`），改了會失敗。
 
 | Token | 淺色 | 深色 | 用途 |
 | --- | --- | --- | --- |
 | `bg` | `#f4f6fa` | `#0d1320` | 頁面背景 |
-| `surface` | `#ffffff` | `#151d2c` | 卡片、頁首、側邊欄 |
-| `surfaceAlt` | `#eef2f8` | `#1c2637` | 巢狀段落、叫牌過程表 |
-| `border` | `#d5dce8` | `#2c3850` | 分隔線 |
+| `surface` | `#ffffff` | `#151d2c` | 面板、頁首、側邊欄、輸入框底 |
+| `surfaceAlt` | `#eef2f8` | `#1c2637` | 叫牌過程表、選取底 |
+| `border` | `#d5dce8` | `#2c3850` | 分隔線、表格細線 |
 | `text` | `#1a2233` | `#e6ebf3` | 內文 |
 | `textMuted` | `#4f5a70` | `#a3afc4` | 次要文字（對比 ≥ 4.5:1） |
-| `primary` | `#0f3d7a` | `#8db8ff` | 淡江藍：連結、主要強調、第一層段落左框 |
+| `primary` | `#0f3d7a` | `#8db8ff` | 淡江藍：連結、主要按鈕、主要強調 |
 | `primaryStrong` | `#0a2b57` | `#b5d0ff` | 特約名稱 |
-| `primarySoft` | `#e3ecf8` | `#1b2c4a` | 卡片標題列、選取狀態 |
-| `lantern` | `#d9a330` | `#e7b850` | 宮燈金：巢狀段落左框、Logo 點綴 |
-| `vermilion` | `#b8321f` | `#ff8a70` | 朱紅：Logo 點綴 |
+| `primarySoft` | `#e3ecf8` | `#1b2c4a` | 標題列、選取狀態 |
+| `onPrimary` | `#ffffff` | `#0d1320` | 主要按鈕的字 |
+| `accent` | `#d9a330` | `#e7b850` | 宮燈金：細線與小標記（標題下一道、Logo 屋簷），不做大面積 |
+| `structure` | `#0f3d7a` | `#8db8ff` | 章節編號、段落左線、輸入框聚焦框 |
+| `seal` | `#b8321f` | `#ff8a70` | 朱紅：危險文字、目前位置、通知數字 |
 | `focus` | `#2f6fd6` | `#8db8ff` | 鍵盤焦點框 |
-| `pending*` | 米黃底、琥珀框 | 深褐底、金框 | 「待確認」標示 |
-| `warning*` | 淡紅底、紅框 | 深紅底、紅框 | 原文 P.S. 等注意事項 |
-| `callPass` | `#2f9e44` | `#28863a` | 叫牌盒的 Pass 鍵（填色，與淡江牌桌 `bidPass` 同色；深色加深一階，白字對比 ≥ 4.5:1；所有風格同值） |
+| `pendingBg`／`pendingBorder`／`pendingText` | 米黃底、琥珀框、深褐字 | 深褐底、金框、淡金字 | 「待確認」標示與數量 |
+| `warningBg`／`warningBorder` | 淡紅底、紅框 | 深紅底、紅框 | 原文 P.S. 等注意事項 |
+| `tagBg`／`tagBorder`／`tagText` | 同 `surfaceAlt`／`border`／`textMuted` | 同左 | 標籤 |
+| `overlay` | `rgba(10, 20, 40, 0.45)` | `rgba(0, 0, 0, 0.6)` | 抽屜與彈出清單的遮罩 |
+| `callPass` | `#2f9e44` | `#28863a` | 叫牌盒的 Pass 鍵（與淡江牌桌 `bidPass` 同色；深色加深一階，白字 ≥ 4.5:1；所有風格同值） |
 | `callDouble` | `#d9372b` | `#d9372b` | 叫牌盒的 X 鍵（牌桌 `bidDouble`） |
 | `callRedouble` | `#2b6fd6` | `#2b6fd6` | 叫牌盒的 XX 鍵（牌桌 `bidRedouble`） |
 | `onCall` | `#ffffff` | `#ffffff` | 上面三個鍵的文字 |
 
-### 2.2 花色
+e9-t14 移除了舊名：`lantern` → `accent`、`vermilion` → `seal`、`shadow` → `shadows.panel`、`radius.sm／md／lg／pill` → `shape.control／popover／panel／tag`（§4），值不變。
 
-固定使用四色牌，不提供切換。
+### 2.2 花色
 
 | 花色 | 淺色 | 深色 |
 | --- | --- | --- |
@@ -47,77 +55,113 @@
 | ♦ | `#b34700`（橘） | `#ffa04d`（橘） |
 | ♣ | `#1b7a33`（綠） | `#5fd27a`（綠） |
 
-列印時固定為紅（♥♦）與黑（♠♣）。
+預設四色；個人設定「花色顏色」可改雙色（♦ 同 ♥、♣ 同 ♠，與牌桌「牌樣式」相同）。每種風格有自己的四色值。列印固定紅（♥♦）與黑（♠♣）。
+
+### 2.3 六種風格與個人設定
+
+`/settings`「個人設定」（e9-t15）存在 localStorage `tku-bridgebook:prefs`，未知值退回預設；之後會改記在帳號。
+
+| 設定 | 選項（第一個是預設） |
+| --- | --- |
+| 風格 | 一般、中國風、圓潤、夜讀、四色、極簡 |
+| 版面 | 整本一頁、三欄閱讀、專注單欄、卡片總覽（§6） |
+| 明暗 | 跟隨系統、淺、深（夜讀在跟隨系統時一律深色） |
+| 字體 | 跟隨風格、襯線標題、無襯線、系統字型（不下載網頁字型） |
+| 字級 | 小、中、大、特大（根字級 87.5%／100%／112.5%／125%） |
+| 花色顏色 | 四色、雙色 |
+| 密度 | 舒適、緊湊（間距改 3px 基準、行高 −0.15） |
+
+| 風格 | 特徵（值以 `docs/design/pitch.html` 為準，為了 AA 微調過幾個色） |
+| --- | --- |
+| 一般 | §2.1 的值；無襯線標題；面板 14px 圓角、1px 框、淡陰影；章節「§1」；膠囊式待確認 |
+| 中國風 | 宣紙、墨、朱紅、青花、金；襯線標題；2px 圓角；章節「一、」；微旋轉的印章式待確認 |
+| 圓潤 | 湖水青與芒果、奶油底；22px 圓角、無框、浮起陰影 |
+| 夜讀 | 深色優先、琥珀；淺色版石墨＋琥珀 |
+| 四色 | 純白／墨黑、2px 粗線、硬陰影、粗體標題 |
+| 極簡 | 黑白灰、直角、細線、字小行緊 |
 
 ## 3. 字體
 
-- 內文：**Noto Sans TC**（`@fontsource-variable/noto-sans-tc`，可變字重，依 unicode-range 分片載入），備援 PingFang TC、Microsoft JhengHei。
-- 標題字體跟隨風格（`fonts.heading`）：「一般」與內文相同；「中國風」用 **Noto Serif TC** 600（`@fontsource/noto-serif-tc`，依 unicode-range 分片）。襯線字型只在選了需要它的風格時才載入（`styles/fonts.ts` 動態載入樣式表），「一般」不下載。
-- 花色符號：優先使用 Segoe UI Symbol／Apple Symbols，避免部分 CJK 字型把 ♠♥ 畫成 emoji 或寬度不一。
-- 字級：內文 16px、行高 1.7（中文需要較寬鬆的行距）；表格 15px；次要說明 13–14px；特約名稱 20px／700。以上是「中」字級的大小。
-- 使用者可選字級「小／中／大」（頁首的切換鈕，手機在目錄抽屜）：根字級 87.5%／100%／112.5%，用 rem 的文字、表單元件與側邊欄寬度一起縮放。用百分比是為了保留瀏覽器本身的字級設定。
-- 表單元件：桌機高 36px、字 15px，標籤 13px、提示 12px；手機至少 40px、字至少 16px（小於 16px 時 iOS 會在點進輸入框時放大畫面）。
-- 叫品使用 `tabular-nums`，讓數字對齊。
+- 內文：**Noto Sans TC**（`@fontsource-variable/noto-sans-tc`，可變字重，依 unicode-range 分片），備援 PingFang TC、Microsoft JhengHei。
+- 標題字體跟隨風格（`fonts.heading`）：「一般」與內文相同；中國風用 **Noto Serif TC** 600（`@fontsource/noto-serif-tc`，分片）。襯線字型只在標題是襯線時才載入（`styles/fonts.ts`）；「系統字型」什麼都不下載。
+- 花色符號：優先 Segoe UI Symbol／Apple Symbols，避免 CJK 字型把 ♠♥ 畫成 emoji 或寬度不一。
+- 字級（「中」）：內文 16px、行高 1.7（風格可改）；表格 15px；次要說明 13–14px；特約名（h1）2rem。根字級用百分比，保留瀏覽器本身的字級設定；rem 的文字、表單元件與側邊欄寬度一起縮放。
+- 表單元件：桌機高 36px、字 15px，標籤 13px、提示 12px；手機至少 40px、字至少 16px（小於 16px 時 iOS 會放大畫面）。
+- 叫品使用 `tabular-nums`。
 
-## 4. 間距與形狀
+## 4. 間距、形狀、版面尺寸
 
-- 4px 基準：`space(n) = n × 4px`。卡片內距 16px，段落間距 8px，分類間距 40px。
-- 圓角：`sm 6px`（按鈕、表格）、`md 10px`（段落）、`lg 14px`（卡片）、`pill`（標籤、搜尋框）。新元件與換過皮的元件改讀依角色命名的 `shape`（`control` 按鈕與輸入框、`panel` 面板、`tag`、`badge`、`note` 提示框）與 `shadows.panel`；`radius`、`shadow` 與色彩的 `lantern`、`vermilion`（改名 `accent`、`seal`）是舊名，e9-t14 移除。
-- 版面：頁首 60px、側邊欄 19rem（「中」字級為 304px，放得下最長的特約名稱）、內容最寬 60rem（960px）；900px 以下切換為行動版。
-- 表單：短欄位兩兩並排（名稱、網址代稱與分類），長文字（摘要、標籤、別名、段落摘要）獨佔一列並自動換行。欄位一律靠上對齊，旁邊有提示文字的欄位不會把同列的輸入框撐高。
+- 4px 基準：`space(n) = n × 4px`（緊湊 3px）。
+- 圓角依角色（`shape`）。「一般」：`control` 6px（按鈕、輸入框、表格）、`popover` 10px（選單、搜尋結果、浮動提示）、`panel` 14px（面板、卡片）、`tag` 與 `badge` 膠囊、`note` 6px（提示框）。
+- 線（`borders.control`／`borders.panel`）只給寬度與樣式，元件自己加顏色；陰影 `shadows.panel`。
+- 頁首 60px、手機底部工具列 56px、側邊欄 19rem、內容最寬 60rem；`mobileBreakpoint` 900px（以下為手機）、`wideBreakpoint` 1100px（以上特約頁有右欄「本頁」）。
+- 表單：短欄位兩兩並排，長文字獨佔一列；欄位一律靠上對齊。
 
 ## 5. 元件
 
 | 元件 | 檔案 | 說明 |
 | --- | --- | --- |
-| ConventionCard | `components/ConventionCard.tsx` | 一個特約。收合時：中文名、英文名、摘要、標籤、待確認數量；展開後：本特約展開／收合、段落、來源。 |
-| SectionAccordion | `components/SectionAccordion.tsx` | 遞迴的段落收合。第一層左框為淡江藍，更深層為宮燈金，背景交替。標題列含摘要與複製連結按鈕。 |
-| AuctionTable | `components/AuctionTable.tsx` | 四欄叫牌過程（座位標題依原文，例如「開叫者／敵方／答叫者／敵方」），「?」以主色標示。 |
-| ResponseTable（BidSequence） | `components/ResponseTable.tsx` | 「叫品／意義」表；意義下方可帶補充說明與待確認。 |
-| CallLabel、Suit、RichText | `components/Suit.tsx` | 叫品與花色的唯一繪製方式；RichText 只解析花色符號與 `**粗體**`。 |
-| Hand | `components/Hand.tsx` | 一手牌（♠♥♦♣ 四行），供未來的牌例使用。 |
-| DealDiagram | `components/board/DealDiagram.tsx` | 四家牌（桌機十字、手機四行），中間發牌與身價；有身價的座位名用 `seal`。型別在 `lib/board.ts`，與牌桌相容。討論區用（E11）。 |
-| DealInput | `components/board/DealInput.tsx` | 4×13 選牌面板（方向鍵移動、一個 Tab 停點），點牌歸給目前座位、13 張滿換下一家；發牌與身價下拉。 |
-| HandInput | `components/board/HandInput.tsx` | 單手牌輸入，同一個選牌面板，最多 13 張，顯示張數與大牌點。 |
-| AuctionInput | `components/board/AuctionInput.tsx` | 兩列式叫牌盒（與牌桌同款），Pass／X／XX 鍵用 `callPass`／`callDouble`／`callRedouble` 填色；只開放合法叫品；鍵盤 1–7＋C D H S N、P、X；可加註；預覽用 `AuctionTable`。 |
-| Tag | `components/Tag.tsx` | 膠囊形標籤。 |
-| PendingNote | `components/PendingNote.tsx` | 「待確認」標記與說明。 |
+| AppHeader | `components/AppHeader.tsx` | 頁首只有四件事：Logo（連結名稱是看得到的字＋「首頁」）、制度集（只有社團時是不能點的膠囊 `ProfilePill`，可選時是 `ProfileSwitch` 下拉；手機在目錄抽屜）、搜尋、帳號。 |
+| HandbookShell | `pages/HandbookShell.tsx` | 閱讀頁（首頁、特約頁、`/book`）共用的殼：跳到主要內容、頁首、目錄、主欄；依「版面」決定有沒有目錄欄；手機有底部工具列與目錄抽屜（Esc 關閉，焦點回工具列）。 |
+| HomePage、HomeBlocks | `pages/HomePage.tsx`、`HomeBlocks.tsx` | 兩欄：主欄「我的制度集」卡（未登入是社團預設＋登入提示）、「第一次來」三課、分類卡；右欄「最近更新」（E11 之前代替社團新聞）。區塊 lazy。 |
+| CardOverview | `pages/CardOverview.tsx` | 「卡片總覽」版面的首頁：分類頁籤、特約磁貼（程度、待確認、覆寫數）、右側預覽；手機兩欄磁貼。 |
+| ConventionPage | `pages/ConventionPage.tsx` | 書頁：麵包屑、h1 特約名、種類／程度／標籤／待確認、摘要、編號段落（第一層預設全開）、頁底來源與上一個／下一個特約；≥ 1100px 右欄「本頁」，較窄時收成正文上方的摺疊清單，手機是工具列叫出的彈出清單。 |
+| BookPage、ConventionCard | `pages/BookPage.tsx`、`components/ConventionCard.tsx` | `/book` 全書整本一頁：每個特約一張可展開的卡片（M0 的樣子），可「印整本」。 |
+| SectionAccordion | `components/SectionAccordion.tsx` | 遞迴段落。書節樣式：左線（`structure`）、無框；第一層前綴章節編號（`sectionNumbers`：§1／一、）；標題列含摘要、複製連結、收合箭頭；覆寫的段落左線換成覆寫色並有文字標。 |
+| AuctionTable | `components/AuctionTable.tsx` | 四欄叫牌過程，`surfaceAlt` 淡底、無外框；「?」以主色標示。 |
+| ResponseTable | `components/ResponseTable.tsx` | 「叫品／意義」細線表格（上下線、列間淡線，不做斑馬紋）；意義下方可帶補充說明與待確認。 |
+| CallLabel、Suit、RichText | `components/Suit.tsx` | 叫品與花色的唯一繪製方式；RichText 只解析花色符號與 `**粗體**`。RichText 回傳多個節點，放進 flex 容器時要包一層 `span`，否則文字與花色會各成一欄。 |
+| Hand、DealDiagram、DealInput、HandInput、AuctionInput | `components/Hand.tsx`、`components/board/` | 牌例元件（E11 用）：一手牌、四家牌（桌機十字、手機四行）、4×13 選牌面板、兩列式叫牌盒（Pass／X／XX 用 `call*` 填色）。型別在 `lib/board.ts`，與牌桌相容。 |
+| Tag、KindLevel | `components/Tag.tsx`、`KindLevel.tsx` | 膠囊形標籤；種類與程度標籤。 |
+| PendingNote | `components/PendingNote.tsx` | 「待確認」標記與說明；樣式由 `pendingBadge` 決定（一般是膠囊，中國風是印章）。目錄的待確認數量用同一組 `pending*` 色。 |
 | SearchBar | `components/SearchBar.tsx` | 頁首搜尋框，下拉結果為深層連結；Esc 清除。 |
-| Sidebar（TOC） | `components/Sidebar.tsx` | 樹狀目錄，箭頭一律在左側、每層往內縮並有引導線。兩層下拉：分類（預設展開，顯示特約數量）→ 特約（點特約名稱展開，再點一次收起；箭頭只是狀態圖示、不能單獨點；預設收合，網址所在的特約自動展開）。目前位置高亮。行動版為抽屜。 |
-| AppHeader | `components/AppHeader.tsx` | 頁首 v2（e9-t03）只有四件事：Logo、制度集（只有社團的時候是不能點的膠囊 `ProfilePill`，可選時是 `ProfileSwitch` 下拉）、搜尋、帳號。手機：選單按鈕、Logo 圖示、搜尋、帳號；制度集下拉在目錄抽屜。 |
-| ReadingSettings | `components/ReadingSettingsButton.tsx`、`ReadingSettings.tsx` | 「閱讀設定」按鈕在每個閱讀頁頂端右側（e9-t05 移到右欄），面板 lazy 載入：主題（跟隨系統／淺色／深色）、字級、本頁全部展開／收合、列印本頁（全書頁為「印整本」）、安裝 App。Esc、×、點外面關閉；Esc 與 × 把焦點還給按鈕。 |
-| AccountMenu | `components/AccountMenu.tsx` | 頁首右端：未登入時是「登入」膠囊按鈕；登入後是名字＋選單（新增特約、匯入檔案、社團管理、我的帳號、登出，依權限顯示），有待審核申請時顯示朱紅數字。 |
-| 表單元件 | `components/ui.tsx` | Button（一般／主要／危險／ghost）、Input、TextArea、Select、Field（標籤＋提示）、Panel、PasswordInput（右側眼睛按鈕切換顯示密碼）、ErrorText、Notice。全部讀風格 token（e9-t11）：輸入框 `surface` 底、聚焦框 `structure`；危險按鈕 `seal`；面板、編輯器各欄用風格的框線（`borders`）、圓角（`shape`）與陰影。登入、帳號、管理、編輯器、匯入、牌桌報告頁的頁首沒有字級鈕，與閱讀頁一樣收在「閱讀設定」。 |
-| 資料表 | `components/DataTable.tsx` | 管理頁的成員／邀請碼與牌桌報告的表格：上下細線、表頭下一條線、列間淡線，不做斑馬紋（同叫牌表）。只在 lazy 頁面用，不進首頁 bundle。 |
-| 編輯器 | `components/editor/` | Outline（段落樹，手機為下拉選單）、MetaForm、SectionForm、BlockEditor（各區塊表單，左框宮燈金）、Preview（完整展開的卡片）、RevisionsPanel、SuitPalette（插入 ♠♥♦♣，不搶走輸入框焦點）。桌機版是剛好填滿視窗的工作區：段落樹、表單、預覽三欄上下緣對齊、各自捲動，整頁不捲動；手機版單欄隨頁面捲動。 |
+| Sidebar | `components/Sidebar.tsx` | 全書目錄：程度篩選（全部／入門／進階／高階）、分類（可收合，顯示特約數）→ 特約（目前頁面 ● 與 `seal` 字）；待確認群組與外部參考在最下。手機為底部抽屜。 |
+| ReadingSettings | `components/ReadingSettingsButton.tsx`、`ReadingSettings.tsx` | 「閱讀設定」按鈕在閱讀頁頂端右側（手機在工具列），面板 lazy：主題、字級、更多顯示設定（連到 `/settings`）、本頁全部展開／收合、列印本頁／印整本、安裝 App。Esc、×、點外面關閉；Esc 與 × 把焦點還給按鈕。手機是底部面板。 |
+| MobileToolbar | `components/MobileToolbar.tsx` | 手機（< 900px）底部工具列，lazy：目錄、本頁（特約頁）或我的、搜尋、閱讀設定，都有圖示。「討論」等 G6。 |
+| DisplaySettings、SettingsPage | `components/DisplaySettings.tsx`、`pages/SettingsPage.tsx` | 個人設定（§2.3），也出現在「我的帳號 › 顯示」。 |
+| PrintSheet | `components/PrintSheet.tsx` | 列印用的封面、目錄、頁眉（§7），lazy。 |
+| AccountMenu | `components/AccountMenu.tsx` | 未登入是「登入」按鈕；登入後名字＋選單（依權限），待審核申請以 `seal` 數字標示。 |
+| 表單元件 | `components/ui.tsx` | Button（一般／主要／危險／ghost）、Input、TextArea、Select、Field、Panel、PasswordInput、ErrorText、Notice。全部讀風格 token：輸入框 `surface` 底、聚焦框 `structure`、危險 `seal`；面板用風格的 `borders`、`shape`、`shadows`。 |
+| DataTable | `components/DataTable.tsx` | 管理頁與牌桌報告的表格，與叫牌表同樣的細線；只在 lazy 頁面用。 |
+| 編輯器 | `components/editor/` | Outline、MetaForm、SectionForm、BlockEditor、Preview、RevisionsPanel、SuitPalette。桌機三欄填滿視窗、各自捲動；手機單欄。 |
 
-## 6. 版面（Swagger 式）
+## 6. 版面
+
+「版面」是個人設定，由 `HandbookShell` 決定殼；手機一律單欄＋底部工具列。
+
+| 版面 | 桌機 |
+| --- | --- |
+| 整本一頁（預設） | 目錄在左；特約頁 ≥ 1100px 時「本頁」在右。（名稱沿用規格；B2 拆頁後，整本一頁的書在 `/book`。） |
+| 三欄閱讀 | 同上，但 900px 起就有右欄「本頁」 |
+| 專注單欄 | 沒有目錄欄，正文置中（48rem） |
+| 卡片總覽 | 首頁換成 `CardOverview`；沒有目錄欄 |
 
 ```
-┌──────────────────────── 頁首（sticky）────────────────────────┐
-│ [拱門] TKU BridgeHall 淡江橋館   [ 搜尋 ……… ]   ⇕ ⇳ ♦♣ ☾ 🖶 │
-├──────────────┬────────────────────────────────────────────────┤
-│ 無王開叫後續 │ 無王開叫後續                                    │
-│  雷本索特約  │ ┌ ▸ 雷本索特約  Lebensohl              🔗 ┐     │
-│   ├ 遭自然…  │ │ 摘要……  [1NT] [插叫] … [2 項待確認]        │     │
-│   └ 其他運用 │ └─────────────────────────────────────────┘     │
-│ 競叫與防守   │ ┌ ▾ 對抗不尋常2NT …                     🔗 ┐     │
-│  對抗不尋常… │ │  ┃ ▾ [原文已移除]          🔗 │     │
-│              │ │  ┃   ┃ ▸ 開叫1♥時                        │     │
-└──────────────┴────────────────────────────────────────────────┘
+┌ 頁首（sticky）：[拱門] 淡江橋館 · [社團預設]  [ 搜尋 ……… ]  [登入] ┐
+├────────────┬─────────────────────────────────────┬───────────────┤
+│ 全書目錄   │ 全書目錄 › 花色開叫後續 › 特約        │ 本頁          │
+│ 全部 入門… │ 開叫高花之滿貫詢問叫                  │ §1 前言       │
+│ ▾ 無王開叫 │ Jacoby 2NT [特約][高階][11 項待確認]  │ §2 此詢問叫…  │
+│   1NT的答叫│ ──────────── accent ────────────     │ §3 開叫1♠時…  │
+│ ▾ 花色開叫 │ 摘要……                               │ [閱讀設定]    │
+│  ●開叫高花…│ ┃ §1 前言                        ▾ 🔗 │               │
+│            │ ┃   叫品  意義 ……                     │               │
+│            │ ← 上一個 新低花迫叫    下一個 → …     │               │
+└────────────┴─────────────────────────────────────┴───────────────┘
 ```
 
-收合指示使用 ▸（旋轉 90° 表示展開）。
+手機：頁首只剩 Logo、搜尋、帳號；底部工具列 56px；目錄與閱讀設定是底部抽屜，本頁是中間彈出清單；正文左右 16px，表格可橫向捲動，觸控目標 ≥ 44px。
 
-## 7. 淺色／深色、無障礙、列印
+## 7. 淺色／深色、無障礙、列印、回歸測試
 
-- **主題與字級**：主題預設跟隨系統 `prefers-color-scheme`，可手動切換；字級預設「中」。兩者都記在 localStorage（無法存取時照常運作）。
-- **鍵盤**：Radix Accordion 提供 Enter／Space 切換、上下鍵在同層標題間移動、Home／End。所有按鈕有可見焦點框（3px）。另有「跳到主要內容」連結。
-- **ARIA**：觸發器有 `aria-expanded`／`aria-controls`；標題層級 h1（頁面）→ h2（分類、特約）→ h3–h6（段落）。搜尋框有 `role="search"` 與隱藏標籤；複製連結結果以 `role="status"` 告知。
-- **花色**：符號形狀本身即可區分；`Suit` 以 `role="img"` 與中文 `aria-label`（黑桃、紅心、方塊、梅花）讓螢幕閱讀器念出。
-- **對比**：所有文字色在對應背景上達 WCAG AA（4.5:1）。
+- **主題**：預設跟隨系統 `prefers-color-scheme`，可在閱讀設定或個人設定切換；設定記在 localStorage（無法存取時照常運作）。
+- **鍵盤**：第一個 Tab 是「跳到主要內容」；Radix Accordion 提供 Enter／Space、上下鍵、Home／End；所有可聚焦元件有可見焦點框；面板與抽屜 Esc 關閉並把焦點還給開啟的按鈕。
+- **ARIA**：觸發器有 `aria-expanded`／`aria-controls`；標題層級 h1（頁面）→ h2 → h3–h6；搜尋框 `role="search"`；複製連結結果以 `role="status"` 告知。連結的名稱要包含看得到的字（WCAG 2.5.3），不要用意思不同的 `aria-label` 蓋掉；裝飾用的箭頭加 `aria-hidden`。
+- **花色**：`Suit` 以 `role="img"` 與中文 `aria-label`（黑桃、紅心、方塊、梅花）念出。
+- **對比**：每種風格、淺深色的文字色在對應背景上達 WCAG AA（4.5:1）；token 由 `tests/styles/tokens.test.ts` 檢查，實際頁面由 axe 檢查。
 - **動態**：尊重 `prefers-reduced-motion`。
-- **列印**（v2，e9-t10）：A4 書頁；所有段落展開；隱藏頁首、側邊欄與按鈕；任何風格都印成黑白（花色仍是紅黑），標題字體跟隨風格；表格避免跨頁斷開。特約頁每頁頁眉「淡江橋館 · 特約名」、頁尾頁碼。全書目錄的「印整本」：封面（社團、淡江橋館、橋譜、制度集、列印日期）＋目錄頁＋每個特約從新的一頁開始、頁眉是該特約名稱（分類標題跟著它的第一個特約）。頁眉頁碼靠 CSS 頁邊框（Chrome 131 以上；不支援的瀏覽器照樣印，只是沒有頁眉頁碼）。
+- **列印**（e9-t10）：A4 書頁；所有段落展開；隱藏頁首、目錄、右欄與按鈕；任何風格都印成黑白（花色紅黑），標題字體跟隨風格；表格避免跨頁。特約頁頁眉「淡江橋館 · 特約名」、頁尾頁碼。`/book` 的「印整本」：封面（社團、淡江橋館、橋譜、制度集、日期）＋目錄＋每個特約從新的一頁開始、頁眉是該特約名。頁眉頁碼靠 CSS 頁邊框（Chrome 131 以上）。
+- **回歸測試**（e9-t12、e9-t13；CI 的 `browser` job，本機 `npm run test:browser`）：`tests/browser/visual.spec.ts` 以 Playwright 截圖比對首頁、特約頁、`/book`、個人設定（一般 × 桌機／手機 × 淺／深）、另五種風格的特約頁（淺／深）與手機首頁、其他三種版面、手機工具列的抽屜與面板；`tests/browser/a11y.spec.ts` 以 axe（WCAG 2.1 A／AA）檢查同樣的頁面與六種風格的首頁、特約頁，另有鍵盤巡覽測試。Lighthouse（`lighthouserc.json`）在首頁、特約頁、個人設定擋無障礙 ≥ 0.95。改了外觀要更新基準圖，做法寫在 `playwright.config.ts`。
 
 ## 8. Logo
 

@@ -63,7 +63,7 @@ const soft: StyleTokens = {
   fonts: { body: fontStacks.sans, heading: fontStacks.sans, mono: fontStacks.mono },
   headingWeight: 700,
   lineHeight: 1.7,
-  shape: { control: '12px', panel: '22px', tag: '999px', badge: '999px', note: '12px' },
+  shape: { control: '12px', panel: '22px', popover: '22px', tag: '999px', badge: '999px', note: '12px' },
   borders: { control: '1px solid', panel: '0 solid' },
   shadows: {
     light: { panel: '0 2px 6px rgba(30, 42, 40, 0.05), 0 14px 36px rgba(30, 42, 40, 0.09)' },

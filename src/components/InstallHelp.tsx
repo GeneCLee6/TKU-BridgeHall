@@ -45,10 +45,10 @@ const Dialog = styled.dialog`
   width: min(420px, calc(100vw - 32px));
   padding: ${({ theme }) => theme.space(5)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.md};
+  border-radius: ${({ theme }) => theme.shape.popover};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
-  box-shadow: ${({ theme }) => theme.shadow};
+  box-shadow: ${({ theme }) => theme.shadows.panel};
   line-height: 1.6;
 
   &::backdrop {

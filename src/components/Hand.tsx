@@ -34,7 +34,7 @@ const Figure = styled.figure`
   margin: ${({ theme }) => theme.space(2)} 0;
   padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(4)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   font-family: ${({ theme }) => theme.fonts.mono};
 
   figcaption {

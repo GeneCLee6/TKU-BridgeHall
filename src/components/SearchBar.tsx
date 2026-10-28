@@ -77,7 +77,7 @@ const Field = styled.div`
   height: 40px;
   padding: 0 ${({ theme }) => theme.space(3)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.pill};
+  border-radius: ${({ theme }) => theme.shape.tag};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.textMuted};
 
@@ -111,9 +111,9 @@ const Results = styled.div`
   overflow-y: auto;
   padding: ${({ theme }) => theme.space(2)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.md};
+  border-radius: ${({ theme }) => theme.shape.popover};
   background: ${({ theme }) => theme.colors.surface};
-  box-shadow: ${({ theme }) => theme.shadow};
+  box-shadow: ${({ theme }) => theme.shadows.panel};
 
   ul {
     margin: 0;
@@ -131,7 +131,7 @@ const Results = styled.div`
     min-width: 0;
     display: block;
     padding: ${({ theme }) => theme.space(2)};
-    border-radius: ${({ theme }) => theme.radius.sm};
+    border-radius: ${({ theme }) => theme.shape.control};
     color: ${({ theme }) => theme.colors.text};
     text-decoration: none;
     font-size: 0.9375rem;

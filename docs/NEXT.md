@@ -1,6 +1,6 @@
 # NEXT — 接下來怎麼做（給 AI 協作者與自己的交接手冊）
 
-最後更新 2026-10-28。**完整順序在 [`ROADMAP.md`](ROADMAP.md)**（一批一個 PR）；這份只記「現在的位置」與工作方式。每完成一批就更新「現在的位置」；每個 AI session 開頭只需要讀 `CLAUDE.md` 和這一份。
+最後更新 2026-10-28（B7 後）。**完整順序在 [`ROADMAP.md`](ROADMAP.md)**（一批一個 PR）；這份只記「現在的位置」與工作方式。每完成一批就更新「現在的位置」；每個 AI session 開頭只需要讀 `CLAUDE.md` 和這一份。
 
 ## 1. 現在的位置
 
@@ -33,8 +33,9 @@
 - **B5 列印 v2、其他頁換皮**（PR #11，2026-10-28）：特約頁與全書目錄掛 `components/PrintSheet.tsx`（lazy）：A4 書頁、黑白（花色紅黑）、頁尾頁碼、特約頁頁眉「淡江橋館 · 特約名」；「印整本」印封面（社團、制度集、日期）＋目錄＋每個特約一頁起、頁眉是該特約名（具名 `@page`）。頁眉頁碼靠 CSS 頁邊框，Chrome 131 以上才有。登入、帳號、管理、編輯器、匯入、牌桌報告頁全部讀風格 token（`borders`／`shape`／`shadows`，輸入框 `surface` 底、聚焦 `structure`、危險 `seal`），表格共用 `components/DataTable.tsx`；這些頁的頁首字級鈕換成「閱讀設定」按鈕。
 - **B4 首頁 v2 與手機工具列**（PR #12，2026-10-28）：首頁兩欄——主欄「我的制度集」卡（未登入是社團預設＋登入提示）、「第一次來」三課（`pages/HomeBlocks.tsx` 的 `FIRST_STEPS`，暫定總覽 → 1NT的答叫 → 防守信號，**待社團確認**）、分類卡；右欄「最近更新」（E11 前代替社團新聞）。這些區塊 lazy，字串在 `pageStrings.ts`。手機（< 900px）有 lazy 的底部工具列：目錄（底部抽屜）、本頁（特約頁，中間彈出清單）或我的、搜尋、閱讀設定（面板變成底部面板）；頁首不再有漢堡鈕，頁面上的閱讀設定按鈕在手機隱藏，工具列用 window 事件（`lib/toolbar.ts`）叫頁面開面板。「討論」與社團新聞、最新討論等 G6。
 - **B6 個人設定、六組風格、卡片總覽**（PR #13，2026-10-28）：`/settings`「個人設定」（lazy；閱讀設定有「更多顯示設定」連結，我的帳號有「顯示」區塊）可選風格（一般／中國風／圓潤／夜讀／四色／極簡）、版面（整本一頁／三欄閱讀／專注單欄／卡片總覽）、明暗、字體（跟隨風格／襯線標題／無襯線／系統字型）、字級（多了特大）、花色顏色（四色／雙色）、密度（舒適／緊湊）。存 localStorage `tku-bridgebook:prefs`，未知值退回預設；**還沒存帳號**（要牌桌 `POST /api/account/preferences` 加欄位，另開牌桌 PR）。非預設風格在 `styles/themes/` 各一個 lazy chunk，`main.tsx` 先載入再渲染；值照 `pitch.html`，為了 AA 微調了幾個色。版面「整本一頁」（預設）＝現在的樣子不變——**注意**：規格的「整本一頁」原意是 M0 那種整本卡片，B2 拆頁後預設已是首頁＋特約頁，這裡沿用現況，`/book` 仍是整本一頁；三欄閱讀＝900px 起就有右欄、專注單欄＝無目錄置中、卡片總覽＝首頁換成 `pages/CardOverview.tsx`（分類頁籤、磁貼含待確認與覆寫數、右側預覽，手機兩欄）。視覺回歸截圖併入 B7。
-- **首頁 JS 146.0／150 kB**（B6 後；B4 後 145.2、B3 後 149.2、B5 後 149.0）：`vite.config.ts` 的 rolldown `codeSplitting` group（`tags: ['$initial']`）把首頁靜態載入的模組合成一個 chunk——原本被切成 12 塊，lazy 模組多 import 一個共用模組就會再多切一塊、多幾百 bytes。之後的功能仍一律 lazy，`strings.ts` 也算在首頁裡；lazy 頁的字串放各自的字串模組（`pageStrings.ts`、`strings-account.ts`、`tableReportStrings.ts`）。
-- **下一批**：A 期做完。B4、B5、B6 已完成；C1、D3 的前提 B3 已滿足；B6 已完成；F1 的前提 B5 已滿足；B7 的前提 B5、B6 都已滿足；C4（隊伍頁、搭檔頁）等 C1；G1 已完成，下一個 G2（我的帳號編輯檔案、他人檔案頁、`shared/forum.ts`）；K2 已完成，K3 等 J2、K4 可做。
+- **B7 視覺回歸、無障礙回歸、移除舊 token**（PR #14，2026-10-28）——**Phase B 完成，新介面上線。** CI 多一個 `browser` job（Playwright 容器，`npm run test:browser`，設定在 `playwright.config.ts`）：`tests/browser/visual.spec.ts` 37 張截圖（首頁、特約頁、`/book`、個人設定 × 桌機／手機 × 淺／深；另五種風格的特約頁淺深與手機首頁；三欄、專注、卡片總覽版面；手機工具列的抽屜與面板），基準圖在 `tests/browser/__screenshots__`，**只能由 CI（Linux 容器）產生**，改了外觀就下載失敗 job 的 `browser` artifact 換上；`tests/browser/a11y.spec.ts` 用 axe（WCAG 2.1 A／AA）掃同樣的頁面與六種風格，加鍵盤巡覽；Lighthouse 加 `/settings`。axe 抓到並修好：Logo 與上一個／下一個連結的名稱和看得到的字不符（WCAG 2.5.3）、目錄「待確認」數量白字琥珀底只有 2.5:1（改成和待確認標籤同色——**「一般」唯一的外觀變動**）、手機目錄抽屜 Esc 關不掉、「本頁」清單的段落標題有花色時被拆成好幾欄。舊名 `radius`／`shadow`／`lantern`／`vermilion` 移除（`radius.md` 的 10px 改名 `shape.popover`，值不變、測試鎖住）；`DESIGN.md` 改寫為 v2 現行樣式，`DESIGN-V2.md` 標註為已實作。
+- **首頁 JS 146.1／150 kB**（B7 後；B6 後 146.0、B4 後 145.2、B3 後 149.2、B5 後 149.0）：`vite.config.ts` 的 rolldown `codeSplitting` group（`tags: ['$initial']`）把首頁靜態載入的模組合成一個 chunk——原本被切成 12 塊，lazy 模組多 import 一個共用模組就會再多切一塊、多幾百 bytes。之後的功能仍一律 lazy，`strings.ts` 也算在首頁裡；lazy 頁的字串放各自的字串模組（`pageStrings.ts`、`strings-account.ts`、`tableReportStrings.ts`）。
+- **下一批**（前提都已滿足，可平行開）：C1 制度集編輯 UI（B3）、D3 制度卡預覽與列印（D2、B3）、F1 送審狀態機（B5）、G2 個人檔案頁與 `shared/forum.ts`（G1）、H1 導讀與入門版（B6）、I1 練習（A7）、J1 文章模型（A2、G1）、K4 幹部補手牌條件（K2）、L2 錯誤回報與分析（B6，若決定做）。之後：C4 等 C1；D4 等 D3、C4；G3 起依序；K3 等 J2。
 - **已拍板**（2026-10-24）：網站改名**淡江橋館 · TKU BridgeHall**，「橋譜」保留為制度區塊名；新標誌（屋簷＋拱門＋四花色）在 `design/logo/`，改名是 ROADMAP B0（`e9-t18`）。介面預設「一般」＝現行配色與圓角，另五種風格、四種版面、字體、字級、花色顏色、密度都放個人設定，不投票（E9，展示頁 `design/pitch.html`）；首頁保留第一版視覺稿的版面並加社團新聞與最新討論（`DESIGN-V2.md` §5.3）；制度卡以 WBF 卡為主力、內容寫進格子、輸出 .docx 與 PDF，簡易卡與棕標申報表也要能生成（E3）；**新增 E11 社群與討論**（頭像、板面、牌例友善的貼文與留言、通知、管理），先給社內測試，型別與 Worker 模組放牌桌 repo 以便日後搬到牌桌 E13（ROADMAP Phase G）。
 - **等人決定的事**（不卡 A 期）：程度名稱（E4）、制度負責人（E8）、WBF 卡英文濃縮文字由誰定稿（E3）。見 `docs/PRD/00-prd.md` §14。
 
@@ -85,7 +86,7 @@ Token 吃掉的是**對話上下文**，不是程式碼。原則：**一個 sess
 | 介面像工具、沒有首頁、頁首擠 | 配色與圓角保留為預設 | B 全線：首頁、個人設定、風格維度 |
 | 討論散在 FB 與 LINE | — | G 全線（E11） |
 | 後端全在牌桌 Worker | 可接受（社團規模） | 型別對拍自動化（K3）；多社團時再拆 |
-| 測試、CI、PWA、無障礙 | 良好 | 維持；B6 加視覺回歸 |
+| 測試、CI、PWA、無障礙 | 良好 | 維持；B7 加了視覺回歸與 axe（CI `browser` job） |
 
 ## 5. 不做或延後的
 

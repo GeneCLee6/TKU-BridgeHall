@@ -43,3 +43,7 @@ source-docs/
 .claude/
 .vercel
 .env*
+
+# Playwright output (tests/browser)
+test-results/
+playwright-report/

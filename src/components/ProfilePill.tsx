@@ -13,7 +13,7 @@ export const pill =(theme: AppTheme) => `
   height: 34px;
   padding: 0 ${theme.space(1)} 0 ${theme.space(3)};
   border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radius.pill};
+  border-radius: ${theme.shape.tag};
   background: ${theme.colors.surface};
   color: ${theme.colors.text};
   svg { flex: none; color: ${theme.colors.textMuted}; }

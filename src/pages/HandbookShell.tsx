@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 import { AppHeader } from '../components/AppHeader.tsx'
@@ -36,6 +36,17 @@ export function HandbookShell() {
   const { conventions, categories, status, skipped } = useContent()
   const { can } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+  // Esc closes the phone's catalogue drawer and gives the focus back to the toolbar (e9-t13)
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setMenuOpen(false)
+      document.querySelector<HTMLElement>('[aria-controls="catalogue"]')?.focus()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [menuOpen])
   // Focusing the search box downloads the search code and index (state/useSearch.ts)
   const { search, prepare: prepareSearch } = useSearch()
   const isMobile = useMediaQuery(mobileQuery)
@@ -130,7 +141,7 @@ export function useOnlineNote() {
 
 export const NotFound = styled.p`
   padding: ${({ theme }) => theme.space(3)};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.warningBg};
 `
 
@@ -195,7 +206,7 @@ const Main = styled.main<{ $busy: boolean; $centred: boolean; $measure?: string 
 const Status = styled.p`
   margin: 0 0 ${({ theme }) => theme.space(4)};
   padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.pendingBg};
   color: ${({ theme }) => theme.colors.pendingText};
 `

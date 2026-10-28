@@ -244,7 +244,7 @@ const Nav = styled.nav<{ $open: boolean }>`
     border-right: none;
     border-top: 1px solid ${({ theme }) => theme.colors.border};
     border-radius: ${({ theme }) => theme.shape.panel} ${({ theme }) => theme.shape.panel} 0 0;
-    box-shadow: ${({ theme }) => theme.shadow};
+    box-shadow: ${({ theme }) => theme.shadows.panel};
     transform: translateY(
       ${({ $open, theme }) => ($open ? '0' : `calc(100% + ${theme.layout.toolbarHeight})`)}
     );
@@ -296,7 +296,7 @@ const GroupTrigger = styled(Accordion.Trigger)`
   }
   padding: 0 ${({ theme }) => theme.space(1)} 0 0;
   border: none;
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: transparent;
   color: ${({ theme }) => theme.colors.textMuted};
   font: inherit;
@@ -318,7 +318,7 @@ const GroupTrigger = styled(Accordion.Trigger)`
 const Count = styled.span`
   margin-left: auto;
   padding: 0 ${({ theme }) => theme.space(2)};
-  border-radius: ${({ theme }) => theme.radius.pill};
+  border-radius: ${({ theme }) => theme.shape.tag};
   background: ${({ theme }) => theme.colors.surfaceAlt};
   font-weight: 600;
   letter-spacing: 0;
@@ -432,9 +432,11 @@ const Name = styled.span`
   }
 `
 
+/** Coloured like the 「待確認」 badges: white on the amber line was 2.5:1, under AA (e9-t13) */
 const PendingCount = styled(Count)`
-  background: ${({ theme }) => theme.colors.pendingBorder};
-  color: ${({ theme }) => (theme.mode === 'light' ? '#ffffff' : '#1a1200')};
+  box-shadow: inset 0 0 0 1px ${({ theme }) => theme.colors.pendingBorder};
+  background: ${({ theme }) => theme.colors.pendingBg};
+  color: ${({ theme }) => theme.colors.pendingText};
 `
 
 const PendingConvention = styled.p`
@@ -450,7 +452,7 @@ const PendingItem = styled(Link)`
   display: flex;
   flex-direction: column;
   padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(2)};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   color: ${({ theme }) => theme.colors.textMuted};
   font-size: 0.8125rem;
   line-height: 1.45;
@@ -477,7 +479,7 @@ const ReferenceLink = styled.a`
   align-items: flex-start;
   gap: ${({ theme }) => theme.space(2)};
   padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(2)};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   color: ${({ theme }) => theme.colors.text};
   font-size: 0.875rem;
   font-weight: 600;

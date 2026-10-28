@@ -129,9 +129,9 @@ export function ConventionCard({
 
 const Card = styled(Accordion.Item)`
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.lg};
+  border-radius: ${({ theme }) => theme.shape.panel};
   background: ${({ theme }) => theme.colors.surface};
-  box-shadow: ${({ theme }) => theme.shadow};
+  box-shadow: ${({ theme }) => theme.shadows.panel};
   scroll-margin-top: calc(${({ theme }) => theme.layout.headerHeight} + 16px);
   overflow: hidden;
   /* Cards off screen skip layout and paint until scrolled to, which keeps expand-all fast */
@@ -229,7 +229,7 @@ export const TextButton = styled.button`
   min-height: 36px;
   padding: 0 ${({ theme }) => theme.space(3)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   font-size: 0.875rem;

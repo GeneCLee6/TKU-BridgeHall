@@ -63,7 +63,7 @@ const plain: StyleTokens = {
   fonts: { body: fontStacks.sans, heading: fontStacks.sans, mono: fontStacks.mono },
   headingWeight: 600,
   lineHeight: 1.55,
-  shape: { control: '0px', panel: '0px', tag: '0px', badge: '0px', note: '0px' },
+  shape: { control: '0px', panel: '0px', popover: '0px', tag: '0px', badge: '0px', note: '0px' },
   borders: { control: '1px solid', panel: '1px solid' },
   shadows: { light: { panel: 'none' }, dark: { panel: 'none' } },
   pendingBadge: { borderWidth: '1px', rotate: '0deg', serif: false },
