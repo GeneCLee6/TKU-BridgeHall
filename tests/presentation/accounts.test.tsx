@@ -86,7 +86,7 @@ describe('signing in and registering', () => {
     await userEvent.click(screen.getByRole('button', { name: '顯示密碼' }))
     expect(password).toHaveAttribute('type', 'text')
     await userEvent.click(screen.getByRole('button', { name: '登入' }))
-    expect(await screen.findByRole('button', { name: /^雷本索特約/ }, { timeout: 5000 })).toHaveAttribute('aria-expanded', 'true')
+    expect(await screen.findByRole('heading', { level: 1, name: '雷本索特約' }, { timeout: 5000 })).toBeInTheDocument()
     expect(sent.find((s) => s.path === '/api/login')!.body).toEqual({ username: 'amy', password: 'secret1' })
   })
 

@@ -1,53 +1,99 @@
-import { useEffect } from 'react'
+import { Pencil } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import styled from 'styled-components'
-import { ConventionCard } from '../components/ConventionCard.tsx'
-import { allKeys, conventionDomId, conventionKey, findSectionPath, sectionDomId, sectionKey } from '../lib/sections.ts'
+import styled, { useTheme } from 'styled-components'
+import { CopyLinkButton, IconButton } from '../components/CopyLinkButton.tsx'
+import { KindLevel } from '../components/KindLevel.tsx'
+import { Badge } from '../components/PendingNote.tsx'
+import { OriginMark, ProfileNotes } from '../components/ProfileMarks.tsx'
+import { ReadingSettingsButton, type ReadingActions } from '../components/ReadingSettingsButton.tsx'
+import { SectionAccordion } from '../components/SectionAccordion.tsx'
+import { RichText } from '../components/Suit.tsx'
+import { Tag, TagList } from '../components/Tag.tsx'
+import { sectionNumber } from '../lib/sectionNumber.ts'
+import {
+  allKeys,
+  conventionDomId,
+  conventionKey,
+  conventionPath,
+  findSectionPath,
+  pendingPath,
+  sectionDomId,
+  sectionKey,
+  sectionPath,
+} from '../lib/sections.ts'
+import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
+import { pageStrings } from '../pageStrings.ts'
+import type { ResolvedConvention } from '../lib/profiles.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
+import { layout } from '../styles/tokens.ts'
+import type { ConventionKind, ConventionMeta } from '../types/convention.ts'
 import { HomePage } from './HomePage.tsx'
-import { NotFound, PageBar, useOnlineNote } from './HandbookShell.tsx'
+import { NotFound, useOnlineNote } from './HandbookShell.tsx'
+
+/** Wide enough for the 本頁 column beside the text (DESIGN-V2.md §4) */
+const wideQuery = `(min-width: ${layout.wideBreakpoint})`
 
 /**
- * One convention on its own page (e9-t04): /c/:slug opens it, /c/:slug/:sectionId also opens the
- * path down to that section, scrolls to it and focuses its heading; ?pending=k picks the k-th
- * 待確認 note of the section. Loaded lazily, so the home page carries none of the card code.
- * The three-column layout is e9-t05.
+ * One convention on its own page (e9-t04), laid out like a page of a book (e9-t05, DESIGN-V2.md
+ * §5.4): the catalogue on the left (HandbookShell), the text in the middle — where it sits in the
+ * book, the title with its kind and level, the summary, the numbered sections, source and last
+ * check, the neighbouring conventions — and 本頁 on the right: the sections and 閱讀設定. Below
+ * 1100px the right column folds into a 本頁 list above the text.
+ *
+ * /c/:slug/:sectionId also opens the path down to that section, scrolls to it and focuses its
+ * heading; ?pending=k picks the k-th 待確認 note of the section. The top-level sections start
+ * open, the deeper ones closed. Loaded lazily, so the home page carries none of this code.
  */
 export function ConventionPage() {
-  const { bySlug, categories } = useContent()
+  const { bySlug, categories, conventions } = useContent()
   const { can } = useAuth()
   const { slug = '', sectionId } = useParams()
   const [searchParams] = useSearchParams()
   const pendingIndex = searchParams.get('pending')
   const { open, close } = useExpansion()
   const onlineNote = useOnlineNote()
+  const wide = useMediaQuery(wideQuery)
+  const heading = useRef<HTMLHeadingElement>(null)
 
   const convention = bySlug(slug)
   // The convention's content: the scroll waits for it, as the section is not there before
   const target = useConvention(convention ? slug : undefined)
-  const ready = Boolean(target.convention) || target.failed
+  const loaded = target.convention
+  const ready = Boolean(loaded) || target.failed
   const path = convention && sectionId ? findSectionPath(convention, sectionId) : []
   usePageTitle(convention?.nameZh)
 
-  // Open the path to the link at once; the scroll below waits for the content. Both depend on the
-  // manifest entry itself, which stays the same object while other conventions load.
+  // Arriving at a convention opens its top-level sections. It depends on the manifest entry,
+  // which stays the same object while other conventions load.
   useEffect(() => {
     if (!convention) return
-    const trail = sectionId ? findSectionPath(convention, sectionId) : []
-    open([conventionKey(convention.slug), ...trail.map((s) => sectionKey(convention.slug, s.id))])
+    open([conventionKey(convention.slug), ...convention.outline.map((s) => sectionKey(convention.slug, s.id))])
+  }, [open, convention])
+
+  // A link to a section opens the path down to it at once; the scroll below waits for the content
+  useEffect(() => {
+    if (!convention || !sectionId) return
+    open(findSectionPath(convention, sectionId).map((s) => sectionKey(convention.slug, s.id)))
   }, [sectionId, open, convention])
 
   useEffect(() => {
     if (!convention || !ready) return
     const trail = sectionId ? findSectionPath(convention, sectionId) : []
-    const domId = sectionId && trail.length ? sectionDomId(convention.slug, sectionId) : conventionDomId(convention.slug)
+    const toSection = Boolean(sectionId && trail.length)
     // Wait one frame so the newly opened content has its height before scrolling
     const frame = window.requestAnimationFrame(() => {
-      const el = document.getElementById(domId)
+      if (!toSection) {
+        // A new convention starts at the top, like turning to a new page
+        document.scrollingElement?.scrollTo?.({ top: 0 })
+        heading.current?.focus({ preventScroll: true })
+        return
+      }
+      const el = document.getElementById(sectionDomId(convention.slug, sectionId!))
       // ?pending=k points at the k-th 待確認 note that belongs directly to the section
       // (notes inside its child sections belong to those children)
       const note =
@@ -73,10 +119,25 @@ export function ConventionPage() {
 
   const keys = allKeys(convention)
   const category = categories.find((c) => c.id === convention.category)
+  const kind = (convention.kind ?? 'convention') as ConventionKind
+  const order = categories.flatMap((c) => conventions.filter((x) => x.category === c.id))
+  const at = order.findIndex((c) => c.slug === convention.slug)
+  const previous = at > 0 ? order[at - 1] : undefined
+  const next = at >= 0 ? order[at + 1] : undefined
+  const online = onlineNote(convention.slug)
+  const canEdit = can('bookEdit')
+  const actions: ReadingActions = {
+    onExpandAll: () => open(keys),
+    onCollapseAll: () => close(keys.slice(1)),
+    // Only this convention is on the page, so its content is there to print
+    onPrint: () => window.print(),
+  }
+  const current = path[0]?.id
+
   return (
-    <>
-      <PageBar
-        lead={
+    <Columns $wide={wide}>
+      <Article aria-labelledby={`${conventionDomId(convention.slug)}-title`}>
+        <TopBar>
           <Trail aria-label={strings.pages.trail}>
             <Link to="/book">{strings.pages.book}</Link>
             {category && (
@@ -85,29 +146,378 @@ export function ConventionPage() {
                 {category.label}
               </>
             )}
+            <span aria-hidden> › </span>
+            {strings.kinds[kind] ?? strings.kinds.convention}
           </Trail>
-        }
-        onExpandAll={() => open(keys)}
-        onCollapseAll={() => close(keys.slice(1))}
-        // Only this convention is on the page, and it is open, so its content is there to print
-        onPrint={() => window.print()}
-      />
-      {sectionId && path.length === 0 && <NotFound role="alert">{strings.notFound}</NotFound>}
-      <ConventionCard
-        key={convention.slug}
-        convention={convention}
-        editPath={can('bookEdit') ? `/edit/${convention.slug}` : undefined}
-        online={onlineNote(convention.slug)}
-      />
-    </>
+          {!wide && (
+            <TopActions>
+              <ReadingSettingsButton {...actions} />
+            </TopActions>
+          )}
+        </TopBar>
+        {sectionId && path.length === 0 && <NotFound role="alert">{strings.notFound}</NotFound>}
+        {!wide && convention.outline.length > 1 && (
+          <Fold data-print="hide">
+            <summary>
+              {pageStrings.onThisPage}
+              <small>{pageStrings.sectionCount(convention.outline.length)}</small>
+            </summary>
+            <SectionList convention={convention} current={current} />
+          </Fold>
+        )}
+
+        <TitleBlock id={conventionDomId(convention.slug)}>
+          <TitleRow>
+            <Title id={`${conventionDomId(convention.slug)}-title`} ref={heading} tabIndex={-1}>
+              {convention.nameZh}
+            </Title>
+            <OriginMark origin={(convention as { origin?: ResolvedConvention['origin'] }).origin} />
+            <TitleTools data-print="hide">
+              {canEdit && (
+                <EditLink
+                  as={Link}
+                  to={`/edit/${convention.slug}`}
+                  aria-label={strings.online.edit(convention.nameZh)}
+                  title={strings.online.edit(convention.nameZh)}
+                >
+                  <Pencil size={16} aria-hidden />
+                </EditLink>
+              )}
+              <CopyLinkButton path={conventionPath(convention.slug)} label={convention.nameZh} />
+            </TitleTools>
+          </TitleRow>
+          <NameEn lang="en">{convention.nameEn}</NameEn>
+          <MetaRow>
+            <KindLevel kind={convention.kind} level={convention.level} />
+            {convention.tags.length > 0 && (
+              <TagList aria-label="標籤">
+                {convention.tags.map((t) => (
+                  <Tag key={t} label={t} />
+                ))}
+              </TagList>
+            )}
+            {convention.pending.length > 0 && (
+              <PendingLink
+                to={pendingPath(convention.slug, convention.pending[0].sectionId, convention.pending[0].index)}
+                title={strings.pendingJump}
+              >
+                {strings.pendingCount(convention.pending.length)}
+              </PendingLink>
+            )}
+          </MetaRow>
+        </TitleBlock>
+
+        <Lede>
+          <RichText text={convention.summary} />
+        </Lede>
+        <ProfileNotes slug={convention.slug} />
+
+        {loaded ? (
+          <SectionAccordion slug={convention.slug} sections={loaded.sections} />
+        ) : target.failed ? (
+          <Loading role="alert">
+            {strings.online.loadFailed}
+            <RetryButton type="button" onClick={target.retry}>
+              {strings.online.retry}
+            </RetryButton>
+          </Loading>
+        ) : (
+          <Loading role="status">{strings.loading}</Loading>
+        )}
+
+        <Source>
+          {strings.source}：{convention.source.title}
+          {convention.source.note && `（${convention.source.note}）`}・{strings.updated}：{convention.updated}
+          {online && `・${online}`}
+        </Source>
+
+        {(previous || next) && (
+          <Neighbours aria-label={pageStrings.neighbours} data-print="hide">
+            {previous ? (
+              <Link to={conventionPath(previous.slug)} aria-label={pageStrings.previousLabel(previous.nameZh)}>
+                <small>← {pageStrings.previous}</small>
+                {previous.nameZh}
+              </Link>
+            ) : (
+              <span />
+            )}
+            {next && (
+              <Link to={conventionPath(next.slug)} aria-label={pageStrings.nextLabel(next.nameZh)} data-next>
+                <small>{pageStrings.next} →</small>
+                {next.nameZh}
+              </Link>
+            )}
+          </Neighbours>
+        )}
+      </Article>
+
+      {wide && (
+        <Rail aria-label={pageStrings.onThisPage} data-print="hide">
+          <RailHeading>{pageStrings.onThisPage}</RailHeading>
+          <SectionList convention={convention} current={current} />
+          <ReadingSettingsButton {...actions} />
+        </Rail>
+      )}
+    </Columns>
   )
 }
 
+/** The top-level sections, numbered as in the text, each a deep link */
+function SectionList({ convention, current }: { convention: ConventionMeta; current?: string }) {
+  const theme = useTheme()
+  return (
+    <Sections>
+      {convention.outline.map((s, i) => (
+        <li key={s.id}>
+          <Link
+            to={sectionPath(convention.slug, s.id)}
+            aria-current={s.id === current ? 'location' : undefined}
+          >
+            <span aria-hidden>{sectionNumber(theme.sectionNumbers, i + 1)}</span>
+            <RichText text={s.title} />
+          </Link>
+        </li>
+      ))}
+    </Sections>
+  )
+}
+
+/** Text and 本頁 side by side; the text keeps a book's measure (about 44rem) */
+const Columns = styled.div<{ $wide: boolean }>`
+  display: grid;
+  grid-template-columns: ${({ $wide }) => ($wide ? 'minmax(0, 44rem) 13rem' : 'minmax(0, 44rem)')};
+  gap: ${({ theme }) => theme.space(8)};
+  align-items: start;
+
+  @media print {
+    grid-template-columns: 1fr;
+  }
+`
+
+const Article = styled.article`
+  min-width: 0;
+`
+
+const TopBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.space(3)};
+  min-height: 36px;
+  margin-bottom: ${({ theme }) => theme.space(3)};
+`
+
+const TopActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(2)};
+`
+
 const Trail = styled.nav`
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: ${({ theme }) => theme.colors.textMuted};
 
   a {
     color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+const TitleBlock = styled.header`
+  padding-bottom: ${({ theme }) => theme.space(3)};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.accent};
+  scroll-margin-top: calc(${({ theme }) => theme.layout.headerHeight} + 16px);
+`
+
+const TitleRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(2)};
+`
+
+const Title = styled.h1`
+  margin: 0;
+  font-family: ${({ theme }) => theme.fonts.heading};
+  font-size: 2rem;
+  font-weight: ${({ theme }) => theme.headingWeight};
+  line-height: 1.25;
+  color: ${({ theme }) => theme.colors.primaryStrong};
+  outline: none;
+`
+
+const TitleTools = styled.span`
+  display: inline-flex;
+  margin-left: auto;
+`
+
+const EditLink = styled(IconButton)`
+  text-decoration: none;
+`
+
+const NameEn = styled.p`
+  margin: ${({ theme }) => theme.space(1)} 0 ${({ theme }) => theme.space(2)};
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: ${({ theme }) => theme.colors.textMuted};
+`
+
+const MetaRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(2)};
+`
+
+const PendingLink = styled(Badge).attrs({ as: Link })`
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    filter: brightness(0.92);
+    text-decoration: underline;
+  }
+`
+
+const Lede = styled.p`
+  margin: ${({ theme }) => theme.space(4)} 0 ${({ theme }) => theme.space(6)};
+  color: ${({ theme }) => theme.colors.textMuted};
+  line-height: 1.75;
+`
+
+const Loading = styled.p`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(3)};
+  color: ${({ theme }) => theme.colors.textMuted};
+`
+
+const RetryButton = styled.button`
+  min-height: 36px;
+  padding: 0 ${({ theme }) => theme.space(3)};
+  border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.control};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+`
+
+const Source = styled.p`
+  margin: ${({ theme }) => theme.space(10)} 0 0;
+  padding-top: ${({ theme }) => theme.space(3)};
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  font-size: 0.8125rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+`
+
+const Neighbours = styled.nav`
+  display: flex;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.space(4)};
+  margin-top: ${({ theme }) => theme.space(6)};
+
+  a {
+    display: flex;
+    flex-direction: column;
+    gap: ${({ theme }) => theme.space(0.5)};
+    max-width: 48%;
+    min-height: 44px;
+    padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.shape.control};
+    color: ${({ theme }) => theme.colors.primary};
+    font-weight: 600;
+    text-decoration: none;
+  }
+  a[data-next] {
+    margin-left: auto;
+    text-align: right;
+  }
+  a:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+  small {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+`
+
+const Rail = styled.aside`
+  position: sticky;
+  top: calc(${({ theme }) => theme.layout.headerHeight} + ${({ theme }) => theme.space(6)});
+  max-height: calc(100vh - ${({ theme }) => theme.layout.headerHeight} - ${({ theme }) => theme.space(12)});
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: ${({ theme }) => theme.space(4)};
+  padding-left: ${({ theme }) => theme.space(4)};
+  border-left: 1px solid ${({ theme }) => theme.colors.border};
+`
+
+const RailHeading = styled.h2`
+  margin: 0;
+  font-family: ${({ theme }) => theme.fonts.heading};
+  font-size: 0.9375rem;
+  font-weight: ${({ theme }) => theme.headingWeight};
+`
+
+const Sections = styled.ol`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.space(0.5)};
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    display: flex;
+    gap: ${({ theme }) => theme.space(1.5)};
+    padding: ${({ theme }) => theme.space(1)} 0;
+    color: ${({ theme }) => theme.colors.textMuted};
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-decoration: none;
+  }
+  a > span:first-child {
+    flex: none;
+    min-width: 1.75em;
+    color: ${({ theme }) => theme.colors.structure};
+    font-variant-numeric: tabular-nums;
+  }
+  a:hover {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+  a[aria-current] {
+    color: ${({ theme }) => theme.colors.seal};
+    font-weight: 600;
+  }
+`
+
+/** 本頁 above the text when there is no room for the column */
+const Fold = styled.details`
+  margin-bottom: ${({ theme }) => theme.space(4)};
+  padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.control};
+  background: ${({ theme }) => theme.colors.surface};
+
+  summary {
+    display: flex;
+    align-items: center;
+    gap: ${({ theme }) => theme.space(2)};
+    min-height: 32px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  small {
+    font-weight: 400;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+  ol {
+    margin-top: ${({ theme }) => theme.space(2)};
   }
 `

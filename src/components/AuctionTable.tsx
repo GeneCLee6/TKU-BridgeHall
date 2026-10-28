@@ -48,14 +48,14 @@ export function AuctionTable({ auction }: { auction: Auction }) {
   )
 }
 
+/** v2 (e9-t06, DESIGN-V2.md §5.5): a tinted block with no frame or corners, seats in small type */
 const Table = styled.table`
   border-collapse: collapse;
-  margin: ${({ theme }) => theme.space(2)} 0 ${({ theme }) => theme.space(3)};
+  margin: ${({ theme }) => theme.space(2)} 0 ${({ theme }) => theme.space(1)};
   min-width: min(100%, 360px);
   background: ${({ theme }) => theme.colors.surfaceAlt};
-  border-radius: ${({ theme }) => theme.radius.sm};
-  overflow: hidden;
   font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
 
   th,
   td {
@@ -64,10 +64,13 @@ const Table = styled.table`
     width: 25%;
   }
   th {
-    font-size: 0.8125rem;
-    font-weight: 600;
+    padding-top: ${({ theme }) => theme.space(2)};
+    font-size: 0.75rem;
+    font-weight: 500;
     color: ${({ theme }) => theme.colors.textMuted};
-    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  }
+  tbody tr:last-child td {
+    padding-bottom: ${({ theme }) => theme.space(2)};
   }
 `
 
@@ -84,6 +87,8 @@ const CallNote = styled.span`
   color: ${({ theme }) => theme.colors.textMuted};
 `
 
+/** The call to decide, 「?」, in the seal colour */
 const Cell = styled.td<{ $decide: boolean }>`
-  color: ${({ theme, $decide }) => ($decide ? theme.colors.primary : 'inherit')};
+  color: ${({ theme, $decide }) => ($decide ? theme.colors.seal : 'inherit')};
+  font-weight: ${({ $decide }) => ($decide ? 700 : 'inherit')};
 `

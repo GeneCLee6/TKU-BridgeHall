@@ -36,6 +36,8 @@ export const strings = {
   openMenu: '開啟目錄',
   closeMenu: '關閉目錄',
   catalogue: '特約目錄',
+  levelFilter: '依程度篩選',
+  allLevels: '全部',
   conventionCount: (n: number) => `${n} 個特約`,
   copyLink: '複製連結',
   copied: '已複製連結',
