@@ -84,7 +84,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 
 | 批 | Task | 內容 | 前提 |
 | --- | --- | --- | --- |
-| [ ] G1 | `e11-t01` `e11-t02` `e11-t03` | 個人檔案模型與 API、R2 bucket 與圖片上傳、頭像（裁切、預設字首、`Avatar` 元件） | B2 |
+| [x] G1 #8 | `e11-t01` `e11-t02` `e11-t03` | 個人檔案模型與 API、R2 bucket 與圖片上傳、頭像（裁切、預設字首、`Avatar` 元件） | B2 |
 | [ ] G2 | `e11-t04` `e11-t05` `e11-t19` | 我的帳號編輯檔案、他人檔案頁；`shared/forum.ts` 型別；牌桌名牌改讀共用頭像 | G1 |
 | [ ] G3 | `e11-t06` `e11-t07` | `worker/forum.ts`：板面、貼文、分頁、置頂與鎖定、速率；留言、反應、`@` | G2 |
 | [x] G4 #14 | `e11-t11` `e11-t12` | `DealDiagram`／`DealInput`、`AuctionInput`／`HandInput`（E5 共用） | B1 |
@@ -129,7 +129,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | 批 | Task | 內容 | 前提 |
 | --- | --- | --- | --- |
 | [x] K1 #31 | `e7-t01` `e7-t02` | 規則形狀對照與啟發式清單、`toSystemSpec` 與快照（牌桌 #123） | A5（牌桌 `shared/robot/system` 穩定） |
-| [ ] K2 | `e7-t03` `e7-t04` | `system-spec` API 與牌桌載入、差異報告頁 | K1 |
+| [x] K2 #9 | `e7-t03` `e7-t04` | `system-spec` API 與牌桌載入、差異報告頁（牌桌 #168） | K1 |
 | [ ] K3 | `e7-t05` `e7-t06` `e7-t07` | `bookRef` 與 `?profile=`、牌桌紀錄連結、共用元件對拍 | K2, J2 |
 | [ ] K4 | `e7-t08` | 幹部補手牌條件 UI | K2 |
 

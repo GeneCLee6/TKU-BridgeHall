@@ -20,7 +20,7 @@
 
 ## Epic 進度
 
-統計日期 2026-10-25。勾選以各 epic 文件為準，改了勾選順手更新這張表。
+統計日期 2026-10-28。勾選以各 epic 文件為準，改了勾選順手更新這張表。
 
 | Epic | 名稱 | Task 完成 | AC 完成 | 里程碑 | 狀態 |
 | --- | --- | --- | --- | --- | --- |
@@ -30,12 +30,12 @@
 | [E4](e4-levels-learning-path.md) | 分級與學習路徑 | 0／12 | 0／6 | M2 | planned |
 | [E5](e5-library-articles-ebooks.md) | 橋藝叢書 | 0／15 | 0／8 | M2 | planned |
 | [E6](e6-quiz-practice.md) | 練習與測驗 | 0／9 | 0／6 | M2 | planned |
-| [E7](e7-bridgetable-integration.md) | 與淡江牌桌整合 | 2／8 | 0／5 | M2 | in progress |
+| [E7](e7-bridgetable-integration.md) | 與淡江牌桌整合 | 4／8 | 2／5 | M2 | in progress |
 | [E8](e8-content-governance.md) | 內容治理 | 0／14 | 0／6 | M1、M2 | planned |
 | [E9](e9-ui-redesign.md) | 介面重新設計（v2） | 8／18 | 1／10 | M1 | in progress |
 | [E10](e10-platform-performance-ops.md) | 平台、效能與維運 | 7／11 | 2／6 | M1、M2、M3 | in progress |
-| [E11](e11-community-forum.md) | 社群與討論 | 2／21 | 0／9 | M1（t21 M2） | in progress |
-| | **合計** | **28／147** | **8／78** | | |
+| [E11](e11-community-forum.md) | 社群與討論 | 5／21 | 0／9 | M1（t21 M2） | in progress |
+| | **合計** | **45／147** | **12／78** | | |
 
 里程碑分布：M1 約 90 個 task、M2 約 54 個、M3 2 個（概數，以 ROADMAP 為準）。M0 的功能（F1–F18）在 2026-10-21～23 完成，沒有拆成 task。
 

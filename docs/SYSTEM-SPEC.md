@@ -11,7 +11,7 @@
 | 牌桌 `tests/engine/system-spec.test.ts` | 每條啟發式的單元測試；型別檢查 `SpecShows` 可指派給機器人的 `Spec`、名稱都在 `CONVENTIONS` 裡、`SPEC_ANY` 等於 `ANY`、產生的 `after` 通過 `patternProblem` |
 | 橋譜 `tests/lib/systemSpec.test.ts` | 22 個內建特約（`club` 制度集、內建內容）的轉換快照：每條規則、每列 `unresolved` 各一行；改內容或改啟發式時 PR 的快照差異就是審查清單 |
 
-檔案不 import 任何東西，所以同一份原始碼在兩個 repo 都能編譯。網站程式不 import 它（不進首頁 bundle）；e7-t03 由 Worker 呼叫。
+檔案不 import 任何東西，所以同一份原始碼在兩個 repo 都能編譯。只有 lazy 的牌桌整合頁（`/integrations/table`，e7-t04）import 它（不進首頁 bundle）：轉換在瀏覽器做、結果同步到牌桌（e7-t03，ARCHITECTURE.md §4.7）。
 
 ## 2. 牌桌的規則形狀（`shared/robot/system/spec.ts`，2026-10-25 版）
 
@@ -118,4 +118,4 @@
 
 待決定：
 
-- 機器人用這些規則時的順序、`needs` 與後備規則由 e7-t03 決定（PRD 風險對策：牌桌已驗證的規則為後備）。
+- ~~機器人用這些規則時的順序、`needs` 與後備規則由 e7-t03 決定~~ e7-t03（2026-10-28）：**機器人不照這些規則叫牌**，叫牌仍是牌桌已驗證的 `tku/` 規則；同步的規則只用來給機器人的叫品附上橋館原文（同一叫牌過程、同一叫品；兩列文字不同時都不附），以及差異報告頁比對兩邊讀法。要讓機器人照橋館規則叫，等幹部補完手牌條件（e7-t08）再議。

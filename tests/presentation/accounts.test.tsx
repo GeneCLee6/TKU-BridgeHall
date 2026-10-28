@@ -171,6 +171,40 @@ describe('what a member sees', () => {
   })
 })
 
+describe('the avatar on my account (e11-t03)', () => {
+  it('shows the default initials, then the uploaded picture, and goes back to the default', async () => {
+    signedIn({ profile: { displayName: '王小美' } })
+    const { container, unmount } = renderAt('/account')
+    expect(await screen.findByRole('heading', { name: '頭像' })).toBeInTheDocument()
+    const avatars = () => [...container.querySelectorAll('[data-avatar]')]
+    expect(avatars().map((a) => a.getAttribute('data-initials'))).toEqual(['王', '王'])
+    expect(container.querySelector('[data-avatar] img')).toBeNull()
+    expect(screen.queryByRole('button', { name: '改回預設頭像' })).toBeNull()
+    unmount()
+
+    signedIn({ avatar: 7 })
+    routes['DELETE /api/account/avatar'] = () => {
+      signedIn({})
+      return { body: { user: { id: 'u1', username: 'amy', admin: false, permissions: [] } } }
+    }
+    const again = renderAt('/account')
+    await userEvent.click(await screen.findByRole('button', { name: '改回預設頭像' }))
+    expect(again.container.querySelector('[data-avatar] img')).toBeNull()
+    expect(await screen.findByRole('status')).toHaveTextContent('已改回預設頭像')
+    expect(sent.some((r) => r.method === 'DELETE' && r.path === '/api/account/avatar')).toBe(true)
+  })
+
+  it('turns down a file that is not a picture before cropping', async () => {
+    signedIn({})
+    const { container } = renderAt('/account')
+    await screen.findByRole('heading', { name: '頭像' })
+    const input = container.querySelector<HTMLInputElement>('input[type=file]')!
+    await userEvent.upload(input, new File(['x'], 'a.gif', { type: 'image/gif' }), { applyAccept: false })
+    expect(await screen.findByRole('alert')).toHaveTextContent('頭像只能是 JPEG、PNG 或 WebP 圖片')
+    expect(screen.queryByRole('group', { name: '裁切頭像' })).toBeNull()
+  })
+})
+
 describe('the admin page', () => {
   it('approves a registration and grants a permission', async () => {
     signedIn({ admin: true, permissions: ['bookEdit', 'bookImport'] })
