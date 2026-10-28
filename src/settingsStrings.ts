@@ -1,0 +1,52 @@
+/**
+ * Interface copy of 個人設定 (e9-t15, DESIGN-V2.md §10.5). Only the lazily loaded settings page
+ * and 我的帳號 import it, so the home page's bundle does not carry it (scripts/check-budget.mjs).
+ * Each choice is a name and, where it helps, one line on what it looks like.
+ */
+export const settingsStrings = {
+  title: '個人設定',
+  intro: '風格、版面與文字都可以照自己的習慣調，只改變你看到的樣子，不影響別人。設定存在這台裝置的瀏覽器。',
+  display: '顯示',
+  displayIntro: '風格、版面、字體、字級、花色顏色與密度。',
+  toSettings: '打開個人設定',
+  phoneNote: '手機一律單欄＋底部工具列，版面在電腦與平板生效。',
+  reset: '全部恢復預設',
+  resetDone: '已恢復預設',
+  groups: {
+    style: '風格',
+    layout: '版面',
+    theme: '明暗',
+    font: '字體',
+    textSize: '字級',
+    suitColors: '花色顏色',
+    density: '密度',
+  },
+  styles: {
+    general: ['一般', '現在的配色與圓角（預設）'],
+    chinese: ['中國風', '宣紙、墨、朱紅；襯線標題、雙線框'],
+    soft: ['圓潤', '湖水青與芒果；大圓角、無框、浮起'],
+    night: ['夜讀', '石墨與琥珀，跟隨系統時一律深色'],
+    suits: ['四色', '純白墨黑、粗線，花色四色當點綴'],
+    plain: ['極簡', '黑白灰、直角細線、字小行緊'],
+  },
+  layouts: {
+    whole: ['整本一頁', '目錄在左，寬螢幕時「本頁」在右（預設）'],
+    three: ['三欄閱讀', '平板寬度起「本頁」就固定在右欄'],
+    focus: ['專注單欄', '收起目錄，正文置中'],
+    cards: ['卡片總覽', '首頁是特約卡片，點一下在右側預覽'],
+  },
+  fonts: {
+    style: ['跟隨風格', '風格自己的字體'],
+    serif: ['襯線標題', '標題用明體，內文不變'],
+    sans: ['無襯線', '標題與內文都用黑體'],
+    system: ['系統字型', '用裝置內建字型，不下載網頁字型'],
+  },
+  suitColors: {
+    four: ['四色', '♥ 紅、♦ 橘、♣ 綠、♠ 黑'],
+    two: ['雙色', '♥♦ 紅、♣♠ 黑，和牌桌的雙色牌一樣'],
+  },
+  densities: {
+    comfortable: ['舒適', '預設的間距'],
+    compact: ['緊湊', '間距與行高收緊，一頁看得更多'],
+  },
+} as const

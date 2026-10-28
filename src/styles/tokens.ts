@@ -1,28 +1,47 @@
 /**
- * Design tokens. Every colour in the app comes from here (DESIGN.md §2 explains each one of
- * 「一般」). Components read them through the styled-components theme, never as raw hex values.
+ * Design tokens. Every colour in the app comes from here or from a style in `styles/themes/`
+ * (DESIGN.md §2 explains each one of 「一般」). Components read them through the
+ * styled-components theme, never as raw hex values.
  */
 
 export type ThemeMode = 'light' | 'dark'
 
 /** The reader's 字級 choice */
-export type TextSize = 'small' | 'medium' | 'large'
+export type TextSize = 'small' | 'medium' | 'large' | 'xlarge'
 
 /**
  * Root font size for each 字級. Percentages keep the browser's own text-size setting; everything
  * sized in rem (text, form controls, the sidebar's width) follows the choice.
  */
-export const textSizes: Record<TextSize, string> = { small: '87.5%', medium: '100%', large: '112.5%' }
+export const textSizes: Record<TextSize, string> = {
+  small: '87.5%',
+  medium: '100%',
+  large: '112.5%',
+  xlarge: '125%',
+}
 
 /**
  * A style (風格) is one complete set of tokens: colours, shapes, lines, shadows and fonts.
  * Components read only tokens and never ask which style is on (DESIGN-V2.md §10.5). 「一般」 is
- * today's look and the default; the other styles take their values from the
- * `.demo[data-style=…]` blocks of `docs/design/pitch.html`. The remaining four arrive in e9-t16.
+ * today's look and the default, and the only one in the first download; the other five are in
+ * `styles/themes/` and load when a reader picks one (`loadStyle`). Their values follow the
+ * `.demo[data-style=…]` blocks of `docs/design/pitch.html`.
  */
-export type StyleName = 'general' | 'chinese'
+export type StyleName = 'general' | 'chinese' | 'soft' | 'night' | 'suits' | 'plain'
 
-export const styleNames: readonly StyleName[] = ['general', 'chinese']
+export const styleNames: readonly StyleName[] = ['general', 'chinese', 'soft', 'night', 'suits', 'plain']
+
+/** 字體: the style's own, serif headings, all sans, or the system's font (no web font downloaded) */
+export type FontChoice = 'style' | 'serif' | 'sans' | 'system'
+export const fontChoices: readonly FontChoice[] = ['style', 'serif', 'sans', 'system']
+
+/** 花色顏色: the four-colour deck, or two colours (♦ like ♥, ♣ like ♠) as on 淡江牌桌's 牌樣式 */
+export type SuitColors = 'four' | 'two'
+export const suitColorChoices: readonly SuitColors[] = ['four', 'two']
+
+/** 密度: 緊湊 tightens spacing and line height everywhere */
+export type Density = 'comfortable' | 'compact'
+export const densities: readonly Density[] = ['comfortable', 'compact']
 
 /** Colours every style defines, for light and dark */
 export interface Palette {
@@ -62,12 +81,14 @@ export interface Palette {
 
 type Suits = Record<'S' | 'H' | 'D' | 'C', string>
 
-interface StyleTokens {
+export interface StyleTokens {
   colors: Record<ThemeMode, Palette>
   /** Four-colour deck: ♠ dark, ♥ red, ♦ orange, ♣ green */
   suits: Record<ThemeMode, Suits>
   fonts: { body: string; heading: string; mono: string }
   headingWeight: number
+  /** The body text's line height */
+  lineHeight: number
   /** Corner radius by role */
   shape: { control: string; panel: string; tag: string; badge: string; note: string }
   /** Border width and line style by role; components add the colour */
@@ -77,6 +98,8 @@ interface StyleTokens {
   pendingBadge: { borderWidth: string; rotate: string; serif: boolean }
   /** How top-level sections are numbered: 「§1」 or 「一、」 (DESIGN-V2.md §10.5) */
   sectionNumbers: 'sign' | 'han'
+  /** 夜讀 opens dark when the reader follows the system (DESIGN-V2.md §10.5) */
+  prefersDark?: boolean
 }
 
 /**
@@ -84,15 +107,19 @@ interface StyleTokens {
  * every style so a call looks the same on both sites. In dark mode Pass is a shade darker, so the
  * white text keeps 4.5:1 and the key still stands out from the dark surface (3:1).
  */
-const calls: Record<ThemeMode, Pick<Palette, 'callPass' | 'callDouble' | 'callRedouble' | 'onCall'>> = {
+export const calls: Record<ThemeMode, Pick<Palette, 'callPass' | 'callDouble' | 'callRedouble' | 'onCall'>> = {
   light: { callPass: '#2f9e44', callDouble: '#d9372b', callRedouble: '#2b6fd6', onCall: '#ffffff' },
   dark: { callPass: '#28863a', callDouble: '#d9372b', callRedouble: '#2b6fd6', onCall: '#ffffff' },
 }
 
-const sans = `'Noto Sans TC Variable', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif`
-const mono = `ui-monospace, 'Cascadia Mono', Consolas, 'Noto Sans TC Variable', monospace`
-/** Loaded on demand (styles/fonts.ts), only by a style whose headings are serif */
-const serif = `'Noto Serif TC', 'Songti TC', 'PMingLiU', serif`
+export const fontStacks = {
+  sans: `'Noto Sans TC Variable', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif`,
+  mono: `ui-monospace, 'Cascadia Mono', Consolas, 'Noto Sans TC Variable', monospace`,
+  /** Loaded on demand (styles/fonts.ts), only when the headings are serif */
+  serif: `'Noto Serif TC', 'Songti TC', 'PMingLiU', serif`,
+  /** 系統字型: nothing to download */
+  system: `system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif`,
+}
 
 const general: StyleTokens = {
   colors: {
@@ -153,8 +180,9 @@ const general: StyleTokens = {
     light: { S: '#1a2233', H: '#c8102e', D: '#b34700', C: '#1b7a33' },
     dark: { S: '#e6ebf3', H: '#ff6b6b', D: '#ffa04d', C: '#5fd27a' },
   },
-  fonts: { body: sans, heading: sans, mono },
+  fonts: { body: fontStacks.sans, heading: fontStacks.sans, mono: fontStacks.mono },
   headingWeight: 700,
+  lineHeight: 1.7,
   shape: { control: '6px', panel: '14px', tag: '999px', badge: '999px', note: '6px' },
   borders: { control: '1px solid', panel: '1px solid' },
   shadows: {
@@ -165,79 +193,32 @@ const general: StyleTokens = {
   sectionNumbers: 'sign',
 }
 
-/** 中國風: rice paper, ink, vermilion, blue-and-white and gold; double-line frames, serif headings */
-const chinese: StyleTokens = {
-  colors: {
-    light: {
-      bg: '#efe4cc',
-      surface: '#f9f1dd',
-      surfaceAlt: '#ecdfc2',
-      border: '#c9b282',
-      text: '#241e19',
-      textMuted: '#6d5e4a',
-      primary: '#b5261e',
-      primaryStrong: '#241e19',
-      primarySoft: '#f4dccb',
-      onPrimary: '#fff6e6',
-      accent: '#c9a227',
-      structure: '#1f4e8c',
-      seal: '#a0251a',
-      focus: '#1f4e8c',
-      pendingBg: 'rgba(160, 37, 26, 0.06)',
-      pendingBorder: '#a0251a',
-      pendingText: '#a0251a',
-      warningBg: '#f4dccb',
-      warningBorder: '#a0251a',
-      tagBg: 'transparent',
-      tagBorder: '#b5261e',
-      tagText: '#b5261e',
-      overlay: 'rgba(36, 30, 25, 0.45)',
-      ...calls.light,
-    },
-    dark: {
-      bg: '#1a1512',
-      surface: '#241d18',
-      surfaceAlt: '#2e261f',
-      border: '#5a4a33',
-      text: '#efe3c9',
-      textMuted: '#b8a68a',
-      primary: '#e2574a',
-      primaryStrong: '#efe3c9',
-      primarySoft: '#3d231d',
-      onPrimary: '#1a1512',
-      accent: '#d8b64a',
-      structure: '#8fb0e8',
-      seal: '#ff8f7a',
-      focus: '#8fb0e8',
-      pendingBg: 'rgba(255, 143, 122, 0.08)',
-      pendingBorder: '#ff8f7a',
-      pendingText: '#ff8f7a',
-      warningBg: '#3d231d',
-      warningBorder: '#ff8f7a',
-      tagBg: 'transparent',
-      tagBorder: '#e2574a',
-      tagText: '#e2574a',
-      overlay: 'rgba(0, 0, 0, 0.6)',
-      ...calls.dark,
-    },
-  },
-  suits: {
-    light: { S: '#241e19', H: '#c8102e', D: '#b34700', C: '#1b6b3a' },
-    dark: { S: '#efe3c9', H: '#ff6b6b', D: '#ffa04d', C: '#5fd27a' },
-  },
-  fonts: { body: sans, heading: serif, mono },
-  headingWeight: 600,
-  shape: { control: '2px', panel: '2px', tag: '2px', badge: '3px', note: '2px' },
-  borders: { control: '1px solid', panel: '3px double' },
-  shadows: { light: { panel: 'none' }, dark: { panel: 'none' } },
-  pendingBadge: { borderWidth: '2px', rotate: '-3deg', serif: true },
-  sectionNumbers: 'han',
+/** The styles loaded so far; 「一般」 always is */
+const loaded = new Map<StyleName, StyleTokens>([['general', general]])
+
+/** Each style beyond 「一般」 is a chunk of its own, downloaded when a reader picks it */
+const loaders: Record<Exclude<StyleName, 'general'>, () => Promise<{ default: StyleTokens }>> = {
+  chinese: () => import('./themes/chinese.ts'),
+  soft: () => import('./themes/soft.ts'),
+  night: () => import('./themes/night.ts'),
+  suits: () => import('./themes/suits.ts'),
+  plain: () => import('./themes/plain.ts'),
 }
 
-const styles: Record<StyleName, StyleTokens> = { general, chinese }
+export const isStyleLoaded = (style: StyleName) => loaded.has(style)
 
-/** Whether a style's headings need the serif web font, which is then loaded (styles/fonts.ts) */
-export const usesSerif = (style: StyleName) => styles[style].fonts.heading === serif
+/** Downloads a style's tokens; createTheme shows 「一般」 until they are here */
+export async function loadStyle(style: StyleName): Promise<void> {
+  if (loaded.has(style) || style === 'general') return
+  const { default: tokens } = await loaders[style]()
+  loaded.set(style, tokens)
+}
+
+export const isStyleName = (value: unknown): value is StyleName =>
+  typeof value === 'string' && (styleNames as readonly string[]).includes(value)
+
+/** Whether a loaded style's headings need the serif web font, which is then loaded (styles/fonts.ts) */
+export const usesSerif = (style: StyleName) => loaded.get(style)?.fonts.heading === fontStacks.serif
 
 export const layout = {
   headerHeight: '60px',
@@ -256,31 +237,64 @@ export const printColors = { ink: '#000', paper: '#fff', rule: '#888' }
 
 /** 4px spacing scale: space(2) === '8px' */
 export const space = (n: number) => `${n * 4}px`
+/** 緊湊: a 3px scale */
+const compactSpace = (n: number) => `${n * 3}px`
 
-export function createTheme(mode: ThemeMode, textSize: TextSize = 'medium', style: StyleName = 'general') {
-  const tokens = styles[style]
+export interface ThemeOptions {
+  font?: FontChoice
+  suitColors?: SuitColors
+  density?: Density
+}
+
+/**
+ * The theme for one set of choices. A style that has not been loaded yet (`loadStyle`) falls back
+ * to 「一般」, and `style` then says 'general'. The options default to the style's own look.
+ */
+export function createTheme(
+  mode: ThemeMode,
+  textSize: TextSize = 'medium',
+  requested: StyleName = 'general',
+  { font = 'style', suitColors = 'four', density = 'comfortable' }: ThemeOptions = {},
+) {
+  const style: StyleName = loaded.has(requested) ? requested : 'general'
+  const tokens = loaded.get(style)!
   const colors = tokens.colors[mode]
   const shadows = tokens.shadows[mode]
+  const deck = tokens.suits[mode]
+  const fonts =
+    font === 'serif'
+      ? { ...tokens.fonts, heading: fontStacks.serif }
+      : font === 'sans'
+        ? { ...tokens.fonts, heading: tokens.fonts.body }
+        : font === 'system'
+          ? { body: fontStacks.system, heading: fontStacks.system, mono: tokens.fonts.mono }
+          : tokens.fonts
+  const serifHeadings = fonts.heading === fontStacks.serif
+  const headingWeight = serifHeadings ? Math.min(tokens.headingWeight, 600) : Math.max(tokens.headingWeight, 700)
+  const compact = density === 'compact'
   return {
     mode,
     textSize,
     style,
+    density,
     colors: {
       ...colors,
       /** Old names, removed in e9-t14 */
       lantern: colors.accent,
       vermilion: colors.seal,
     },
-    suits: tokens.suits[mode],
-    fonts: tokens.fonts,
-    headingWeight: tokens.headingWeight,
+    suits: suitColors === 'two' ? { ...deck, D: deck.H, C: deck.S } : deck,
+    fonts,
+    headingWeight: font === 'style' ? tokens.headingWeight : headingWeight,
+    lineHeight: compact ? Math.round((tokens.lineHeight - 0.15) * 100) / 100 : tokens.lineHeight,
     shape: tokens.shape,
     borders: tokens.borders,
     shadows,
     pendingBadge: tokens.pendingBadge,
     sectionNumbers: tokens.sectionNumbers,
+    prefersDark: tokens.prefersDark ?? false,
     layout,
-    space,
+    space: compact ? compactSpace : space,
     /** Old names, removed in e9-t14 once every component reads `shape` and `shadows` */
     radius:
       style === 'general'

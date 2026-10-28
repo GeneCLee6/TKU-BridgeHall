@@ -9,4 +9,6 @@ export const warmPages = () =>
     import('../../src/pages/BookPage.tsx'),
     import('../../src/components/ReadingSettings.tsx'),
     import('../../src/pages/LoginPage.tsx'),
+    import('../../src/pages/SettingsPage.tsx'),
+    import('../../src/pages/CardOverview.tsx'),
   ])

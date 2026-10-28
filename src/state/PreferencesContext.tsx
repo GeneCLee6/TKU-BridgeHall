@@ -1,13 +1,29 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ThemeProvider } from 'styled-components'
-import { loadStyleFonts } from '../styles/fonts.ts'
-import { createTheme, styleNames, textSizes, type StyleName, type TextSize, type ThemeMode } from '../styles/tokens.ts'
+import { loadThemeFonts } from '../styles/fonts.ts'
+import {
+  createTheme,
+  densities,
+  fontChoices,
+  isStyleLoaded,
+  isStyleName,
+  loadStyle,
+  suitColorChoices,
+  textSizes,
+  type Density,
+  type FontChoice,
+  type StyleName,
+  type SuitColors,
+  type TextSize,
+  type ThemeMode,
+} from '../styles/tokens.ts'
 
 /**
- * Per-viewer display preferences: the theme (follow the system, light or dark), the 字級 (text
- * size) and the 風格 (style; no control for it yet, that comes with the settings panel in e9-t15).
- * (Suits always use the four-colour deck.) Remembered in localStorage when it is available; the
- * app works the same without it.
+ * Per-viewer display preferences (個人設定, e9-t15, DESIGN-V2.md §10.5): the theme (follow the
+ * system, light or dark), 風格, 版面, 字體, 字級, 花色顏色 and 密度. Remembered in localStorage
+ * under `tku-bridgebook:prefs` when it is available; the app works the same without it. A stored
+ * value this version does not know falls back to the default, which is today's look: 「一般」,
+ * 整本一頁, the style's font, 中, four colours, 舒適.
  */
 
 /** What the reader picked in 閱讀設定: 'system' follows prefers-color-scheme */
@@ -15,15 +31,48 @@ export type ThemeChoice = 'system' | ThemeMode
 // oxlint-disable-next-line react/only-export-components
 export const themeChoices: readonly ThemeChoice[] = ['system', 'light', 'dark']
 
-interface Preferences {
+/**
+ * 版面: the shell of the reading pages. 整本一頁 is the default and today's (catalogue on the left,
+ * 本頁 on the right when there is room); 三欄閱讀 keeps 本頁 beside the text from tablet width;
+ * 專注單欄 hides the catalogue for one centred column; 卡片總覽 opens on tiles (e9-t17). Phones
+ * always get one column and the bottom toolbar.
+ */
+export type LayoutName = 'whole' | 'three' | 'focus' | 'cards'
+// oxlint-disable-next-line react/only-export-components
+export const layoutNames: readonly LayoutName[] = ['whole', 'three', 'focus', 'cards']
+
+export interface DisplayPrefs {
+  theme: ThemeChoice
+  style: StyleName
+  layout: LayoutName
+  font: FontChoice
+  textSize: TextSize
+  suitColors: SuitColors
+  density: Density
+}
+
+// oxlint-disable-next-line react/only-export-components
+export const defaultPrefs: DisplayPrefs = {
+  theme: 'system',
+  style: 'general',
+  layout: 'whole',
+  font: 'style',
+  textSize: 'medium',
+  suitColors: 'four',
+  density: 'comfortable',
+}
+
+interface Preferences extends DisplayPrefs {
   /** The mode in effect */
   mode: ThemeMode
   themeChoice: ThemeChoice
   setThemeChoice: (choice: ThemeChoice) => void
-  textSize: TextSize
   setTextSize: (size: TextSize) => void
-  style: StyleName
   setStyle: (style: StyleName) => void
+  /** Changes any of the settings at once */
+  update: (changes: Partial<DisplayPrefs>) => void
+  /** Back to the defaults */
+  reset: () => void
 }
 
 const PreferencesContext = createContext<Preferences | null>(null)
@@ -31,14 +80,40 @@ const PreferencesContext = createContext<Preferences | null>(null)
 const STORAGE_KEY = 'tku-bridgebook:prefs'
 const DARK_QUERY = '(prefers-color-scheme: dark)'
 
-/** `mode` is how the light/dark choice was stored before 跟隨系統 existed (e9-t03) */
-function readStored(): Partial<{ theme: ThemeChoice; mode: ThemeMode; textSize: TextSize; style: StyleName }> {
+const oneOf =
+  <T,>(choices: readonly T[]) =>
+  (value: unknown): value is T =>
+    choices.includes(value as T)
+
+const valid: { [K in keyof DisplayPrefs]: (value: unknown) => boolean } = {
+  theme: oneOf(themeChoices),
+  style: isStyleName,
+  layout: oneOf(layoutNames),
+  font: oneOf(fontChoices),
+  textSize: (value) => typeof value === 'string' && Object.hasOwn(textSizes, value),
+  suitColors: oneOf(suitColorChoices),
+  density: oneOf(densities),
+}
+
+/** The stored settings, each checked; `mode` is how light/dark was stored before 跟隨系統 existed */
+// oxlint-disable-next-line react/only-export-components
+export function readStoredPrefs(): DisplayPrefs {
+  let stored: Record<string, unknown> = {}
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : {}
+    const parsed: unknown = raw ? JSON.parse(raw) : {}
+    if (parsed && typeof parsed === 'object') stored = parsed as Record<string, unknown>
   } catch {
-    return {}
+    // Unreadable: the defaults
   }
+  const prefs = { ...defaultPrefs }
+  const theme = stored.theme ?? stored.mode
+  const pick = <K extends keyof DisplayPrefs>(key: K, value: unknown) => {
+    if (valid[key](value)) prefs[key] = value as DisplayPrefs[K]
+  }
+  pick('theme', theme)
+  for (const key of ['style', 'layout', 'font', 'textSize', 'suitColors', 'density'] as const) pick(key, stored[key])
+  return prefs
 }
 
 function darkQuery(): MediaQueryList | undefined {
@@ -63,37 +138,57 @@ function useSystemMode(): ThemeMode {
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
-  const [themeChoice, setThemeChoice] = useState<ThemeChoice>(() => {
-    const stored = readStored()
-    const choice = stored.theme ?? stored.mode
-    return choice && themeChoices.includes(choice) ? choice : 'system'
-  })
-  const [textSize, setTextSize] = useState<TextSize>(() => {
-    const stored = readStored().textSize
-    return stored && stored in textSizes ? stored : 'medium'
-  })
-  const [style, setStyle] = useState<StyleName>(() => {
-    const stored = readStored().style
-    return stored && styleNames.includes(stored) ? stored : 'general'
-  })
+  const [prefs, setPrefs] = useState<DisplayPrefs>(readStoredPrefs)
+  // Bumped when a style's tokens arrive, so the theme is made again with them
+  const [, setStyleArrived] = useState(0)
   const system = useSystemMode()
-  const mode = themeChoice === 'system' ? system : themeChoice
+  const { style } = prefs
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme: themeChoice, textSize, style }))
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
     } catch {
       // Private mode or blocked storage: the preference simply is not remembered.
     }
-  }, [themeChoice, textSize, style])
+  }, [prefs])
 
-  useEffect(() => loadStyleFonts(style), [style])
+  useEffect(() => {
+    if (isStyleLoaded(style)) return
+    let live = true
+    loadStyle(style)
+      .then(() => live && setStyleArrived((n) => n + 1))
+      // Offline and never loaded: 「一般」 until the next visit
+      .catch(() => {})
+    return () => {
+      live = false
+    }
+  }, [style])
 
-  const theme = useMemo(() => createTheme(mode, textSize, style), [mode, textSize, style])
-  const value = useMemo(
-    () => ({ mode, themeChoice, setThemeChoice, textSize, setTextSize, style, setStyle }),
-    [mode, themeChoice, textSize, style],
-  )
+  const ready = isStyleLoaded(style)
+  const theme = useMemo(() => {
+    const options = { font: prefs.font, suitColors: prefs.suitColors, density: prefs.density }
+    const probe = createTheme('light', prefs.textSize, style, options)
+    const mode = prefs.theme === 'system' ? (probe.prefersDark ? 'dark' : system) : prefs.theme
+    return mode === 'light' ? probe : createTheme(mode, prefs.textSize, style, options)
+    // `ready` makes the theme again once the style's tokens have arrived
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefs, style, system, ready])
+
+  useEffect(() => loadThemeFonts(theme), [theme])
+
+  const value = useMemo<Preferences>(() => {
+    const update = (changes: Partial<DisplayPrefs>) => setPrefs((now) => ({ ...now, ...changes }))
+    return {
+      ...prefs,
+      mode: theme.mode,
+      themeChoice: prefs.theme,
+      setThemeChoice: (theme) => update({ theme }),
+      setTextSize: (textSize) => update({ textSize }),
+      setStyle: (style) => update({ style }),
+      update,
+      reset: () => setPrefs(defaultPrefs),
+    }
+  }, [prefs, theme.mode])
 
   return (
     <PreferencesContext.Provider value={value}>

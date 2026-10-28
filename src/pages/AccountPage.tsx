@@ -2,15 +2,17 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
 import { AvatarCropper } from '../components/AvatarCropper.tsx'
+import { DisplaySettings } from '../components/DisplaySettings.tsx'
 import { Button, ErrorText, Field, Muted, Notice, PageTitle, Panel, PanelTitle, PasswordInput } from '../components/ui.tsx'
 import { accountApi, AVATAR_INPUT_TYPES } from '../lib/account.ts'
 import { api, errorText, LIMITS, type Me, TABLE_SITE } from '../lib/api.ts'
 import { useAuth } from '../state/AuthContext.tsx'
+import { settingsStrings } from '../settingsStrings.ts'
 import { accountStrings } from '../strings-account.ts'
 import { strings } from '../strings.ts'
 import { Frame, Gate } from './Frame.tsx'
 
-/** 我的帳號: what this member may do here, their avatar, and changing the password (shared with 淡江牌桌) */
+/** 我的帳號: what this member may do here, their avatar, 顯示 (個人設定), and changing the password (shared with 淡江牌桌) */
 export function AccountPage() {
   return (
     <Frame title={strings.me.title}>
@@ -65,6 +67,12 @@ function AccountBody() {
         </TableLink>
       </Panel>
       <AvatarPanel user={user} />
+      {/* 我的帳號 › 顯示 (e9-t15): the same choices as the 個人設定 page */}
+      <Panel aria-labelledby="account-display">
+        <PanelTitle id="account-display">{settingsStrings.display}</PanelTitle>
+        <Muted>{settingsStrings.intro}</Muted>
+        <DisplaySettings />
+      </Panel>
       <Panel>
         <PanelTitle>{strings.me.changePassword}</PanelTitle>
         <Form onSubmit={change} aria-label={strings.me.changePassword}>

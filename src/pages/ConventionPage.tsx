@@ -34,11 +34,14 @@ import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
 import { layout, mobileQuery } from '../styles/tokens.ts'
 import type { ConventionKind, ConventionMeta } from '../types/convention.ts'
+import { usePreferences } from '../state/PreferencesContext.tsx'
 import { HomePage } from './HomePage.tsx'
 import { NotFound, useOnlineNote } from './HandbookShell.tsx'
 
 /** Wide enough for the 本頁 column beside the text (DESIGN-V2.md §4) */
 const wideQuery = `(min-width: ${layout.wideBreakpoint})`
+/** 三欄閱讀 keeps it there from tablet width (e9-t15) */
+const tabletQuery = `(min-width: calc(${layout.mobileBreakpoint} + 1px))`
 
 /**
  * One convention on its own page (e9-t04), laid out like a page of a book (e9-t05, DESIGN-V2.md
@@ -59,7 +62,11 @@ export function ConventionPage() {
   const pendingIndex = searchParams.get('pending')
   const { open, close } = useExpansion()
   const onlineNote = useOnlineNote()
-  const wide = useMediaQuery(wideQuery)
+  // 版面 (e9-t15): 專注單欄 and 卡片總覽 fold 本頁 above the text like a narrow screen
+  const { layout: shell } = usePreferences()
+  const roomy = useMediaQuery(wideQuery)
+  const tablet = useMediaQuery(tabletQuery)
+  const wide = shell === 'three' ? tablet : shell === 'whole' && roomy
   // Phones open 本頁 from the bottom toolbar instead of the list above the text (e9-t09)
   const phone = useMediaQuery(mobileQuery)
   const heading = useRef<HTMLHeadingElement>(null)
