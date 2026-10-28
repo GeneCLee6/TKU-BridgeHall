@@ -1,6 +1,6 @@
-# 橋譜 → 牌桌機器人規則：轉換對照表與意義文字啟發式（E7 · e7-t01、e7-t02）
+# 橋譜 → 牌桌機器人規則：轉換對照表與意義文字啟發式（E7 · e7-t01、e7-t02、e7-t08）
 
-最後更新 2026-10-26。對應 PRD [`e7-bridgetable-integration.md`](PRD/e7-bridgetable-integration.md) 的 AC-7.1。
+最後更新 2026-10-28（K4，§8）。對應 PRD [`e7-bridgetable-integration.md`](PRD/e7-bridgetable-integration.md) 的 AC-7.1。
 
 ## 1. 程式在哪裡
 
@@ -33,6 +33,7 @@
 | `ResponseRow.meaning` | `SpecRule.text` ＋ `SpecRule.shows`（= `Rule.shows`） | 文字**逐字**保留當說明；`shows` 只放啟發式（§5）讀得出來的 |
 | `ResponseRow.note` | `SpecRule.note` | 逐字保留，啟發式不讀 |
 | `ResponseRow.pending`、`Section.pending` | `unresolved`（`pending`） | 待確認的內容不給機器人 |
+| `ResponseRow.conditions`（幹部補的，e7-t08） | `SpecRule.shows`＋`filled: true` | 有就取代啟發式讀到的；見 §8 |
 | 意義讀剩的文字 | `SpecRule.unparsed` | 讓 e7-t04 報告看得到哪些條件沒進規則 |
 | `paragraph`、`rules`、`note`、`hand` 區塊 | 不轉 | 只有叫品表有「叫品 → 意義」 |
 | 制度集 `id`、`version` | `SystemSpec.profileId`、`version` | 同步以制度集版本為準 |
@@ -119,3 +120,23 @@
 待決定：
 
 - ~~機器人用這些規則時的順序、`needs` 與後備規則由 e7-t03 決定~~ e7-t03（2026-10-28）：**機器人不照這些規則叫牌**，叫牌仍是牌桌已驗證的 `tku/` 規則；同步的規則只用來給機器人的叫品附上橋館原文（同一叫牌過程、同一叫品；兩列文字不同時都不附），以及差異報告頁比對兩邊讀法。要讓機器人照橋館規則叫，等幹部補完手牌條件（e7-t08）再議。
+- 補條件的介面已完成（e7-t08，§8）；機器人要不要、何時照橋館規則叫牌，等幹部補到一定程度再由使用者決定。
+
+## 8. 幹部補的手牌條件（e7-t08，2026-10-28）
+
+啟發式讀不出來的列，由幹部在差異報告頁（`/integrations/table`）直接補，存成叫品列的選填欄位 `ResponseRow.conditions`（型別 `SpecConditions`，在 `shared/systemSpec.ts`）：
+
+| 欄位 | 形狀 | 說明 |
+| --- | --- | --- |
+| `hcp` | `[下限, 上限]` | 大牌點；0–37，上限 `SPEC_ANY`（40）是沒有上限 |
+| `len` | `{ S?, H?, D?, C? }`，每門 `[下限, 上限]` | 張數；0–13，上限可為 `SPEC_ANY`；下限合計不超過 13 |
+| `forcing` | `'oneRound'`／`'game'` | 迫叫一圈／成局迫叫 |
+
+規則：
+
+- **不是制度原文。** 原文（`meaning`、`note`）一字不改；網站不顯示條件；內建特約（`src/content/conventions/*.ts`）不填（`tests/lib/handConditions.test.ts` 鎖住）。
+- 至少要有點力或張數（只有迫叫不算手牌條件，和 §5.1 的 `noConditions` 一致）；形狀由 `conditionsProblem` 檢查，牌桌 Worker 存特約與制度集段落時也用它（`worker/book.ts` 的 `checkSections`）。
+- `toSystemSpec`：列不是待確認、叫牌過程與叫品讀得出來，而且有合法的 `conditions` 時，每個叫品一條規則，`shows` 就是條件（欄位順序固定，取代啟發式讀到的，包括特約名），`filled: true`，沒有 `unparsed`；`text`、`note` 照舊逐字。條件不合法時當作沒有。
+- 報告頁只對 `alternatives`、`bracketed`、`noConditions` 三類提供「補條件」（其他原因是叫牌過程、叫品或待確認的問題，補條件也沒用）；已補的列在「幹部補過手牌條件的叫品」可修改或清除。表單預填啟發式讀到的部分（例如迫叫）。
+- 存在**社團版內容**的那一列（同段落、同叫品、同文字、同叫牌過程；走 ARCHITECTURE.md §4.1 的線上內容，所以該特約會有線上版本），繼承它的制度集都跟著用。制度集覆寫了文字的列（`resolveProfile` 的 `changeRow`）不帶條件——條件描述的是原本的文字；這種列目前沒有補的畫面。
+- 補完要在報告頁再按「重新同步到牌桌」。機器人仍照牌桌已驗證的規則叫牌（§7），條件目前讓這些列的原文能附到機器人的叫品上，並在報告頁和牌桌規則比對。
