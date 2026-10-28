@@ -21,7 +21,7 @@ content/conventions/*.ts ──► content/loaders.ts（每個特約一個 chunk
 ## 2. 資料夾結構
 
 ```
-TKU-BridgeBook/
+TKU-BridgeHall/
 ├─ public/                  logo.svg、logo-mark.svg、favicon.svg
 ├─ src/
 │  ├─ components/editor/    線上編輯器的段落樹、表單、各種區塊、預覽、版本紀錄
