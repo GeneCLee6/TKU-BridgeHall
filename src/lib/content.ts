@@ -48,13 +48,13 @@ export interface MergedManifest {
 export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
 export const SECTION_ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
+export const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
-const isString = (value: unknown): value is string => typeof value === 'string'
-const optionalString = (value: unknown) => value === undefined || isString(value)
-const isStrings = (value: unknown) => Array.isArray(value) && value.every(isString)
-const isLevel = (value: unknown): value is Level => levels.includes(value as Level)
-const optionalLevel = (value: unknown) => value === undefined || isLevel(value)
+export const isString = (value: unknown): value is string => typeof value === 'string'
+export const optionalString = (value: unknown) => value === undefined || isString(value)
+export const isStrings = (value: unknown) => Array.isArray(value) && value.every(isString)
+export const isLevel = (value: unknown): value is Level => levels.includes(value as Level)
+export const optionalLevel = (value: unknown) => value === undefined || isLevel(value)
 
 /** A card's kind, level, prerequisites and card slots, the fields set only in the editor or files */
 export function classification(c: Partial<Pick<Convention, 'kind' | 'level' | 'prerequisites' | 'cardSlots'>> = {}) {
@@ -98,6 +98,38 @@ export function conventionProblems(value: unknown, categories: string[]): string
   if (!Array.isArray(value.sections)) return [...problems, '缺少段落']
 
   const ids = new Set<string>()
+  const section = (s: unknown, depth: number) => {
+    if (!isObject(s) || !isString(s.id) || !isString(s.title)) return add('每個段落都要有 id 與標題')
+    const where = s.title || s.id
+    if (!SECTION_ID_PATTERN.test(s.id)) add(`${where}：段落 id 只能用小寫英文、數字與連字號`)
+    if (ids.has(s.id)) add(`段落 id 重複：${s.id}`)
+    ids.add(s.id)
+    if (depth > 8) add(`${where}：段落層數太多`)
+    if (!optionalString(s.originalTitle) || !optionalString(s.summary) || !optionalString(s.pending))
+      add(`${where}：原文標題、摘要與待確認要是文字`)
+    if (!optionalLevel(s.level)) add(`${where}：程度不存在`)
+    if (s.blocks !== undefined) {
+      if (!Array.isArray(s.blocks)) add(`${where}：內容要是清單`)
+      else for (const b of s.blocks) problems.push(...blockProblems(b, where))
+    }
+    if (s.children !== undefined) {
+      if (!Array.isArray(s.children)) add(`${where}：子段落要是清單`)
+      else for (const child of s.children) section(child, depth + 1)
+    }
+  }
+  for (const s of value.sections) section(s, 1)
+  return problems
+}
+
+/**
+ * Why a value is not one of the handbook's content blocks, worded for editors and starting with
+ * `where`; empty when it is one. Articles check their blocks with it too (lib/articles.ts).
+ */
+export function blockProblems(b: unknown, where: string): string[] {
+  const problems: string[] = []
+  const add = (problem: string) => {
+    problems.push(problem)
+  }
   const rules = (items: unknown, where: string): void => {
     if (!Array.isArray(items)) return add(`${where}：條列要是清單`)
     for (const item of items) {
@@ -146,26 +178,7 @@ export function conventionProblems(value: unknown, categories: string[]): string
         add(`${where}：不明的內容區塊`)
     }
   }
-  const section = (s: unknown, depth: number) => {
-    if (!isObject(s) || !isString(s.id) || !isString(s.title)) return add('每個段落都要有 id 與標題')
-    const where = s.title || s.id
-    if (!SECTION_ID_PATTERN.test(s.id)) add(`${where}：段落 id 只能用小寫英文、數字與連字號`)
-    if (ids.has(s.id)) add(`段落 id 重複：${s.id}`)
-    ids.add(s.id)
-    if (depth > 8) add(`${where}：段落層數太多`)
-    if (!optionalString(s.originalTitle) || !optionalString(s.summary) || !optionalString(s.pending))
-      add(`${where}：原文標題、摘要與待確認要是文字`)
-    if (!optionalLevel(s.level)) add(`${where}：程度不存在`)
-    if (s.blocks !== undefined) {
-      if (!Array.isArray(s.blocks)) add(`${where}：內容要是清單`)
-      else for (const b of s.blocks) block(b, where)
-    }
-    if (s.children !== undefined) {
-      if (!Array.isArray(s.children)) add(`${where}：子段落要是清單`)
-      else for (const child of s.children) section(child, depth + 1)
-    }
-  }
-  for (const s of value.sections) section(s, 1)
+  block(b, where)
   return problems
 }
 
@@ -275,7 +288,7 @@ export function onlineConvention(
 }
 
 /** A block with nothing in it, as the editor leaves behind: dropped on save */
-function emptyBlock(b: Block) {
+export function emptyBlock(b: Block) {
   switch (b.kind) {
     case 'paragraph':
     case 'note':
@@ -291,54 +304,59 @@ function emptyBlock(b: Block) {
   }
 }
 
+/** The text when it has any, so an empty optional field is left out */
+export const text = (value: string | undefined) => (value && value.trim() ? value : undefined)
+
+function rule(item: RuleItem): RuleItem {
+  const children = item.children?.map(rule)
+  return {
+    text: item.text,
+    ...(text(item.pending) && { pending: item.pending }),
+    ...(children?.length && { children }),
+  }
+}
+
+/** A deep copy of a block without its empty optional fields and empty rows (articles use it too) */
+export function tidyBlock(b: Block): Block {
+  switch (b.kind) {
+    case 'paragraph':
+      return { kind: 'paragraph', text: b.text, ...(text(b.pending) && { pending: b.pending }) }
+    case 'rules':
+      return { kind: 'rules', items: b.items.map(rule), ...(b.ordered && { ordered: true }) }
+    case 'note':
+      return { kind: 'note', tone: b.tone, text: b.text }
+    case 'hand':
+      return { kind: 'hand', ...(text(b.label) && { label: b.label }), hand: { ...b.hand } }
+    case 'intro': {
+      const pitfalls = b.pitfalls?.filter((p) => p.trim())
+      return {
+        kind: 'intro',
+        ...(text(b.why) && { why: b.why }),
+        ...(text(b.when) && { when: b.when }),
+        ...(pitfalls?.length && { pitfalls }),
+      }
+    }
+    case 'responses':
+      return {
+        kind: 'responses',
+        ...(b.auction && { auction: { seats: [...b.auction.seats], calls: [...b.auction.calls] } }),
+        ...(text(b.caption) && { caption: b.caption }),
+        rows: b.rows.filter((r) => r.call.trim() || r.meaning.trim()).map((r) => ({
+          call: r.call.trim(),
+          meaning: r.meaning,
+          ...(text(r.note) && { note: r.note }),
+          ...(text(r.pending) && { pending: r.pending }),
+          ...(r.conditions && { conditions: structuredClone(r.conditions) }),
+        })),
+      }
+  }
+}
+
 /**
  * A deep copy that drops empty optional fields, empty blocks and empty response rows, so saved
  * content stays as tidy as the files
  */
 export function tidyConvention(convention: Convention): Convention {
-  const text = (value: string | undefined) => (value && value.trim() ? value : undefined)
-  const rule = (item: RuleItem): RuleItem => {
-    const children = item.children?.map(rule)
-    return {
-      text: item.text,
-      ...(text(item.pending) && { pending: item.pending }),
-      ...(children?.length && { children }),
-    }
-  }
-  const block = (b: Block): Block => {
-    switch (b.kind) {
-      case 'paragraph':
-        return { kind: 'paragraph', text: b.text, ...(text(b.pending) && { pending: b.pending }) }
-      case 'rules':
-        return { kind: 'rules', items: b.items.map(rule), ...(b.ordered && { ordered: true }) }
-      case 'note':
-        return { kind: 'note', tone: b.tone, text: b.text }
-      case 'hand':
-        return { kind: 'hand', ...(text(b.label) && { label: b.label }), hand: { ...b.hand } }
-      case 'intro': {
-        const pitfalls = b.pitfalls?.filter((p) => p.trim())
-        return {
-          kind: 'intro',
-          ...(text(b.why) && { why: b.why }),
-          ...(text(b.when) && { when: b.when }),
-          ...(pitfalls?.length && { pitfalls }),
-        }
-      }
-      case 'responses':
-        return {
-          kind: 'responses',
-          ...(b.auction && { auction: { seats: [...b.auction.seats], calls: [...b.auction.calls] } }),
-          ...(text(b.caption) && { caption: b.caption }),
-          rows: b.rows.filter((r) => r.call.trim() || r.meaning.trim()).map((r) => ({
-            call: r.call.trim(),
-            meaning: r.meaning,
-            ...(text(r.note) && { note: r.note }),
-            ...(text(r.pending) && { pending: r.pending }),
-            ...(r.conditions && { conditions: structuredClone(r.conditions) }),
-          })),
-        }
-    }
-  }
   const section = (s: Section): Section => {
     const children = s.children?.map(section)
     return {
@@ -348,7 +366,7 @@ export function tidyConvention(convention: Convention): Convention {
       ...(text(s.summary) && { summary: s.summary }),
       ...(text(s.pending) && { pending: s.pending }),
       ...(s.level && { level: s.level }),
-      ...(s.blocks?.some((b) => !emptyBlock(b)) && { blocks: s.blocks.filter((b) => !emptyBlock(b)).map(block) }),
+      ...(s.blocks?.some((b) => !emptyBlock(b)) && { blocks: s.blocks.filter((b) => !emptyBlock(b)).map(tidyBlock) }),
       ...(children?.length && { children }),
     }
   }

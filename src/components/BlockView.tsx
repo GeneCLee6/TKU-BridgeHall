@@ -1,7 +1,9 @@
 import { memo } from 'react'
 import styled from 'styled-components'
 import { pageStrings } from '../pageStrings.ts'
-import type { Block, IntroBlock, RuleItem } from '../types/convention.ts'
+import { useArticleFile } from '../state/ArticleFilesContext.tsx'
+import type { ArticleBlock, ImageBlock, QuoteBlock } from '../types/article.ts'
+import type { IntroBlock, RuleItem } from '../types/convention.ts'
 import { AuctionTable } from './AuctionTable.tsx'
 import { Hand } from './Hand.tsx'
 import { PendingNote } from './PendingNote.tsx'
@@ -9,10 +11,11 @@ import { ResponseTable } from './ResponseTable.tsx'
 import { RichText } from './Suit.tsx'
 
 /**
- * Renders one content block. A new block kind means a new case here and in the type.
+ * Renders one content block, a convention's or an article's (heading, quote and image are only in
+ * articles, types/article.ts). A new block kind means a new case here and in the type.
  * Memoised: content is static, so expanding or collapsing accordions never re-renders blocks.
  */
-export const BlockView = memo(function BlockView({ block }: { block: Block }) {
+export const BlockView = memo(function BlockView({ block }: { block: ArticleBlock }) {
   switch (block.kind) {
     case 'paragraph':
       return (
@@ -43,8 +46,58 @@ export const BlockView = memo(function BlockView({ block }: { block: Block }) {
       return <Hand hand={block.hand} label={block.label} />
     case 'intro':
       return <Intro block={block} />
+    case 'heading':
+      return block.level === 2 ? (
+        <Heading2 data-block="heading">
+          <RichText text={block.text} />
+        </Heading2>
+      ) : (
+        <Heading3 data-block="heading">
+          <RichText text={block.text} />
+        </Heading3>
+      )
+    case 'quote':
+      return <Quote block={block} />
+    case 'image':
+      return <Picture block={block} />
   }
 })
+
+/** 引文 (e5-t01): the words, then where they are from */
+function Quote({ block }: { block: QuoteBlock }) {
+  return (
+    <QuoteBox data-block="quote">
+      <blockquote>
+        <RichText text={block.text} />
+      </blockquote>
+      {block.cite?.trim() && <figcaption>— {block.cite}</figcaption>}
+    </QuoteBox>
+  )
+}
+
+/**
+ * 圖片 (e5-t01, e5-t12): the uploaded picture by the address the Worker signed for it; without one
+ * (no R2 bucket yet, or the article came without addresses), its description in a box instead
+ */
+function Picture({ block }: { block: ImageBlock }) {
+  const file = useArticleFile(block.src)
+  return (
+    <Figure data-block="image">
+      {file ? (
+        <img src={file.url} alt={block.alt} loading="lazy" decoding="async" />
+      ) : (
+        <Missing role="img" aria-label={block.alt}>
+          {pageStrings.article.pictureMissing(block.alt)}
+        </Missing>
+      )}
+      {block.caption?.trim() && (
+        <figcaption>
+          <RichText text={block.caption} />
+        </figcaption>
+      )}
+    </Figure>
+  )
+}
 
 /** 導讀 (e4-t04): a labelled box with whichever of its three parts are filled in */
 function Intro({ block }: { block: IntroBlock }) {
@@ -159,6 +212,66 @@ const IntroBox = styled.section`
   dd ul {
     margin: 0;
   }
+`
+
+const headingStyle = `
+  margin: 1.75em 0 0.5em;
+  line-height: 1.4;
+`
+
+const Heading2 = styled.h2`
+  ${headingStyle}
+  font-family: ${({ theme }) => theme.fonts.heading};
+  font-weight: ${({ theme }) => theme.headingWeight};
+  font-size: 1.375rem;
+`
+
+const Heading3 = styled.h3`
+  ${headingStyle}
+  font-family: ${({ theme }) => theme.fonts.heading};
+  font-weight: ${({ theme }) => theme.headingWeight};
+  font-size: 1.125rem;
+`
+
+const QuoteBox = styled.figure`
+  margin: ${({ theme }) => theme.space(4)} 0;
+  padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(4)};
+  border-left: 3px solid ${({ theme }) => theme.colors.border};
+
+  blockquote {
+    margin: 0;
+    line-height: 1.8;
+  }
+  figcaption {
+    margin-top: ${({ theme }) => theme.space(2)};
+    font-size: 0.875rem;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+`
+
+const Figure = styled.figure`
+  margin: ${({ theme }) => theme.space(4)} 0;
+  text-align: center;
+
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: ${({ theme }) => theme.shape.note};
+  }
+  figcaption {
+    margin-top: ${({ theme }) => theme.space(2)};
+    font-size: 0.875rem;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+`
+
+const Missing = styled.div`
+  padding: ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(4)};
+  border: 1px dashed ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.note};
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.875rem;
 `
 
 const IntroTitle = styled.p`

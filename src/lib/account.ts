@@ -75,6 +75,9 @@ export const FILE_LIMITS = {
   urlsMax: 50,
 } as const
 
+/** A stored file's key, `<purpose>/<24 hex>[-thumb].<ext>` (the table's `FILE_KEY`) */
+export const FILE_KEY = /^(post|article)\/[0-9a-f]{24}(-thumb)?\.(jpg|png|webp)$/
+
 export interface FileTicketRequest {
   purpose: FilePurpose
   type: FileType

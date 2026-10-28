@@ -25,6 +25,9 @@ import type * as Handbook from '../src/types/convention.ts'
 import type * as Protocol from '@table/shared/protocol.ts'
 import type * as Worker from '@table/worker/book.ts'
 import type * as Audit from '@table/worker/audit.ts'
+import type * as TableArticles from '@table/worker/articles.ts'
+import type * as Articles from '../src/lib/articles.ts'
+import type * as Library from '../src/types/article.ts'
 import type * as QuizRecords from '../src/lib/quizRecords.ts'
 import type * as TableQuiz from '@table/shared/quiz.ts'
 
@@ -73,6 +76,18 @@ export type Checks = [
   Check<Same<Book.BookDraftSummary, Worker.BookDraftSummary>>,
   Check<Same<Book.AuditAction, Audit.AuditAction>>,
   Check<Same<Book.AuditEntry, Audit.AuditEntry>>,
+  // The library's articles (e5-t01, e5-t04); `article` is `unknown` here: lib/articles.ts checks it
+  Check<Same<Library.License, TableArticles.ArticleLicense>>,
+  Check<Same<Library.ArticleMeta, TableArticles.ArticleMeta>>,
+  Check<Reads<Book.ArticleEntry, TableArticles.ArticleEntry>>,
+  Check<Same<Omit<Book.ArticleEntry, 'article'>, Omit<TableArticles.ArticleEntry, 'article'>>>,
+  Check<Same<Book.ArticleEntrySummary, TableArticles.ArticleEntrySummary>>,
+  Check<Same<Book.ArticleFiles, TableArticles.ArticleList['files']>>,
+  Check<Same<Book.ArticleList, TableArticles.ArticleList>>,
+  Check<Reads<Book.ArticleResponse, TableArticles.ArticleResponse>>,
+  Check<Reads<Book.ArticleRevision, TableArticles.ArticleRevision>>,
+  Check<Same<Omit<Book.ArticleRevision, 'article'>, Omit<TableArticles.ArticleRevision, 'article'>>>,
+  Check<Same<typeof Articles.ARTICLE_TITLE_MAX, typeof TableArticles.ARTICLE_LIMITS.titleMax>>,
 
   // ── Practice results and question fixes (shared/quiz.ts, E6 e6-t04 e6-t06) ───────────────────
   Check<Same<typeof QuizRecords.QUIZ_LIMITS, typeof TableQuiz.QUIZ_LIMITS>>,
