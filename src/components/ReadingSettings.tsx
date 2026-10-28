@@ -23,7 +23,8 @@ export function ReadingSettings({
   onCollapseAll,
   onPrint,
   printLabel = strings.reading.printPage,
-}: ReadingActions & { id: string; onClose: () => void }) {
+  aboveToolbar = false,
+}: ReadingActions & { id: string; onClose: () => void; aboveToolbar?: boolean }) {
   const { themeChoice, setThemeChoice } = usePreferences()
   const titleId = useId()
   const themeId = useId()
@@ -43,7 +44,7 @@ export function ReadingSettings({
   }
 
   return (
-    <Panel ref={ref} id={id} role="dialog" aria-labelledby={titleId} data-print="hide">
+    <Panel ref={ref} id={id} role="dialog" aria-labelledby={titleId} data-print="hide" $aboveToolbar={aboveToolbar}>
       <Head>
         <h2 id={titleId}>{strings.reading.open}</h2>
         <IconButton
@@ -109,7 +110,7 @@ export function ReadingSettings({
   )
 }
 
-const Panel = styled.div`
+const Panel = styled.div<{ $aboveToolbar: boolean }>`
   position: absolute;
   top: calc(100% + ${({ theme }) => theme.space(2)});
   right: 0;
@@ -137,7 +138,7 @@ const Panel = styled.div`
     top: auto;
     left: 0;
     right: 0;
-    bottom: ${({ theme }) => theme.layout.toolbarHeight};
+    bottom: ${({ theme, $aboveToolbar }) => ($aboveToolbar ? theme.layout.toolbarHeight : '0')};
     z-index: 44;
     width: auto;
     max-width: none;

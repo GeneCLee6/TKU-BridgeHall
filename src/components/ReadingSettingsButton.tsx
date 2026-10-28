@@ -22,15 +22,16 @@ export interface ReadingActions {
 
 /**
  * The 閱讀設定 button and its panel (e9-t03). The panel's code loads on first open. Esc, × or a
- * click outside closes it; Esc and × put the focus back on the button. On phones the button is the
- * bottom toolbar's (e9-t09), which toggles the panel with a window event.
+ * click outside closes it; Esc and × put the focus back on the button. On the handbook's pages
+ * (`toolbar`) phones use the bottom toolbar's button instead (e9-t09), which toggles the panel with
+ * a window event.
  */
-export function ReadingSettingsButton(actions: ReadingActions) {
+export function ReadingSettingsButton({ toolbar = false, ...actions }: ReadingActions & { toolbar?: boolean }) {
   const [open, setOpen] = useState(false)
   const wrap = useRef<HTMLDivElement>(null)
   const button = useRef<HTMLButtonElement>(null)
   const panelId = useId()
-  const phone = useMediaQuery(mobileQuery)
+  const phone = useMediaQuery(mobileQuery) && toolbar
 
   const close = useCallback(() => {
     setOpen(false)
@@ -38,10 +39,11 @@ export function ReadingSettingsButton(actions: ReadingActions) {
   }, [])
 
   useEffect(() => {
+    if (!toolbar) return
     const toggle = () => setOpen((o) => !o)
     window.addEventListener(toolbarEvents.reading, toggle)
     return () => window.removeEventListener(toolbarEvents.reading, toggle)
-  }, [])
+  }, [toolbar])
 
   useEffect(() => {
     if (!open) return
@@ -81,7 +83,7 @@ export function ReadingSettingsButton(actions: ReadingActions) {
       )}
       {open && (
         <Suspense fallback={null}>
-          <ReadingSettings id={panelId} onClose={close} {...actions} />
+          <ReadingSettings id={panelId} onClose={close} aboveToolbar={toolbar} {...actions} />
         </Suspense>
       )}
     </Wrap>

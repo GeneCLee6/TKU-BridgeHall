@@ -98,7 +98,7 @@ export function PageBar({ lead, ...actions }: ReadingActions & { lead?: ReactNod
   return (
     <Bar>
       <div>{lead}</div>
-      <ReadingSettingsButton {...actions} />
+      <ReadingSettingsButton toolbar {...actions} />
     </Bar>
   )
 }

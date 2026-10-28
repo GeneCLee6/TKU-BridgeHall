@@ -1,6 +1,7 @@
 import { startTransition } from 'react'
 import styled from 'styled-components'
 import { ConventionCard } from '../components/ConventionCard.tsx'
+import { PrintBook } from '../components/PrintSheet.tsx'
 import { allKeys } from '../lib/sections.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useAuth } from '../state/AuthContext.tsx'
@@ -12,7 +13,8 @@ import { PageBar, useOnlineNote } from './HandbookShell.tsx'
 /**
  * /book, the whole book on one page (e9-t04): every convention as a collapsed card under its
  * category, as the handbook was before the split. Each card loads its content when it opens;
- * 印整本 loads all of it first. Loaded lazily, like the convention page.
+ * 印整本 loads all of it first and prints it as a book: cover, contents, a convention a page
+ * (e9-t10). Loaded lazily, like the convention page.
  */
 export function BookPage() {
   const { conventions, categories, loadAll } = useContent()
@@ -37,7 +39,8 @@ export function BookPage() {
         }
         printLabel={strings.reading.printBook}
       />
-      <Intro>
+      <PrintBook categories={categories} conventions={conventions} />
+      <Intro data-print="hide">
         <h1>{strings.pages.book}</h1>
         <p>{strings.pages.bookIntro}</p>
       </Intro>
