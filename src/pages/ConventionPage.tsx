@@ -1,5 +1,5 @@
-import { Pencil, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Dumbbell, Pencil, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled, { useTheme } from 'styled-components'
 import { CopyLinkButton, IconButton } from '../components/CopyLinkButton.tsx'
@@ -12,6 +12,7 @@ import { SectionAccordion } from '../components/SectionAccordion.tsx'
 import { RichText } from '../components/Suit.tsx'
 import { Tag, TagList } from '../components/Tag.tsx'
 import { basicHiddenIds } from '../lib/levels.ts'
+import { practicePath, hasQuestions } from '../lib/quiz.ts'
 import { sectionNumber } from '../lib/sectionNumber.ts'
 import {
   allKeys,
@@ -77,6 +78,8 @@ export function ConventionPage() {
   const target = useConvention(convention ? slug : undefined)
   const loaded = target.convention
   const ready = Boolean(loaded) || target.failed
+  // 練這個特約 (e6-t09): only when the convention has a table questions can be made from
+  const practice = useMemo(() => Boolean(loaded && hasQuestions(loaded)), [loaded])
   const path = convention && sectionId ? findSectionPath(convention, sectionId) : []
   // 入門版 (e4-t02): 「這頁顯示全部」 shows this convention in full until the reader moves on; a link
   // to a section 入門版 hides shows the page in full too, or there would be nothing to scroll to
@@ -262,6 +265,15 @@ export function ConventionPage() {
           </Loading>
         ) : (
           <Loading role="status">{strings.loading}</Loading>
+        )}
+
+        {practice && (
+          <Practice data-print="hide">
+            <Link to={practicePath(convention.slug)}>
+              <Dumbbell size={16} aria-hidden />
+              {pageStrings.practice}
+            </Link>
+          </Practice>
         )}
 
         <Source>
@@ -547,6 +559,27 @@ const RetryButton = styled.button`
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   cursor: pointer;
+`
+
+const Practice = styled.p`
+  margin: ${({ theme }) => theme.space(8)} 0 0;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: ${({ theme }) => theme.space(2)};
+    min-height: 44px;
+    padding: 0 ${({ theme }) => theme.space(4)};
+    border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.shape.control};
+    background: ${({ theme }) => theme.colors.surface};
+    color: ${({ theme }) => theme.colors.primaryStrong};
+    font-weight: 600;
+    text-decoration: none;
+  }
+  a:hover {
+    border-color: ${({ theme }) => theme.colors.structure};
+  }
 `
 
 const Source = styled.p`
