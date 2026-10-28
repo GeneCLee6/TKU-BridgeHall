@@ -1,4 +1,4 @@
-import { type Me, request, send } from './api.ts'
+import { type ClubTeam, type Me, type Partnership, request, send } from './api.ts'
 
 /**
  * 個人檔案、頭像與圖片檔案（E11 `e11-t01`～`e11-t03`）: the calls and types that only the account
@@ -22,6 +22,24 @@ export interface Profile {
   system?: string
   /** 自我介紹 */
   bio?: string
+}
+
+/**
+ * Another member's profile (`GET /api/members/:id`, the table's `MemberProfile`). The table also
+ * sends their latest boards (`recent`), which the handbook does not show
+ */
+export interface MemberProfile {
+  id: string
+  username: string
+  /** Their uploaded picture's version (`avatarUrl`), if any */
+  avatar?: number
+  profile: Profile
+}
+
+/** `GET /api/club/members/:id/teams`: the teams a member is in and their active partnerships */
+export interface MemberTeams {
+  teams: ClubTeam[]
+  pairs: Partnership[]
 }
 
 /** The table's `PROFILE_LIMITS` (not the system profiles' limits in api.ts) */
@@ -91,6 +109,9 @@ export const accountApi = {
   /** The picture as `AvatarCropper` made it (256×256, ≤ 64 KB) */
   uploadAvatar: (picture: Blob) => upload<{ user: Me }>('PUT', '/api/account/avatar', picture),
   removeAvatar: () => send<{ user: Me }>('DELETE', '/api/account/avatar'),
+  /** Another member's profile card, for their page `/u/:id` (e11-t04) */
+  member: (id: string) => request<{ member: MemberProfile }>(`/api/members/${encodeURIComponent(id)}`).then((r) => r.member),
+  memberTeams: (id: string) => request<MemberTeams>(`/api/club/members/${encodeURIComponent(id)}/teams`),
 
   files: {
     /** A single-use pass; 503 `filesOff` until the R2 bucket exists, 429 past 30 a day */

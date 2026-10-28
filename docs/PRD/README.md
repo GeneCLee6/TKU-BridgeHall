@@ -34,8 +34,8 @@
 | [E8](e8-content-governance.md) | 內容治理 | 3／14 | 1／6 | M1、M2 | in progress |
 | [E9](e9-ui-redesign.md) | 介面重新設計（v2） | 18／18 | 6／10 | M1 | in progress |
 | [E10](e10-platform-performance-ops.md) | 平台、效能與維運 | 7／11 | 2／6 | M1、M2、M3 | in progress |
-| [E11](e11-community-forum.md) | 社群與討論 | 5／21 | 0／9 | M1（t21 M2） | in progress |
-| | **合計** | **74／147** | **27／78** | | |
+| [E11](e11-community-forum.md) | 社群與討論 | 8／21 | 1／9 | M1（t21 M2） | in progress |
+| | **合計** | **77／147** | **28／78** | | |
 
 里程碑分布：M1 約 90 個 task、M2 約 54 個、M3 2 個（概數，以 ROADMAP 為準）。M0 的功能（F1–F18）在 2026-10-21～23 完成，沒有拆成 task。
 
