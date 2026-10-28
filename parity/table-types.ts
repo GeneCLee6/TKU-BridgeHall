@@ -14,6 +14,7 @@
  */
 
 import type * as Book from '../src/lib/api.ts'
+import type * as Sync from '../src/lib/tableSync.ts'
 import type * as Handbook from '../src/types/convention.ts'
 import type * as Protocol from '@table/shared/protocol.ts'
 import type * as Worker from '@table/worker/book.ts'
@@ -86,4 +87,15 @@ export type Checks = [
   Check<Same<Book.ClubMember, Protocol.ClubMember>>,
   Check<Same<typeof Book.TEAM_LIMITS, typeof Protocol.TEAM_LIMITS>>,
   Check<Same<typeof Book.PAIR_STATUSES, typeof Protocol.PAIR_STATUSES>>,
+
+  // ── The handbook → TKB (shared/protocol.ts, E7 e7-t03 e7-t04) ────────────────────────────────
+  // The constant is in lib/tableSync.ts, which only the report page loads
+  Check<Same<Book.SyncedSystemSpec, Protocol.SyncedSystemSpec>>,
+  Check<Same<Book.SystemSpecStatus, Protocol.SystemSpecStatus>>,
+  Check<Same<Book.SystemSpecInput, Protocol.SystemSpecInput>>,
+  Check<Same<Book.RobotMeaningsQuery, Protocol.RobotMeaningsQuery>>,
+  Check<Same<Book.RobotShows, Protocol.RobotShows>>,
+  Check<Same<Book.RobotMeaningsItem, Protocol.RobotMeaningsItem>>,
+  Check<Same<Book.RobotMeanings, Protocol.RobotMeanings>>,
+  Check<Same<typeof Sync.SYSTEM_SPEC_LIMITS, typeof Protocol.SYSTEM_SPEC_LIMITS>>,
 ]

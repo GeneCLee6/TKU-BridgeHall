@@ -193,6 +193,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（分類、隊伍）編輯者也看得到（§4.2） |
 | `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約 |
 | `/import` | 匯入檔案（bookImport） |
+| `/integrations/table` | 牌桌整合（bookEdit）：同步制度集到牌桌機器人、差異報告（§4.6） |
 | 其他 | 顯示首頁並提示；找不到的 slug 也是首頁加提示，找不到的段落在特約頁提示 |
 
 管理、編輯、匯入三頁用 `React.lazy` 分開打包，讀者不會下載。
@@ -270,6 +271,14 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - `ContentContext` 用 `resolveCategories` 算出 `categories`：有線上清單就照它的 `order`，沒有就用內建；線上清單沒列、但還有特約在裡面的內建分類（例如線上改過之後才在 repo 加的）接在最後，特約不會從目錄消失。驗證特約時接受線上與內建兩份的 id（`knownCategoryIds`）。側邊欄、首頁、編輯器的分類選單、匯入送給 AI 的分類都讀這一份。
 - 管理：`/admin` 的「分類」面板（bookEdit；跟著管理頁 lazy 載入，不進首頁 bundle）。改名、上下移、新增（代號自動產生 `c-<時間>`）、刪除，按「儲存分類」一次 `PUT /api/book/categories` `{ categories, baseVersion }` 整份取代。有特約（目前目錄裡的，含內建；隱藏的不算）的分類刪除鈕停用；Worker 另外擋還有線上特約的分類（409 `categoryInUse`），因為它只知道線上的特約。別人先存了回 409 `categoryConflict`，按「重新載入」拿對方的版本。存檔後重抓 manifest。
 - 型別 `BookCategory`、`BookCategories` 在 `lib/api.ts`，對應牌桌 `worker/book.ts`；上限（20 個、名稱 40 字、說明 200 字）兩邊一致。
+
+### 4.6 牌桌整合（`pages/TableReportPage.tsx`、`lib/specReport.ts`、`lib/tableSync.ts`，E7 e7-t03 e7-t04）
+
+- `/integrations/table`（bookEdit，lazy；管理頁有連結）：選一個制度集，頁面用社團版內容（內建＋線上，不經過 `ProfiledContent`）與該制度集的繼承鏈（`summaryChain`＋`resolveProfile`）算出套用後的特約，再用 `toSystemSpec`（`lib/systemSpec.ts`，牌桌 `shared/systemSpec.ts` 的逐字複本，`docs/SYSTEM-SPEC.md`）轉成規則。
+- **同步**：「重新同步到牌桌」把轉好的 `SystemSpec` 整份送 `PUT /api/book/system-spec/:profileId`，牌桌存起來；`GET /api/book/system-spec?profileId=` 回最後同步的那份、時間與同步者，頁面比對現在轉出來的是否相同（「內容在同步之後改過」）。轉換在瀏覽器做，因為內建特約只在橋館的 bundle，且 22 個特約的轉換超過 Worker 免費方案一次請求的 CPU。
+- **牌桌載入**：TKB 用淡江制度時，叫牌仍照牌桌已驗證的規則；叫出的叫品若在牌桌設定的制度集（`SYSTEM_PROFILE_ID`，預設 `club`）有同一叫牌過程、同一叫品的規則，叫品說明附上那列的原文（牌桌 `AuctionCall.book`，牌桌 ROBOT.md「橋館的文字跟著叫品」）。
+- **差異報告**：每個叫牌過程（`meaningQueries`）分批問 `POST /api/book/robot-meanings`（一次 10 個，`SYSTEM_SPEC_LIMITS`），`compareSpec` 列出牌桌規則讀法不同（只比原文寫到的點力、張數、平均、迫叫、特約名；開放上限一律視為相同）與牌桌沒有規則的叫品；`unresolvedByReason` 依原因列出轉不出來的列。頁面只呈現轉換結果，不改任何內容。
+- 型別（`SyncedSystemSpec`、`SystemSpecStatus`、`RobotMeaningsQuery`、`RobotShows` …）在 `lib/api.ts`，呼叫與上限在 `lib/tableSync.ts`、頁面文字在 `pages/tableReportStrings.ts`（都不進首頁 bundle）；對拍在 `parity/table-types.ts`。
 
 ## 5. UI 函式庫選擇
 

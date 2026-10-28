@@ -6,6 +6,7 @@
  */
 
 import type { ConventionMeta, Section } from '../types/convention.ts'
+import type { SpecShows, SystemSpec } from './systemSpec.ts'
 
 /** TKU BridgeTable (淡江牌桌), whose Worker holds the accounts */
 export const TABLE_SITE = 'https://tku-bridge-table.genelee-pro.workers.dev'
@@ -300,6 +301,59 @@ export interface PairInvite {
   teamId?: string
 }
 
+// ── The handbook → TKB, the table's robot (E7: e7-t03, e7-t04) ─────────────────────────────────
+// The calls and SYSTEM_SPEC_LIMITS are in lib/tableSync.ts, which only the report page loads
+
+/**
+ * A profile's rules as last synced to the table: the report page makes the `SystemSpec` from the
+ * profile's conventions (`toSystemSpec`) and an editor sends it (PUT /api/book/system-spec/:id)
+ */
+export interface SyncedSystemSpec {
+  spec: SystemSpec
+  syncedAt: number
+  /** The user id that synced it */
+  syncedBy: string
+  /** Their username, when the account still exists */
+  syncedByName?: string
+}
+
+/** GET /api/book/system-spec?profileId=: the profile's synced rules, and which profile TKB follows */
+export interface SystemSpecStatus {
+  /** The profile whose rules TKB uses in the club's system (the table's `ClubConfig.systemProfileId`) */
+  tableProfileId: string
+  /** Null until the profile is synced */
+  synced: SyncedSystemSpec | null
+}
+
+/** PUT /api/book/system-spec/:profileId */
+export interface SystemSpecInput {
+  spec: SystemSpec
+}
+
+/** POST /api/book/robot-meanings: the calls to look up, after each auction (a `Book.after` pattern) */
+export interface RobotMeaningsQuery {
+  items: { after: string; calls: string[] }[]
+}
+
+/** What the robot's rule shows, in the parts the handbook's patterns read, and in words */
+export interface RobotShows extends Omit<SpecShows, 'name'> {
+  /** The robot's convention name, which may be one the handbook's patterns do not read */
+  name?: string
+  /** The robot's explanation in Traditional Chinese */
+  text: string
+}
+
+export interface RobotMeaningsItem {
+  after: string
+  /** Null when no rule of TKB in the club's system makes the call after this auction */
+  meanings: Record<string, RobotShows | null>
+}
+
+/** The answer to POST /api/book/robot-meanings */
+export interface RobotMeanings {
+  items: RobotMeaningsItem[]
+}
+
 /** An error from the API, with the server's message (in Traditional Chinese) */
 export class ApiError extends Error {
   readonly status: number
@@ -319,7 +373,7 @@ export const errorText = (error: unknown) =>
     ? error.message
     : '連不上伺服器，請確認網路後再試一次'
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     credentials: 'same-origin',
     headers: init?.body ? { 'Content-Type': 'application/json' } : undefined,
@@ -336,7 +390,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return data as T
 }
 
-const send = <T>(method: string, path: string, body: unknown = {}) =>
+export const send = <T>(method: string, path: string, body: unknown = {}) =>
   request<T>(path, { method, body: JSON.stringify(body) })
 const post = <T>(path: string, body?: unknown) => send<T>('POST', path, body)
 
