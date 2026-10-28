@@ -136,6 +136,8 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - `lib/profiles.ts` 只在登入後才動態載入（首頁 JS 預算）；`loadProfileView` 先看摘要的數量，整條鏈什麼都沒改（全部 0）就不抓制度集本體、直接照原樣顯示，否則只抓鏈上的制度集，做出 `profileView`。`profileView` 套用和 `resolveProfile` 同一套規則，但一次一個特約（內容是分片載入的）：`plays`、`changes`、`convention`（套覆寫，依物件快取）、`meta`（目錄項目：摘要、標籤與被換掉的段落大綱；`outline` 代替段落套用同一組覆寫）、`notes`。
 - `ProfiledContent` 只包住手冊頁（`App.tsx`），用同一個 `ContentContext` 提供制度集看到的內容：不採用的特約從目錄、`bySlug`、`load`、`loadAll`（列印）消失，其餘套覆寫。編輯器、管理頁仍讀社團版原文。`Content.changed(slug)` 對被覆寫的特約回傳含制度集版本的鍵，搜尋就改用載入後的內容建索引（與線上改過的特約同一條路）。
 - 頁首選單 `components/ProfileSwitch.tsx`（lazy；有兩個以上制度集才出現）：桌機在頁首，手機在目錄抽屜；原生 `<select>` 依社團／隊伍／搭檔分組，`role="status"` 報讀「目前顯示…」；切換時內容區變淡（`aria-busy`，減少動態時不做過場），舊內容留到新的載好，載入失敗顯示提示並退回社團版。
+- **編輯頁**（`pages/ProfileEditorPage.tsx`，e1-t14，lazy；純函式在 `lib/profileEdit.ts`，字串 `pages/profileEditStrings.ts`）：讀 `profileWithAccess`，`access.edit` 為否時全部唯讀。編輯的對象是**母制度集解析後的特約**（社團版原文套上母層覆寫，但不濾掉母層不採用的），所以叫品列的位置和解析時一致；這一層換掉的段落，挑列時用換掉後的版本。採用是三選一（跟隨母制度集／採用／不採用）；叫品列的備註欄預設填原備註，不動就不送 `note`、清空送 `''`；「換成…」用編輯器的 `SectionForm`（`replacing` 隱藏搬移、新增、刪除與 id）。整份 `ProfileInput` 一次存，帶載入時的 `baseVersion`，409 時停用儲存、提示重新載入，不覆蓋別人的版本；超過 `PROFILE_LIMITS` 先擋。摘要／標籤覆寫沒有畫面，存檔時保留原有的。入口是管理頁的「制度集」面板（`components/admin/ProfilesPanel.tsx`）。
+- **比較頁**（`pages/ProfileComparePage.tsx`，e1-t15，lazy；`lib/profileCompare.ts`，字串 `pages/profileCompareStrings.ts`）：載入全部特約與整條鏈，「原文」是母制度集解析後的樣子，只列這一層自己的改動（上層的改動在上層自己的比較頁）；不採用的特約上的覆寫仍列出並註明目前無作用；`problems` 中屬於這一層的（失效覆寫、備忘、採用）與鏈的問題都列出。「到該段」連 `/c/:slug/:sectionId`，那裡顯示的是讀者目前的制度集。
 - 覆寫標記 `components/ProfileMarks.tsx`：段落標題與特約名稱旁的「社團覆寫／隊伍覆寫／搭檔覆寫」，答叫表被覆寫的列在意義欄左側一條色線並加同一個文字標（顏色借 `structure`／`accent`／`seal`）；備忘（`notes`）在特約或段落開頭，只有登入讀得到制度集的人看得到，列印不印。
 
 **儲存與 API**（牌桌 `worker/profiles.ts`，e1-t09／e1-t10；橋譜的 client 在 `lib/api.ts` 的 `api.book.profiles` 等）：
@@ -191,10 +193,12 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
 | `/account` | 我的帳號：權限、頭像、顯示（個人設定）、修改密碼 |
 | `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
-| `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（分類、隊伍）編輯者也看得到（§4.2） |
+| `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（分類、隊伍、制度集）編輯者也看得到（§4.2） |
 | `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約 |
 | `/import` | 匯入檔案（bookImport） |
 | `/integrations/table` | 牌桌整合（bookEdit）：同步制度集到牌桌機器人、差異報告（§4.7） |
+| `/profiles/:id/edit` | 編輯制度集（e1-t14，社員；沒有 `access.edit` 唯讀）：採用、叫品改寫、段落替換、備忘（§3.1） |
+| `/profiles/:id/compare` | 與母制度集比較（e1-t15，社員）：這一層的採用、覆寫（原文 vs 覆寫後）、失效的覆寫 |
 | 其他 | 顯示首頁並提示；找不到的 slug 也是首頁加提示，找不到的段落在特約頁提示 |
 
 管理、編輯、匯入三頁用 `React.lazy` 分開打包，讀者不會下載。
