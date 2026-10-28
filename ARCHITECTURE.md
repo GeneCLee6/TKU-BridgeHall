@@ -205,6 +205,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/profiles/:id/compare` | 與母制度集比較（e1-t15，社員）：這一層的採用、覆寫（原文 vs 覆寫後）、失效的覆寫 |
 | `/teams` | 隊伍列表（e2-t05，社員）：隊長、人數，自己的隊伍在前，已封存另列 |
 | `/teams/:id` | 隊伍頁（e2-t05，社員）：隊員、隊伍制度集入口（讀制度、比較、有 `access.edit` 時編輯）、各搭檔相對隊伍的覆寫／不採用／另採用數 |
+| `/u/:id` | 社員檔案頁（e11-t04，社員）：頭像、顯示名稱與帳號名稱、自評程度、常用制度、自我介紹、隊伍（含封存）與現役搭檔；自己的頁連到我的帳號（§4.6） |
 | `/pairs/:id` | 搭檔頁（e2-t06，社員）：兩人、所屬隊伍、接受／婉拒／收回／結束、這對的制度摘要與入口、從隊伍或另一對搭檔複製採用與覆寫（e2-t09，在瀏覽器組好 `ProfileInput` 用 `saveProfile` 存，備忘不複製；Worker 不需改動）。我的帳號的「我的隊伍與搭檔」列自己的隊伍、搭檔、邀請並可邀請搭檔 |
 | 其他 | 顯示首頁並提示；找不到的 slug 也是首頁加提示，找不到的段落在特約頁提示 |
 
@@ -292,12 +293,15 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - 管理：`/admin` 的「分類」面板（bookEdit；跟著管理頁 lazy 載入，不進首頁 bundle）。改名、上下移、新增（代號自動產生 `c-<時間>`）、刪除，按「儲存分類」一次 `PUT /api/book/categories` `{ categories, baseVersion }` 整份取代。有特約（目前目錄裡的，含內建；隱藏的不算）的分類刪除鈕停用；Worker 另外擋還有線上特約的分類（409 `categoryInUse`），因為它只知道線上的特約。別人先存了回 409 `categoryConflict`，按「重新載入」拿對方的版本。存檔後重抓 manifest。
 - 型別 `BookCategory`、`BookCategories` 在 `lib/api.ts`，對應牌桌 `worker/book.ts`；上限（20 個、名稱 40 字、說明 200 字）兩邊一致。
 
-### 4.6 個人檔案、頭像與圖片檔案（`lib/account.ts`、`components/Avatar.tsx`、`lib/imageUpload.ts`，E11 G1）
+### 4.6 個人檔案、頭像與圖片檔案（`lib/account.ts`、`components/Avatar.tsx`、`lib/imageUpload.ts`，E11 G1、G2）
 
-- **都在牌桌 Worker**，兩站共用。個人檔案是 `Me.profile`（`displayName`、`level`、`system`、`bio`，`PATCH /api/account/profile`），牌桌 e1-t15 已做好，橋譜只加型別與呼叫；編輯畫面是 G2（e11-t04）。
+- **都在牌桌 Worker**，兩站共用。個人檔案是 `Me.profile`（`displayName`、`level`、`system`、`bio`，`PATCH /api/account/profile`），牌桌 e1-t15 已做好，橋譜只加型別與呼叫。「我的帳號 › 個人檔案」（G2，e11-t04）每次存整份（空白或不填就清掉那一項）。
+- **他人檔案頁 `/u/:id`**（e11-t04）：`GET /api/members/:id`（牌桌的 `MemberProfile`，橋館不顯示其中的 `recent` 牌局）＋`GET /api/club/members/:id/teams`（那位社員所在的隊伍含封存、現役搭檔；邀請中與已結束的不列）。**只有登入社員看得到**（和隊伍頁、搭檔頁一樣；M1 討論區也只給社員）。隊伍頁、搭檔頁的社員名字連到這裡；最近貼文等 G3。
+- **牌桌名牌**（e11-t19，牌桌 #174）：牌桌大廳的社員與座位帶 `displayName`，牌桌頁從大廳補上頭像與顯示名稱，所以兩站顯示同一個名字與頭像。
 - **頭像**：`Me.avatar`／`ClubMember.avatar` 是版本號，圖片在 `GET /api/avatar/:id?v=<版本>`（牌桌 `avatar:<id>`，瀏覽器裁好的 256×256、≤ 64 KB）。PRD 原寫 512×512 放 R2；牌桌已有這一套（e1-t34），兩站讀同一張，所以沿用。沒有圖片就用字首＋由 id 決定的顏色（`lib/avatar.ts`，和牌桌同一套 FNV 雜湊與十個顏色 `styles/avatarColors.ts`），同一個人在兩站顏色相同。`Avatar` 是裝飾（`aria-hidden`），名字一定在旁邊。「我的帳號」可上傳（`AvatarCropper` 就地裁切）或改回預設。`GET /api/club/members` 多回 `displayName`、`avatar`，給之後的討論區與隊伍頁畫別人的頭像。
 - **圖片檔案**（貼文與文章用）：R2 bucket `bridgebook-files`（牌桌 `worker/files.ts`，ARCHITECTURE.md §5.14）。`uploadImage(file, purpose)` 在瀏覽器縮到長邊 2048 px（≤ 2 MB）與 480 px 縮圖（≤ 256 KB），拿一次性憑證（`POST /api/files/ticket`，每人每天 30 張）、`PUT` 原圖與縮圖；顯示用簽名短效網址 `/api/files/<key>?e=&s=`（一小時，不用登入），過期用 `POST /api/files/urls` 重簽。**bucket 還沒建時**牌桌回 503 `filesOff`（牌桌 DEPLOY.md §4.8）。
 - **不進首頁**：這些型別與呼叫在 `lib/account.ts`，不在 `api.ts`；介面文字在 `strings-account.ts`，不在 `strings.ts`（首頁 JS 預算只剩 1 kB 左右）；只有 lazy 的頁面 import 它們。型別對拍在 `parity/table-types.ts`（牌桌 `shared/profile.ts`、`avatar.ts`、`files.ts`）。
+- **討論區型別**（e11-t05）：`lib/forum.ts` 是牌桌 `shared/forum.ts` 的複本（`Board`、`Post`、`PostBlock`、`CommentBlock`、`Comment`、`Reaction`、`Report`、內建四板、`FORUM_LIMITS`），每個型別 `Same` 對拍、常數在 `tests/lib/tableParity.test.ts` 比值；要改先改牌桌。牌與叫牌用 `lib/board.ts` 的型別；`hand` 區塊是 `cards: Card[]`（`HandInput` 的格式），特約的叫品表（`responses`）不放進貼文，引用特約用 `ref`。
 
 ### 4.7 牌桌整合（`pages/TableReportPage.tsx`、`lib/specReport.ts`、`lib/tableSync.ts`，E7 e7-t03 e7-t04）
 

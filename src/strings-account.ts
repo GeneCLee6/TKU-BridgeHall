@@ -1,5 +1,5 @@
 /**
- * 個人檔案與頭像的介面文字（E11 `e11-t03`）. Kept apart from `strings.ts`, which the home page
+ * 個人檔案、頭像與他人檔案頁的介面文字（E11 `e11-t03`、`e11-t04`）. Kept apart from `strings.ts`, which the home page
  * carries in full: only the lazy account page and the forum import this (CLAUDE.md rule 4, the
  * home page's JS budget).
  */
@@ -18,4 +18,36 @@ export const accountStrings = {
   cropFrame: '頭像裁切範圍',
   cropZoom: '縮放',
   saving: '儲存中…',
+
+  // 我的帳號 › 個人檔案 (e11-t04)
+  profile: '個人檔案',
+  profileHint: '兩站共用：淡江牌桌的名牌、社員分頁和你的檔案頁都會顯示。每一項都可以留空。',
+  displayName: '顯示名稱',
+  displayNameHint: (max: number) => `社團怎麼稱呼你，例如真名；登入仍用帳號名稱。最多 ${max} 字`,
+  level: '自評程度',
+  levelNone: '不填',
+  levels: { beginner: '初學者', college: '大專', open: '公開組', master: '橋士組' },
+  system: '常用制度',
+  systemHint: (max: number) => `例如「淡江制度」或「2/1」，最多 ${max} 字`,
+  bio: '自我介紹',
+  bioCount: (n: number, max: number) => `${n} / ${max} 字`,
+  profileSaved: '個人檔案已儲存',
+  myPage: '看我的檔案頁',
+
+  // 他人檔案頁 /u/:id (e11-t04)
+  memberTitle: '社員檔案',
+  memberGone: '找不到這位社員',
+  username: (name: string) => `帳號 ${name}`,
+  noBio: '還沒有自我介紹。',
+  teams: '隊伍',
+  noTeams: '不在任何隊伍裡',
+  captain: '隊長',
+  archived: '已封存',
+  pairs: '搭檔',
+  noPairs: '沒有現役的搭檔',
+  pairWith: (name: string) => `與 ${name}`,
+  pairTeam: (name: string) => `（${name}）`,
+  postsLater: '最近貼文在討論區上線後顯示。',
+  editMine: '在「我的帳號」編輯個人檔案',
+  you: '（你）',
 } as const
