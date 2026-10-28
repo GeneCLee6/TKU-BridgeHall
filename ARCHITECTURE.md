@@ -200,6 +200,9 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 | `/integrations/table` | 牌桌整合（bookEdit）：同步制度集到牌桌機器人、差異報告（§4.7） |
 | `/profiles/:id/edit` | 編輯制度集（e1-t14，社員；沒有 `access.edit` 唯讀）：採用、叫品改寫、段落替換、備忘（§3.1） |
 | `/profiles/:id/compare` | 與母制度集比較（e1-t15，社員）：這一層的採用、覆寫（原文 vs 覆寫後）、失效的覆寫 |
+| `/teams` | 隊伍列表（e2-t05，社員）：隊長、人數，自己的隊伍在前，已封存另列 |
+| `/teams/:id` | 隊伍頁（e2-t05，社員）：隊員、隊伍制度集入口（讀制度、比較、有 `access.edit` 時編輯）、各搭檔相對隊伍的覆寫／不採用／另採用數 |
+| `/pairs/:id` | 搭檔頁（e2-t06，社員）：兩人、所屬隊伍、接受／婉拒／收回／結束、這對的制度摘要與入口、從隊伍或另一對搭檔複製採用與覆寫（e2-t09，在瀏覽器組好 `ProfileInput` 用 `saveProfile` 存，備忘不複製；Worker 不需改動）。我的帳號的「我的隊伍與搭檔」列自己的隊伍、搭檔、邀請並可邀請搭檔 |
 | 其他 | 顯示首頁並提示；找不到的 slug 也是首頁加提示，找不到的段落在特約頁提示 |
 
 管理、編輯、匯入三頁用 `React.lazy` 分開打包，讀者不會下載。
