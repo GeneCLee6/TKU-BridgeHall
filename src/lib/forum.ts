@@ -141,6 +141,8 @@ export interface Post {
   locked?: boolean
   reactions: Reactions
   commentCount: number
+  /** The members its text names with `@` (username or display name), in the order they first appear */
+  mentions?: string[]
 }
 
 /** Comments nest one level: a reply to a reply hangs under the same top comment */
@@ -154,6 +156,8 @@ export interface Comment {
   createdAt: number
   editedAt?: number
   reactions: Reactions
+  /** The members its text names with `@`, as on a post */
+  mentions?: string[]
 }
 
 // ── Reports ──────────────────────────────────────────────────────────────────────────────────
@@ -191,4 +195,10 @@ export const FORUM_LIMITS = {
   /** Posts on one page of a board */
   pageSize: 20,
   reportReasonMax: 300,
+  /** Boards a club may have, and the length of a board's name and description */
+  boardsMax: 20,
+  boardNameMax: 20,
+  boardDescriptionMax: 100,
+  /** Posts in each of the home page's two lists (社團新聞, 最新討論) */
+  latestShown: 3,
 } as const
