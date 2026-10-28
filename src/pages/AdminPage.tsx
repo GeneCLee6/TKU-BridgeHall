@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { CategoriesPanel } from '../components/admin/CategoriesPanel.tsx'
+import { ProfilesPanel } from '../components/admin/ProfilesPanel.tsx'
 import { TeamsPanel } from '../components/admin/TeamsPanel.tsx'
 import { DataTable, TableScroll } from '../components/DataTable.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
@@ -27,7 +28,7 @@ import { tableReport } from './tableReportStrings.ts'
  * 社團管理. Admins manage everything, accounts included; editors (bookEdit) everything else
  * (ARCHITECTURE.md §4.2, decided 2026-10-25). So the account panels (registrations waiting for
  * approval, members' permissions and passwords, the account limit and invite code) are admins';
- * every other panel (the handbook's categories, the teams, and the system profiles to come) is for editors
+ * every other panel (the handbook's categories, the teams, and the system profiles) is for editors
  * too. The accounts are TKU BridgeTable's; adding or deleting members, admins and tables stay on
  * its admin page.
  */
@@ -51,6 +52,7 @@ function AdminOrEditor() {
       {/* Not about accounts: editors' too */}
       <CategoriesPanel />
       <TeamsPanel />
+      <ProfilesPanel />
       <Muted>
         <Link to="/integrations/table">{tableReport.adminLink}</Link>
       </Muted>

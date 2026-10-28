@@ -44,8 +44,12 @@ beforeAll(() => {
 beforeAll(warmPages, 60_000)
 
 beforeEach(() => {
-  // The admin page's team panel (e2-t07) reads these whenever it opens
-  routes = { 'GET /api/club/teams': { body: { teams: [] } }, 'GET /api/club/members': { body: { members: [] } } }
+  // The admin page's team panel (e2-t07) and profile panel (e1-t14) read these whenever it opens
+  routes = {
+    'GET /api/club/teams': { body: { teams: [] } },
+    'GET /api/club/members': { body: { members: [] } },
+    'GET /api/book/profiles': { body: { profiles: [] } },
+  }
   sent = []
   vi.stubGlobal(
     'fetch',
