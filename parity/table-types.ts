@@ -25,6 +25,8 @@ import type * as Handbook from '../src/types/convention.ts'
 import type * as Protocol from '@table/shared/protocol.ts'
 import type * as Worker from '@table/worker/book.ts'
 import type * as Audit from '@table/worker/audit.ts'
+import type * as QuizRecords from '../src/lib/quizRecords.ts'
+import type * as TableQuiz from '@table/shared/quiz.ts'
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false
 type Assignable<From, To> = [From] extends [To] ? true : false
@@ -71,6 +73,18 @@ export type Checks = [
   Check<Same<Book.BookDraftSummary, Worker.BookDraftSummary>>,
   Check<Same<Book.AuditAction, Audit.AuditAction>>,
   Check<Same<Book.AuditEntry, Audit.AuditEntry>>,
+
+  // ── Practice results and question fixes (shared/quiz.ts, E6 e6-t04 e6-t06) ───────────────────
+  Check<Same<typeof QuizRecords.QUIZ_LIMITS, typeof TableQuiz.QUIZ_LIMITS>>,
+  Check<Same<QuizRecords.QuizAnswer, TableQuiz.QuizAnswer>>,
+  Check<Same<QuizRecords.QuizRoundInput, TableQuiz.QuizRoundInput>>,
+  Check<Same<QuizRecords.QuizRound, TableQuiz.QuizRound>>,
+  Check<Same<QuizRecords.QuizBasis, TableQuiz.QuizBasis>>,
+  Check<Same<QuizRecords.QuizHand, TableQuiz.QuizHand>>,
+  Check<Same<QuizRecords.QuizAuction, TableQuiz.QuizAuction>>,
+  Check<Same<QuizRecords.ManualQuiz, TableQuiz.ManualQuiz>>,
+  Check<Same<QuizRecords.QuizFixInput, TableQuiz.QuizFixInput>>,
+  Check<Same<QuizRecords.QuizFix, TableQuiz.QuizFix>>,
 
   // ── System profiles (shared/protocol.ts) ─────────────────────────────────────────────────────
   // The one difference: the Worker keeps a replaced section as Record<string, unknown>, the

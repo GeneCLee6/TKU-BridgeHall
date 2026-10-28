@@ -13,7 +13,8 @@ import type { Auction, Call, Convention, Hand, Level, ResponseRow, Section } fro
  * answers: what they say may not be what the club plays. Questions are made in the browser from
  * the content the reader's profile resolves to, so a profile's overrides are what gets asked.
  *
- * `call` questions (a hand and an auction; which call?) come with e6-t07.
+ * `call` questions (a hand and an auction; which call?) come with e6-t07; editors can write them
+ * by hand already (e6-t06, lib/quizRecords.ts), as they can take a question out or change its answer.
  */
 
 export interface Quiz {
@@ -78,14 +79,14 @@ interface Row {
 }
 
 /** Text as compared: spacing and a closing full stop do not make two meanings different */
-const same = (a: string) =>
+export const sameText = (a: string) =>
   a
     .replace(/\s+/g, ' ')
     .trim()
     .replace(/[。.]+$/, '')
 
 /** A meaning that only points at the row above (同上) says nothing on its own */
-const refersBack = (meaning: string) => /^同上$/.test(same(meaning))
+const refersBack = (meaning: string) => /^同上$/.test(sameText(meaning))
 
 function rowsOf(convention: Convention): Row[] {
   const rows: Row[] = []
@@ -128,19 +129,19 @@ function rowsOf(convention: Convention): Row[] {
  * pending, and when it is the same call in a table with the same auction (it would be right too).
  */
 function distractors(question: Row, rows: Row[]): string[] {
-  const answer = same(question.row.meaning)
+  const answer = sameText(question.row.meaning)
   const length = answer.length
   const usable = rows.filter(
     (r) =>
       r !== question &&
       !r.pending &&
-      same(r.row.meaning) !== '' &&
+      sameText(r.row.meaning) !== '' &&
       !refersBack(r.row.meaning) &&
-      !(same(r.row.call) === same(question.row.call) && r.auctionKey === question.auctionKey),
+      !(sameText(r.row.call) === sameText(question.row.call) && r.auctionKey === question.auctionKey),
   )
   const byLength = (list: Row[]) =>
     list
-      .map((r, order) => ({ r, order, gap: Math.abs(same(r.row.meaning).length - length) }))
+      .map((r, order) => ({ r, order, gap: Math.abs(sameText(r.row.meaning).length - length) }))
       .sort((a, b) => a.gap - b.gap || a.order - b.order)
       .map(({ r }) => r.row.meaning)
   const ordered = [
@@ -151,8 +152,8 @@ function distractors(question: Row, rows: Row[]): string[] {
   const seen = new Set([answer])
   for (const meaning of ordered) {
     if (picked.length === CHOICES - 1) break
-    if (seen.has(same(meaning))) continue
-    seen.add(same(meaning))
+    if (seen.has(sameText(meaning))) continue
+    seen.add(sameText(meaning))
     picked.push(meaning)
   }
   return picked
@@ -178,9 +179,9 @@ export function generateQuizzes(conventions: readonly Convention[], profileId: s
     for (const r of rows) {
       const reason: SkipReason | undefined = r.pending
         ? 'pending'
-        : !same(r.row.call)
+        : !sameText(r.row.call)
           ? 'emptyCall'
-          : !same(r.row.meaning)
+          : !sameText(r.row.meaning)
             ? 'emptyMeaning'
             : refersBack(r.row.meaning)
               ? 'refersBack'
