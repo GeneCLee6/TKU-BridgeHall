@@ -46,14 +46,14 @@ export function ProfileEntries({ profileId, name, access }: { profileId: string;
   )
 }
 
-/** A member with their avatar and name, and what they are (隊長) when given */
+/** A member with their avatar and name, linked to their profile page (e11-t04), and what they are (隊長) when given */
 export function MemberChip({ members, id, role }: { members: readonly ClubMember[]; id: string; role?: string }) {
   const member = members.find((m) => m.id === id)
   const name = memberName(members, id)
   return (
     <Chip>
       <Avatar id={id} name={name} size={28} avatar={member?.avatar} />
-      <span>{name}</span>
+      <Link to={`/u/${encodeURIComponent(id)}`}>{name}</Link>
       {role && <Badge>{role}</Badge>}
     </Chip>
   )

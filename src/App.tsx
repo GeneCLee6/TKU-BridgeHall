@@ -30,6 +30,8 @@ const ProfileComparePage = lazy(() =>
 const TeamsPage = lazy(() => import('./pages/TeamsPage.tsx').then((m) => ({ default: m.TeamsPage })))
 const TeamPage = lazy(() => import('./pages/TeamsPage.tsx').then((m) => ({ default: m.TeamPage })))
 const PairPage = lazy(() => import('./pages/PairPage.tsx').then((m) => ({ default: m.PairPage })))
+// A member's profile page (e11-t04)
+const MemberPage = lazy(() => import('./pages/MemberPage.tsx').then((m) => ({ default: m.MemberPage })))
 // Kept out of the first download too, which has a size budget (scripts/check-budget.mjs)
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
 const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ default: m.AccountPage })))
@@ -73,6 +75,7 @@ export function App() {
                   <Route path="/teams" element={<TeamsPage />} />
                   <Route path="/teams/:id" element={<TeamPage />} />
                   <Route path="/pairs/:id" element={<PairPage />} />
+                  <Route path="/u/:id" element={<MemberPage />} />
                 </Routes>
               </Suspense>
             </ExpansionProvider>

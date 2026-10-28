@@ -3,8 +3,9 @@ import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
 import { AvatarCropper } from '../components/AvatarCropper.tsx'
 import { DisplaySettings } from '../components/DisplaySettings.tsx'
-import { Button, ErrorText, Field, Muted, Notice, PageTitle, Panel, PanelTitle, PasswordInput } from '../components/ui.tsx'
-import { accountApi, AVATAR_INPUT_TYPES } from '../lib/account.ts'
+import { Link } from 'react-router-dom'
+import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, PasswordInput, Select, TextArea } from '../components/ui.tsx'
+import { accountApi, AVATAR_INPUT_TYPES, PROFILE_FIELD_LIMITS, PROFILE_LEVELS, type Profile, type ProfileLevel } from '../lib/account.ts'
 import { api, errorText, LIMITS, type Me, TABLE_SITE } from '../lib/api.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { settingsStrings } from '../settingsStrings.ts'
@@ -13,7 +14,10 @@ import { strings } from '../strings.ts'
 import { Frame, Gate } from './Frame.tsx'
 import { MyTeams } from './MyTeams.tsx'
 
-/** 我的帳號: what this member may do here, their avatar, 顯示 (個人設定), and changing the password (shared with 淡江牌桌) */
+/**
+ * 我的帳號: what this member may do here, their profile and avatar (shared with 淡江牌桌), their teams,
+ * 顯示 (個人設定), and changing the password
+ */
 export function AccountPage() {
   return (
     <Frame title={strings.me.title}>
@@ -62,13 +66,17 @@ function AccountBody() {
               ? user.permissions.map((p) => strings.permission[p]).join('、')
               : strings.me.none}
         </Muted>
-        <TableLink href={TABLE_SITE} target="_blank" rel="noreferrer">
-          {strings.me.toTable}
-          {strings.opensInNewTab}
-        </TableLink>
+        <Links>
+          <Link to={`/u/${encodeURIComponent(user.id)}`}>{accountStrings.myPage}</Link>
+          <a href={TABLE_SITE} target="_blank" rel="noreferrer">
+            {strings.me.toTable}
+            {strings.opensInNewTab}
+          </a>
+        </Links>
       </Panel>
-      <MyTeams user={user} />
+      <ProfilePanel user={user} />
       <AvatarPanel user={user} />
+      <MyTeams user={user} />
       {/* 我的帳號 › 顯示 (e9-t15): the same choices as the 個人設定 page */}
       <Panel aria-labelledby="account-display">
         <PanelTitle id="account-display">{settingsStrings.display}</PanelTitle>
@@ -103,6 +111,89 @@ function AccountBody() {
         </Form>
       </Panel>
     </>
+  )
+}
+
+type ProfileForm = Required<Omit<Profile, 'level'>> & { level: ProfileLevel | '' }
+
+/**
+ * 個人檔案 (e11-t04, AC-11.1): the display name, self-rated level, usual system and bio, the same
+ * on both sites. The Worker checks the limits again (`parseProfile`); an empty field clears it
+ */
+function ProfilePanel({ user }: { user: Me }) {
+  const { refresh } = useAuth()
+  const [form, setForm] = useState<ProfileForm>(() => ({
+    displayName: user.profile?.displayName ?? '',
+    level: user.profile?.level ?? '',
+    system: user.profile?.system ?? '',
+    bio: user.profile?.bio ?? '',
+  }))
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const set = (patch: Partial<ProfileForm>) => {
+    setForm((f) => ({ ...f, ...patch }))
+    setNotice('')
+  }
+
+  const save = async (event: FormEvent) => {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      // The whole profile each time: an empty text, or a level left out, clears that field
+      const { level, ...texts } = form
+      await accountApi.setProfile({ ...texts, ...(level && { level }) })
+      await refresh()
+      setNotice(accountStrings.profileSaved)
+    } catch (e) {
+      setError(errorText(e))
+    }
+    setBusy(false)
+  }
+
+  const limits = PROFILE_FIELD_LIMITS
+  return (
+    <Panel aria-labelledby="account-profile">
+      <PanelTitle id="account-profile">{accountStrings.profile}</PanelTitle>
+      <Muted>{accountStrings.profileHint}</Muted>
+      <Form onSubmit={(e) => void save(e)} aria-label={accountStrings.profile}>
+        <Field>
+          {accountStrings.displayName}
+          <Input value={form.displayName} maxLength={limits.displayNameMax} onChange={(e) => set({ displayName: e.target.value })} />
+          <small>{accountStrings.displayNameHint(limits.displayNameMax)}</small>
+        </Field>
+        <Field>
+          {accountStrings.level}
+          <Select value={form.level} onChange={(e) => set({ level: e.target.value as ProfileLevel | '' })}>
+            <option value="">{accountStrings.levelNone}</option>
+            {PROFILE_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {accountStrings.levels[level]}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field>
+          {accountStrings.system}
+          <Input value={form.system} maxLength={limits.systemMax} onChange={(e) => set({ system: e.target.value })} />
+          <small>{accountStrings.systemHint(limits.systemMax)}</small>
+        </Field>
+        <Field>
+          {accountStrings.bio}
+          <TextArea rows={4} value={form.bio} maxLength={limits.bioMax} onChange={(e) => set({ bio: e.target.value })} />
+          <small>{accountStrings.bioCount([...form.bio].length, limits.bioMax)}</small>
+        </Field>
+        {error && <ErrorText role="alert">{error}</ErrorText>}
+        {notice && <Notice role="status">{notice}</Notice>}
+        <div>
+          <Button type="submit" $variant="primary" disabled={busy}>
+            {busy ? accountStrings.saving : strings.save}
+          </Button>
+        </div>
+      </Form>
+    </Panel>
   )
 }
 
@@ -196,9 +287,14 @@ const Form = styled.form`
   max-width: 420px;
 `
 
-const TableLink = styled.a`
-  display: inline-block;
-  margin-top: ${({ theme }) => theme.space(3)};
-  color: ${({ theme }) => theme.colors.primary};
-  font-weight: 600;
+const Links = styled.p`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.space(4)};
+  margin: ${({ theme }) => theme.space(3)} 0 0;
+
+  & > a {
+    color: ${({ theme }) => theme.colors.primary};
+    font-weight: 600;
+  }
 `

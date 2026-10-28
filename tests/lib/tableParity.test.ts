@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import * as account from '../../src/lib/account.ts'
 import * as api from '../../src/lib/api.ts'
+import * as forum from '../../src/lib/forum.ts'
 
 /**
  * The constants src/lib/api.ts copies from TKU-BridgeTable shared/protocol.ts (e10-t09). Runs only
@@ -65,6 +66,21 @@ describe.skipIf(!tableDir)('profile, avatar and file constants shared with TKU-B
     expect(account.FILE_TYPES).toEqual(FILE_TYPES)
     expect(['post', 'article']).toEqual(FILE_PURPOSES)
     expect(account.FILE_LIMITS).toEqual(FILE_LIMITS)
+  })
+
+  it('has the same forum boards, blocks, reactions and limits (e11-t05)', async () => {
+    const table = await shared('forum')
+    for (const name of [
+      'BOARD_POST_POLICIES',
+      'BUILTIN_BOARDS',
+      'NEWS_BOARD_ID',
+      'POST_BLOCK_KINDS',
+      'COMMENT_BLOCK_KINDS',
+      'REACTION_EMOJIS',
+      'REPORT_STATUSES',
+      'FORUM_LIMITS',
+    ] as const)
+      expect(forum[name], name).toEqual(table[name])
   })
 })
 
