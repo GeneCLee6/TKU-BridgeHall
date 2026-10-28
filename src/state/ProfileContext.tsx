@@ -135,8 +135,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       setChoice(next)
       keep(next)
       void save(next)
+      // A profile made since the list came (a partnership just accepted) is fetched with it
+      if (!list.some((p) => p.id === id)) api.book.profiles().then(setList, () => {})
     },
-    [userId],
+    [userId, list],
   )
 
   const value = useMemo(

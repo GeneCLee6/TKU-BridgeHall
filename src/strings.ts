@@ -89,6 +89,7 @@ export const strings = {
     signIn: '登入',
     menu: (name: string) => `${name} 的帳號選單`,
     mine: '我的帳號',
+    teams: '隊伍與搭檔',
     admin: '社團管理',
     adminPending: (n: number) => `社團管理（${n} 筆待審核）`,
     newConvention: '新增特約',

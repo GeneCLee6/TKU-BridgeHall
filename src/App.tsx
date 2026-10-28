@@ -26,6 +26,10 @@ const ProfileEditorPage = lazy(() =>
 const ProfileComparePage = lazy(() =>
   import('./pages/ProfileComparePage.tsx').then((m) => ({ default: m.ProfileComparePage })),
 )
+// Teams and partnerships (e2-t05, e2-t06)
+const TeamsPage = lazy(() => import('./pages/TeamsPage.tsx').then((m) => ({ default: m.TeamsPage })))
+const TeamPage = lazy(() => import('./pages/TeamsPage.tsx').then((m) => ({ default: m.TeamPage })))
+const PairPage = lazy(() => import('./pages/PairPage.tsx').then((m) => ({ default: m.PairPage })))
 // Kept out of the first download too, which has a size budget (scripts/check-budget.mjs)
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
 const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ default: m.AccountPage })))
@@ -66,6 +70,9 @@ export function App() {
                   <Route path="/integrations/table" element={<TableReportPage />} />
                   <Route path="/profiles/:id/edit" element={<ProfileEditorPage />} />
                   <Route path="/profiles/:id/compare" element={<ProfileComparePage />} />
+                  <Route path="/teams" element={<TeamsPage />} />
+                  <Route path="/teams/:id" element={<TeamPage />} />
+                  <Route path="/pairs/:id" element={<PairPage />} />
                 </Routes>
               </Suspense>
             </ExpansionProvider>

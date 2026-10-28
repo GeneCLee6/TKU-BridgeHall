@@ -11,6 +11,7 @@ import { settingsStrings } from '../settingsStrings.ts'
 import { accountStrings } from '../strings-account.ts'
 import { strings } from '../strings.ts'
 import { Frame, Gate } from './Frame.tsx'
+import { MyTeams } from './MyTeams.tsx'
 
 /** 我的帳號: what this member may do here, their avatar, 顯示 (個人設定), and changing the password (shared with 淡江牌桌) */
 export function AccountPage() {
@@ -66,6 +67,7 @@ function AccountBody() {
           {strings.opensInNewTab}
         </TableLink>
       </Panel>
+      <MyTeams user={user} />
       <AvatarPanel user={user} />
       {/* 我的帳號 › 顯示 (e9-t15): the same choices as the 個人設定 page */}
       <Panel aria-labelledby="account-display">
