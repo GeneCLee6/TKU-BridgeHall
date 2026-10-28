@@ -1,5 +1,5 @@
-import { Pencil } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { Pencil, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled, { useTheme } from 'styled-components'
 import { CopyLinkButton, IconButton } from '../components/CopyLinkButton.tsx'
@@ -22,6 +22,7 @@ import {
   sectionKey,
   sectionPath,
 } from '../lib/sections.ts'
+import { toolbarEvents } from '../lib/toolbar.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { pageStrings } from '../pageStrings.ts'
@@ -30,7 +31,7 @@ import { useAuth } from '../state/AuthContext.tsx'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
 import { strings } from '../strings.ts'
-import { layout } from '../styles/tokens.ts'
+import { layout, mobileQuery } from '../styles/tokens.ts'
 import type { ConventionKind, ConventionMeta } from '../types/convention.ts'
 import { HomePage } from './HomePage.tsx'
 import { NotFound, useOnlineNote } from './HandbookShell.tsx'
@@ -58,6 +59,8 @@ export function ConventionPage() {
   const { open, close } = useExpansion()
   const onlineNote = useOnlineNote()
   const wide = useMediaQuery(wideQuery)
+  // Phones open 本頁 from the bottom toolbar instead of the list above the text (e9-t09)
+  const phone = useMediaQuery(mobileQuery)
   const heading = useRef<HTMLHeadingElement>(null)
 
   const convention = bySlug(slug)
@@ -72,7 +75,10 @@ export function ConventionPage() {
   // which stays the same object while other conventions load.
   useEffect(() => {
     if (!convention) return
-    open([conventionKey(convention.slug), ...convention.outline.map((s) => sectionKey(convention.slug, s.id))])
+    open([
+      conventionKey(convention.slug),
+      ...convention.outline.map((s) => sectionKey(convention.slug, s.id)),
+    ])
   }, [open, convention])
 
   // A link to a section opens the path down to it at once; the scroll below waits for the content
@@ -156,7 +162,8 @@ export function ConventionPage() {
           )}
         </TopBar>
         {sectionId && path.length === 0 && <NotFound role="alert">{strings.notFound}</NotFound>}
-        {!wide && convention.outline.length > 1 && (
+        {phone && <OnThisPagePopup convention={convention} current={current} />}
+        {!wide && !phone && convention.outline.length > 1 && (
           <Fold data-print="hide">
             <summary>
               {pageStrings.onThisPage}
@@ -198,7 +205,11 @@ export function ConventionPage() {
             )}
             {convention.pending.length > 0 && (
               <PendingLink
-                to={pendingPath(convention.slug, convention.pending[0].sectionId, convention.pending[0].index)}
+                to={pendingPath(
+                  convention.slug,
+                  convention.pending[0].sectionId,
+                  convention.pending[0].index,
+                )}
                 title={strings.pendingJump}
               >
                 {strings.pendingCount(convention.pending.length)}
@@ -227,14 +238,18 @@ export function ConventionPage() {
 
         <Source>
           {strings.source}：{convention.source.title}
-          {convention.source.note && `（${convention.source.note}）`}・{strings.updated}：{convention.updated}
+          {convention.source.note && `（${convention.source.note}）`}・{strings.updated}：
+          {convention.updated}
           {online && `・${online}`}
         </Source>
 
         {(previous || next) && (
           <Neighbours aria-label={pageStrings.neighbours} data-print="hide">
             {previous ? (
-              <Link to={conventionPath(previous.slug)} aria-label={pageStrings.previousLabel(previous.nameZh)}>
+              <Link
+                to={conventionPath(previous.slug)}
+                aria-label={pageStrings.previousLabel(previous.nameZh)}
+              >
                 <small>← {pageStrings.previous}</small>
                 {previous.nameZh}
               </Link>
@@ -242,7 +257,11 @@ export function ConventionPage() {
               <span />
             )}
             {next && (
-              <Link to={conventionPath(next.slug)} aria-label={pageStrings.nextLabel(next.nameZh)} data-next>
+              <Link
+                to={conventionPath(next.slug)}
+                aria-label={pageStrings.nextLabel(next.nameZh)}
+                data-next
+              >
                 <small>{pageStrings.next} →</small>
                 {next.nameZh}
               </Link>
@@ -281,6 +300,101 @@ function SectionList({ convention, current }: { convention: ConventionMeta; curr
     </Sections>
   )
 }
+
+/**
+ * 本頁 on phones (DESIGN-V2.md §7): a list in the middle of the screen, opened by the bottom
+ * toolbar. Esc, ×, the backdrop or choosing a section closes it; the focus goes back to the toolbar.
+ */
+function OnThisPagePopup({
+  convention,
+  current,
+}: {
+  convention: ConventionMeta
+  current?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const show = () => setOpen(true)
+    window.addEventListener(toolbarEvents.onThisPage, show)
+    return () => window.removeEventListener(toolbarEvents.onThisPage, show)
+  }, [])
+  useEffect(() => {
+    if (open) box.current?.querySelector<HTMLElement>('a, button')?.focus()
+  }, [open])
+
+  if (!open) return null
+  const close = () => {
+    setOpen(false)
+    document.querySelector<HTMLElement>('[data-toolbar="on-this-page"]')?.focus()
+  }
+  return (
+    <>
+      <PopupScrim aria-hidden onClick={close} />
+      <Popup
+        ref={box}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="on-this-page-title"
+        onKeyDown={(e) => e.key === 'Escape' && close()}
+        onClick={(e) => (e.target as Element).closest('a') && close()}
+      >
+        <PopupHead>
+          <h2 id="on-this-page-title">{pageStrings.onThisPage}</h2>
+          <IconButton
+            type="button"
+            onClick={close}
+            aria-label={pageStrings.toolbar.closeOnThisPage}
+          >
+            <X size={18} aria-hidden />
+          </IconButton>
+        </PopupHead>
+        <SectionList convention={convention} current={current} />
+      </Popup>
+    </>
+  )
+}
+
+const PopupScrim = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: ${({ theme }) => theme.colors.overlay};
+`
+
+const Popup = styled.div`
+  position: fixed;
+  z-index: 61;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(calc(100vw - ${({ theme }) => theme.space(8)}), 24rem);
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(4)}
+    ${({ theme }) => theme.space(4)};
+  border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.panel};
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: ${({ theme }) => theme.shadows.panel};
+
+  a {
+    min-height: 44px;
+  }
+`
+
+const PopupHead = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: ${({ theme }) => theme.space(2)};
+  h2 {
+    margin: 0;
+    font-family: ${({ theme }) => theme.fonts.heading};
+    font-size: 1.0625rem;
+  }
+`
 
 /** Text and 本頁 side by side; the text keeps a book's measure (about 44rem) */
 const Columns = styled.div<{ $wide: boolean }>`
@@ -448,7 +562,9 @@ const Neighbours = styled.nav`
 const Rail = styled.aside`
   position: sticky;
   top: calc(${({ theme }) => theme.layout.headerHeight} + ${({ theme }) => theme.space(6)});
-  max-height: calc(100vh - ${({ theme }) => theme.layout.headerHeight} - ${({ theme }) => theme.space(12)});
+  max-height: calc(
+    100vh - ${({ theme }) => theme.layout.headerHeight} - ${({ theme }) => theme.space(12)}
+  );
   overflow-y: auto;
   display: flex;
   flex-direction: column;

@@ -1,4 +1,5 @@
 import { BookOpen, FilePlus2, FileUp } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { KindLevel } from '../components/KindLevel.tsx'
@@ -7,13 +8,20 @@ import { conventionPath } from '../lib/sections.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
+import { mobile } from '../styles/tokens.ts'
 import { NotFound, PageBar } from './HandbookShell.tsx'
 
+// The blocks beyond the categories load after the page: the home page has a JS budget
+const blocks = () => import('./HomeBlocks.tsx')
+const ProfileCard = lazy(() => blocks().then((m) => ({ default: m.ProfileCard })))
+const FirstSteps = lazy(() => blocks().then((m) => ({ default: m.FirstSteps })))
+const RecentChanges = lazy(() => blocks().then((m) => ({ default: m.RecentChanges })))
+
 /**
- * The entrance (e9-t04): what the site is, the way to the whole book, and every category with its
- * conventions as links to their own pages. It loads no convention content. The full home page
- * (profile card, 第一次來, news, recent changes) is e9-t08. Also shown for an unknown address,
- * with a note.
+ * The entrance (e9-t08, DESIGN-V2 §5.3): what the site is; in the main column the reader's system
+ * profile, 第一次來 and every category with its conventions as links to their own pages; on the
+ * right 最近更新 (the club news board takes that place in E11). One column on phones, in the same
+ * order. It loads no convention content. Also shown for an unknown address, with a note.
  */
 export function HomePage({ notFound = false }: { notFound?: boolean }) {
   const { conventions, categories } = useContent()
@@ -50,29 +58,44 @@ export function HomePage({ notFound = false }: { notFound?: boolean }) {
           )}
         </Actions>
       </Intro>
-      {categories.map((category) => {
-        const items = conventions.filter((c) => c.category === category.id)
-        if (!items.length) return null
-        return (
-          <Category key={category.id} aria-labelledby={`home-cat-${category.id}`}>
-            <h2 id={`home-cat-${category.id}`}>
-              {category.label}
-              <small>{category.description}</small>
-            </h2>
-            <ul>
-              {items.map((c) => (
-                <li key={c.slug}>
-                  <Link to={conventionPath(c.slug)}>
-                    <strong>{c.nameZh}</strong>
-                    <small lang="en">{c.nameEn}</small>
-                    <KindLevel kind={c.kind} level={c.level} $small />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Category>
-        )
-      })}
+      <Columns>
+        <MainColumn>
+          <Suspense fallback={<Reserve $h={9} />}>
+            <ProfileCard />
+            <FirstSteps />
+          </Suspense>
+          <Categories>
+            {categories.map((category) => {
+              const items = conventions.filter((c) => c.category === category.id)
+              if (!items.length) return null
+              return (
+                <Category key={category.id} aria-labelledby={`home-cat-${category.id}`}>
+                  <h2 id={`home-cat-${category.id}`}>{category.label}</h2>
+                  <p>
+                    {category.description}
+                    <small>{strings.conventionCount(items.length)}</small>
+                  </p>
+                  <ul>
+                    {items.map((c) => (
+                      <li key={c.slug}>
+                        <Link to={conventionPath(c.slug)}>
+                          <span>{c.nameZh}</span>
+                          <KindLevel kind={c.kind} level={c.level} $small />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </Category>
+              )
+            })}
+          </Categories>
+        </MainColumn>
+        <Aside>
+          <Suspense fallback={<Reserve $h={12} />}>
+            <RecentChanges />
+          </Suspense>
+        </Aside>
+      </Columns>
     </>
   )
 }
@@ -103,52 +126,79 @@ const Actions = styled.div`
   margin-top: ${({ theme }) => theme.space(4)};
 `
 
+const Columns = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18rem;
+  gap: ${({ theme }) => theme.space(8)};
+  align-items: start;
+  ${mobile} {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+const MainColumn = styled.div`
+  display: grid;
+  gap: ${({ theme }) => theme.space(8)};
+  min-width: 0;
+`
+
+const Aside = styled.aside`
+  min-width: 0;
+`
+
+/** Room for a lazy block while it loads, so the page does not jump */
+const Reserve = styled.div<{ $h: number }>`
+  min-height: ${({ $h }) => $h}rem;
+`
+
+const Categories = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: ${({ theme }) => theme.space(3)};
+`
+
 const Category = styled.section`
-  margin-bottom: ${({ theme }) => theme.space(8)};
+  padding: ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(4)};
+  border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.shape.panel};
+  background: ${({ theme }) => theme.colors.surface};
 
   h2 {
+    margin: 0;
+    font-family: ${({ theme }) => theme.fonts.heading};
+    font-size: 1.0625rem;
+  }
+  p {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    gap: ${({ theme }) => theme.space(3)};
-    margin: 0 0 ${({ theme }) => theme.space(3)};
-    font-family: ${({ theme }) => theme.fonts.heading};
-    font-size: 1.125rem;
-  }
-  h2 small {
-    font-family: ${({ theme }) => theme.fonts.body};
-    font-size: 0.875rem;
-    font-weight: 400;
+    gap: 0 ${({ theme }) => theme.space(2)};
+    margin: ${({ theme }) => theme.space(1)} 0 ${({ theme }) => theme.space(2)};
+    font-size: 0.8125rem;
     color: ${({ theme }) => theme.colors.textMuted};
   }
+  small {
+    font-size: inherit;
+    color: ${({ theme }) => theme.colors.structure};
+  }
   ul {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-    gap: ${({ theme }) => theme.space(3)};
     margin: 0;
     padding: 0;
     list-style: none;
   }
   a {
     display: flex;
-    flex-direction: column;
-    gap: ${({ theme }) => theme.space(1)};
-    height: 100%;
-    padding: ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(4)};
-    border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
-    border-radius: ${({ theme }) => theme.shape.panel};
-    background: ${({ theme }) => theme.colors.surface};
+    align-items: center;
+    justify-content: space-between;
+    gap: ${({ theme }) => theme.space(2)};
+    min-height: 36px;
+    border-top: 1px solid ${({ theme }) => theme.colors.border};
     color: ${({ theme }) => theme.colors.text};
     text-decoration: none;
+    ${mobile} {
+      min-height: 44px;
+    }
   }
-  a:hover {
-    border-color: ${({ theme }) => theme.colors.primary};
-  }
-  a:hover strong {
+  a:hover span {
     color: ${({ theme }) => theme.colors.primary};
-  }
-  small {
-    color: ${({ theme }) => theme.colors.textMuted};
-    font-size: 0.8125rem;
   }
 `

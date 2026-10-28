@@ -46,7 +46,12 @@ export function ReadingSettings({
     <Panel ref={ref} id={id} role="dialog" aria-labelledby={titleId} data-print="hide">
       <Head>
         <h2 id={titleId}>{strings.reading.open}</h2>
-        <IconButton type="button" onClick={onClose} aria-label={strings.reading.close} title={strings.reading.close}>
+        <IconButton
+          type="button"
+          onClick={onClose}
+          aria-label={strings.reading.close}
+          title={strings.reading.close}
+        >
           <X size={18} aria-hidden />
         </IconButton>
       </Head>
@@ -111,7 +116,8 @@ const Panel = styled.div`
   z-index: 40;
   width: 20rem;
   max-width: calc(100vw - ${({ theme }) => theme.space(8)});
-  padding: ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(4)} ${({ theme }) => theme.space(4)};
+  padding: ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(4)}
+    ${({ theme }) => theme.space(4)};
   border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.shape.panel};
   background: ${({ theme }) => theme.colors.surface};
@@ -123,6 +129,25 @@ const Panel = styled.div`
       opacity: 0;
       transform: translateY(-8px);
     }
+  }
+
+  /* Phones: a sheet above the bottom toolbar, which opens it (DESIGN-V2.md §7) */
+  ${mobile} {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: ${({ theme }) => theme.layout.toolbarHeight};
+    z-index: 44;
+    width: auto;
+    max-width: none;
+    max-height: calc(
+      100vh - ${({ theme }) => theme.layout.headerHeight} -
+        ${({ theme }) => theme.layout.toolbarHeight}
+    );
+    overflow-y: auto;
+    border-width: 1px 0 0;
+    border-radius: ${({ theme }) => theme.shape.panel} ${({ theme }) => theme.shape.panel} 0 0;
   }
 `
 
