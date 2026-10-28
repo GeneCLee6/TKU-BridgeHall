@@ -35,15 +35,18 @@ export function KindLevel({
   kind,
   level,
   $small = false,
+  levelOnly = false,
 }: {
   kind?: string
   level?: string
   /** The catalogue's size */
   $small?: boolean
+  /** Only the level: a section marked apart from its convention (e4-t01) */
+  levelOnly?: boolean
 }) {
   const k = (kind ?? 'convention') as ConventionKind
   const l = level as Level | undefined
-  const KindIcon = conventionKinds.includes(k) ? kindIcons[k] : undefined
+  const KindIcon = !levelOnly && conventionKinds.includes(k) ? kindIcons[k] : undefined
   const LevelIcon = l && levels.includes(l) ? levelIcons[l] : undefined
   if (!KindIcon && !LevelIcon) return null
   const size = $small ? 12 : 14

@@ -1,5 +1,6 @@
 import * as Accordion from '@radix-ui/react-accordion'
 import { ChevronRight, Pencil } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import {
@@ -12,6 +13,7 @@ import {
 } from '../lib/sections.ts'
 import { useConvention } from '../state/ContentContext.tsx'
 import { useExpansion } from '../state/ExpansionContext.tsx'
+import { usePreferences } from '../state/PreferencesContext.tsx'
 import { strings } from '../strings.ts'
 import type { ResolvedConvention } from '../lib/profiles.ts'
 import type { Convention, ConventionMeta } from '../types/convention.ts'
@@ -46,6 +48,10 @@ export function ConventionCard({
   const fetched = useConvention(convention.slug, isOpen && !given)
   const loaded = given ?? fetched.convention
   const { failed, retry } = fetched
+  // 入門版 (e4-t02); the editor's preview (`given`) always shows everything
+  const { reading } = usePreferences()
+  const [shownAll, setShownAll] = useState(false)
+  const basic = reading === 'basic' && !given && !shownAll
 
   return (
     <Accordion.Root
@@ -66,7 +72,13 @@ export function ConventionCard({
               </Names>
             </Trigger>
             {editPath && (
-              <EditLink as={Link} to={editPath} aria-label={strings.online.edit(convention.nameZh)} title={strings.online.edit(convention.nameZh)} data-print="hide">
+              <EditLink
+                as={Link}
+                to={editPath}
+                aria-label={strings.online.edit(convention.nameZh)}
+                title={strings.online.edit(convention.nameZh)}
+                data-print="hide"
+              >
                 <Pencil size={16} aria-hidden />
               </EditLink>
             )}
@@ -104,7 +116,13 @@ export function ConventionCard({
           </Toolbar>
           <ProfileNotes slug={convention.slug} />
           {loaded ? (
-            <SectionAccordion slug={convention.slug} sections={loaded.sections} />
+            <SectionAccordion
+              slug={convention.slug}
+              sections={loaded.sections}
+              basic={basic}
+              level={convention.level}
+              onShowAll={() => setShownAll(true)}
+            />
           ) : failed ? (
             <Loading role="alert">
               {strings.online.loadFailed}

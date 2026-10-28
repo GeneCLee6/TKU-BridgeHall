@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Trash2 } from 'lucide-react
 import { useState } from 'react'
 import styled from 'styled-components'
 import { cellCall, cellText, DEFAULT_SEATS, normaliseCall, parseResponseLines, rulesToText, suitSymbols, textToRules } from '../../lib/editing.ts'
+import { pageStrings } from '../../pageStrings.ts'
 import { strings } from '../../strings.ts'
 import type { AuctionCall, Block, ResponseRow } from '../../types/convention.ts'
 import { Button, Field, Input, Row, Select } from '../ui.tsx'
@@ -10,6 +11,10 @@ import { AutoTextArea, MiniButton } from './fields.tsx'
 type Of<K extends Block['kind']> = Extract<Block, { kind: K }>
 
 const t = strings.editor
+
+/** A block kind's name; 導讀's lives with the lazy page strings, off the home page's bundle */
+// oxlint-disable-next-line react/only-export-components
+export const blockName = (kind: Block['kind']) => (kind === 'intro' ? pageStrings.intro.name : t.blockNames[kind])
 
 /** One content block in the editor: its kind's fields, plus move and delete */
 export function BlockEditor({
@@ -28,9 +33,9 @@ export function BlockEditor({
   onRemove: () => void
 }) {
   return (
-    <Box aria-label={`${t.blockNames[block.kind]} ${index + 1}`}>
+    <Box aria-label={`${blockName(block.kind)} ${index + 1}`}>
       <Head>
-        <Kind>{t.blockNames[block.kind]}</Kind>
+        <Kind>{blockName(block.kind)}</Kind>
         <Row>
           <MiniButton type="button" onClick={() => onMove(-1)} disabled={index === 0} aria-label={t.moveUp} title={t.moveUp}>
             <ArrowUp size={16} aria-hidden />
@@ -48,7 +53,39 @@ export function BlockEditor({
       {block.kind === 'rules' && <RulesEditor block={block} onChange={onChange} />}
       {block.kind === 'responses' && <ResponsesEditor block={block} onChange={onChange} />}
       {block.kind === 'hand' && <HandEditor block={block} onChange={onChange} />}
+      {block.kind === 'intro' && <IntroEditor block={block} onChange={onChange} />}
     </Box>
+  )
+}
+
+/** 導讀 (e4-t04): three optional parts; 常見錯誤 is one per line, kept as typed so the cursor never jumps */
+function IntroEditor({ block, onChange }: { block: Of<'intro'>; onChange: (b: Block) => void }) {
+  const s = pageStrings.intro
+  const [pitfalls, setPitfalls] = useState(() => (block.pitfalls ?? []).join('\n'))
+  return (
+    <>
+      <small>{s.hint}</small>
+      <Field>
+        {s.why}
+        <AutoTextArea value={block.why ?? ''} onChange={(e) => onChange({ ...block, why: e.target.value })} />
+      </Field>
+      <Field>
+        {s.when}
+        <AutoTextArea value={block.when ?? ''} onChange={(e) => onChange({ ...block, when: e.target.value })} />
+      </Field>
+      <Field>
+        {s.pitfalls}
+        <AutoTextArea
+          minRows={3}
+          value={pitfalls}
+          onChange={(e) => {
+            setPitfalls(e.target.value)
+            onChange({ ...block, pitfalls: e.target.value.split('\n') })
+          }}
+        />
+        <small>{s.pitfallsHint}</small>
+      </Field>
+    </>
   )
 }
 

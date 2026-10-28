@@ -3,7 +3,8 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { isStandalone, useInstallOffer } from '../lib/pwa.ts'
-import { themeChoices, usePreferences } from '../state/PreferencesContext.tsx'
+import { pageStrings } from '../pageStrings.ts'
+import { readingModes, themeChoices, usePreferences } from '../state/PreferencesContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 import { IconButton } from './CopyLinkButton.tsx'
@@ -26,9 +27,10 @@ export function ReadingSettings({
   printLabel = strings.reading.printPage,
   aboveToolbar = false,
 }: ReadingActions & { id: string; onClose: () => void; aboveToolbar?: boolean }) {
-  const { themeChoice, setThemeChoice } = usePreferences()
+  const { themeChoice, setThemeChoice, reading, update } = usePreferences()
   const titleId = useId()
   const themeId = useId()
+  const readingId = useId()
   const ref = useRef<HTMLDivElement>(null)
 
   // Keyboard users land in the panel; Esc or × takes them back to the button
@@ -45,7 +47,14 @@ export function ReadingSettings({
   }
 
   return (
-    <Panel ref={ref} id={id} role="dialog" aria-labelledby={titleId} data-print="hide" $aboveToolbar={aboveToolbar}>
+    <Panel
+      ref={ref}
+      id={id}
+      role="dialog"
+      aria-labelledby={titleId}
+      data-print="hide"
+      $aboveToolbar={aboveToolbar}
+    >
       <Head>
         <h2 id={titleId}>{strings.reading.open}</h2>
         <IconButton
@@ -68,6 +77,21 @@ export function ReadingSettings({
               onClick={() => setThemeChoice(choice)}
             >
               {strings.reading.themes[choice]}
+            </button>
+          ))}
+        </Segments>
+      </Row>
+      <Row>
+        <span id={readingId}>{pageStrings.levels.mode}</span>
+        <Segments role="group" aria-labelledby={readingId}>
+          {readingModes.map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              aria-pressed={reading === mode}
+              onClick={() => update({ reading: mode })}
+            >
+              {pageStrings.levels.modes[mode]}
             </button>
           ))}
         </Segments>

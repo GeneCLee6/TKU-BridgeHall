@@ -8,6 +8,7 @@ export const warmPages = () =>
     import('../../src/pages/ConventionPage.tsx'),
     import('../../src/pages/BookPage.tsx'),
     import('../../src/components/ReadingSettings.tsx'),
+    import('../../src/components/NewcomerPrompt.tsx'),
     import('../../src/pages/LoginPage.tsx'),
     import('../../src/pages/SettingsPage.tsx'),
     import('../../src/pages/CardOverview.tsx'),

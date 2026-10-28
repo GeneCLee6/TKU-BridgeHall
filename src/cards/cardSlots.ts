@@ -134,6 +134,8 @@ function blockLines(block: ResolvedBlock, heading: boolean): Collected {
     case 'rules':
       return { lines: ruleLines(block.items), pending: rulePending(block.items) }
     case 'hand':
+    // 導讀 is the club's own words for new players, not part of the system: never on the card
+    case 'intro':
       return { lines: [], pending: false }
     case 'responses': {
       const head = heading && block.auction ? [auctionText(block.auction)] : heading && block.caption ? [plain(block.caption)] : []

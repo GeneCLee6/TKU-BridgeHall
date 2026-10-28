@@ -38,13 +38,19 @@ describe('stored preferences (e9-t15)', () => {
       textSize: 'medium',
       suitColors: 'four',
       density: 'comfortable',
+      reading: 'full',
+      newcomerAsked: false,
     })
   })
 
   it('keep what they know and drop what they do not', () => {
-    store({ theme: 'blue', style: 'neon', layout: 'grid', font: 1, textSize: 'huge', suitColors: 'six', density: 'x' })
+    // Settings from before 「你是新生嗎？」 (e4-t03) are someone who has been here: not asked again
+    const returning = { ...defaultPrefs, newcomerAsked: true }
+    store({ theme: 'blue', style: 'neon', layout: 'grid', font: 1, textSize: 'huge', suitColors: 'six', density: 'x', reading: 'easy' })
+    expect(readStoredPrefs()).toEqual(returning)
+    store({ newcomerAsked: 'yes' })
     expect(readStoredPrefs()).toEqual(defaultPrefs)
-    store({ mode: 'dark', style: 'night', layout: 'cards', font: 'system', textSize: 'xlarge', suitColors: 'two', density: 'compact' })
+    store({ mode: 'dark', style: 'night', layout: 'cards', font: 'system', textSize: 'xlarge', suitColors: 'two', density: 'compact', reading: 'basic', newcomerAsked: false })
     expect(readStoredPrefs()).toEqual({
       theme: 'dark',
       style: 'night',
@@ -53,11 +59,13 @@ describe('stored preferences (e9-t15)', () => {
       textSize: 'xlarge',
       suitColors: 'two',
       density: 'compact',
+      reading: 'basic',
+      newcomerAsked: false,
     })
     window.localStorage.setItem(KEY, 'not json')
     expect(readStoredPrefs()).toEqual(defaultPrefs)
     window.localStorage.setItem(KEY, '"text"')
-    expect(readStoredPrefs()).toEqual(defaultPrefs)
+    expect(readStoredPrefs()).toEqual(returning)
   })
 })
 
@@ -89,6 +97,8 @@ describe('個人設定 page', () => {
       textSize: 'xlarge',
       suitColors: 'two',
       density: 'compact',
+      reading: 'full',
+      newcomerAsked: false,
     })
 
     await userEvent.click(screen.getByRole('button', { name: '全部恢復預設' }))

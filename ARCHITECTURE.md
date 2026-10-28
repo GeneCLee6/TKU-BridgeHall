@@ -63,6 +63,7 @@ type Block =
   | { kind: 'responses'; auction?: Auction; caption?: string; rows: ResponseRow[] }
   | { kind: 'note'; tone: 'info' | 'warning'; text: string }
   | { kind: 'hand'; label?: string; hand: Hand }
+  | { kind: 'intro'; why?: string; when?: string; pitfalls?: string[] } // 導讀（e4-t04），社團撰寫
 
 interface Section {
   id: string            // 在特約內唯一，用於 /c/:slug/:sectionId
@@ -215,7 +216,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 **狀態**
 
 - `ExpansionContext`：一個 `Set<string>` 記錄所有打開的項目（特約 key 為 `slug`，段落為 `slug/sectionId`）。每一層 Radix Accordion 以 `openAmong(keys)` 取得 value、以 `setLevel(keys, open)` 回寫。全部展開／收合與深層連結因此能控制不屬於它們的收合元件。
-- `PreferencesContext`：個人設定（e9-t15）——主題（跟隨系統／淺／深，`themeChoice`；`mode` 是實際生效的淺或深，跟隨時監聽 `prefers-color-scheme`，夜讀風格跟隨時一律深色；舊版存的 `mode` 讀成固定選擇）、風格、版面、字體、字級（小／中／大／特大，`GlobalStyle` 依此設定根字級）、花色顏色（四色／雙色）、密度（舒適／緊湊），存在 localStorage `tku-bridgebook:prefs`（失敗時忽略；`readStoredPrefs` 逐欄檢查，未知值退回預設）。還沒存帳號（要牌桌 API 加欄位）。風格 token 除了「一般」都在 `styles/themes/` 各自一個 chunk，`loadStyle()` 選到才下載，沒載到前顯示「一般」；`main.tsx` 在第一次渲染前先載入存好的風格。
+- `PreferencesContext`：個人設定（e9-t15）——主題（跟隨系統／淺／深，`themeChoice`；`mode` 是實際生效的淺或深，跟隨時監聽 `prefers-color-scheme`，夜讀風格跟隨時一律深色；舊版存的 `mode` 讀成固定選擇）、風格、版面、字體、字級（小／中／大／特大，`GlobalStyle` 依此設定根字級）、花色顏色（四色／雙色）、密度（舒適／緊湊）、閱讀版本 `reading`（完整版／入門版，e4-t02：入門版由 `lib/levels.ts` 決定隱藏哪些段落，`SectionAccordion` 用 `hidden` 屬性藏起來並顯示「還有 n 段」，列印同樣；連到被藏的段落時整頁改顯示全部）、`newcomerAsked`（「你是新生嗎？」問過沒，e4-t03：只問未登入的第一次訪客，提示 `NewcomerPrompt` lazy；在這之前就存過設定的人視為問過；「全部恢復預設」不重設它），存在 localStorage `tku-bridgebook:prefs`（失敗時忽略；`readStoredPrefs` 逐欄檢查，未知值退回預設）。還沒存帳號（要牌桌 API 加欄位）。風格 token 除了「一般」都在 `styles/themes/` 各自一個 chunk，`loadStyle()` 選到才下載，沒載到前顯示「一般」；`main.tsx` 在第一次渲染前先載入存好的風格。
 - `useMediaQuery(mobileQuery)`：決定制度集下拉放在頁首（桌機）或目錄抽屜（手機），同一時間只渲染一組。
 - 不使用狀態管理函式庫；兩個 Context 就夠了。
 

@@ -70,6 +70,22 @@ export type Block =
   | { kind: 'responses'; auction?: Auction; caption?: string; rows: ResponseRow[] }
   | { kind: 'note'; tone: 'info' | 'warning'; text: string }
   | { kind: 'hand'; label?: string; hand: Hand }
+  | IntroBlock
+
+/**
+ * 導讀 (e4-t04): why a convention is used, when, and the usual mistakes, written by the club for
+ * new players rather than transcribed from the source document. Every part is optional; 入門版
+ * shows it like any other block of its section, so it belongs in a section new players see.
+ */
+export interface IntroBlock {
+  kind: 'intro'
+  /** 為什麼用它 */
+  why?: string
+  /** 什麼時候用 */
+  when?: string
+  /** 常見錯誤, one per item */
+  pitfalls?: string[]
+}
 
 export interface Section {
   /** Unique within its convention; used in deep links (/c/:slug/:sectionId) */

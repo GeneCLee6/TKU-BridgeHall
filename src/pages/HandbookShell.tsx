@@ -21,6 +21,10 @@ import { AccountCorner } from './Frame.tsx'
 const ProfileSwitch = lazy(() =>
   import('../components/ProfileSwitch.tsx').then((m) => ({ default: m.ProfileSwitch })),
 )
+// A signed-out reader's first visit only (e4-t03)
+const NewcomerPrompt = lazy(() =>
+  import('../components/NewcomerPrompt.tsx').then((m) => ({ default: m.NewcomerPrompt })),
+)
 // Phones only (e9-t09)
 const MobileToolbar = lazy(() =>
   import('../components/MobileToolbar.tsx').then((m) => ({ default: m.MobileToolbar })),
@@ -34,7 +38,7 @@ const MobileToolbar = lazy(() =>
  */
 export function HandbookShell() {
   const { conventions, categories, status, skipped } = useContent()
-  const { can } = useAuth()
+  const { can, user } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   // Esc closes the phone's catalogue drawer and gives the focus back to the toolbar (e9-t13)
   useEffect(() => {
@@ -51,7 +55,7 @@ export function HandbookShell() {
   const { search, prepare: prepareSearch } = useSearch()
   const isMobile = useMediaQuery(mobileQuery)
   // 版面 (e9-t15): 專注單欄 and 卡片總覽 have no catalogue column; phones keep their drawer
-  const { layout } = usePreferences()
+  const { layout, newcomerAsked } = usePreferences()
   const catalogue = isMobile || layout === 'whole' || layout === 'three'
   const home = useLocation().pathname === '/'
   // Without the catalogue the column is centred: a book's measure for a page, room for the tiles at home
@@ -97,6 +101,11 @@ export function HandbookShell() {
           {profiles.status === 'failed' && <Status role="status">{strings.profiles.failed}</Status>}
           {can('bookEdit') && skipped.length > 0 && (
             <Status role="status">{strings.online.skipped(skipped.length)}</Status>
+          )}
+          {user === null && !newcomerAsked && (
+            <Suspense fallback={null}>
+              <NewcomerPrompt />
+            </Suspense>
           )}
           <Suspense fallback={<p role="status">{strings.loading}</p>}>
             <Outlet />
