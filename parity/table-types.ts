@@ -24,6 +24,7 @@ import type * as TableForum from '@table/shared/forum.ts'
 import type * as Handbook from '../src/types/convention.ts'
 import type * as Protocol from '@table/shared/protocol.ts'
 import type * as Worker from '@table/worker/book.ts'
+import type * as Audit from '@table/worker/audit.ts'
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false
 type Assignable<From, To> = [From] extends [To] ? true : false
@@ -63,6 +64,13 @@ export type Checks = [
   Check<Same<Omit<Book.BookRevision, 'convention'>, Omit<Worker.BookRevision, 'convention'>>>,
   Check<Same<Book.ImportDraftSummary, Worker.ImportDraftSummary>>,
   Check<Same<Book.ImportDraft, Worker.ImportDraft>>,
+  // Review (e8-t01, e8-t02) and the audit log (e8-t09)
+  Check<Same<Book.BookEntryStatus, Worker.BookEntryStatus>>,
+  Check<Reads<Book.BookDraft, Worker.BookDraft>>,
+  Check<Same<Omit<Book.BookDraft, 'convention'>, Omit<Worker.BookDraft, 'convention'>>>,
+  Check<Same<Book.BookDraftSummary, Worker.BookDraftSummary>>,
+  Check<Same<Book.AuditAction, Audit.AuditAction>>,
+  Check<Same<Book.AuditEntry, Audit.AuditEntry>>,
 
   // ── System profiles (shared/protocol.ts) ─────────────────────────────────────────────────────
   // The one difference: the Worker keeps a replaced section as Record<string, unknown>, the
@@ -70,6 +78,7 @@ export type Checks = [
   Check<Same<Book.ProfileScope, Protocol.ProfileScope>>,
   Check<Same<Book.Adoption, Protocol.Adoption>>,
   Check<Same<Book.ProfileNote, Protocol.ProfileNote>>,
+  Check<Same<Book.ProfileCardEdit, Protocol.ProfileCardEdit>>,
   Check<Same<Exclude<Book.ProfileOverride, { kind: 'section' }>, Exclude<Protocol.ProfileOverride, { kind: 'section' }>>>,
   Check<Same<keyof Extract<Book.ProfileOverride, { kind: 'section' }>, keyof Extract<Protocol.ProfileOverride, { kind: 'section' }>>>,
   Check<Same<Omit<Book.SystemProfile, 'overrides'>, Omit<Protocol.SystemProfile, 'overrides'>>>,

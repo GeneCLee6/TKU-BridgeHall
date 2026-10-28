@@ -12,6 +12,8 @@ export const profileCompare = {
   intro: '只列出這個制度集自己的改動；上層制度集的改動請看母制度集的比較頁。',
   linkNote: '「到該段」開啟的手冊頁顯示的是你目前選用的制度集。',
   edit: '編輯制度集',
+  /** The profile's convention card (e3-t05) */
+  card: '看制度卡',
   empty: '這個制度集和母制度集完全相同：沒有不採用的特約，也沒有覆寫。',
 
   problemsTitle: '失效的覆寫與其他問題',

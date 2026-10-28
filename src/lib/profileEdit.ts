@@ -33,7 +33,7 @@ export interface RowRef {
 }
 
 /** What a profile saves, taken from the loaded profile */
-export const toInput = ({ name, scope, parentId, visibility, adopted, overrides, notes }: SystemProfile): ProfileInput => ({
+export const toInput = ({ name, scope, parentId, visibility, adopted, overrides, notes, cardEdits }: SystemProfile): ProfileInput => ({
   name,
   scope,
   ...(parentId !== undefined && { parentId }),
@@ -41,6 +41,8 @@ export const toInput = ({ name, scope, parentId, visibility, adopted, overrides,
   adopted,
   overrides,
   notes,
+  // Not edited here but saved with the rest, so a save keeps the cards' hand edits (e3-t06)
+  ...(cardEdits !== undefined && { cardEdits }),
 })
 
 /** Whether two inputs would save the same profile (key order aside, which the editor keeps) */

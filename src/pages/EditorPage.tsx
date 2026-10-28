@@ -9,7 +9,7 @@ import { Preview } from '../components/editor/Preview.tsx'
 import { RevisionsPanel } from '../components/editor/RevisionsPanel.tsx'
 import { SectionForm, type SectionAction } from '../components/editor/SectionForm.tsx'
 import { Button, ErrorText, Input, Muted, Notice, Row } from '../components/ui.tsx'
-import { api, ApiError, errorText, type BookRevision } from '../lib/api.ts'
+import { api, ApiError, errorText, type BookDraft, type BookRevision } from '../lib/api.ts'
 import { classification, conventionProblems, conventionWarnings, tidyConvention } from '../lib/content.ts'
 import {
   blankBlock,
@@ -25,22 +25,29 @@ import {
   updateSection,
 } from '../lib/editing.ts'
 import { formatDateTime, today } from '../lib/format.ts'
+import { reviewApi } from '../lib/reviewApi.ts'
 import { importedItems, type ImportedItem } from '../lib/importResult.ts'
 import { conventionPath } from '../lib/sections.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
+import { useAuth } from '../state/AuthContext.tsx'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile, mobileQuery } from '../styles/tokens.ts'
 import type { Convention, Section } from '../types/convention.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { Frame, Gate } from './Frame.tsx'
+import { review as r } from './reviewStrings.ts'
 
 const t = strings.editor
 
 /**
- * The online editor. /edit/:slug edits a convention (the online version if there is one, else the
- * bundled one); /new starts an empty one; ?draft=<id>&n=<i> opens what AI import made from a file.
- * Saving publishes at once and keeps the previous version in the history.
+ * The online editor. /edit/:slug edits a convention (its draft if it has one, else the online
+ * version, else the bundled one); /new starts an empty one; ?draft=<id>&n=<i> opens what AI import
+ * made from a file; ?rev=<id> opens the history at that version (the audit log links there).
+ *
+ * Review (e8-t01, e8-t02): editors save a draft and send it for review; only editors and reviewers
+ * see drafts. Reviewers (`bookReview`) publish it, send it back, or publish straight away.
+ * Publishing keeps the previous version in the history.
  */
 export function EditorPage() {
   return (
@@ -69,6 +76,27 @@ function EditorLoader() {
   const index = Number(params.get('n') ?? 0)
   const [draft, setDraft] = useState<DraftSource | null>(null)
   const [error, setError] = useState('')
+  // The convention's review draft (e8-t02): undefined while loading. When it cannot be fetched the
+  // editor starts from the published version; a save then meets the draft's conflict check.
+  const [wip, setWip] = useState<{ key: string; draft: BookDraft | null }>()
+  const wipKey = `${slug ?? ''}|${location.key}`
+
+  useEffect(() => {
+    if (!slug || draftId) return
+    let current = true
+    reviewApi.draftOf(slug).then(
+      (d) => current && setWip({ key: wipKey, draft: d }),
+      () => current && setWip({ key: wipKey, draft: null }),
+    )
+    return () => {
+      current = false
+    }
+  }, [slug, draftId, wipKey])
+  const reviewDraft = wip?.key === wipKey ? wip.draft : undefined
+  const wipConvention =
+    reviewDraft && conventionProblems(reviewDraft.convention, content.categories.map((c) => c.id)).length === 0
+      ? (reviewDraft.convention as Convention)
+      : undefined
 
   useEffect(() => {
     if (!draftId) return
@@ -83,9 +111,10 @@ function EditorLoader() {
       .catch((e) => setError(errorText(e)))
   }, [draftId, index])
 
-  // The content to edit: the online version, or the bundled one when it has none or is hidden
-  const exists = slug ? Boolean(content.bySlug(slug) ?? content.bundledBySlug(slug)) : false
-  const fetched = useConvention(slug, content.status !== 'loading' && exists && !draftId)
+  // The content to edit: the draft, the online version, or the bundled one when it has none or is hidden
+  const published = slug ? Boolean(content.bySlug(slug) ?? content.bundledBySlug(slug)) : false
+  const exists = published || Boolean(wipConvention)
+  const fetched = useConvention(slug, content.status !== 'loading' && published && !draftId)
   // After a save the newer version loads in the background; the open editor keeps going meanwhile
   // (adjusting state during render, the React-recommended alternative to an effect)
   const [shown, setShown] = useState<Convention>()
@@ -95,8 +124,13 @@ function EditorLoader() {
 
   if (error) return <Page><ErrorText role="alert">{error}</ErrorText></Page>
   if (failed) return <Page><ErrorText role="alert">{strings.online.loadFailed}</ErrorText></Page>
-  if (missing && !draftId) return <Page><ErrorText role="alert">{t.notFound}</ErrorText></Page>
-  if (content.status === 'loading' || (draftId && !draft) || (exists && !draftId && !current))
+  if (missing && !draftId && !wipConvention) return <Page><ErrorText role="alert">{t.notFound}</ErrorText></Page>
+  if (
+    content.status === 'loading' ||
+    (draftId && !draft) ||
+    (slug && !draftId && reviewDraft === undefined) ||
+    (published && !draftId && !current && !wipConvention)
+  )
     return <Page><Muted role="status">{strings.loading}</Muted></Page>
 
   const info = slug ? content.online.get(slug) : undefined
@@ -106,7 +140,7 @@ function EditorLoader() {
     ? slug
       ? { ...classification(replaced), ...draft.item.convention, slug }
       : draft.item.convention
-    : (current ?? blankConvention(content.categories[0].id, today()))
+    : (wipConvention ?? current ?? blankConvention(content.categories[0].id, today()))
   if (slug && !exists && !draft) return <Page><ErrorText role="alert">{t.notFound}</ErrorText></Page>
 
   return (
@@ -117,7 +151,9 @@ function EditorLoader() {
       baseVersion={info?.version ?? 0}
       hidden={!!info?.hidden}
       draft={draft}
-      savedNotice={(location.state as { saved?: number } | null)?.saved}
+      reviewDraft={draftId ? null : (reviewDraft ?? null)}
+      savedNotice={(location.state as { notice?: string } | null)?.notice}
+      highlight={params.get('rev') ?? undefined}
     />
   )
 }
@@ -134,16 +170,24 @@ function EditorBody({
   baseVersion,
   hidden,
   draft: source,
+  reviewDraft,
   savedNotice,
+  highlight,
 }: {
   slug?: string
   initial: Convention
   baseVersion: number
   hidden: boolean
   draft: DraftSource | null
-  savedNotice?: number
+  /** The convention's draft for review (e8-t02), null when it has none */
+  reviewDraft: BookDraft | null
+  savedNotice?: string
+  /** A version to point at in the history (?rev=) */
+  highlight?: string
 }) {
   const content = useContent()
+  const { can } = useAuth()
+  const reviewer = can('bookReview')
   // The same list the catalogue shows (lib/categories.ts)
   const { categories } = content
   const categoryIds = categories.map((c) => c.id)
@@ -161,10 +205,15 @@ function EditorBody({
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState(savedNotice ? t.savedVersion(savedNotice) : '')
+  const [notice, setNotice] = useState(savedNotice ?? '')
   const [problems, setProblems] = useState<string[]>([])
-  const [conflict, setConflict] = useState<{ version: number; convention: Convention | null } | null>(null)
-  const [showHistory, setShowHistory] = useState(false)
+  const [conflict, setConflict] = useState<{ version: number; convention: Convention | null; retry: (version: number) => void } | null>(null)
+  const [wip, setWip] = useState(reviewDraft)
+  /** Someone saved the draft in between: reload to carry on from theirs */
+  const [draftConflict, setDraftConflict] = useState('')
+  const [rejectNote, setRejectNote] = useState('')
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const [showHistory, setShowHistory] = useState(Boolean(highlight))
   const [tab, setTab] = useState<'form' | 'preview'>('form')
   const [restore, setRestore] = useState<Saved | null>(() => {
     try {
@@ -255,45 +304,100 @@ function EditorBody({
   const slugTaken = !slug && existingSlugs.has(draft.slug)
   const warnings = useMemo(() => conventionWarnings(draft), [draft])
 
-  const save = async (baseOverride?: number) => {
+  /**
+   * Saves the draft (`mode` 'draft' or 'submit', e8-t02) or publishes ('publish', reviewers only).
+   * A 409 `bookConflict` means a newer version was published since the editor started: the
+   * editor may load it or carry on over it (`retry`). A 409 `bookDraftConflict` means someone
+   * saved the draft in between: reload to carry on from theirs.
+   */
+  const save = async (mode: 'draft' | 'submit' | 'publish', baseOverride?: number) => {
     setError('')
     setNotice('')
+    setDraftConflict('')
     const tidy = tidyConvention({ ...draft, updated: today() })
     const found = [...(slugTaken ? [t.slugTaken] : []), ...conventionProblems(tidy, categoryIds)]
     if (found.length) return setProblems(found)
     setBusy(true)
+    const common = {
+      convention: tidy,
+      baseVersion: baseOverride ?? base,
+      bundledUpdated: content.bundledBySlug(tidy.slug)?.updated,
+      note: note || (source ? `匯入：${source.fileName}` : undefined),
+    }
     try {
-      const { entry } = await api.book.save(tidy.slug, {
-        convention: tidy,
-        baseVersion: baseOverride ?? base,
-        bundledUpdated: content.bundledBySlug(tidy.slug)?.updated,
-        note: note || (source ? `匯入：${source.fileName}` : undefined),
-      })
+      let message: string
+      let nextWip: BookDraft | null = null
+      if (mode === 'publish') {
+        const { entry } = await api.book.save(tidy.slug, { ...common, ...(wip ? { draftRevision: wip.revision } : {}) })
+        await content.reload()
+        setBase(entry.version)
+        message = r.published(entry.version)
+      } else {
+        nextWip = await reviewApi.saveDraft(tidy.slug, { ...common, draftRevision: wip?.revision ?? 0, submit: mode === 'submit' })
+        message = mode === 'submit' ? r.submitted : r.draftSaved
+      }
       forget()
       setDirty(false)
       setConflict(null)
-      await content.reload()
       if (!slug) {
-        navigate(`/edit/${tidy.slug}`, { replace: true, state: { saved: entry.version } })
+        navigate(`/edit/${tidy.slug}`, { replace: true, state: { notice: message } })
         return
       }
+      setWip(nextWip)
       setDraft(tidy)
-      setBase(entry.version)
       setNote('')
-      setNotice(t.savedVersion(entry.version))
+      setNotice(message)
     } catch (e) {
-      if (e instanceof ApiError && e.status === 409) {
-        // Someone saved in between: fetch their version so the editor can choose
+      if (e instanceof ApiError && e.code === 'bookDraftConflict') setDraftConflict(errorText(e))
+      else if (e instanceof ApiError && e.status === 409) {
+        // A newer version was published in between: fetch it so the editor can choose
         const entry = await api.book.entry(tidy.slug).catch(() => null)
         setConflict({
           version: entry?.version ?? 0,
           convention: entry && conventionProblems(entry.convention, categoryIds).length === 0 ? (entry.convention as Convention) : null,
+          retry: (version) => void save(mode, version),
         })
       } else setError(errorText(e))
     } finally {
       setBusy(false)
     }
   }
+
+  /** A reviewer's: back to its editor with why */
+  const reject = async () => {
+    if (!slug || !wip) return
+    setError('')
+    setBusy(true)
+    try {
+      setWip(await reviewApi.reject(slug, wip.revision, rejectNote))
+      setRejectNote('')
+      setNotice(r.rejected)
+    } catch (e) {
+      if (e instanceof ApiError && e.code === 'bookDraftConflict') setDraftConflict(errorText(e))
+      else setError(errorText(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const discard = async () => {
+    if (!slug || !wip) return
+    setError('')
+    setBusy(true)
+    try {
+      await reviewApi.discardDraft(slug, wip.revision)
+      forget()
+      setConfirmDiscard(false)
+      // Start over from what is published (or nothing, for a convention that only had a draft)
+      navigate(content.online.has(slug) || content.bundledBySlug(slug) ? `/edit/${slug}` : '/', { replace: true, state: { notice: r.discarded } })
+    } catch (e) {
+      if (e instanceof ApiError && e.code === 'bookDraftConflict') setDraftConflict(errorText(e))
+      else setError(errorText(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const reloadPage = () => navigate(`/edit/${slug ?? draft.slug}`, { replace: true })
 
   const loadRevision = async (revision: BookRevision) => {
     const { revision: full } = await api.book.revision(revision.slug, revision.id)
@@ -349,7 +453,7 @@ function EditorBody({
             <Wide>{t.back}</Wide>
           </Button>
           <Title>{title}</Title>
-          <State role="status">{dirty ? t.unsaved : t.allSaved}</State>
+          <State role="status">{dirty ? t.unsaved : wip ? (wip.status === 'in-review' ? r.stateInReview : r.stateDraft) : t.allSaved}</State>
         </Heading>
         <Tools>
           <SuitPalette />
@@ -366,9 +470,31 @@ function EditorBody({
             </Button>
           )}
           {!phone && noteInput}
-          <Button type="button" $variant="primary" $small onClick={() => void save()} disabled={busy || (!dirty && !source)}>
-            {busy ? t.saving : phone ? t.saveShort : t.save}
+          {/* Review (e8-t02): a draft, sent for review, published by a reviewer */}
+          <Button type="button" $small onClick={() => void save('draft')} disabled={busy || (!dirty && !source)} aria-label={r.saveDraft}>
+            {busy ? r.saving : phone ? r.saveDraftShort : r.saveDraft}
           </Button>
+          <Button
+            type="button"
+            $variant={reviewer ? undefined : 'primary'}
+            $small
+            onClick={() => void save('submit')}
+            disabled={busy || (!dirty && !source && wip?.status !== 'draft')}
+          >
+            {r.submit}
+          </Button>
+          {reviewer && (
+            <Button
+              type="button"
+              $variant="primary"
+              $small
+              onClick={() => void save('publish')}
+              disabled={busy || (!dirty && !source && !wip)}
+              title={wip ? undefined : r.publishHint}
+            >
+              {wip?.status === 'in-review' ? r.publishDraft : r.publish}
+            </Button>
+          )}
         </Tools>
       </Bar>
       {/* On phones the note stays out of the bar that follows the page, so the bar is short */}
@@ -414,10 +540,70 @@ function EditorBody({
           </Notice>
         )}
         {hidden && <Notice>{t.hidden}</Notice>}
+        {wip && (
+          <Notice>
+            {wip.status === 'in-review'
+              ? r.inReviewInfo(wip, formatDateTime(wip.reviewRequestedAt ?? wip.updatedAt))
+              : r.draftInfo(wip, formatDateTime(wip.updatedAt))}
+            {wip.reviewedBy && wip.reviewNote !== undefined && (
+              <>
+                <br />
+                <strong>{r.sentBack(wip.reviewedBy, formatDateTime(wip.reviewedAt ?? wip.updatedAt))}：</strong>
+                {wip.reviewNote || r.sentBackNoReason}
+              </>
+            )}
+            {wip.baseVersion < base && (
+              <>
+                <br />
+                {r.stale(wip.baseVersion, base)}
+              </>
+            )}
+            {reviewer && wip.status === 'in-review' && !dirty && (
+              <Row>
+                <NoteInput
+                  value={rejectNote}
+                  onChange={(e) => setRejectNote(e.target.value)}
+                  placeholder={r.rejectReasonHint}
+                  aria-label={r.rejectReason}
+                  maxLength={500}
+                />
+                <Button type="button" $small onClick={() => void reject()} disabled={busy}>
+                  {r.reject}
+                </Button>
+              </Row>
+            )}
+            <Row>
+              {confirmDiscard ? (
+                <>
+                  {r.discardConfirm}
+                  <Button type="button" $small $variant="danger" onClick={() => void discard()} disabled={busy}>
+                    {r.confirm}
+                  </Button>
+                  <Button type="button" $small onClick={() => setConfirmDiscard(false)}>
+                    {r.cancel}
+                  </Button>
+                </>
+              ) : (
+                <Button type="button" $small $variant="ghost" onClick={() => setConfirmDiscard(true)}>
+                  {r.discard}
+                </Button>
+              )}
+            </Row>
+          </Notice>
+        )}
+        {!reviewer && !wip && <Muted>{r.editorOnly}</Muted>}
+        {draftConflict && (
+          <ErrorText role="alert">
+            {draftConflict}{' '}
+            <Button type="button" $small onClick={reloadPage}>
+              {r.reload}
+            </Button>
+          </ErrorText>
+        )}
         {content.status === 'offline' && <ErrorText>{strings.online.offline}</ErrorText>}
         {notice && (
           <Notice role="status">
-            {notice} {slug && !dirty && <Link to={conventionPath(slug)}>{t.view}</Link>}
+            {notice} {slug && !dirty && !wip && <Link to={conventionPath(slug)}>{t.view}</Link>}
           </Notice>
         )}
         {error && <ErrorText role="alert">{error}</ErrorText>}
@@ -438,7 +624,7 @@ function EditorBody({
                   {t.loadTheirs}
                 </Button>
               )}
-              <Button type="button" $small $variant="danger" onClick={() => void save(conflict.version)}>
+              <Button type="button" $small $variant="danger" onClick={() => conflict.retry(conflict.version)}>
                 {t.overwrite}
               </Button>
             </Row>
@@ -492,8 +678,10 @@ function EditorBody({
           <RevisionsPanel
             load={() => api.book.revisions(slug).then((r) => r.revisions)}
             onLoad={loadRevision}
+            highlight={highlight}
+            // Hiding and going back to the bundled one publish at once: reviewers' (e8-t01)
             onReset={
-              isEdited && content.bundledBySlug(slug)
+              reviewer && isEdited && content.bundledBySlug(slug)
                 ? async () => {
                     await api.book.reset(slug, base)
                     forget()
@@ -503,8 +691,7 @@ function EditorBody({
                 : undefined
             }
             onHide={
-              // Editors may hide a convention too: everything but accounts is theirs (ARCHITECTURE.md §4.2)
-              !hidden
+              reviewer && !hidden
                 ? async () => {
                     await api.book.hide(slug, base)
                     forget()
