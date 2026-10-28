@@ -50,6 +50,21 @@ test.describe('axe', () => {
       })
     }
 
+  // 練習 (e6-t02, e6-t03): the settings, then a question answered with its source table
+  for (const [sizeName, size] of [
+    ['desktop', DESKTOP],
+    ['phone', PHONE],
+  ] as const)
+    test(`practice · ${sizeName}`, async ({ page }) => {
+      await open(page, '/practice?c=lebensohl', size, { theme: 'light' })
+      await page.getByRole('button', { name: '開始練習' }).waitFor()
+      await audit(page)
+      await page.getByRole('button', { name: '開始練習' }).click()
+      await page.getByRole('list', { name: '選項' }).getByRole('button').first().click()
+      await page.getByRole('link', { name: '去讀原文' }).waitFor()
+      await audit(page)
+    })
+
   test('卡片總覽 with a preview open', async ({ page }) => {
     await open(page, '/', DESKTOP, { layout: 'cards', theme: 'light' })
     await audit(page)
