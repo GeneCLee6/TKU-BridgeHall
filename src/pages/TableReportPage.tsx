@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { DataTable, TableScroll } from '../components/DataTable.tsx'
@@ -24,6 +24,12 @@ import {
 } from '../lib/api.ts'
 import { formatCall } from '../lib/calls.ts'
 import { formatDateTime } from '../lib/format.ts'
+import {
+  FILLABLE,
+  filledTargets,
+  unresolvedTarget,
+  type ConditionsTarget,
+} from '../lib/handConditions.ts'
 import { resolveProfile, summaryChain } from '../lib/profiles.ts'
 import {
   batches,
@@ -44,6 +50,7 @@ import {
 import { SYSTEM_SPEC_LIMITS, tableSync } from '../lib/tableSync.ts'
 import { useContent } from '../state/ContentContext.tsx'
 import { Frame, Gate } from './Frame.tsx'
+import { HandConditionsForm } from './HandConditionsForm.tsx'
 import { tableReport as t } from './tableReportStrings.ts'
 
 /**
@@ -77,6 +84,12 @@ function Report() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [syncing, setSyncing] = useState(false)
+  /** Bumped after hand conditions are saved, so the rules are made again (e7-t08) */
+  const [revision, setRevision] = useState(0)
+  /** The row whose hand conditions form is open */
+  const [open, setOpen] = useState<string | null>(null)
+  /** TKB's answers by query, so remaking the rules asks only about new auctions */
+  const answered = useRef(new Map<string, RobotMeaningsItem>())
   const load = useRef(content.loadAll)
   useEffect(() => {
     load.current = content.loadAll
@@ -121,7 +134,7 @@ function Report() {
     return () => {
       current = false
     }
-  }, [profileId, profiles])
+  }, [profileId, profiles, revision])
 
   const choose = (id: string) => {
     setProfileId(id)
@@ -137,13 +150,22 @@ function Report() {
   useEffect(() => {
     if (!spec) return
     let current = true
-    const groups = batches(meaningQueries(spec), SYSTEM_SPEC_LIMITS.meaningItemsMax)
-    const all = groups.reduce((n, g) => n + g.length, 0)
+    const cache = answered.current
+    const queries = meaningQueries(spec)
+    const answers = queries.flatMap((q) => cache.get(JSON.stringify(q)) ?? [])
+    const asked = queries.filter((q) => !cache.has(JSON.stringify(q)))
+    const groups = batches(asked, SYSTEM_SPEC_LIMITS.meaningItemsMax)
+    const all = queries.length
+    if (!groups.length) setCompare({ done: all, all, answers })
     void (async () => {
-      const answers: RobotMeaningsItem[] = []
       for (const group of groups) {
         try {
-          answers.push(...(await tableSync.robotMeanings(group)))
+          const got = await tableSync.robotMeanings(group)
+          for (const q of group) {
+            const item = got.find((a) => a.after === q.after)
+            if (item) cache.set(JSON.stringify(q), item)
+          }
+          answers.push(...got)
         } catch (e) {
           if (current)
             setCompare({ done: answers.length, all, answers: [...answers], error: errorText(e) })
@@ -184,6 +206,27 @@ function Report() {
     setCompare(null)
     setAttempt((a) => a + 1)
   }
+  const [filledNotice, setFilledNotice] = useState('')
+  const conditionsSaved = async (message: string) => {
+    setOpen(null)
+    await content.reload()
+    setFilledNotice(message)
+    setRevision((r) => r + 1)
+  }
+  const filled = useMemo(() => (spec ? filledTargets(spec) : []), [spec])
+  const conditionsForm = (key: string, target: ConditionsTarget, hasConditions: boolean, columns: number) =>
+    open === key && (
+      <tr>
+        <td colSpan={columns}>
+          <HandConditionsForm
+            target={target}
+            filled={hasConditions}
+            onDone={(message) => void conditionsSaved(message)}
+            onCancel={() => setOpen(null)}
+          />
+        </td>
+      </tr>
+    )
   const nameOf = (id: string) => profiles?.find((p) => p.id === id)?.name ?? id
   const conventionName = (slug: string) => content.bySlug(slug)?.nameZh ?? slug
 
@@ -283,6 +326,57 @@ function Report() {
         </Panel>
       )}
 
+      {filledNotice && (
+        <Notice role="status">{filledNotice}</Notice>
+      )}
+
+      {spec && filled.length > 0 && (
+        <Panel aria-labelledby="filled">
+          <PanelTitle id="filled">{t.filledTitle}</PanelTitle>
+          <Muted>{t.filledIntro}</Muted>
+          <TableScroll>
+            <Table>
+              <thead>
+                <tr>
+                  <th>{t.colConvention}</th>
+                  <th>{t.colAuction}</th>
+                  <th>{t.colCall}</th>
+                  <th>{t.colBook}</th>
+                  <th>{t.colConditions}</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {filled.map((f, i) => (
+                  <Fragment key={i}>
+                    <tr>
+                      <td>
+                        <Link to={`/c/${f.ref.slug}/${f.ref.sectionId}`}>{conventionName(f.ref.slug)}</Link>
+                      </td>
+                      <NoWrap>{f.after.map(auctionText).join(' / ')}</NoWrap>
+                      <NoWrap>{f.rules.map((r) => callText(r.call)).join('/')}</NoWrap>
+                      <td>{f.text}</td>
+                      <td>{f.shows && showsText(f.shows)}</td>
+                      <td>
+                        <Button
+                          type="button"
+                          $small
+                          aria-label={`${t.edit}：${conventionName(f.ref.slug)} ${f.rules.map((r) => callText(r.call)).join('/')}`}
+                          onClick={() => setOpen(`f${i}`)}
+                        >
+                          {t.edit}
+                        </Button>
+                      </td>
+                    </tr>
+                    {conditionsForm(`f${i}`, f, true, 6)}
+                  </Fragment>
+                ))}
+              </tbody>
+            </Table>
+          </TableScroll>
+        </Panel>
+      )}
+
       {spec && spec.unresolved.length > 0 && (
         <Panel aria-labelledby="unresolved">
           <PanelTitle id="unresolved">{t.unresolvedTitle}</PanelTitle>
@@ -301,24 +395,45 @@ function Report() {
                       <th>{t.colCall}</th>
                       <th>{t.colBook}</th>
                       <th>{t.colDetail}</th>
+                      {FILLABLE.has(reason) && <th />}
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((u, i) => (
-                      <tr key={i}>
-                        <td>
-                          <Link to={`/c/${u.ref.slug}/${u.ref.sectionId}`}>
-                            {conventionName(u.ref.slug)}
-                          </Link>
-                        </td>
-                        <NoWrap>{u.after ? u.after.map(auctionText).join(' / ') : ''}</NoWrap>
-                        <NoWrap>{formatCall(u.call)}</NoWrap>
-                        <td>{u.text}</td>
-                        <td>
-                          {[u.detail, u.shows && showsText(u.shows)].filter(Boolean).join(' · ')}
-                        </td>
-                      </tr>
-                    ))}
+                    {rows.map((u, i) => {
+                      const target = unresolvedTarget(u)
+                      return (
+                        <Fragment key={i}>
+                          <tr>
+                            <td>
+                              <Link to={`/c/${u.ref.slug}/${u.ref.sectionId}`}>
+                                {conventionName(u.ref.slug)}
+                              </Link>
+                            </td>
+                            <NoWrap>{u.after ? u.after.map(auctionText).join(' / ') : ''}</NoWrap>
+                            <NoWrap>{formatCall(u.call)}</NoWrap>
+                            <td>{u.text}</td>
+                            <td>
+                              {[u.detail, u.shows && showsText(u.shows)].filter(Boolean).join(' · ')}
+                            </td>
+                            {FILLABLE.has(reason) && (
+                              <td>
+                                {target && (
+                                  <Button
+                                    type="button"
+                                    $small
+                                    aria-label={`${t.fill}：${conventionName(u.ref.slug)} ${formatCall(u.call)}`}
+                                    onClick={() => setOpen(`u${reason}${i}`)}
+                                  >
+                                    {t.fill}
+                                  </Button>
+                                )}
+                              </td>
+                            )}
+                          </tr>
+                          {target && conditionsForm(`u${reason}${i}`, target, false, 6)}
+                        </Fragment>
+                      )
+                    })}
                   </tbody>
                 </Table>
               </TableScroll>
