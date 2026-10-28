@@ -72,6 +72,8 @@ beforeEach(() => {
         }))
         return json(200, { items })
       }
+      if (method === 'PUT' && path.startsWith('/api/book/conventions/'))
+        return json(200, { entry: { slug: path.split('/').pop(), version: 1 } })
       return json(401, { error: '請先登入', code: 'signInFirst' })
     }),
   )
@@ -116,5 +118,36 @@ describe('the table report', () => {
     expect(put.path).toBe('/api/book/system-spec/club')
     expect((put.body as { spec: SystemSpec }).spec.rules.length).toBeGreaterThan(700)
     expect(screen.getByText(/和現在的內容相同/)).toBeInTheDocument()
+  }, 30_000)
+
+  it('saves an editor’s hand conditions on the club’s row, beside its words (e7-t08)', async () => {
+    render(
+      <MemoryRouter initialEntries={['/integrations/table']}>
+        <App />
+      </MemoryRouter>,
+    )
+    await screen.findByText(/^和牌桌規則不一致 \d+ 條；牌桌沒有規則 \d+ 條。$/, {}, { timeout: 10_000 })
+    const askedBefore = sent.filter((s) => s.path === '/api/book/robot-meanings').length
+
+    const unresolved = screen.getByRole('region', { name: '轉不出來的叫品' })
+    await userEvent.click(within(unresolved).getAllByRole('button', { name: /^補條件：/ })[0])
+    const form = await within(unresolved).findByRole('form', {}, { timeout: 10_000 })
+    await userEvent.type(within(form).getByRole('spinbutton', { name: '點力下限' }), '8')
+    await userEvent.clear(within(form).getByRole('spinbutton', { name: '點力上限' }))
+    await userEvent.type(within(form).getByRole('spinbutton', { name: '點力上限' }), '10')
+    await userEvent.click(within(form).getByRole('button', { name: '存條件' }))
+    expect(await screen.findByText('已存條件，規則已重新轉換。', {}, { timeout: 10_000 })).toBeInTheDocument()
+
+    const put = sent.find((s) => s.method === 'PUT' && s.path.startsWith('/api/book/conventions/'))!
+    const body = put.body as { convention: { sections: unknown[] }; baseVersion: number; note: string }
+    expect(body.baseVersion).toBe(0)
+    expect(body.note).toMatch(/^補手牌條件：/)
+    // One row gets them (the first row offered, with what the patterns read kept); its words stay
+    const rows = JSON.stringify(body.convention.sections).match(/"conditions":\{[^}]*\}/g)
+    expect(rows).toHaveLength(1)
+    expect(rows![0]).toMatch(/^"conditions":\{"hcp":\[8,10\]/)
+    // Remaking the rules asks TKB only about auctions it was not asked about
+    await screen.findByText(/^和牌桌規則不一致 \d+ 條；牌桌沒有規則 \d+ 條。$/, {}, { timeout: 10_000 })
+    expect(sent.filter((s) => s.path === '/api/book/robot-meanings').length).toBe(askedBefore)
   }, 30_000)
 })

@@ -64,7 +64,7 @@ depends_on: [E1, E2]
 - [ ] `e7-t05` `bookRef`：牌桌 Alert／叫牌盒提示的書圖示；橋譜 `?profile=` 支援 · AC-7.3 · S · ← e7-t03
 - [ ] `e7-t06` 牌桌紀錄頁的叫品意義 hover 與連結（牌桌 task）· AC-7.4 · S · ← e7-t03
 - [ ] `e7-t07` 共用元件對拍測試（`Suit`、`CallLabel`、`AuctionTable`、`DealDiagram`）· AC-7.5 · S · ← e5-t02
-- [ ] `e7-t08` 幹部補手牌條件的 UI：在 `unresolved` 清單直接填「點力／張數／迫叫」存回段落的 `rows[].conditions`（新增選填欄位）· AC-7.1 · M · ← e7-t04
+- [x] `e7-t08` 幹部補手牌條件的 UI：在 `unresolved` 清單直接填「點力／張數／迫叫」存回段落的 `rows[].conditions`（新增選填欄位）· AC-7.1 · M · ← e7-t04 — PR #17（牌桌 #171）：報告頁「補條件」，存在社團版的叫品列（線上內容），`toSystemSpec` 轉成 `filled` 規則；`docs/SYSTEM-SPEC.md` §8
 
 ## 風險與對策
 
