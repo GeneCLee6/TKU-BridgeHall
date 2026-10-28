@@ -581,7 +581,21 @@ function NotesPanel({ input, base, onChange }: { input: ProfileInput; base: Reso
     )
     setDraft(emptyNote)
   }
-  const author = (by: string) => (by === user?.id ? user.username : by)
+  // Other members' names come from the member list; an id stands in until it loads or when it fails
+  const [names, setNames] = useState<Record<string, string>>({})
+  const others = input.notes.some((n) => n.by !== user?.id)
+  useEffect(() => {
+    if (!others) return
+    let live = true
+    api.club
+      .members()
+      .then((members) => live && setNames(Object.fromEntries(members.map((m) => [m.id, m.displayName ?? m.username]))))
+      .catch(() => {})
+    return () => {
+      live = false
+    }
+  }, [others])
+  const author = (by: string) => (by === user?.id ? user.username : (names[by] ?? by))
   return (
     <Panel aria-labelledby="profile-notes">
       <PanelTitle id="profile-notes">{t.notesTitle}</PanelTitle>
