@@ -303,6 +303,8 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - **不進首頁**：這些型別與呼叫在 `lib/account.ts`，不在 `api.ts`；介面文字在 `strings-account.ts`，不在 `strings.ts`（首頁 JS 預算只剩 1 kB 左右）；只有 lazy 的頁面 import 它們。型別對拍在 `parity/table-types.ts`（牌桌 `shared/profile.ts`、`avatar.ts`、`files.ts`）。
 - **討論區型別**（e11-t05）：`lib/forum.ts` 是牌桌 `shared/forum.ts` 的複本（`Board`、`Post`、`PostBlock`、`CommentBlock`、`Comment`、`Reaction`、`Report`、內建四板、`FORUM_LIMITS`），每個型別 `Same` 對拍、常數在 `tests/lib/tableParity.test.ts` 比值；要改先改牌桌。牌與叫牌用 `lib/board.ts` 的型別；`hand` 區塊是 `cards: Card[]`（`HandInput` 的格式），特約的叫品表（`responses`）不放進貼文，引用特約用 `ref`。
 
+- **討論區 API**（e11-t06、e11-t07，G3）：後端是牌桌 `worker/forum.ts`（SQLite 五張表 `forum_*`，牌桌 ARCHITECTURE.md 的「論壇 Worker」與 API 表），全部路由只給登入社員。橋館的呼叫在 `lib/forumApi.ts`（`forumApi.boards`／`boardPage`／`latest`／`post`／`createPost`／`comment`／`react`…），只有討論區的 lazy 頁面 import，首頁的兩個區塊（e11-t16）用 `import()`。請求與回應型別（`BoardInput`、`PostInput`、`CommentInput`、`BoardPage`、`PostThread`、`ForumLatest`）與 `Post.mentions`／`Comment.mentions` 也在 `lib/forum.ts`、一起對拍。規則（牌桌端檢查）：公告板只有幹部發文（`forumModerate` 在 e11-t09 之前是管理員）、置頂與鎖定是幹部的、作者才能編輯、作者或幹部能刪；留言巢狀一層；反應每人每則一種；發文加留言每人每分鐘 5 則（429 `slowDown`）。
+
 ### 4.7 牌桌整合（`pages/TableReportPage.tsx`、`lib/specReport.ts`、`lib/tableSync.ts`，E7 e7-t03 e7-t04）
 
 - `/integrations/table`（bookEdit，lazy；管理頁有連結）：選一個制度集，頁面用社團版內容（內建＋線上，不經過 `ProfiledContent`）與該制度集的繼承鏈（`summaryChain`＋`resolveProfile`）算出套用後的特約，再用 `toSystemSpec`（`lib/systemSpec.ts`，牌桌 `shared/systemSpec.ts` 的逐字複本，`docs/SYSTEM-SPEC.md`）轉成規則。
