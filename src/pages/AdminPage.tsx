@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { CategoriesPanel } from '../components/admin/CategoriesPanel.tsx'
 import { TeamsPanel } from '../components/admin/TeamsPanel.tsx'
@@ -19,6 +20,7 @@ import { useAuth } from '../state/AuthContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 import { Frame, Gate } from './Frame.tsx'
+import { tableReport } from './tableReportStrings.ts'
 
 /**
  * 社團管理. Admins manage everything, accounts included; editors (bookEdit) everything else
@@ -48,6 +50,9 @@ function AdminOrEditor() {
       {/* Not about accounts: editors' too */}
       <CategoriesPanel />
       <TeamsPanel />
+      <Muted>
+        <Link to="/integrations/table">{tableReport.adminLink}</Link>
+      </Muted>
       {user?.admin && (
         <Muted>
           {t.more}{' '}

@@ -47,8 +47,8 @@ depends_on: [E1, E2]
 
 ## 驗收條件
 
-- [ ] AC-7.1 — `toSystemSpec` 純函式：內建 22 個特約可轉換，`unresolved` 清單正確；牌桌載入指定制度集後機器人叫牌有說明且來自橋譜文字。
-- [ ] AC-7.2 — 差異報告頁列出不一致與未解析的叫品；最後同步時間；可一鍵重新同步。
+- [x] AC-7.1 — `toSystemSpec` 純函式：內建 22 個特約可轉換，`unresolved` 清單正確；牌桌載入指定制度集後機器人叫牌有說明且來自橋譜文字。
+- [x] AC-7.2 — 差異報告頁列出不一致與未解析的叫品；最後同步時間；可一鍵重新同步。
 - [ ] AC-7.3 — 牌桌 Alert 與叫牌盒提示有 `bookRef`；橋譜支援 `?profile=` 開指定制度集。
 - [ ] AC-7.4 — 牌桌紀錄頁叫牌過程 hover 顯示橋譜意義、點擊開橋譜段落。
 - [ ] AC-7.5 — 共用顯示元件有對拍測試；兩邊畫出來的花色、叫品、四家牌一致。
@@ -59,8 +59,8 @@ depends_on: [E1, E2]
 
 - [x] `e7-t01` 研究牌桌 `shared/robot/system` 的 `Rule` 形狀，寫轉換對照表（文件）與意義文字啟發式清單 · AC-7.1 · S — `docs/SYSTEM-SPEC.md`
 - [x] `e7-t02` `toSystemSpec` 純函式（放牌桌 `shared/`，橋譜對拍）與測試快照 · AC-7.1 · M · ← e7-t01, e1-t08 — 牌桌 `shared/systemSpec.ts`（牌桌 #123），橋譜 `src/lib/systemSpec.ts` 逐字複本＋快照
-- [ ] `e7-t03` Worker `GET /api/book/system-spec`；牌桌 `ClubConfig.systemProfileId` 與載入（牌桌 task）· AC-7.1 · M · ← e7-t02
-- [ ] `e7-t04` 差異報告頁 `/integrations/table` · AC-7.2 · M · ← e7-t03
+- [x] `e7-t03` Worker `GET /api/book/system-spec`；牌桌 `ClubConfig.systemProfileId` 與載入（牌桌 task）· AC-7.1 · M · ← e7-t02 — 牌桌 #168：spec 在橋館轉好、`PUT` 同步存在牌桌（Worker 沒有內建特約、CPU 不夠）；TKB 叫品附橋館原文，叫牌仍照牌桌已驗證的規則
+- [x] `e7-t04` 差異報告頁 `/integrations/table` · AC-7.2 · M · ← e7-t03 — PR #9：同步與最後同步時間、讀法不同／牌桌沒有規則／轉不出來的叫品
 - [ ] `e7-t05` `bookRef`：牌桌 Alert／叫牌盒提示的書圖示；橋譜 `?profile=` 支援 · AC-7.3 · S · ← e7-t03
 - [ ] `e7-t06` 牌桌紀錄頁的叫品意義 hover 與連結（牌桌 task）· AC-7.4 · S · ← e7-t03
 - [ ] `e7-t07` 共用元件對拍測試（`Suit`、`CallLabel`、`AuctionTable`、`DealDiagram`）· AC-7.5 · S · ← e5-t02
