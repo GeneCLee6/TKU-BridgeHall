@@ -47,6 +47,8 @@ describe('home page', () => {
     const card = within(await screen.findByRole('region', { name: '社團預設制度' }, { timeout: 5000 }))
     expect(card.getByText('目前的制度集 · 社團')).toBeInTheDocument()
     expect(card.getByRole('link', { name: '讀制度' })).toHaveAttribute('href', '/book')
+    // 練習 (e6-t09)
+    expect(card.getByRole('link', { name: '練習叫牌' })).toHaveAttribute('href', '/practice')
     expect(await card.findByRole('link', { name: '登入' })).toHaveAttribute('href', '/login?next=%2F')
 
     const lessons = within(screen.getByRole('region', { name: '第一次來？從這裡開始' })).getAllByRole('link')
