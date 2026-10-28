@@ -12,6 +12,8 @@ export const pageStrings = {
   /** The convention page's 本頁 column and, on narrower screens, its fold-out list */
   onThisPage: '本頁',
   sectionCount: (n: number) => `${n} 節`,
+  /** The convention page's way into 練習 (e6-t09) */
+  practice: '練這個特約',
   /** The home page's blocks (e9-t08, DESIGN-V2 §5.3); the categories stay in strings.ts */
   home: {
     profileEyebrow: (scope: string) => `目前的制度集 · ${scope}`,
@@ -24,6 +26,7 @@ export const pageStrings = {
     notes: (n: number) => `備忘 ${n} 則`,
     lastUpdated: (date: string, by: string) => `最後更新 ${date}${by ? ` ${by}` : ''}`,
     read: '讀制度',
+    practice: '練習叫牌',
     firstTime: '第一次來？從這裡開始',
     lesson: (n: number) => `第 ${n} 課`,
     categories: '全書',
