@@ -285,3 +285,6 @@ export const mobileQuery = `(max-width: ${layout.mobileBreakpoint})`
 
 /** Media query helper: `${mobile} { ... }` */
 export const mobile = `@media ${mobileQuery}`
+
+// The default avatars' colours (e11-t03) are in `styles/avatarColors.ts`: a module of their own, so
+// the chunk that carries these tokens to the home page does not carry them too
