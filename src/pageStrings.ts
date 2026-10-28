@@ -70,6 +70,11 @@ export const pageStrings = {
     pitfallsHint: '一行一項。',
     hint: '給新生看的導讀，由社團撰寫（不是原文轉錄）；三項都可以只填一部分。',
   },
+  /** The blocks only articles have (e5-t01, e5-t12) */
+  article: {
+    /** Shown in place of a picture without an address: the bucket is not set up, or it expired */
+    pictureMissing: (alt: string) => (alt.trim() ? `圖片暫時無法顯示：${alt}` : '圖片暫時無法顯示'),
+  },
   /** The printed book's cover and contents pages (e9-t10) */
   print: {
     club: '淡江橋藝社',

@@ -5,6 +5,7 @@
  * shared/protocol.ts and worker/book.ts in TKU-BridgeTable; change them together.
  */
 
+import type { ArticleMeta } from '../types/article.ts'
 import type { ConventionMeta, Section } from '../types/convention.ts'
 import type { Profile } from './account.ts'
 import type { SpecShows, SystemSpec } from './systemSpec.ts'
@@ -133,6 +134,8 @@ export type AuditAction =
   | 'book:hide'
   | 'book:reset'
   | 'book:categories'
+  | 'article:publish'
+  | 'article:hide'
   | 'profile:create'
   | 'profile:save'
   | 'profile:delete'
@@ -142,7 +145,7 @@ export interface AuditEntry {
   at: number
   by: string
   action: AuditAction
-  /** A convention's slug, a profile's id, or 'categories' */
+  /** A convention's or an article's slug, a profile's id, or 'categories' */
   target: string
   version?: number
   /** The saved version's id (BookRevision.id), for publishing, hiding and resets */
@@ -192,6 +195,54 @@ export interface BookRevision {
   by: string
   note: string
   convention?: unknown
+}
+
+/**
+ * One article in the library as published (e5-t04; TKU-BridgeTable worker/articles.ts): `article`
+ * is null when it is hidden, which only editors get. lib/articles.ts checks its shape before use.
+ */
+export interface ArticleEntry {
+  slug: string
+  version: number
+  article: unknown
+  createdAt: number
+  updatedAt: number
+  updatedBy: string
+  status: 'published'
+  reviewedBy: string
+  reviewedAt: number
+}
+
+export type ArticleEntrySummary = Omit<ArticleEntry, 'article'> & { meta: ArticleMeta | null }
+
+/**
+ * Signed, short-lived addresses for the file keys an article names (its cover and pictures); empty
+ * while the R2 bucket is not set up (`filesOff`), when the page shows the pictures' descriptions
+ */
+export type ArticleFiles = Record<string, { url: string; thumbUrl?: string }>
+
+/** GET /api/book/articles: what the reader may see, without blocks, and the covers' addresses */
+export interface ArticleList {
+  version: number
+  entries: ArticleEntrySummary[]
+  files: ArticleFiles
+}
+
+/** GET /api/book/articles/:slug */
+export interface ArticleResponse {
+  entry: ArticleEntry
+  files: ArticleFiles
+}
+
+export interface ArticleRevision {
+  id: string
+  slug: string
+  version: number
+  action: 'save' | 'hide'
+  at: number
+  by: string
+  note: string
+  article?: unknown
 }
 
 export interface ImportDraftSummary {
@@ -620,6 +671,21 @@ export const api = {
       request<{ revision: ProfileRevision }>(`/api/book/profiles/${encodeURIComponent(id)}/revisions/${version}`).then(
         (r) => r.revision,
       ),
+    /**
+     * The library's articles (e5-t04). Anyone reads them; signed out, `members-only` ones are left
+     * out (404 `articleGone` for one), and only editors get hidden ones. Publishing and hiding are a
+     * reviewer's (409 `articleConflict` when someone published since `baseVersion`, 0 for a new one).
+     */
+    articles: () => request<ArticleList>('/api/book/articles'),
+    article: (slug: string) => request<ArticleResponse>(`/api/book/articles/${slug}`),
+    saveArticle: (slug: string, body: { article: unknown; baseVersion: number; note?: string }) =>
+      send<{ entry: ArticleEntry }>('PUT', `/api/book/articles/${slug}`, body).then((r) => r.entry),
+    hideArticle: (slug: string, baseVersion: number, note?: string) =>
+      post<{ entry: ArticleEntry }>(`/api/book/articles/${slug}/hide`, { baseVersion, note }).then((r) => r.entry),
+    articleRevisions: (slug: string) =>
+      request<{ revisions: ArticleRevision[] }>(`/api/book/articles/${slug}/revisions`).then((r) => r.revisions),
+    articleRevision: (slug: string, id: string) =>
+      request<{ revision: ArticleRevision }>(`/api/book/articles/${slug}/revisions/${id}`).then((r) => r.revision),
     importTicket: () => post<{ ticket: string; url: string; ready: boolean }>('/api/book/import/ticket'),
     drafts: () => request<{ drafts: ImportDraftSummary[] }>('/api/book/drafts'),
     draft: (id: string) => request<{ draft: ImportDraft }>(`/api/book/drafts/${id}`),
