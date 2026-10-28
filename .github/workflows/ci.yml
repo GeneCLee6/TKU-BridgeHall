@@ -1,7 +1,8 @@
 name: CI
 
 # Runs on every push and on pull requests targeting main: install -> lint -> typecheck -> test -> build
-# -> performance budget. A separate `lighthouse` job audits the home page and a convention page.
+# -> performance budget. A separate `lighthouse` job audits the home page, a convention page and 個人設定;
+# `browser` runs the visual and accessibility regression in Playwright.
 # Deployment itself is handled by Vercel's Git integration (production on main, previews on PRs).
 on:
   push:
@@ -43,6 +44,40 @@ jobs:
       - name: Performance budget (bundle size, gzip)
         run: npm run budget
 
+  # e9-t12, e9-t13: the browser tests (playwright.config.ts). Screenshots of the reading pages in the
+  # six styles, light and dark, compared with tests/browser/__screenshots__, and axe and keyboard
+  # checks. Run in Playwright's container so the fonts match the baselines. When a screenshot
+  # differs, the diffs and a fresh set of baselines are uploaded as the `browser` artifact: if the
+  # change was meant, commit those baselines (playwright.config.ts says how).
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Screenshots, axe and keyboard
+        id: compare
+        run: npx playwright test
+
+      - name: New baselines, after a difference
+        if: failure() && steps.compare.outcome == 'failure'
+        run: npx playwright test visual --update-snapshots || true
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: browser
+          path: |
+            test-results/
+            playwright-report/
+            tests/browser/__screenshots__/
+          retention-days: 7
+
   lighthouse:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -60,7 +95,7 @@ jobs:
       - name: Production build
         run: npm run build
 
-      # Config in lighthouserc.json: serves dist with `vite preview` and audits / and /c/jacoby-2nt.
+      # Config in lighthouserc.json: serves dist with `vite preview` and audits /, /c/jacoby-2nt and /settings.
       # Accessibility < 0.95 fails the job; performance and best practices only warn (runner noise).
       - name: Lighthouse CI
         run: npx --yes @lhci/cli@0.15.1 autorun

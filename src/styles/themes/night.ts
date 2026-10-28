@@ -68,7 +68,7 @@ const night: StyleTokens = {
   fonts: { body: fontStacks.sans, heading: fontStacks.sans, mono: fontStacks.mono },
   headingWeight: 700,
   lineHeight: 1.7,
-  shape: { control: '8px', panel: '12px', tag: '999px', badge: '999px', note: '8px' },
+  shape: { control: '8px', panel: '12px', popover: '12px', tag: '999px', badge: '999px', note: '8px' },
   borders: { control: '1px solid', panel: '1px solid' },
   shadows: {
     light: { panel: '0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 8px 24px rgba(0, 0, 0, 0.08)' },

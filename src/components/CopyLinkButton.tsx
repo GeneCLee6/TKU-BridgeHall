@@ -48,7 +48,7 @@ export const IconButton = styled.button`
   width: 36px;
   height: 36px;
   border: 1px solid transparent;
-  border-radius: ${({ theme }) => theme.radius.sm};
+  border-radius: ${({ theme }) => theme.shape.control};
   background: transparent;
   color: ${({ theme }) => theme.colors.textMuted};
   cursor: pointer;

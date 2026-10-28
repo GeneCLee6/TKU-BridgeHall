@@ -115,7 +115,7 @@ const SignIn = styled(Link)`
   min-height: 36px;
   padding: 0 ${({ theme }) => theme.space(3)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.pill};
+  border-radius: ${({ theme }) => theme.shape.tag};
   color: ${({ theme }) => theme.colors.primary};
   font-size: 0.875rem;
   font-weight: 600;
@@ -142,7 +142,7 @@ const Trigger = styled.button`
   min-height: 36px;
   padding: 0 ${({ theme }) => theme.space(2)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.pill};
+  border-radius: ${({ theme }) => theme.shape.tag};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   font-size: 0.875rem;
@@ -171,8 +171,8 @@ const Count = styled.b`
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  border-radius: ${({ theme }) => theme.radius.pill};
-  background: ${({ theme }) => theme.colors.vermilion};
+  border-radius: ${({ theme }) => theme.shape.tag};
+  background: ${({ theme }) => theme.colors.seal};
   color: ${({ theme }) => theme.colors.onPrimary};
   font-size: 0.6875rem;
 `
@@ -186,9 +186,9 @@ const Menu = styled.div`
   min-width: 200px;
   padding: ${({ theme }) => theme.space(1)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.md};
+  border-radius: ${({ theme }) => theme.shape.popover};
   background: ${({ theme }) => theme.colors.surface};
-  box-shadow: ${({ theme }) => theme.shadow};
+  box-shadow: ${({ theme }) => theme.shadows.panel};
 `
 
 const itemStyle = `

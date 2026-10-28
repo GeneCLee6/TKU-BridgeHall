@@ -1,6 +1,6 @@
 /**
  * Design tokens. Every colour in the app comes from here or from a style in `styles/themes/`
- * (DESIGN.md §2 explains each one of 「一般」). Components read them through the
+ * (DESIGN.md §2 explains each one). Components read them through the
  * styled-components theme, never as raw hex values.
  */
 
@@ -89,8 +89,8 @@ export interface StyleTokens {
   headingWeight: number
   /** The body text's line height */
   lineHeight: number
-  /** Corner radius by role */
-  shape: { control: string; panel: string; tag: string; badge: string; note: string }
+  /** Corner radius by role; `popover` is for menus, search results and floating notices */
+  shape: { control: string; panel: string; popover: string; tag: string; badge: string; note: string }
   /** Border width and line style by role; components add the colour */
   borders: { control: string; panel: string }
   shadows: Record<ThemeMode, { panel: string }>
@@ -183,7 +183,7 @@ const general: StyleTokens = {
   fonts: { body: fontStacks.sans, heading: fontStacks.sans, mono: fontStacks.mono },
   headingWeight: 700,
   lineHeight: 1.7,
-  shape: { control: '6px', panel: '14px', tag: '999px', badge: '999px', note: '6px' },
+  shape: { control: '6px', panel: '14px', popover: '10px', tag: '999px', badge: '999px', note: '6px' },
   borders: { control: '1px solid', panel: '1px solid' },
   shadows: {
     light: { panel: '0 1px 2px rgba(15, 40, 80, 0.06), 0 2px 8px rgba(15, 40, 80, 0.06)' },
@@ -277,12 +277,7 @@ export function createTheme(
     textSize,
     style,
     density,
-    colors: {
-      ...colors,
-      /** Old names, removed in e9-t14 */
-      lantern: colors.accent,
-      vermilion: colors.seal,
-    },
+    colors,
     suits: suitColors === 'two' ? { ...deck, D: deck.H, C: deck.S } : deck,
     fonts,
     headingWeight: font === 'style' ? tokens.headingWeight : headingWeight,
@@ -295,12 +290,6 @@ export function createTheme(
     prefersDark: tokens.prefersDark ?? false,
     layout,
     space: compact ? compactSpace : space,
-    /** Old names, removed in e9-t14 once every component reads `shape` and `shadows` */
-    radius:
-      style === 'general'
-        ? { sm: '6px', md: '10px', lg: '14px', pill: '999px' }
-        : { sm: tokens.shape.control, md: tokens.shape.panel, lg: tokens.shape.panel, pill: tokens.shape.tag },
-    shadow: shadows.panel,
   }
 }
 

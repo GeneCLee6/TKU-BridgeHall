@@ -33,10 +33,10 @@ const Toast = styled.div`
   gap: ${({ theme }) => theme.space(2)};
   padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.md};
+  border-radius: ${({ theme }) => theme.shape.popover};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
-  box-shadow: ${({ theme }) => theme.shadow};
+  box-shadow: ${({ theme }) => theme.shadows.panel};
 
   span {
     margin-right: ${({ theme }) => theme.space(1)};

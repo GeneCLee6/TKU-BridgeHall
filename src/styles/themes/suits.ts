@@ -63,7 +63,7 @@ const suits: StyleTokens = {
   fonts: { body: fontStacks.sans, heading: fontStacks.sans, mono: fontStacks.mono },
   headingWeight: 800,
   lineHeight: 1.7,
-  shape: { control: '8px', panel: '10px', tag: '999px', badge: '999px', note: '8px' },
+  shape: { control: '8px', panel: '10px', popover: '10px', tag: '999px', badge: '999px', note: '8px' },
   borders: { control: '2px solid', panel: '2px solid' },
   shadows: { light: { panel: '4px 4px 0 #141416' }, dark: { panel: '4px 4px 0 #f2f2f4' } },
   pendingBadge: { borderWidth: '2px', rotate: '0deg', serif: false },

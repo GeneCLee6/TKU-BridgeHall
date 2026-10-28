@@ -48,7 +48,7 @@
 | --- | --- |
 | [`docs/PRD/`](docs/PRD/README.md) | 產品需求：總 PRD、10 個 epic 與 task；[`docs/ROADMAP.md`](docs/ROADMAP.md) 批次順序；[`docs/NEXT.md`](docs/NEXT.md) 現在的位置 |
 | [`docs/HEALTH-CHECK.md`](docs/HEALTH-CHECK.md) | 2026-10-24 專案健檢與產品建議 |
-| [`docs/DESIGN-V2.md`](docs/DESIGN-V2.md) | 介面 v2 規格（提案）；視覺稿 [`docs/design/mockup-v2.html`](docs/design/mockup-v2.html) |
+| [`docs/DESIGN-V2.md`](docs/DESIGN-V2.md) | 介面 v2 規格（已實作，現行樣式見 `DESIGN.md`）；視覺稿 [`docs/design/mockup-v2.html`](docs/design/mockup-v2.html) |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | 資料夾結構、資料模型、路由、狀態、建置與部署 |
 | [`DESIGN.md`](DESIGN.md) | 設計系統：色彩、字體、元件、版面、無障礙、Logo |
 | [`CONTENT_GUIDE.md`](CONTENT_GUIDE.md) | 幹部新增特約的逐步說明 |
