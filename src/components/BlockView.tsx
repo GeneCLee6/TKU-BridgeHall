@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { lazy, memo, Suspense } from 'react'
 import styled from 'styled-components'
 import { pageStrings } from '../pageStrings.ts'
 import { useArticleFile } from '../state/ArticleFilesContext.tsx'
@@ -10,9 +10,17 @@ import { PendingNote } from './PendingNote.tsx'
 import { ResponseTable } from './ResponseTable.tsx'
 import { RichText } from './Suit.tsx'
 
+// An article's deal and card play (e5-t02, e5-t03): only articles have them, so they load on use
+const DealBlockView = lazy(() =>
+  import('./board/ArticleBoards.tsx').then((m) => ({ default: m.DealBlockView })),
+)
+const PlayBlockView = lazy(() =>
+  import('./board/ArticleBoards.tsx').then((m) => ({ default: m.PlayBlockView })),
+)
+
 /**
- * Renders one content block, a convention's or an article's (heading, quote and image are only in
- * articles, types/article.ts). A new block kind means a new case here and in the type.
+ * Renders one content block, a convention's or an article's (heading, quote, image, deal and play
+ * are only in articles, types/article.ts). A new block kind means a new case here and in the type.
  * Memoised: content is static, so expanding or collapsing accordions never re-renders blocks.
  */
 export const BlockView = memo(function BlockView({ block }: { block: ArticleBlock }) {
@@ -60,6 +68,18 @@ export const BlockView = memo(function BlockView({ block }: { block: ArticleBloc
       return <Quote block={block} />
     case 'image':
       return <Picture block={block} />
+    case 'deal':
+      return (
+        <Suspense fallback={null}>
+          <DealBlockView block={block} />
+        </Suspense>
+      )
+    case 'play':
+      return (
+        <Suspense fallback={null}>
+          <PlayBlockView block={block} />
+        </Suspense>
+      )
   }
 })
 

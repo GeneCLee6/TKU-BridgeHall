@@ -2,6 +2,7 @@ import { FILE_KEY } from '../../src/lib/account.ts'
 import type { ArticleEntry } from '../../src/lib/api.ts'
 import { articleProblems, articleText, isPictureKey, onlineArticle, pictureKeys, tidyArticle } from '../../src/lib/articles.ts'
 import { filesOff, uploadPrepared } from '../../src/lib/imageUpload.ts'
+import type { Deal } from '../../src/lib/board.ts'
 import type { Article } from '../../src/types/article.ts'
 
 /**
@@ -10,6 +11,11 @@ import type { Article } from '../../src/types/article.ts'
  */
 const PICTURE = 'article/0123456789abcdef01234567.webp'
 const COVER = 'article/fedcba9876543210fedcba98.jpg'
+
+/** Two hands shown, the defenders left out as articles often do */
+const DEAL: Deal = { hands: { N: ['SA', 'SK', 'H2'], E: [], S: ['SQ', 'HA'], W: [] }, dealer: 'N', vul: 'NS' }
+const play = (extra: Record<string, unknown>) => ({ kind: 'play', contract: '3N', declarer: 'S', tricks: [['SA']], ...extra })
+const blocks = (...b: unknown[]) => ({ ...article(), blocks: b })
 
 const article = (extra: Partial<Article> = {}): Article => ({
   slug: 'test-article',
@@ -31,6 +37,8 @@ const article = (extra: Partial<Article> = {}): Article => ({
     { kind: 'rules', items: [{ text: '測試條列' }] },
     { kind: 'note', tone: 'info', text: '測試注意' },
     { kind: 'hand', hand: { spades: 'AK2', hearts: 'QJ3', diamonds: 'T98', clubs: '7654' } },
+    { kind: 'deal', deal: DEAL, caption: '測試牌例說明' },
+    { kind: 'play', contract: '4SX', declarer: 'S', tricks: [['HK', 'H2', 'HA', 'H3'], ['SA']], caption: '測試出牌說明' },
   ],
   ...extra,
 })
@@ -69,6 +77,15 @@ describe('article model (e5-t01)', () => {
     ['an unknown block', { ...article(), blocks: [{ kind: 'video' }] }],
     ['a broken handbook block', { ...article(), blocks: [{ kind: 'paragraph' }] }],
     ['no blocks', { ...article(), blocks: undefined }],
+    ['a deal without hands', blocks({ kind: 'deal', deal: { dealer: 'N', vul: 'None' } })],
+    ['a deal with no cards', blocks({ kind: 'deal', deal: { ...DEAL, hands: { N: [], E: [], S: [], W: [] } } })],
+    ['a deal with a card twice', blocks({ kind: 'deal', deal: { ...DEAL, hands: { ...DEAL.hands, E: ['SA'] } } })],
+    ['a deal with a card it does not know', blocks({ kind: 'deal', deal: { ...DEAL, hands: { ...DEAL.hands, E: ['S1'] } } })],
+    ['a deal with an unknown dealer', blocks({ kind: 'deal', deal: { ...DEAL, dealer: 'X' } })],
+    ['a deal with an unknown vulnerability', blocks({ kind: 'deal', deal: { ...DEAL, vul: 'All' } })],
+    ['a play with a bad contract', blocks(play({ contract: '4NT' }))],
+    ['a play with a short trick before the last', blocks(play({ tricks: [['SA'], ['SK']] }))],
+    ['a play with a caption that is not text', blocks(play({ caption: 1 }))],
   ])('refuses %s', (_, value) => {
     expect(articleProblems(value).length).toBeGreaterThan(0)
   })
@@ -76,6 +93,10 @@ describe('article model (e5-t01)', () => {
   it('says which block is broken', () => {
     expect(articleProblems({ ...article(), blocks: [{ kind: 'heading', level: 2, text: 'x' }, { kind: 'quote' }] })).toEqual([
       '第 2 個區塊：引文格式不正確',
+    ])
+    expect(articleProblems(blocks(play({ declarer: 'X' })))).toEqual(['第 1 個區塊：出牌過程：要有莊家'])
+    expect(articleProblems(blocks({ kind: 'deal', deal: { ...DEAL, hands: { ...DEAL.hands, W: ['HA'] } } }))).toEqual([
+      '第 1 個區塊：牌例的 HA 出現了兩次',
     ])
   })
 
@@ -97,6 +118,10 @@ describe('article model (e5-t01)', () => {
           { kind: 'image', src: PICTURE, alt: '測試替代文字', caption: '' },
           { kind: 'image', src: '', alt: '' },
           { kind: 'paragraph', text: '測試段落', pending: '' },
+          { kind: 'deal', deal: { ...DEAL, hands: { N: [], E: [], S: [], W: [] } } },
+          { kind: 'deal', deal: DEAL, caption: ' ' },
+          { kind: 'play', contract: '3N', declarer: 'S', tricks: [] },
+          { kind: 'play', contract: '3N', declarer: 'S', tricks: [['SA']], caption: '' },
         ],
       }),
     )
@@ -106,14 +131,17 @@ describe('article model (e5-t01)', () => {
       { kind: 'quote', text: '測試引文' },
       { kind: 'image', src: PICTURE, alt: '測試替代文字' },
       { kind: 'paragraph', text: '測試段落' },
+      { kind: 'deal', deal: DEAL },
+      { kind: 'play', contract: '3N', declarer: 'S', tricks: [['SA']] },
     ])
     expect(articleProblems(tidy)).toEqual([])
   })
 
   it('gives search the title, authors, summary and every block’s words', () => {
     const words = articleText(article())
-    for (const part of ['測試標題', '測試作者', '測試摘要', '測試小標', '測試段落', '測試引文', '測試出處', '測試替代文字', '測試圖說', '測試條列'])
+    for (const part of ['測試標題', '測試作者', '測試摘要', '測試小標', '測試段落', '測試引文', '測試出處', '測試替代文字', '測試圖說', '測試條列', '測試牌例說明', '測試出牌說明'])
       expect(words).toContain(part)
+    for (const notWords of ['SA', 'HK', '4SX']) expect(words).not.toContain(notWords)
   })
 })
 

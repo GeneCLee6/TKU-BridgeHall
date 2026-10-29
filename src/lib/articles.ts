@@ -1,4 +1,6 @@
 import { FILE_KEY } from './account.ts'
+import { isCard, isSeat, SEATS, VULNERABILITIES, type Card } from './board.ts'
+import { playProblems } from './play.ts'
 import type { ArticleEntry } from './api.ts'
 import { blockProblems, emptyBlock, isObject, isString, isStrings, optionalLevel, optionalString, SLUG_PATTERN, text, tidyBlock } from './content.ts'
 import { blockText } from './sections.ts'
@@ -19,7 +21,35 @@ export const isPictureKey = (value: unknown): value is string =>
   isString(value) && FILE_KEY.test(value) && !value.includes('-thumb.')
 
 const isArticleOnly = (b: { kind?: unknown }): b is Exclude<ArticleBlock, Block> =>
-  b.kind === 'heading' || b.kind === 'quote' || b.kind === 'image'
+  b.kind === 'heading' || b.kind === 'quote' || b.kind === 'image' || b.kind === 'deal' || b.kind === 'play'
+
+/**
+ * A deal block's problems: the forum's rule (TKU-BridgeTable worker/forum.ts), so a seat may be
+ * empty, but each card is held once, at most thirteen to a seat, and there is at least one
+ */
+function dealBlockProblems(deal: unknown): string[] {
+  if (!isObject(deal) || !isObject(deal.hands)) return ['牌例要有四家的牌']
+  const problems: string[] = []
+  if (!isSeat(deal.dealer)) problems.push('牌例要有發牌者')
+  if (!VULNERABILITIES.includes(deal.vul as never)) problems.push('牌例的身價不存在')
+  const seen = new Set<Card>()
+  for (const seat of SEATS) {
+    const cards = deal.hands[seat] ?? []
+    if (!Array.isArray(cards) || cards.length > 13) {
+      problems.push('牌例每家最多 13 張牌')
+      continue
+    }
+    for (const card of cards as unknown[]) {
+      if (!isCard(card)) problems.push(`牌例有不認得的牌：${String(card)}`)
+      else if (seen.has(card)) problems.push(`牌例的 ${card} 出現了兩次`)
+      else seen.add(card)
+    }
+  }
+  if (!seen.size) problems.push('牌例要至少有一張牌')
+  return problems
+}
+
+const captionProblems = (caption: unknown) => (optionalString(caption) ? [] : ['說明要是文字'])
 
 /** Why a value is not an article block, worded for editors; empty when it is one */
 export function articleBlockProblems(b: unknown, where: string): string[] {
@@ -31,6 +61,10 @@ export function articleBlockProblems(b: unknown, where: string): string[] {
       return isString(b.text) && optionalString(b.cite) ? [] : [`${where}：引文格式不正確`]
     case 'image':
       return isPictureKey(b.src) && isString(b.alt) && optionalString(b.caption) ? [] : [`${where}：圖片要是上傳的檔案，並有替代文字`]
+    case 'deal':
+      return [...dealBlockProblems(b.deal), ...captionProblems(b.caption)].map((p) => `${where}：${p}`)
+    case 'play':
+      return [...playProblems(b.contract, b.declarer, b.tricks), ...captionProblems(b.caption)].map((p) => `${where}：出牌過程：${p}`)
   }
 }
 
@@ -64,7 +98,16 @@ export function onlineArticle(entry: ArticleEntry): { article: Article | null } 
 
 function emptyArticleBlock(b: ArticleBlock) {
   if (!isArticleOnly(b)) return emptyBlock(b)
-  return b.kind === 'image' ? !b.src.trim() : !b.text.trim()
+  switch (b.kind) {
+    case 'image':
+      return !b.src.trim()
+    case 'deal':
+      return SEATS.every((seat) => !b.deal.hands[seat]?.length)
+    case 'play':
+      return !b.tricks.length
+    default:
+      return !b.text.trim()
+  }
 }
 
 function tidyArticleBlock(b: ArticleBlock): ArticleBlock {
@@ -76,6 +119,12 @@ function tidyArticleBlock(b: ArticleBlock): ArticleBlock {
       return { kind: 'quote', text: b.text, ...(text(b.cite) && { cite: b.cite }) }
     case 'image':
       return { kind: 'image', src: b.src, alt: b.alt, ...(text(b.caption) && { caption: b.caption }) }
+    case 'deal':
+      return { kind: 'deal', deal: structuredClone(b.deal), ...(text(b.caption) && { caption: b.caption }) }
+    case 'play': {
+      const tricks = b.tricks.map((trick) => [...trick])
+      return { kind: 'play', contract: b.contract, declarer: b.declarer, tricks, ...(text(b.caption) && { caption: b.caption }) }
+    }
   }
 }
 
@@ -107,6 +156,9 @@ export function articleBlockText(block: ArticleBlock): string {
       return [block.text, block.cite].filter(Boolean).join(' ')
     case 'image':
       return [block.alt, block.caption].filter(Boolean).join(' ')
+    case 'deal':
+    case 'play':
+      return block.caption ?? ''
   }
 }
 
