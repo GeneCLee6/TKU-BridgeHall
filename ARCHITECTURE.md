@@ -199,10 +199,13 @@ type ArticleBlock = Block                                   // 特約的區塊�
   | { kind: 'heading'; level: 2 | 3; text: string }          // 文章沒有段落樹，用小標題分段
   | { kind: 'quote'; text: string; cite?: string }
   | { kind: 'image'; src: string; alt: string; caption?: string } // src 是上傳檔案的 key
+  | { kind: 'deal'; deal: Deal; caption?: string }            // J2：lib/board.ts 的 Deal（論壇同一形狀）
+  | { kind: 'play'; contract: string; declarer: Seat; tricks: Card[][]; caption?: string } // J2
 interface Article { slug; title; authors: string[]; series; level?; summary; cover?; blocks: ArticleBlock[]; published; updated; license: 'own' | 'permitted' | 'members-only' }
 ```
 
-- **只有文章用的區塊不進 `Block`**：特約的編輯器、制度卡、AI 匯入、牌桌 `checkSections` 都不用認得它們。`BlockView` 收 `ArticleBlock`，三種新區塊在同一個 switch。`deal`、`play` 是 J2（e5-t02、e5-t03）。
+- **只有文章用的區塊不進 `Block`**：特約的編輯器、制度卡、AI 匯入、牌桌 `checkSections` 都不用認得它們。`BlockView` 收 `ArticleBlock`，五種新區塊在同一個 switch。
+- **牌例與出牌過程**（J2，e5-t02、e5-t03，`components/board/ArticleBoards.tsx`，`BlockView` 用 `React.lazy` 載入，首頁不帶）：`deal` 用 G4 的 `DealDiagram` 畫、下面放說明；形狀與論壇的 `deal` 相同（`DealInput` 的輸出直接可用），**可以有空的一家**（文章常只畫莊家兩手；空的一家只顯示座位名），每張牌只出現一次、每家最多 13 張、至少一張。`play` 的合約用牌桌叫品寫法加賭倍（`4S`、`3N`、`4HX`、`6NXX`），每墩從領出的人開始寫；首攻是莊家左手，之後由上一墩贏的人領出，贏墩照牌桌 `trickWinner`（`lib/play.ts`）。只有最後一墩可以沒出完（文章可以停在要討論的那張牌）；牌不重複，但**不檢查跟牌**（沒有四家牌可對）。畫面：逐墩（上一墩／下一墩，十字排列、文字標「領出」「贏」）、到這墩為止兩方的墩數、「展開全部 n 墩」的表格（列印時一律印出表格，不印逐墩）。牌桌 `worker/articles.ts` `checkArticleBlock` 做同樣的檢查；搜尋文字只收兩者的說明，不收牌與合約。文章編輯器的表單（四家牌用 `DealInput`）是 J4。
 - **內建沒有文章**：文章只存在牌桌（`worker/articles.ts`，`article:entry:<slug>`、`article:rev:<slug>:<id>`、`article:version`，內容分段在 `bookpart:`，每日備份涵蓋），repo 裡不放文章內容，測試用假資料。`articleProblems`（＝牌桌 `checkArticle`）在載入時再檢查一次；區塊檢查共用 `lib/content.ts` 的 `blockProblems`，整理共用 `tidyBlock`／`emptyBlock`。`articleText` 給 e5-t13 的搜尋。
 - **圖片與封面存檔案 key，不存網址**（e5-t12）：key 是 G1 上傳回的 `article/<24 hex>.<ext>`（`isPictureKey`，不收縮圖 key 與外部網址；`uploadArticlePicture`）。牌桌每次讀文章順便簽好網址放在回應的 `files`，頁面用 `ArticleFilesContext` 提供，`image` 區塊查不到網址（R2 bucket 還沒建，牌桌 `filesOff` 時 `files` 是空的）就顯示替代文字框，文章照常讀。上傳遇到 503 `filesOff` 用 `filesOff(error)` 判斷。
 - **API**（`api.book.articles`／`article`／`saveArticle`／`hideArticle`／`articleRevisions`／`articleRevision`）：讀要登入（2026-10-29 起全站要登入，牌桌也一樣；`members-only` 因此和其他授權沒有差別），隱藏的只有 bookEdit 看得到；發布、隱藏是 bookReview（`baseVersion` 不符 409 `articleConflict`），版本是 bookEdit。**目前只有已發布路徑**（同特約沒有草稿時的直接發布）；文章的草稿與送審（AC-5.2「送審走 E8」）跟文章編輯器 e5-t07 一起做。審計動作多 `article:publish`、`article:hide`。

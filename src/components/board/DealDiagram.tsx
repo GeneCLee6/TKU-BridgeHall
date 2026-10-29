@@ -8,6 +8,7 @@ import { HandSuits } from './parts.tsx'
  * Four hands in the usual cross (North on top, West left), the dealer and vulnerability in the
  * middle; on phones one hand per row, North, East, South, West. A vulnerable seat's name is in
  * the seal colour, and the vulnerability is also written out, so colour is never the only cue.
+ * A seat with no cards shows only its name: an article's deal often leaves the defenders out.
  */
 export function DealDiagram({ deal, label }: { deal: Deal; label?: string }) {
   const b = strings.board
@@ -18,7 +19,7 @@ export function DealDiagram({ deal, label }: { deal: Deal; label?: string }) {
           <SeatName aria-hidden $vulnerable={isVulnerable(deal.vul, seat)}>
             {b.seatNames[seat]}
           </SeatName>
-          <HandSuits cards={deal.hands[seat]} />
+          {deal.hands[seat].length > 0 && <HandSuits cards={deal.hands[seat]} />}
         </SeatHand>
       ))}
       <Info>
