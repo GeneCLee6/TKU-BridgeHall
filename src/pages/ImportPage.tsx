@@ -1,17 +1,28 @@
 import { FileUp, Square } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { AutoTextArea } from '../components/editor/fields.tsx'
-import { Button, ErrorText, Field, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
-import { api, ApiError, errorText, type ImportDraftSummary } from '../lib/api.ts'
+import { Button, ErrorText, Field, Muted, Notice, PageTitle, Panel, PanelTitle, Row, Select } from '../components/ui.tsx'
+import { api, ApiError, errorText, type ArticleList, type ImportDraftSummary } from '../lib/api.ts'
 import { DocTextError, docToText, docxToText } from '../lib/docText.ts'
 import { formatDateTime, today } from '../lib/format.ts'
-import { draftBody, fromAiReply, importedItems, type ImportResult } from '../lib/importResult.ts'
+import {
+  articleDraftBody,
+  draftBody,
+  fromAiReply,
+  fromArticleReply,
+  importedArticles,
+  importedItems,
+  type ArticleImportResult,
+  type ImportResult,
+} from '../lib/importResult.ts'
+import { articlePath, resolveSeries } from '../lib/series.ts'
 import { readReply, StreamError } from '../lib/sse.ts'
 import { useContent } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
 import type { ConventionMeta, SectionOutline } from '../types/convention.ts'
+import { articleEditStrings as a } from './articleEditStrings.ts'
 import { Frame, Gate } from './Frame.tsx'
 
 const t = strings.importer
@@ -24,6 +35,10 @@ type Source = { name: string; kind: 'text'; text: string } | { name: string; kin
  * 匯入檔案: a Word or PDF file goes to Claude (through TKU BridgeTable's Worker, which holds the
  * key) with the handbook's current catalogue; the reply becomes conventions in a draft that opens
  * in the editor. Word files are read here in the browser; PDFs go as they are.
+ *
+ * `?target=articles` (e5-t08) makes articles for the library instead: the AI gets the series and
+ * the library's articles, transcribes the file verbatim into an article's blocks, and each article
+ * opens in the article editor.
  */
 export function ImportPage() {
   return (
@@ -51,6 +66,21 @@ function catalogue(conventions: ConventionMeta[]) {
     .slice(0, 60_000)
 }
 
+/** The library's articles, one per line, so the AI can tell a new article from an update (e5-t08) */
+const articleCatalogue = (list: ArticleList) =>
+  list.entries
+    .flatMap((e) => (e.meta ? [`${e.slug}｜${e.meta.title}｜${e.meta.authors.join('、')}｜系列 ${e.meta.series}｜${e.meta.summary}`] : []))
+    .join('\n')
+    .slice(0, 60_000)
+
+type Target = 'conventions' | 'articles'
+
+/** Where an imported convention or article opens */
+const editorPath = (target: Target, draftId: string, index: number, replaces: string) =>
+  target === 'articles'
+    ? `${replaces ? `${articlePath(replaces)}/edit` : '/library/new'}?draft=${draftId}&n=${index}`
+    : `${replaces ? `/edit/${replaces}` : '/new'}?draft=${draftId}&n=${index}`
+
 async function readFile(file: File): Promise<Source> {
   const name = file.name
   const ext = name.toLowerCase().split('.').pop() ?? ''
@@ -73,11 +103,15 @@ type Phase =
   | { step: 'idle' }
   | { step: 'running'; chars: number; sections: number; started: number }
   | { step: 'done'; result: ImportResult; draft: ImportDraftSummary }
+  | { step: 'doneArticles'; result: ArticleImportResult; draft: ImportDraftSummary }
 
 function ImportBody() {
   const content = useContent()
   const { categories } = content
   const categoryIds = categories.map((c) => c.id)
+  const [params, setParams] = useSearchParams()
+  const target: Target = params.get('target') === 'articles' ? 'articles' : 'conventions'
+  const [library, setLibrary] = useState<ArticleList | null>(null)
   const [source, setSource] = useState<Source | null>(null)
   const [reading, setReading] = useState(false)
   const [instructions, setInstructions] = useState('')
@@ -98,6 +132,12 @@ function ImportBody() {
   useEffect(() => {
     void loadDrafts()
   }, [loadDrafts])
+
+  // Articles: the series and the library's articles go to the AI
+  useEffect(() => {
+    if (target !== 'articles' || library) return
+    api.book.articles().then(setLibrary, () => undefined)
+  }, [target, library])
 
   // The elapsed time ticks while the AI works
   useEffect(() => {
@@ -135,16 +175,30 @@ function ImportBody() {
     const controller = new AbortController()
     abort.current = controller
     const started = Date.now()
+    const articles = target === 'articles'
     setPhase({ step: 'running', chars: 0, sections: 0, started })
     setNow(started)
     try {
+      const list = articles ? (library ?? (await api.book.articles())) : null
+      const series = list ? resolveSeries(list.series.series) : []
+      if (articles && !series.length) throw new Error(a.importNoSeries)
       const { ticket, url, ready } = await api.book.importTicket()
       if (!ready) throw new Error(t.notReady)
       const form = new FormData()
       form.set('ticket', ticket)
       form.set(
         'meta',
-        JSON.stringify({ fileName: source.name, instructions, catalogue: catalogue(content.conventions), categories }),
+        JSON.stringify(
+          list
+            ? {
+                target: 'articles',
+                fileName: source.name,
+                instructions,
+                catalogue: articleCatalogue(list),
+                categories: series.map(({ id, label, description }) => ({ id, label, description })),
+              }
+            : { fileName: source.name, instructions, catalogue: catalogue(content.conventions), categories },
+        ),
       )
       if (source.kind === 'pdf') form.set('file', source.file, source.name)
       else form.set('text', source.text)
@@ -154,8 +208,10 @@ function ImportBody() {
         const data = await response.json().catch(() => ({}))
         throw new ApiError(data.error ?? `伺服器回應 ${response.status}`, response.status, data.code)
       }
+      // Sections of conventions, or blocks of articles, as a rough count of the progress
+      const counted = articles ? /"kind"/g : /"parentId"/g
       const reply = await readReply(response.body, (p) =>
-        setPhase({ step: 'running', chars: p.text.length, sections: (p.text.match(/"parentId"/g) ?? []).length, started }),
+        setPhase({ step: 'running', chars: p.text.length, sections: (p.text.match(counted) ?? []).length, started }),
       )
       if (reply.stopReason === 'max_tokens') throw new Error(t.tooLong)
       if (reply.stopReason === 'refusal') throw new Error(t.refused)
@@ -165,10 +221,21 @@ function ImportBody() {
       } catch {
         throw new Error(t.badReply)
       }
-      const result = fromAiReply(parsed, categoryIds, today())
-      if (!result.items.length) throw new Error(t.badReply)
-      const { draft } = await api.book.saveDraft(source.name, draftBody(result))
-      setPhase({ step: 'done', result, draft })
+      if (articles) {
+        const result = fromArticleReply(
+          parsed,
+          series.map((x) => x.id),
+          today(),
+        )
+        if (!result.items.length) throw new Error(t.badReply)
+        const { draft } = await api.book.saveDraft(source.name, articleDraftBody(result))
+        setPhase({ step: 'doneArticles', result, draft })
+      } else {
+        const result = fromAiReply(parsed, categoryIds, today())
+        if (!result.items.length) throw new Error(t.badReply)
+        const { draft } = await api.book.saveDraft(source.name, draftBody(result))
+        setPhase({ step: 'done', result, draft })
+      }
       void loadDrafts()
     } catch (e) {
       setPhase({ step: 'idle' })
@@ -179,21 +246,34 @@ function ImportBody() {
     }
   }
 
-  const editorPath = (draftId: string, index: number, replaces: string) =>
-    `${replaces ? `/edit/${replaces}` : '/new'}?draft=${draftId}&n=${index}`
+  const running = phase.step === 'running'
 
   return (
     <>
-      <Muted>{t.intro}</Muted>
+      <Muted>{target === 'articles' ? a.importArticlesIntro : t.intro}</Muted>
       <Panel>
         <Grid>
+          <Field>
+            {a.importTarget}
+            <Select
+              value={target}
+              disabled={running}
+              onChange={(e) => {
+                setPhase({ step: 'idle' })
+                setParams(e.target.value === 'articles' ? { target: 'articles' } : {}, { replace: true })
+              }}
+            >
+              <option value="conventions">{a.importConventions}</option>
+              <option value="articles">{a.importArticlesTarget}</option>
+            </Select>
+          </Field>
           <Field>
             {t.pick}
             <FileInput
               type="file"
               accept=".doc,.docx,.pdf,.txt,.md,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               onChange={(e) => void pick(e.target.files?.[0])}
-              disabled={phase.step === 'running'}
+              disabled={running}
             />
             <small>{t.pickHint}</small>
           </Field>
@@ -257,7 +337,37 @@ function ImportBody() {
                     {item.problems.length > 0 && `・${t.problems(item.problems.length)}`}
                   </Small>
                 </div>
-                <Button as={Link} to={editorPath(phase.draft.id, i, item.replaces)} $small $variant="primary">
+                <Button as={Link} to={editorPath('conventions', phase.draft.id, i, item.replaces)} $small $variant="primary">
+                  {t.open}
+                </Button>
+              </li>
+            ))}
+          </Results>
+        </Panel>
+      )}
+
+      {phase.step === 'doneArticles' && (
+        <Panel aria-labelledby="import-result">
+          <PanelTitle id="import-result">{a.importDone(phase.result.items.length)}</PanelTitle>
+          {phase.result.reviewNotes && (
+            <Notice>
+              <strong>{t.notes}：</strong>
+              {phase.result.reviewNotes}
+            </Notice>
+          )}
+          <Results>
+            {phase.result.items.map((item, i) => (
+              <li key={i}>
+                <div>
+                  <strong>{item.article.title || item.article.slug}</strong>
+                  <Small>
+                    {item.replaces
+                      ? a.importWillReplace(library?.entries.find((e) => e.slug === item.replaces)?.meta?.title ?? item.replaces)
+                      : a.importWillAdd}
+                    {item.problems.length > 0 && `・${t.problems(item.problems.length)}`}
+                  </Small>
+                </div>
+                <Button as={Link} to={editorPath('articles', phase.draft.id, i, item.replaces)} $small $variant="primary">
                   {t.open}
                 </Button>
               </li>
@@ -273,7 +383,7 @@ function ImportBody() {
         ) : (
           <Results>
             {drafts.map((d) => (
-              <DraftRow key={d.id} draft={d} editorPath={editorPath} onDelete={() => api.book.deleteDraft(d.id).then(loadDrafts)} />
+              <DraftRow key={d.id} draft={d} onDelete={() => api.book.deleteDraft(d.id).then(loadDrafts)} />
             ))}
           </Results>
         )}
@@ -282,36 +392,38 @@ function ImportBody() {
   )
 }
 
-/** A saved draft; opening it loads its conventions from the server */
-function DraftRow({
-  draft,
-  editorPath,
-  onDelete,
-}: {
-  draft: ImportDraftSummary
-  editorPath: (draftId: string, index: number, replaces: string) => string
-  onDelete: () => Promise<void>
-}) {
-  const [result, setResult] = useState<ImportResult | null>(null)
+/** A saved draft; opening it loads its conventions (or articles, e5-t08) from the server */
+function DraftRow({ draft, onDelete }: { draft: ImportDraftSummary; onDelete: () => Promise<void> }) {
+  const articles = draft.articles !== undefined
+  const [items, setItems] = useState<{ title: string; replaces: string }[] | null>(null)
   const [open, setOpen] = useState(false)
   useEffect(() => {
-    if (!open || result) return
+    if (!open || items) return
     api.book
       .draft(draft.id)
-      .then(({ draft: d }) => setResult(importedItems(d.result)))
+      .then(({ draft: d }) =>
+        setItems(
+          articles
+            ? importedArticles(d.result).items.map((x) => ({ title: x.article.title || x.article.slug, replaces: x.replaces }))
+            : importedItems(d.result).items.map((x) => ({ title: x.convention.nameZh || x.convention.slug, replaces: x.replaces })),
+        ),
+      )
       .catch(() => undefined)
-  }, [open, result, draft.id])
+  }, [open, items, draft.id, articles])
+  const when = formatDateTime(draft.createdAt)
   return (
     <li>
       <div>
         <button type="button" className="link" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-          {strings.importer.draftLine(draft.fileName || '—', draft.createdBy, formatDateTime(draft.createdAt), draft.conventions)}
+          {articles
+            ? a.importDraftLine(draft.fileName || '—', draft.createdBy, when, draft.articles ?? 0)
+            : strings.importer.draftLine(draft.fileName || '—', draft.createdBy, when, draft.conventions)}
         </button>
-        {open && result && (
+        {open && items && (
           <DraftItems>
-            {result.items.map((item, i) => (
+            {items.map((item, i) => (
               <li key={i}>
-                <Link to={editorPath(draft.id, i, item.replaces)}>{item.convention.nameZh || item.convention.slug}</Link>
+                <Link to={editorPath(articles ? 'articles' : 'conventions', draft.id, i, item.replaces)}>{item.title}</Link>
               </li>
             ))}
           </DraftItems>
