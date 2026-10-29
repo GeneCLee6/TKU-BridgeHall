@@ -138,6 +138,7 @@ export type AuditAction =
   | 'book:glossary'
   | 'article:publish'
   | 'article:hide'
+  | 'article:series'
   | 'profile:create'
   | 'profile:save'
   | 'profile:delete'
@@ -145,6 +146,8 @@ export type AuditAction =
   | 'quiz:unfix'
   | 'card:publish'
   | 'card:delete'
+  | 'path:save'
+  | 'path:reset'
 
 export interface AuditEntry {
   id: string
