@@ -2,7 +2,7 @@ import * as Accordion from '@radix-ui/react-accordion'
 import { ChevronRight, ExternalLink } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, NavLink, useParams } from 'react-router-dom'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import {
   levels,
   type Category,
@@ -10,17 +10,16 @@ import {
   type Level,
   type Reference,
 } from '../types/convention.ts'
-import { conventionPath, pendingPath } from '../lib/sections.ts'
+import { conventionPath } from '../lib/sections.ts'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 import { KindLevel } from './KindLevel.tsx'
-import { RichText } from './Suit.tsx'
 
 /**
  * The catalogue v2 (e9-t07, DESIGN-V2.md §5.7): 全書目錄 with a level filter on top, then the
  * categories (open by default, each can fold) and their conventions. Sections are no longer
  * listed here; the convention page has them in its 本頁 column. The convention in the URL is
- * marked (● and the seal colour) and its category unfolds by itself. The 待確認 group and the
+ * marked (● and the seal colour) and its category unfolds by itself. The link to the 待確認 panel and the
  * outside references come last.
  */
 export function Sidebar({
@@ -42,10 +41,8 @@ export function Sidebar({
 }) {
   const { slug } = useParams()
   const [level, setLevel] = useState<Level | 'all'>('all')
-  const pending = conventions
-    .map((c) => ({ convention: c, notes: c.pending }))
-    .filter((p) => p.notes.length > 0)
-  const pendingTotal = pending.reduce((n, p) => n + p.notes.length, 0)
+  // Every note still in the content; the panel (/pending, e8-t07) lists them with their status
+  const pendingTotal = conventions.reduce((n, c) => n + c.pending.length, 0)
   const [openGroups, setOpenGroups] = useState<string[]>(() => [
     ...categories.map((c) => c.id),
     REFERENCES_GROUP,
@@ -123,45 +120,19 @@ export function Sidebar({
         })}
         {shown.length === 0 && <Empty>{strings.searchEmpty}</Empty>}
         {pendingTotal > 0 && (
-          <Group value={PENDING_GROUP} $apart>
-            <Accordion.Header asChild>
-              <h2>
-                <GroupTrigger title={strings.pendingAllHint}>
-                  <ChevronBox>
-                    <Chevron size={14} aria-hidden />
-                  </ChevronBox>
-                  {strings.pendingAll}
-                  <PendingCount aria-label={strings.pendingCount(pendingTotal)}>
-                    {pendingTotal}
-                  </PendingCount>
-                </GroupTrigger>
-              </h2>
-            </Accordion.Header>
-            <Accordion.Content>
-              <Branch>
-                {pending.map(({ convention, notes }) => (
-                  <li key={convention.slug}>
-                    <PendingConvention>{convention.nameZh}</PendingConvention>
-                    <Branch>
-                      {notes.map((n, i) => (
-                        <li key={i}>
-                          <PendingItem
-                            to={pendingPath(convention.slug, n.sectionId, n.index)}
-                            onClick={onNavigate}
-                          >
-                            <strong>
-                              <RichText text={n.trail[n.trail.length - 1]} />
-                            </strong>
-                            <span>{n.text}</span>
-                          </PendingItem>
-                        </li>
-                      ))}
-                    </Branch>
-                  </li>
-                ))}
-              </Branch>
-            </Accordion.Content>
-          </Group>
+          <PendingGroup>
+            <h2>
+              <PendingLink to="/pending" title={strings.pendingAllHint} onClick={onNavigate}>
+                <ChevronBox>
+                  <Chevron size={14} aria-hidden />
+                </ChevronBox>
+                {strings.pendingAll}
+                <PendingCount aria-label={strings.pendingCount(pendingTotal)}>
+                  {pendingTotal}
+                </PendingCount>
+              </PendingLink>
+            </h2>
+          </PendingGroup>
         )}
         {references.length > 0 && (
           <Group value={REFERENCES_GROUP}>
@@ -201,9 +172,6 @@ export function Sidebar({
 
 /** Width of the chevron column; child levels hang from its centre */
 const CHEVRON = 24
-
-/** Accordion value of the 待確認 group (closed by default; categories start open) */
-const PENDING_GROUP = '__pending'
 
 /** Accordion value of the 外部參考 group (open by default, like the categories) */
 const REFERENCES_GROUP = '__references'
@@ -285,7 +253,8 @@ const Group = styled(Accordion.Item)<{ $apart?: boolean }>`
   }
 `
 
-const GroupTrigger = styled(Accordion.Trigger)`
+/** The look of a group's heading: the categories' triggers and the 待確認 link */
+const groupHeading = css`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.space(1)};
@@ -310,9 +279,27 @@ const GroupTrigger = styled(Accordion.Trigger)`
     color: ${({ theme }) => theme.colors.primary};
     background: ${({ theme }) => theme.colors.surfaceAlt};
   }
+`
+
+const GroupTrigger = styled(Accordion.Trigger)`
+  ${groupHeading}
   &[data-state='open'] ${Chevron} {
     transform: rotate(90deg);
   }
+`
+
+/** 待確認: a link to the panel (e8-t07), set apart from the categories like a group */
+const PendingGroup = styled.div`
+  margin: ${({ theme }) => theme.space(6)} 0 ${({ theme }) => theme.space(3)};
+
+  h2 {
+    margin: 0;
+  }
+`
+
+const PendingLink = styled(Link)`
+  ${groupHeading}
+  text-decoration: none;
 `
 
 const Count = styled.span`
@@ -437,40 +424,6 @@ const PendingCount = styled(Count)`
   box-shadow: inset 0 0 0 1px ${({ theme }) => theme.colors.pendingBorder};
   background: ${({ theme }) => theme.colors.pendingBg};
   color: ${({ theme }) => theme.colors.pendingText};
-`
-
-const PendingConvention = styled.p`
-  margin: ${({ theme }) => theme.space(1)} 0 0;
-  padding: 0 ${({ theme }) => theme.space(2)};
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.text};
-`
-
-/** One note: the section it is in, then the note itself cut to two lines */
-const PendingItem = styled(Link)`
-  display: flex;
-  flex-direction: column;
-  padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(2)};
-  border-radius: ${({ theme }) => theme.shape.control};
-  color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  text-decoration: none;
-
-  strong {
-    color: ${({ theme }) => theme.colors.pendingText};
-    font-weight: 600;
-  }
-  > span {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  &:hover {
-    background: ${({ theme }) => theme.colors.pendingBg};
-  }
 `
 
 /** An outside link, with a new-tab icon at the end */

@@ -244,7 +244,8 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
 | `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（草稿與送審、分類、隊伍、制度集、審計紀錄）編輯者也看得到（§4.2、§4.3.1） |
 | `/review`、`/review/:slug` | 審核（bookEdit 看、bookReview 發布或退回）：草稿清單、草稿與已發布版本的段落差異（§4.3.1，e8-t04） |
-| `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約；`?rev=<id>` 打開版本紀錄並標出那一版（審計紀錄的連結） |
+| `/pending` | 待確認面板（社員都能看，bookEdit 指派與更新；§4.3.1，e8-t07） |
+| `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約；`?rev=<id>` 打開版本紀錄並標出那一版（審計紀錄的連結）；`?section=<id>` 先選好那個段落（待確認面板的連結） |
 | `/import` | 匯入檔案（bookImport） |
 | `/integrations/table` | 牌桌整合（bookEdit）：同步制度集到牌桌機器人、差異報告（§4.7） |
 | `/profiles/:id/edit` | 編輯制度集（e1-t14，社員；沒有 `access.edit` 唯讀）：採用、叫品改寫、段落替換、備忘（§3.1） |
@@ -333,6 +334,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - **審核頁**（e8-t04，`pages/ReviewPage.tsx`，lazy，bookEdit 才進得去）：`/review` 列全部草稿（送審中、編輯中兩組，含編輯者的說明與退回理由）；`/review/:slug` 是那份草稿和讀者現在看到的版本（線上版本，沒有就內建版本，新特約則全部算新增）的差異、編輯者的說明，審核者在下面「發布」（`PUT /api/book/conventions/:slug` 帶 `draftRevision`，發布說明空白時牌桌用草稿的說明）或「退回」（附理由，送審中才有）。單欄，手機可用。不包 `ProfiledContent`，看的是社團版原文。發布、退回的通知等 F4（e8-t10）。
 - **差異**（e8-t03，`lib/diff.ts` 的 `diffConventions(舊, 新)`）：特約欄位逐欄比；段落以 `id` 對齊（不管在樹的哪裡），搬到別的上層記「上層段落」、同層換順序記「順序」（不在最長同序列裡的才算）；段落內每個區塊拆成「行」（段落文字、條列每一條、叫品表每一列的意義／附註／待確認／牌力條件、表格標題、叫牌過程、牌例、導讀各項、待確認），行用最長共同子序列對齊，叫品列以 `call`（同表第 n 個同叫品）對齊，其他行在同一個空檔裡同種類的配成「修改」，其餘是新增或刪除。只回傳不同的行；`inlineDiff` 再標出一行裡改了哪幾個字（超過 250,000 字元平方就整行標）。畫面是 `components/DiffView.tsx`（上下排、刪去的畫線、新增的加底色，螢幕報讀唸「原本／改成」），審核頁與編輯器共用。
 - **版本比較**（e8-t05）：編輯器「版本紀錄」每個儲存的版本多「與這版比較」，比較框取代表單（寬螢幕連預覽一起），「比較對象」可選編輯中的內容或任一其他版本，舊的一律在前（`components/editor/ComparePanel.tsx`）。舊版本只檢查形狀，不檢查分類是否還在。
+- **待確認面板**（e8-t06–t08，`pages/PendingPage.tsx`，lazy；呼叫 `lib/pendingApi.ts`、文字 `pages/pendingStrings.ts`）：待確認本身仍寫在內容的 `pending`；牌桌另存有人動過的那幾則的紀錄（`pendingmeta:<slug>/<sectionId>/<n>`：狀態 未處理／處理中／擱置、負責人、備註、關閉依據；`GET /api/book/pending` 社員可讀、`PUT /api/book/pending/:slug/:sectionId/:n` bookEdit）。`lib/pending.ts` 的 `pendingRows()` 把 manifest 的每則待確認配上紀錄（以段落＋原文比對，同文字兩則先配同位置；改寫過的原文回到未處理）。不能手動設「已確認」：編輯者寫好關閉依據後按「寫依據並修改內容」，存紀錄並開編輯器 `/edit/:slug?section=<id>`，拿掉待確認、送審；審核者發布時牌桌把新版本裡找不到的待確認關閉（記發布者、版本、依據，沒寫依據就用版本說明），列在面板的「最近關閉」。側欄的待確認不再列每一則，改成連到面板的連結，數字＝內容裡還在的待確認（關閉只發生在發布，所以就是面板的總數）。看的是社團版原文，不包 `ProfiledContent`。
 - 呼叫在 `lib/reviewApi.ts`、文字在 `pages/reviewStrings.ts`（差異與審核頁的在 `diffText`），只有編輯器、審核頁與管理頁（都 lazy）import，不進首頁；型別在 `lib/api.ts`，`parity/table-types.ts` 對拍。
 - **還沒做**：隊伍與搭檔制度集照舊直接儲存；`club` 制度集也還是編輯者直接儲存（PRD 目標要走送審，之後再排）。差異、審核頁、通知是 F2、F4。
 
