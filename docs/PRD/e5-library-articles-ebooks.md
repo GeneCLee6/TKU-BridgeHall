@@ -58,7 +58,7 @@ depends_on: [E1, E9, E10]
 
 ## 驗收條件
 
-- [ ] AC-5.1 — `Article` 型別與新區塊；`tests/content` 驗證；文章頁渲染全部區塊種類。
+- [x] AC-5.1 — `Article` 型別與新區塊；`tests/content` 驗證；文章頁渲染全部區塊種類。
 - [ ] AC-5.2 — 文章線上編輯（新增、改、版本、送審走 E8）；AI 匯入可產文章草稿。
 - [ ] AC-5.3 — `deal` 與 `play` 區塊：四家牌輸入與顯示（與牌桌共用元件）、出牌序列逐墩顯示。
 - [x] AC-5.4 — 電子書上傳到 R2（憑證直傳、50 MB、必填授權）；封面、作者、年代。
@@ -72,8 +72,8 @@ depends_on: [E1, E9, E10]
 **M2**
 
 - [x] `e5-t01` `Article` 型別、`heading`／`quote`／`image` 區塊、`BlockView`、內容測試 · AC-5.1 · M
-- [ ] `e5-t02` `deal` 區塊接 E11 的 `DealDiagram`／`DealInput`（`e11-t11`）；文章用的 caption 與版面 · AC-5.3 · S · ← e11-t11
-- [ ] `e5-t03` `play` 區塊：出牌序列顯示（逐墩、可展開）· AC-5.3 · M · ← e5-t02
+- [x] `e5-t02` `deal` 區塊接 E11 的 `DealDiagram`／`DealInput`（`e11-t11`）；文章用的 caption 與版面 · AC-5.3 · S · ← e11-t11
+- [x] `e5-t03` `play` 區塊：出牌序列顯示（逐墩、可展開）· AC-5.3 · M · ← e5-t02
 - [x] `e5-t04` Worker：`article:` 儲存、版本、API（與 `BookEntry` 同法）；R2 bucket 與簽名 URL 沿用 E11 `e11-t02` · AC-5.2、AC-5.6 · M · ← e11-t02
 - [x] `e5-t05` 文章頁 `/library/:slug` 與叢書頁 `/library`（書架版面、系列、篩選）· AC-5.7 · M · ← e5-t01, e9-t09
 - [x] `e5-t06` 系列資料模型與線上管理 · AC-5.7 · S · ← e5-t04
