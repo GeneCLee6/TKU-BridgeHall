@@ -2,7 +2,8 @@ import { defineConfig } from '@playwright/test'
 
 /**
  * Browser tests (e9-t12, e9-t13, AC-9.7): the real app on Vite's dev server, its API answered by
- * fixtures (tests/browser/fixtures.ts) as a signed-out reader with the bundled content.
+ * fixtures (tests/browser/fixtures.ts) as a signed-in member with the bundled content (the whole
+ * site needs an account, 2026-10-29; the login page is checked signed out).
  *
  * - tests/browser/visual.spec.ts: screenshots compared with the baselines in
  *   tests/browser/__screenshots__. Baselines are made on Linux in Playwright's container (the CI

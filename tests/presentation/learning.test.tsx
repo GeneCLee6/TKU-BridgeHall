@@ -27,6 +27,7 @@ beforeAll(() => Promise.all([warmPages(), import('../../src/pages/LearnPages.tsx
 beforeEach(() => {
   forgetOnlinePaths()
   routes = { 'GET /api/book/paths': { body: { paths: [] } } }
+  signedIn({})
   sent = []
   vi.stubGlobal(
     'fetch',
@@ -56,7 +57,7 @@ const renderAt = (path: string) =>
 const WAIT = { timeout: 10_000 }
 
 describe('the path and lesson pages (e4-t09)', () => {
-  it('lists 「從零開始」’s lessons, and asks a visitor to sign in to keep progress', async () => {
+  it('lists 「從零開始」’s lessons', async () => {
     renderAt('/learn/from-zero')
     expect(await screen.findByRole('heading', { level: 1, name: '從零開始' }, WAIT)).toBeInTheDocument()
     const lessons = within(screen.getAllByRole('list').find((l) => l.tagName === 'OL')!).getAllByRole('link')
@@ -64,7 +65,6 @@ describe('the path and lesson pages (e4-t09)', () => {
     expect(lessons[0]).toHaveAttribute('href', '/learn/from-zero/lesson-1')
     expect(lessons[0]).toHaveTextContent('第 1 課淡江自然制總覽')
     expect(screen.getByRole('link', { name: '從第一課開始' })).toHaveAttribute('href', '/learn/from-zero/lesson-1')
-    expect(await screen.findByText('登入後可以記錄完成的課次。')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: '編輯路徑' })).toBeNull()
   })
 

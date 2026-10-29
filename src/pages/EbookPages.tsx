@@ -8,7 +8,7 @@ import {
   type Ebook,
   ebookApi,
   type EbookFiles,
-  EBOOK_LICENSES,
+  offeredLicenses,
   type EbookList,
   type EbookResponse,
   formatBytes,
@@ -32,8 +32,8 @@ const PdfReader = lazy(() => import('../components/PdfReader.tsx').then((m) => (
 /**
  * 電子書（E5 e5-t09～e5-t11、e5-t15）: the list (/library/book), grouped by series, and a book's page
  * (/library/book/:id) with the in-site PDF reader. Reviewers upload, edit and take books down
- * here; editors also see how full the file storage is. Signed out, members-only books are not in
- * the list and their page answers as if there were no such book (the Worker leaves them out).
+ * here; editors also see how full the file storage is. The whole site is for members
+ * (2026-10-29), so every reader sees every book that is up.
  */
 export function EbooksPage() {
   return (
@@ -76,11 +76,6 @@ function Ebooks() {
       <Link to="/library">{t.library}</Link>
       <PageTitle>{t.listTitle}</PageTitle>
       <Muted>{t.listIntro}</Muted>
-      {user === null && (
-        <Muted>
-          {t.membersHint} <Link to="/login?next=%2Flibrary%2Fbook">{t.signIn}</Link>
-        </Muted>
-      )}
       {notice && <Notice role="status">{notice}</Notice>}
       {list && 'usage' in list && list.usage && (
         <>
@@ -167,12 +162,7 @@ function Book() {
     return (
       <>
         {back}
-        <ErrorText role="alert">{loaded.gone ? (user ? t.notFound : t.notFoundSignedOut) : loaded.error}</ErrorText>
-        {loaded.gone && user === null && (
-          <Row>
-            <Link to={`/login?next=${encodeURIComponent(`/library/book/${id}`)}`}>{t.signIn}</Link>
-          </Row>
-        )}
+        <ErrorText role="alert">{loaded.gone ? t.notFound : loaded.error}</ErrorText>
       </>
     )
 
@@ -323,7 +313,7 @@ function EbookForm({ book, onSaved }: { book?: Ebook; onSaved: (book: Ebook) => 
         </Field>
         <Licenses>
           <legend>{t.fields.license}</legend>
-          {EBOOK_LICENSES.map((license) => (
+          {offeredLicenses(book?.license ?? '').map((license) => (
             <label key={license}>
               <input
                 type="radio"

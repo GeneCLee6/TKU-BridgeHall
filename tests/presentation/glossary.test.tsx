@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from '../../src/App.tsx'
+import { READER } from '../setup.ts'
 import type { BookGlossary, Me } from '../../src/lib/api.ts'
 import { warmPages } from './warmPages.ts'
 
@@ -43,7 +44,7 @@ beforeAll(
 )
 
 beforeEach(() => {
-  routes = { 'GET /api/book/glossary': { body: online } }
+  routes = { 'GET /api/me': { body: { user: READER } }, 'GET /api/book/glossary': { body: online } }
   sent = []
   vi.stubGlobal(
     'fetch',
