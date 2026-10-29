@@ -82,6 +82,8 @@ function targetLink(entry: AuditEntry) {
     return entry.action === 'profile:delete' ? null : `/profiles/${encodeURIComponent(entry.target)}/edit`
   if (entry.action === 'book:categories') return null
   if (entry.action === 'book:glossary') return '/glossary'
+  // A 待確認 note (e8-t06): `<slug>/<sectionId>/<n>`
+  if (entry.action === 'book:pending') return '/pending'
   if (entry.action === 'article:series') return '/library'
   if (entry.action.startsWith('article:')) return `/library/${entry.target}`
   // A convention card version (e3-t09): `<profile>/<template>`, the version's number

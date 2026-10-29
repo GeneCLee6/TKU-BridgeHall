@@ -389,19 +389,11 @@ describe('catalogue', () => {
     expect(menu.getByRole('link', { name: /^雷本索特約/ })).toBeInTheDocument()
   })
 
-  it('lists every 待確認 note in the catalogue and jumps straight to it', async () => {
+  it('links the catalogue’s 待確認 count to the panel', () => {
     renderAt('/')
     const menu = screen.getByRole('navigation', { name: '特約目錄' })
-    const group = within(menu).getByRole('button', { name: /^待確認/ })
-    expect(group).toHaveAttribute('aria-expanded', 'false')
-    await userEvent.click(group)
-
-    // The Lebensohl…: no notes; the 1NT doc has one, under 嘗試滿貫
-    const link = within(menu).getByRole('link', { name: /^嘗試滿貫/ })
-    expect(link).toHaveAttribute('href', '/c/notrump-responses/slam-try?pending=0')
-    await userEvent.click(link)
-    expect(await screen.findByRole('heading', { level: 1, name: '1NT的答叫' }, { timeout: 5000 })).toBeInTheDocument()
-    expect(await screen.findByRole('button', { name: /^合約選擇方式/ }, { timeout: 5000 })).toHaveAttribute('aria-expanded', 'true')
-    expect(trigger(/^嘗試滿貫/)).toHaveAttribute('aria-expanded', 'true')
+    const link = within(menu).getByRole('link', { name: /^待確認/ })
+    expect(link).toHaveAttribute('href', '/pending')
+    expect(link.textContent).toMatch(/\d+$/)
   })
 })

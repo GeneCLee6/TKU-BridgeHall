@@ -31,7 +31,7 @@
 | [E5](e5-library-articles-ebooks.md) | 橋藝叢書 | 12／15 | 5／8 | M2 | in progress |
 | [E6](e6-quiz-practice.md) | 練習與測驗 | 7／9 | 4／6 | M2 | in progress |
 | [E7](e7-bridgetable-integration.md) | 與淡江牌桌整合 | 5／8 | 2／5 | M2 | in progress |
-| [E8](e8-content-governance.md) | 內容治理 | 3／14 | 1／6 | M1、M2 | in progress |
+| [E8](e8-content-governance.md) | 內容治理 | 9／14 | 4／6 | M1、M2 | in progress |
 | [E9](e9-ui-redesign.md) | 介面重新設計（v2） | 18／18 | 6／10 | M1 | in progress |
 | [E10](e10-platform-performance-ops.md) | 平台、效能與維運 | 7／11 | 2／6 | M1、M2、M3 | in progress |
 | [E11](e11-community-forum.md) | 社群與討論 | 10／21 | 1／9 | M1（t21 M2） | in progress |
