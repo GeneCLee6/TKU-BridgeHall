@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import { ApiError, errorText } from '../lib/api.ts'
@@ -20,6 +20,7 @@ import {
   workerUrl,
 } from '../lib/ebooks.ts'
 import { filesOff, uploadArticlePicture } from '../lib/imageUpload.ts'
+import { PAGE_PARAM, placeParam, READING_LIMITS, useReadingMark, useReadingPlaces } from '../lib/reading.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { strings } from '../strings.ts'
@@ -220,9 +221,7 @@ function Book() {
         />
       )}
       {pdf ? (
-        <Suspense fallback={<Muted role="status">{t.reader.loading}</Muted>}>
-          <PdfReader key={ebook.fileKey} url={workerUrl(pdf.url)} title={ebook.title} />
-        </Suspense>
+        <BookReader key={ebook.fileKey} ebook={ebook} url={workerUrl(pdf.url)} signedIn={!!user} />
       ) : (
         <ErrorText role="alert">{t.fileMissing}</ErrorText>
       )}
@@ -231,6 +230,36 @@ function Book() {
 }
 
 /** Uploading a new book, or changing one's record (and optionally its PDF): reviewers only */
+/**
+ * The reader, opened where this member left off (e5-t14, AC-5.8): `?page=` (「繼續閱讀」 on 我的帳號)
+ * or else the page kept with their account; every page turned is kept again.
+ */
+function BookReader({ ebook, url, signedIn }: { ebook: Ebook; url: string; signedIn: boolean }) {
+  const [params] = useSearchParams()
+  const asked = placeParam(params.get(PAGE_PARAM), 1, READING_LIMITS.placeMax)
+  const { places } = useReadingPlaces(signedIn && asked === undefined)
+  const saved = places?.find((p) => p.kind === 'ebook' && p.id === ebook.id)?.place
+  // Wait for the kept page, so the reader opens on it rather than jumping there
+  const start = asked ?? (signedIn && !places ? undefined : (saved ?? 1))
+  const [pages, setPages] = useState(ebook.pages ?? 0)
+  const mark = useReadingMark(signedIn && pages ? { kind: 'ebook', id: ebook.id, title: ebook.title, of: pages } : undefined)
+  const onPage = useCallback(
+    (page: number, of: number) => {
+      setPages(of)
+      mark(page)
+    },
+    [mark],
+  )
+
+  const loading = <Muted role="status">{t.reader.loading}</Muted>
+  if (start === undefined) return loading
+  return (
+    <Suspense fallback={loading}>
+      <PdfReader url={url} title={ebook.title} initialPage={start} onPage={onPage} />
+    </Suspense>
+  )
+}
+
 function EbookForm({ book, onSaved }: { book?: Ebook; onSaved: (book: Ebook) => void }) {
   const [form, setForm] = useState(() => formOf(book))
   const [pdf, setPdf] = useState<File | null>(null)
