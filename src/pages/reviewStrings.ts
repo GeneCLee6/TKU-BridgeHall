@@ -83,6 +83,7 @@ export const review = {
     'path:reset': '學習路徑還原為內建',
   } satisfies Record<AuditAction, string>,
   categories: '分類',
+  series: '叢書系列',
   glossary: '名詞表',
 }
 

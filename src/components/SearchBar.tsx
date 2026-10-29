@@ -9,7 +9,7 @@ import { KindLevel } from './KindLevel.tsx'
 import { RichText } from './Suit.tsx'
 
 /**
- * Searches convention names, aliases, tags, bids and meanings; results are deep links.
+ * Searches convention names, aliases, tags, bids and meanings, and the library's articles; results are deep links.
  * `onFocus` lets the page load the content to search while the reader starts typing.
  */
 export function SearchBar({ search, onFocus }: { search: SearchFn; onFocus?: () => void }) {
@@ -48,12 +48,12 @@ export function SearchBar({ search, onFocus }: { search: SearchFn; onFocus?: () 
             {results.map((r) => (
               <li key={`${r.slug}/${r.sectionId ?? ''}`}>
                 <Link
-                  to={r.sectionId ? sectionPath(r.slug, r.sectionId) : conventionPath(r.slug)}
+                  to={r.path ?? (r.sectionId ? sectionPath(r.slug, r.sectionId) : conventionPath(r.slug))}
                   onClick={() => setQuery('')}
                 >
                   <RichText text={r.label} />
                 </Link>
-                <KindLevel kind={r.kind} level={r.level} $small />
+                <KindLevel kind={r.kind} level={r.level} levelOnly={Boolean(r.path)} $small />
               </li>
             ))}
           </ul>

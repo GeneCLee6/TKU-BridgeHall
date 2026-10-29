@@ -82,6 +82,8 @@ function targetLink(entry: AuditEntry) {
     return entry.action === 'profile:delete' ? null : `/profiles/${encodeURIComponent(entry.target)}/edit`
   if (entry.action === 'book:categories') return null
   if (entry.action === 'book:glossary') return '/glossary'
+  if (entry.action === 'article:series') return '/library'
+  if (entry.action.startsWith('article:')) return `/library/${entry.target}`
   // A convention card version (e3-t09): `<profile>/<template>`, the version's number
   if (entry.action === 'card:publish' && entry.version) return `/cards/${entry.target}/v/${entry.version}`
   if (entry.action === 'card:delete') return null
@@ -113,7 +115,14 @@ export function AuditPanel() {
               <tbody>
                 {entries.map((e) => {
                   const link = targetLink(e)
-                  const name = e.action === 'book:categories' ? t.categories : e.action === 'book:glossary' ? t.glossary : e.target
+                  const name =
+                    e.action === 'book:categories'
+                      ? t.categories
+                      : e.action === 'article:series'
+                        ? t.series
+                        : e.action === 'book:glossary'
+                          ? t.glossary
+                          : e.target
                   return (
                     <tr key={e.id}>
                       <td>{formatDateTime(e.at)}</td>
