@@ -78,6 +78,9 @@ describe('the path and lesson pages (e4-t09)', () => {
     const nav = within(screen.getByRole('navigation', { name: '上一課與下一課' }))
     expect(nav.getByRole('link', { name: /上一課/ })).toHaveAttribute('href', '/learn/from-zero/lesson-4')
     expect(nav.getByRole('link', { name: /下一課/ })).toHaveAttribute('href', '/learn/from-zero/lesson-6')
+    // e4-t10: no questions chosen, so the lesson practises its readings
+    expect(screen.getByText('從這一課的閱讀範圍出題（幹部還沒選題）。')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '練這一課的題目' })).toHaveAttribute('href', '/practice?lesson=from-zero%2Flesson-5')
   })
 
   it('shows the editors’ online version in place of the bundled one, with sections and checklist', async () => {
@@ -194,5 +197,46 @@ describe('editing a path online (e4-t12)', () => {
     signedIn({})
     renderAt('/learn/from-zero/edit')
     expect(await screen.findByRole('alert', undefined, WAIT)).toHaveTextContent(/權限/)
+  })
+})
+
+describe('a lesson’s questions (e4-t10)', () => {
+  it('lets an editor choose questions from the lesson’s readings; the lesson page counts them', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    let saved: SavedLearningPath | undefined
+    routes['PUT /api/book/paths'] = (body) => {
+      saved = { ...(body as { path: SavedLearningPath }).path, by: 'amy', at: Date.UTC(2026, 9, 2) }
+      routes['GET /api/book/paths'] = { body: { paths: [saved] } }
+      return { body: { path: saved } }
+    }
+    const user = userEvent.setup()
+    renderAt('/learn/from-zero/edit')
+    const seventh = within(await screen.findByRole('group', { name: '第 7 課' }, WAIT))
+    await user.click(seventh.getByRole('button', { name: /^選題/ }))
+    // 叫牌觀念 makes one question: its worked example
+    const list = within(await seventh.findByRole('list', { name: '第 7 課 題目' }, WAIT))
+    const boxes = list.getAllByRole('checkbox')
+    expect(boxes).toHaveLength(1)
+    expect(list.getByText(/叫品題/)).toBeInTheDocument()
+    await user.click(boxes[0])
+    expect(seventh.getByText(/已選 1／40 題/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '存檔' }))
+    expect(await screen.findByText('已存檔。', undefined, WAIT)).toBeInTheDocument()
+    expect(saved!.lessons[6].quizIds).toEqual(['system-concepts/fit/18/hand'])
+    expect(saved!.lessons[5].quizIds).toBeUndefined()
+  })
+
+  it('says how many questions the editors chose', async () => {
+    const online: SavedLearningPath = {
+      id: 'from-zero',
+      name: '從零開始',
+      by: 'ed',
+      at: 1,
+      lessons: [{ id: 'lesson-1', title: '第一堂', goal: '', readings: [], quizIds: ['lebensohl/a/0/0', 'lebensohl/a/0/1'], checklist: [] }],
+    }
+    routes['GET /api/book/paths'] = { body: { paths: [online] } }
+    renderAt('/learn/from-zero/lesson-1')
+    expect(await screen.findByText('幹部為這一課選了 2 題。', undefined, WAIT)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '練這一課的題目' })).toHaveAttribute('href', '/practice?lesson=from-zero%2Flesson-1')
   })
 })

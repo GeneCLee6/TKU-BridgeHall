@@ -13,8 +13,14 @@ import type { Auction, Call, Convention, Hand, Level, ResponseRow, Section } fro
  * answers: what they say may not be what the club plays. Questions are made in the browser from
  * the content the reader's profile resolves to, so a profile's overrides are what gets asked.
  *
- * `call` questions (a hand and an auction; which call?) come with e6-t07; editors can write them
- * by hand already (e6-t06, lib/quizRecords.ts), as they can take a question out or change its answer.
+ * A 叫品題 (`call`, e6-t07) shows a hand and asks for the call. It is made only from the handbook's
+ * worked examples, where the text itself says what to call with that hand: a hand block whose label
+ * is a call (叫4H, 應叫1H, PASS!, 應叫2C，絕不可叫1NT), under a paragraph that sets the example out
+ * ([原文已移除]). The paragraph is shown word for word as the question, the
+ * label's call is the answer, and the reader answers on a bidding box: no wrong calls are made up
+ * as choices. Labels that are not a call (何手牌較佳？, 可開3NT) ask nothing. Editors can also write
+ * call questions by hand (e6-t06, lib/quizRecords.ts), as they can take a question out or change
+ * its answer.
  */
 
 export interface Quiz {
@@ -29,10 +35,15 @@ export interface Quiz {
   /** The call asked about (meaning) */
   call?: Call
   hand?: Hand
-  /** meaning: the row's meaning; call: the call */
+  /** meaning: the row's meaning; call: the call, in compact notation (4H, 1NT, P) */
   answer: string
-  /** meaning: four meanings, the answer among them, in a fixed order (shuffle when showing) */
+  /**
+   * meaning: four meanings, the answer among them, in a fixed order (shuffle when showing); call:
+   * the calls to choose from when an editor wrote them, else absent and answered on a bidding box
+   */
   choices?: string[]
+  /** call (made): the example's paragraph, word for word, which sets out the auction */
+  prompt?: string
   /** The section's level, or the convention's; absent when neither is classified */
   level?: Level
   source: 'auto' | 'manual'
@@ -44,7 +55,16 @@ export interface Quiz {
   trail: string[]
 }
 
-export type SkipReason = 'pending' | 'emptyMeaning' | 'emptyCall' | 'refersBack' | 'fewChoices'
+export type SkipReason =
+  | 'pending'
+  | 'emptyMeaning'
+  | 'emptyCall'
+  | 'refersBack'
+  | 'fewChoices'
+  /** A hand whose label is not a call: nothing says what to call with it */
+  | 'noCall'
+  /** A hand whose label is a call, without an example paragraph (EX) …) above it */
+  | 'noPrompt'
 
 /** A row no question was made from, and why */
 export interface SkippedRow {
@@ -159,6 +179,89 @@ function distractors(question: Row, rows: Row[]): string[] {
   return picked
 }
 
+/** A call as a label writes it: 4H, 4♥, 1NT, 3N, PASS, P, X, XX */
+const CALL = String.raw`(PASS|P|XX|X|[1-7](?:NT|N|[CDHS♣♦♥♠]))`
+
+/**
+ * The call a hand's label says to make, in compact notation, or undefined when the label says
+ * something else. Only a label that is nothing but the call counts — after an optional (i)/(ii)
+ * numbering, 叫 or 應叫, and emphasis (!) — or the call then a comma and the reason
+ * (叫2D，Cue-Bid; 應叫2C，絕不可叫1NT). 可開3NT, [原文已移除] and the like say no.
+ */
+export function labelCall(label: string | undefined): Call | undefined {
+  if (!label) return undefined
+  const match = new RegExp(String.raw`^(?:\([ivx]+\)\s*)?(?:應叫|叫)?\s*${CALL}\s*[!！]*(?:\s*[，,].*)?$`, 'i').exec(
+    label.trim(),
+  )
+  if (!match) return undefined
+  const call = match[1].toUpperCase().replace(/[♣♦♥♠]/, (suit) => ({ '♣': 'C', '♦': 'D', '♥': 'H', '♠': 'S' })[suit]!)
+  if (call === 'PASS') return 'P'
+  return /^[1-7]N$/.test(call) ? `${call}T` : call
+}
+
+/** A paragraph that sets out a worked example: EX) …, EX1) … */
+const isExample = (text: string) => /^\s*EX\s*\d*\s*\)/i.test(text)
+
+/** Call questions from a convention's worked examples (e6-t07), and the hands none came from */
+function callQuizzes(convention: Convention, profileId: string): QuizSet {
+  const quizzes: Quiz[] = []
+  const skipped: SkippedRow[] = []
+  const walk = (sections: Section[], trail: string[], pending: boolean, level?: Level) => {
+    for (const section of sections) {
+      const here = [...trail, section.title]
+      const pendingHere = pending || Boolean(section.pending)
+      const levelHere = section.level ?? level
+      const blocks = section.blocks ?? []
+      blocks.forEach((block, blockIndex) => {
+        if (block.kind !== 'hand') return
+        const id = `${convention.slug}/${section.id}/${blockIndex}/hand`
+        const call = labelCall(block.label)
+        // The example's paragraph: the first block above that is not another of its hands
+        let above = blockIndex - 1
+        while (above >= 0 && blocks[above].kind === 'hand') above--
+        const prompt = blocks[above]
+        const reason: SkipReason | undefined = !call
+          ? 'noCall'
+          : prompt?.kind !== 'paragraph' || !isExample(prompt.text)
+            ? 'noPrompt'
+            : pendingHere || prompt.pending
+              ? 'pending'
+              : undefined
+        if (reason || !call || prompt?.kind !== 'paragraph') {
+          skipped.push({ id, reason: reason ?? 'noPrompt' })
+          return
+        }
+        quizzes.push({
+          id,
+          kind: 'call',
+          profileId,
+          slug: convention.slug,
+          sectionId: section.id,
+          hand: block.hand,
+          answer: call,
+          ...(levelHere && { level: levelHere }),
+          source: 'auto',
+          prompt: prompt.text,
+          trail: here,
+        })
+      })
+      if (section.children) walk(section.children, here, pendingHere, levelHere)
+    }
+  }
+  walk(convention.sections, [], false, convention.level)
+  return { quizzes, skipped }
+}
+
+/** Two calls are the same call: 1NT and 1nt, P and PASS, 4♥ and 4H */
+export const sameCall = (a: string, b: string) => {
+  const norm = (c: string) => labelCall(c) ?? sameText(c).toUpperCase()
+  return norm(a) === norm(b)
+}
+
+/** Whether `picked` answers the question: a meaning word for word, a call as the same call */
+export const isRight = (quiz: Pick<Quiz, 'kind' | 'answer'>, picked: string) =>
+  quiz.kind === 'call' ? sameCall(picked, quiz.answer) : picked === quiz.answer
+
 /** A position for the answer among the choices that does not depend on the meanings' order */
 function answerSlot(id: string): number {
   let hash = 0
@@ -168,8 +271,8 @@ function answerSlot(id: string): number {
 
 /**
  * Meaning questions from every response table of the given conventions (as the reader's profile
- * resolves them), with the rows no question could be made from. Pure: the same content gives the
- * same questions, ids and choices.
+ * resolves them), then call questions from their worked examples, with the rows and hands no
+ * question could be made from. Pure: the same content gives the same questions, ids and choices.
  */
 export function generateQuizzes(conventions: readonly Convention[], profileId: string): QuizSet {
   const quizzes: Quiz[] = []
@@ -213,6 +316,9 @@ export function generateQuizzes(conventions: readonly Convention[], profileId: s
         trail: r.trail,
       })
     }
+    const calls = callQuizzes(convention, profileId)
+    quizzes.push(...calls.quizzes)
+    skipped.push(...calls.skipped)
   }
   return { quizzes, skipped }
 }
@@ -235,11 +341,15 @@ export interface QuizFilter {
   slugs?: readonly string[]
   /** Only questions of this level; questions without a level come only when there is no filter */
   level?: Level
+  /** Only 意義題 or only 叫品題 */
+  kind?: Quiz['kind']
 }
 
-export function filterQuizzes(quizzes: readonly Quiz[], { slugs, level }: QuizFilter): Quiz[] {
+export function filterQuizzes(quizzes: readonly Quiz[], { slugs, level, kind }: QuizFilter): Quiz[] {
   const wanted = slugs && new Set(slugs)
-  return quizzes.filter((q) => !q.disabled && (!wanted || wanted.has(q.slug)) && (!level || q.level === level))
+  return quizzes.filter(
+    (q) => !q.disabled && (!wanted || wanted.has(q.slug)) && (!level || q.level === level) && (!kind || q.kind === kind),
+  )
 }
 
 /** Fisher–Yates with a random source tests can fix */
