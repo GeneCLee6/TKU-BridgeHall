@@ -65,6 +65,10 @@ const GlossaryPage = lazy(() => import('./glossary/GlossaryPage.tsx').then((m) =
 const GlossaryEditorPage = lazy(() =>
   import('./glossary/GlossaryEditorPage.tsx').then((m) => ({ default: m.GlossaryEditorPage })),
 )
+// 討論區 (E11 G5: e11-t13, e11-t14); the board pages and the forum's frame are G6
+const forum = () => import('./forum/ForumPages.tsx')
+const PostPage = lazy(() => forum().then((m) => ({ default: m.PostPage })))
+const NewPostPage = lazy(() => forum().then((m) => ({ default: m.NewPostPage })))
 
 // The reading pages read the reader's system profile; the editor and the admin page keep the club's content
 const handbook = (
@@ -171,6 +175,8 @@ export function App() {
               <Route path="/u/:id" element={<MemberPage />} />
               <Route path="/library/book" element={<EbooksPage />} />
               <Route path="/library/book/:id" element={<EbookPage />} />
+              <Route path="/forum/new" element={<NewPostPage />} />
+              <Route path="/forum/p/:postId" element={<PostPage />} />
             </Route>
           </Routes>
         </Suspense>
