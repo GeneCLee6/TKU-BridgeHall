@@ -30,6 +30,7 @@ export const pageStrings = {
     library: '叢書',
     firstTime: '第一次來？從這裡開始',
     lesson: (n: number) => `第 ${n} 課`,
+    wholePath: (name: string, n: number) => `看「${name}」全部 ${n} 課`,
     categories: '全書',
     recent: '最近更新',
     recentEdited: '線上修改',

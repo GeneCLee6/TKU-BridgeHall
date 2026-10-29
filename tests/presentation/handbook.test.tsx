@@ -51,10 +51,13 @@ describe('home page', () => {
     expect(card.getByRole('link', { name: '練習叫牌' })).toHaveAttribute('href', '/practice')
     expect(await card.findByRole('link', { name: '登入' })).toHaveAttribute('href', '/login?next=%2F')
 
+    // The first lessons of 「從零開始」 (e4-t09), and the way to the whole path
     const lessons = within(screen.getByRole('region', { name: '第一次來？從這裡開始' })).getAllByRole('link')
-    expect(lessons).toHaveLength(3)
-    expect(lessons[0]).toHaveAttribute('href', '/c/system-overview')
+    expect(lessons).toHaveLength(4)
+    expect(lessons[0]).toHaveAttribute('href', '/learn/from-zero/lesson-1')
     expect(lessons[0]).toHaveTextContent(/^第 1 課淡江自然制總覽/)
+    expect(lessons[3]).toHaveAttribute('href', '/learn/from-zero')
+    expect(lessons[3]).toHaveTextContent('看「從零開始」全部 8 課')
 
     // Newest first; nothing was edited online, so all show their bundled date
     const recent = within(screen.getByRole('region', { name: '最近更新' })).getAllByRole('listitem')
