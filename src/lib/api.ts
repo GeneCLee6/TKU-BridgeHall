@@ -136,6 +136,7 @@ export type AuditAction =
   | 'book:hide'
   | 'book:reset'
   | 'book:categories'
+  | 'book:glossary'
   | 'article:publish'
   | 'article:hide'
   | 'article:series'
@@ -146,6 +147,8 @@ export type AuditAction =
   | 'quiz:unfix'
   | 'card:publish'
   | 'card:delete'
+  | 'path:save'
+  | 'path:reset'
 
 export interface AuditEntry {
   id: string
