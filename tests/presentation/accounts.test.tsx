@@ -52,6 +52,8 @@ beforeEach(() => {
     // And its drafts and audit log (e8-t02, e8-t09)
     'GET /api/book/reviews': { body: { drafts: [] } },
     'GET /api/book/audit': { body: { entries: [] } },
+    // And the library's series (e5-t06)
+    'GET /api/book/articles': { body: { version: 0, entries: [], files: {}, series: { version: 0, series: [] } } },
   }
   sent = []
   vi.stubGlobal(

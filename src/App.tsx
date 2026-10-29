@@ -14,6 +14,8 @@ import { strings } from './strings.ts'
 // The reading pages with convention content; the home page stays free of the card code (e9-t04)
 const ConventionPage = lazy(() => import('./pages/ConventionPage.tsx').then((m) => ({ default: m.ConventionPage })))
 const BookPage = lazy(() => import('./pages/BookPage.tsx').then((m) => ({ default: m.BookPage })))
+// 叢書 (E5 e5-t05): the shelves, or one article
+const Library = lazy(() => import('./pages/LibraryPage.tsx').then((m) => ({ default: m.Library })))
 // Only editors need these, so readers never download them
 const AdminPage = lazy(() => import('./pages/AdminPage.tsx').then((m) => ({ default: m.AdminPage })))
 const EditorPage = lazy(() => import('./pages/EditorPage.tsx').then((m) => ({ default: m.EditorPage })))
@@ -71,6 +73,7 @@ export function App() {
                     <Route path="/book" element={<BookPage />} />
                     <Route path="/c/:slug" element={<ConventionPage />} />
                     <Route path="/c/:slug/:sectionId" element={<ConventionPage />} />
+                    <Route path="/library/:slug?" element={<Library />} />
                     <Route path="*" element={<HomePage notFound />} />
                   </Route>
                   <Route

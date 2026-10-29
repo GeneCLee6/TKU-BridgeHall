@@ -72,10 +72,12 @@ export const review = {
     'profile:delete': '刪除制度集',
     'article:publish': '發布文章',
     'article:hide': '隱藏文章',
+    'article:series': '改叢書系列',
     'quiz:fix': '修改練習題',
     'quiz:unfix': '刪除練習題的修正',
     'card:publish': '發布制度卡版本',
     'card:delete': '刪除制度卡版本',
   } satisfies Record<AuditAction, string>,
   categories: '分類',
+  series: '叢書系列',
 }

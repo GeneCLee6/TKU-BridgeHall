@@ -1,6 +1,9 @@
 import Fuse from 'fuse.js'
+import { libraryStrings } from '../libraryStrings.ts'
 import type { Convention, ConventionKind, ConventionMeta, Level, Section } from '../types/convention.ts'
+import type { ArticleMeta, ArticleSeries } from '../types/article.ts'
 import { formatCall, toAsciiSuits } from './calls.ts'
+import { articlePath, resolveSeries } from './series.ts'
 import { blockText, walkSections } from './sections.ts'
 
 export interface SearchRecord {
@@ -18,6 +21,8 @@ export interface SearchRecord {
   /** The convention's kind and level (a section's own level when it has one), shown with the result */
   kind?: ConventionKind
   level?: Level
+  /** Where the result goes when it is not a convention: an article's page (e5-t13) */
+  path?: string
 }
 
 /**
@@ -66,6 +71,37 @@ export function buildRecords(conventions: (Convention | ConventionMeta)[]): Sear
     })
   }
   return records
+}
+
+/**
+ * One record per article the reader may see (e5-t13): title, authors and series, then the summary
+ * and the words of its blocks as the Worker sends them (`?text=1`). Articles live only online, so
+ * they are not in the index file built with the site (the search box loads them with
+ * libraryApi.ts `loadArticleRecords`); their slugs are kept apart from the conventions' by the
+ * `library/` prefix.
+ */
+export function articleRecords(list: {
+  entries: { slug: string; meta: ArticleMeta | null }[]
+  series?: { series: ArticleSeries[] }
+  text?: Record<string, string>
+}): SearchRecord[] {
+  const series = new Map(resolveSeries(list.series?.series).map((s) => [s.id, s.label]))
+  return list.entries.flatMap(({ slug, meta }) =>
+    meta
+      ? [
+          {
+            slug: `library/${slug}`,
+            path: articlePath(slug),
+            label: `${libraryStrings.title} › ${meta.title}`,
+            ...(meta.level && { level: meta.level }),
+            name: toAsciiSuits(meta.title),
+            tags: toAsciiSuits([...meta.authors, series.get(meta.series) ?? ''].join(' ')),
+            bids: '',
+            text: toAsciiSuits(`${meta.summary} ${list.text?.[slug] ?? ''}`),
+          },
+        ]
+      : [],
+  )
 }
 
 /**

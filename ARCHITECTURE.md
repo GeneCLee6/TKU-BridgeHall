@@ -206,6 +206,9 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - **內建沒有文章**：文章只存在牌桌（`worker/articles.ts`，`article:entry:<slug>`、`article:rev:<slug>:<id>`、`article:version`，內容分段在 `bookpart:`，每日備份涵蓋），repo 裡不放文章內容，測試用假資料。`articleProblems`（＝牌桌 `checkArticle`）在載入時再檢查一次；區塊檢查共用 `lib/content.ts` 的 `blockProblems`，整理共用 `tidyBlock`／`emptyBlock`。`articleText` 給 e5-t13 的搜尋。
 - **圖片與封面存檔案 key，不存網址**（e5-t12）：key 是 G1 上傳回的 `article/<24 hex>.<ext>`（`isPictureKey`，不收縮圖 key 與外部網址；`uploadArticlePicture`）。牌桌每次讀文章順便簽好網址放在回應的 `files`，頁面用 `ArticleFilesContext` 提供，`image` 區塊查不到網址（R2 bucket 還沒建，牌桌 `filesOff` 時 `files` 是空的）就顯示替代文字框，文章照常讀。上傳遇到 503 `filesOff` 用 `filesOff(error)` 判斷。
 - **API**（`api.book.articles`／`article`／`saveArticle`／`hideArticle`／`articleRevisions`／`articleRevision`）：讀不用登入，未登入看不到 `members-only`（單篇 404 `articleGone`），隱藏的只有 bookEdit 看得到；發布、隱藏是 bookReview（`baseVersion` 不符 409 `articleConflict`），版本是 bookEdit。**目前只有已發布路徑**（同特約沒有草稿時的直接發布）；文章的草稿與送審（AC-5.2「送審走 E8」）跟文章編輯器 e5-t07 一起做。審計動作多 `article:publish`、`article:hide`。
+- **叢書頁與文章頁**（e5-t05，`pages/LibraryPage.tsx`、`pages/ArticlePage.tsx`，字串 `libraryStrings.ts`）：每次打開都向牌桌讀（沒有快取，文章少）；登入狀態改變時重讀。書架依系列順序、每個書架新的在前，系列不在清單裡的文章放最後的「其他」，不會消失。沒有封面時用系列的顏色（`styles/avatarColors.ts` 的十色，依系列 id 固定）＋書名生成封面。
+- **系列**（e5-t06，`lib/series.ts`、`components/admin/SeriesPanel.tsx`，在管理頁）：與分類同法（§4.5），整份一次存 `PUT /api/book/series`（bookEdit，`libraryApi.saveSeries`；409 `seriesConflict`、`seriesInUse`），存在牌桌 `article:series`，隨 `GET /api/book/articles` 的 `series` 一起回來。**沒存過時用內建系列**（`BUILTIN_SERIES`：主打、擠牌、防守、叫牌理論、社課講義、社史，PRD 列的六個），存過以線上為準。還有文章的系列不能刪：牌桌只檢查它存過的系列，內建的由管理頁依看得到的文章檢查。審計動作 `article:series`。
+- **搜尋含文章**（e5-t13）：文章只在線上，不進建置時的 `search-index.json`。搜尋框第一次聚焦時另外抓 `GET /api/book/articles?text=1`（`libraryApi.loadArticleRecords`，lazy），牌桌回每篇的摘要與區塊文字（`searchText`，每篇最多 2 萬字；讀者看不到的文章不會有），`lib/search.ts` 的 `articleRecords` 每篇建一筆紀錄（`slug` 前綴 `library/`、`path` 是文章頁），跟特約的紀錄一起給 Fuse。叢書頁的搜尋框用同一份紀錄、只搜文章。抓不到時搜尋照常、只是沒有文章。`lib/articles.ts` 的 `articleText` 目前沒有用在搜尋（牌桌算好送來，省得下載全部內容）。
 
 ## 4. 路由、狀態與內容載入
 
@@ -217,6 +220,8 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/book` | 全書目錄 `BookPage`：整本一頁，全部特約皆收合（拆頁前的手冊）；閱讀設定的「印整本」先載入全部再列印 |
 | `/c/:slug` | 特約頁 `ConventionPage`：只有這個特約，展開並捲動到它；上方有回全書目錄的位置列 |
 | `/c/:slug/:sectionId` | 同上，再展開該段落的所有祖先段落，捲動並聚焦到段落標題；`?pending=k` 跳到該段的第 k 個待確認 |
+| `/library` | 叢書（E5 e5-t05，lazy，在 `HandbookShell` 裡）：依系列分書架、封面；依系列、程度、作者篩選（`?series=`、`?level=`、`?author=`）；叢書頁搜尋框（e5-t13）。§3.2 |
+| `/library/:slug` | 文章頁：書頁版面（約 68 字寬、襯線標題）、全部區塊、作者、程度、日期、授權；看不到的（下架、未登入的僅社員）顯示「找不到」與登入連結。與 `/library` 同一個 lazy chunk（`Library`），首頁只多一條路由 |
 | `/practice` | 練習（E6，lazy，包在 `ProfiledContent`）：依制度集、特約、程度、題數抽意義題，答完顯示原文叫牌表與深層連結；`?c=<slug>` 只選這個特約（「練這個特約」）。題目由 `lib/quiz.ts` 的 `generateQuizzes` 在瀏覽器從解析後的內容產生，只用原文逐字，`pending` 不出題；套上幹部的修題，答完存成績（§4.8）。`?wrong=1` 只練錯題 |
 | `/practice/scores` | 成績與錯題本（E6 e6-t05，lazy，包在 `ProfiledContent`）：總答對率、各特約答對率、錯題本、最近的練習、清除 |
 | `/practice/fixes` | 修題（E6 e6-t06，bookEdit，lazy，包在 `ProfiledContent`）：停用、改正解或選項、手動出題；`?id=<題目 id>` 開一題 |
@@ -311,7 +316,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 3. Worker 原封不動回傳 Claude 的 SSE 串流；`sse.ts` 收集文字（refusal fallback 時會有第二個文字區塊，照樣接起來）。
 4. 回覆是扁平的 JSON（段落用 `parentId`、條列用 `level`），`importResult.ts` 組回 `Convention`，存成伺服器上的草稿，再到編輯器檢查、儲存。**schema 定義在牌桌的 `worker/importer.ts`，兩邊要一起改。**`tests/lib/importResult.test.ts` 把每個內建特約轉成扁平格式再還原，結果必須完全相同。
 
-**搜尋**：`lib/search.ts` 為每個特約與每個段落各建一筆紀錄（名稱、別名、標籤、叫品、內文），以 Fuse.js 搜尋（`ignoreLocation`、threshold 0.3）。內建特約的紀錄在建置時算好：`scripts/search-index.ts` 產生 `{ version, records }`，`vite.config.ts` 的 `searchIndex` plugin 在 build 時寫進 `dist/search-index.json`、dev server 則每次請求用目前內容現算，所以索引不會過期、也不 commit。之後的文章與名詞加成同一份 records 即可。所有文字與查詢都先經過 `toAsciiSuits`，因此「2♦」與「2D」結果相同。
+**搜尋**：`lib/search.ts` 為每個特約與每個段落各建一筆紀錄（名稱、別名、標籤、叫品、內文），以 Fuse.js 搜尋（`ignoreLocation`、threshold 0.3）。內建特約的紀錄在建置時算好：`scripts/search-index.ts` 產生 `{ version, records }`，`vite.config.ts` 的 `searchIndex` plugin 在 build 時寫進 `dist/search-index.json`、dev server 則每次請求用目前內容現算，所以索引不會過期、也不 commit。文章的紀錄不在這份索引裡，搜尋框另外向牌桌抓（§3.2「搜尋含文章」）；之後的名詞加成同一份 records 即可。所有文字與查詢都先經過 `toAsciiSuits`，因此「2♦」與「2D」結果相同。
 
 **列印**：Accordion Content 一律 `forceMount`，關閉時以 CSS（`[data-state='closed']`）隱藏；列印樣式覆寫成全部顯示。列印 v2（e9-t10）在 `components/PrintSheet.tsx`，只有特約頁與全書目錄掛上（都是 lazy，不進首頁）：一段 `<style media="print">`（不經 styled-components，因為它的 CSS 解析器不保留 `@page` 裡的 `@top-left` 頁邊框）設 A4、頁尾頁碼、黑白（顏色來自 `tokens.ts` 的 `printColors`），特約頁加頁眉。印整本時每個特約是一個具名頁面（`@page c0 { @top-left { content: "淡江橋館 · 名稱" } }`，以 `[id="c-<slug>"]` 指定），分類標題併入它的第一個特約；封面與目錄是 `hidden` 的區塊（螢幕與報讀器都看不到），列印時以 `[data-print-only]` 顯示，所在的 `front` 頁不印頁碼。
 
