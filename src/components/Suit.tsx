@@ -1,4 +1,4 @@
-import { Fragment, memo, type ReactNode } from 'react'
+import { Fragment, memo, useContext, type ReactNode } from 'react'
 import styled from 'styled-components'
 import {
   SUIT_NAME,
@@ -7,6 +7,7 @@ import {
   splitCall,
   type SuitLetter,
 } from '../lib/calls.ts'
+import { GlossaryContext } from '../state/glossaryContext.ts'
 
 /**
  * A suit symbol. The glyph shape already tells suits apart, so colour is never the only cue;
@@ -51,16 +52,23 @@ const CallText = styled.span`
   font-variant-numeric: tabular-nums;
 `
 
-/** Text with suit symbols coloured and **bold** honoured; nothing else is interpreted */
-export const RichText = memo(function RichText({ text }: { text: string }) {
+/**
+ * Text with suit symbols coloured and **bold** honoured; nothing else is interpreted. With
+ * `glossary`, inside a glossary provider (the reading pages), the first mention of each term is
+ * marked (e4-t06); the words themselves never change.
+ */
+export const RichText = memo(function RichText({ text, glossary }: { text: string; glossary?: boolean }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g)
+  const mark = useContext(GlossaryContext)
+  const seen = new Set<string>()
+  const show = glossary && mark ? (s: string) => mark(s, seen, withSuits) : withSuits
   return (
     <>
       {parts.map((part, i) =>
         part.startsWith('**') && part.endsWith('**') ? (
-          <strong key={i}>{withSuits(part.slice(2, -2))}</strong>
+          <strong key={i}>{show(part.slice(2, -2))}</strong>
         ) : (
-          <Fragment key={i}>{withSuits(part)}</Fragment>
+          <Fragment key={i}>{show(part)}</Fragment>
         ),
       )}
     </>

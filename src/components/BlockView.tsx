@@ -21,7 +21,7 @@ export const BlockView = memo(function BlockView({ block }: { block: ArticleBloc
       return (
         <>
           <Paragraph>
-            <RichText text={block.text} />
+            <RichText text={block.text} glossary />
           </Paragraph>
           {block.pending && <PendingNote text={block.pending} />}
         </>
@@ -39,7 +39,7 @@ export const BlockView = memo(function BlockView({ block }: { block: ArticleBloc
     case 'note':
       return (
         <Callout role="note" $tone={block.tone}>
-          <RichText text={block.text} />
+          <RichText text={block.text} glossary />
         </Callout>
       )
     case 'hand':
@@ -111,7 +111,7 @@ function Intro({ block }: { block: IntroBlock }) {
           <>
             <dt>{s.why}</dt>
             <dd>
-              <RichText text={block.why} />
+              <RichText text={block.why} glossary />
             </dd>
           </>
         )}
@@ -119,7 +119,7 @@ function Intro({ block }: { block: IntroBlock }) {
           <>
             <dt>{s.when}</dt>
             <dd>
-              <RichText text={block.when} />
+              <RichText text={block.when} glossary />
             </dd>
           </>
         )}
@@ -130,7 +130,7 @@ function Intro({ block }: { block: IntroBlock }) {
               <Unordered>
                 {pitfalls.map((p, i) => (
                   <li key={i}>
-                    <RichText text={p} />
+                    <RichText text={p} glossary />
                   </li>
                 ))}
               </Unordered>
@@ -148,7 +148,7 @@ function RuleList({ items, ordered }: { items: RuleItem[]; ordered?: boolean }) 
     <List>
       {items.map((item, i) => (
         <li key={i}>
-          <RichText text={item.text} />
+          <RichText text={item.text} glossary />
           {item.pending && <PendingNote text={item.pending} />}
           {item.children && <RuleList items={item.children} />}
         </li>
