@@ -234,6 +234,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/account` | 我的帳號：權限、頭像、顯示（個人設定）、修改密碼 |
 | `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
 | `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（草稿與送審、分類、隊伍、制度集、審計紀錄）編輯者也看得到（§4.2、§4.3.1） |
+| `/review`、`/review/:slug` | 審核（bookEdit 看、bookReview 發布或退回）：草稿清單、草稿與已發布版本的段落差異（§4.3.1，e8-t04） |
 | `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約；`?rev=<id>` 打開版本紀錄並標出那一版（審計紀錄的連結） |
 | `/import` | 匯入檔案（bookImport） |
 | `/integrations/table` | 牌桌整合（bookEdit）：同步制度集到牌桌機器人、差異報告（§4.7） |
@@ -312,8 +313,11 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 
 - **狀態機**：每個特約最多一份草稿（`BookDraft`，牌桌 `book:wip:<slug>`，編輯者共用）：`draft` →（送審）`in-review` →（審核者發布）成為新的 `BookEntry` 版本；審核者退回時回到 `draft`，附理由（`reviewNote`，再送審時清掉）。送審中的草稿再存一次（不送審）就撤回成 `draft`。
 - **編輯器**按鈕：「儲存草稿」「送審」（所有編輯者）；審核者多「直接發布」（有送審中的草稿時叫「發布」）。打開 `/edit/:slug` 時先抓 `GET /api/book/conventions/:slug/draft`，有草稿就編草稿（只有草稿、還沒發布過的新特約也能打開）。草稿的存檔帶 `draftRevision`（草稿的第幾次儲存），別人先存了回 409 `bookDraftConflict`，按「重新載入」接著對方的改；第一次存草稿也檢查 `baseVersion`。從草稿發布時帶 `draftRevision`，草稿用掉，送審者記在版本上（`reviewRequestedBy`、`reviewedBy`）。草稿起點比目前已發布的舊時，編輯器提醒「發布草稿會取代它」。送審中時審核者看得到「退回理由」欄與「退回」鈕；草稿可以「捨棄」。
-- **管理頁**：「草稿與送審」面板（`GET /api/book/reviews`，送審中的在前，連到編輯器；F2 的 `/review` 審核頁之後取代它），「審計紀錄」面板（`GET /api/book/audit`，最近 200 筆：存草稿、送審、退回、捨棄、發布、隱藏、還原、改分類、制度集新增／儲存／刪除；發布類連到編輯器 `?rev=<版本 id>`）。
-- 呼叫在 `lib/reviewApi.ts`、文字在 `pages/reviewStrings.ts`，只有編輯器與管理頁（都 lazy）import，不進首頁；型別在 `lib/api.ts`，`parity/table-types.ts` 對拍。
+- **管理頁**：「草稿與送審」面板（`GET /api/book/reviews`，送審中的在前，連到審核頁 `/review/:slug`），「審計紀錄」面板（`GET /api/book/audit`，最近 200 筆：存草稿、送審、退回、捨棄、發布、隱藏、還原、改分類、制度集新增／儲存／刪除；發布類連到編輯器 `?rev=<版本 id>`）。
+- **審核頁**（e8-t04，`pages/ReviewPage.tsx`，lazy，bookEdit 才進得去）：`/review` 列全部草稿（送審中、編輯中兩組，含編輯者的說明與退回理由）；`/review/:slug` 是那份草稿和讀者現在看到的版本（線上版本，沒有就內建版本，新特約則全部算新增）的差異、編輯者的說明，審核者在下面「發布」（`PUT /api/book/conventions/:slug` 帶 `draftRevision`，發布說明空白時牌桌用草稿的說明）或「退回」（附理由，送審中才有）。單欄，手機可用。不包 `ProfiledContent`，看的是社團版原文。發布、退回的通知等 F4（e8-t10）。
+- **差異**（e8-t03，`lib/diff.ts` 的 `diffConventions(舊, 新)`）：特約欄位逐欄比；段落以 `id` 對齊（不管在樹的哪裡），搬到別的上層記「上層段落」、同層換順序記「順序」（不在最長同序列裡的才算）；段落內每個區塊拆成「行」（段落文字、條列每一條、叫品表每一列的意義／附註／待確認／牌力條件、表格標題、叫牌過程、牌例、導讀各項、待確認），行用最長共同子序列對齊，叫品列以 `call`（同表第 n 個同叫品）對齊，其他行在同一個空檔裡同種類的配成「修改」，其餘是新增或刪除。只回傳不同的行；`inlineDiff` 再標出一行裡改了哪幾個字（超過 250,000 字元平方就整行標）。畫面是 `components/DiffView.tsx`（上下排、刪去的畫線、新增的加底色，螢幕報讀唸「原本／改成」），審核頁與編輯器共用。
+- **版本比較**（e8-t05）：編輯器「版本紀錄」每個儲存的版本多「與這版比較」，比較框取代表單（寬螢幕連預覽一起），「比較對象」可選編輯中的內容或任一其他版本，舊的一律在前（`components/editor/ComparePanel.tsx`）。舊版本只檢查形狀，不檢查分類是否還在。
+- 呼叫在 `lib/reviewApi.ts`、文字在 `pages/reviewStrings.ts`（差異與審核頁的在 `diffText`），只有編輯器、審核頁與管理頁（都 lazy）import，不進首頁；型別在 `lib/api.ts`，`parity/table-types.ts` 對拍。
 - **還沒做**：隊伍與搭檔制度集照舊直接儲存；`club` 制度集也還是編輯者直接儲存（PRD 目標要走送審，之後再排）。差異、審核頁、通知是 F2、F4。
 
 ### 4.4 匯入檔案（`pages/ImportPage.tsx`、`lib/docText.ts`、`lib/sse.ts`、`lib/importResult.ts`）

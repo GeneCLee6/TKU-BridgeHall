@@ -17,6 +17,8 @@ const BookPage = lazy(() => import('./pages/BookPage.tsx').then((m) => ({ defaul
 // Only editors need these, so readers never download them
 const AdminPage = lazy(() => import('./pages/AdminPage.tsx').then((m) => ({ default: m.AdminPage })))
 const EditorPage = lazy(() => import('./pages/EditorPage.tsx').then((m) => ({ default: m.EditorPage })))
+// 審核 (e8-t04)
+const ReviewPage = lazy(() => import('./pages/ReviewPage.tsx').then((m) => ({ default: m.ReviewPage })))
 const ImportPage = lazy(() => import('./pages/ImportPage.tsx').then((m) => ({ default: m.ImportPage })))
 const TableReportPage = lazy(() => import('./pages/TableReportPage.tsx').then((m) => ({ default: m.TableReportPage })))
 // System profiles: editing (e1-t14) and comparing with the parent (e1-t15)
@@ -105,6 +107,8 @@ export function App() {
                   <Route path="/admin" element={<AdminPage />} />
                   <Route path="/new" element={<EditorPage />} />
                   <Route path="/edit/:slug" element={<EditorPage />} />
+                  <Route path="/review" element={<ReviewPage />} />
+                  <Route path="/review/:slug" element={<ReviewPage />} />
                   <Route path="/import" element={<ImportPage />} />
                   <Route path="/integrations/table" element={<TableReportPage />} />
                   <Route path="/profiles/:id/edit" element={<ProfileEditorPage />} />

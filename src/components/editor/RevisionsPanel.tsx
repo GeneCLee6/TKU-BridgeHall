@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import type { BookRevision } from '../../lib/api.ts'
 import { formatDateTime } from '../../lib/format.ts'
+import { diffText } from '../../pages/reviewStrings.ts'
 import { strings } from '../../strings.ts'
 import { Button, ErrorText, Muted, Row } from '../ui.tsx'
 
@@ -10,11 +11,13 @@ const t = strings.editor
 /**
  * The saved versions of a convention, newest first. Loading one puts it in the editor; saving
  * then restores it. Also offers going back to the bundled version and hiding (reviewers', e8-t01).
- * `highlight` marks one version (the audit log links to it, e8-t09).
+ * `highlight` marks one version (the audit log links to it, e8-t09). 與這版比較 (e8-t05) opens the
+ * differences between a version and the editor's content or another version.
  */
 export function RevisionsPanel({
   load,
   onLoad,
+  onCompare,
   highlight,
   onReset,
   onHide,
@@ -22,6 +25,8 @@ export function RevisionsPanel({
 }: {
   load: () => Promise<BookRevision[]>
   onLoad: (revision: BookRevision) => Promise<void>
+  /** Compares a version with another one (e8-t05); gets the whole list to choose from */
+  onCompare?: (revision: BookRevision, revisions: BookRevision[]) => void
   highlight?: string
   /** Absent when there is no online version to drop */
   onReset?: () => Promise<void>
@@ -71,9 +76,16 @@ export function RevisionsPanel({
                 {r.note && <Note>{r.note}</Note>}
               </div>
               {r.action === 'save' && (
-                <Button type="button" $small onClick={() => void act(() => onLoad(r))}>
-                  {t.loadRevision}
-                </Button>
+                <Row>
+                  {onCompare && (
+                    <Button type="button" $small onClick={() => onCompare(r, revisions)}>
+                      {diffText.compare}
+                    </Button>
+                  )}
+                  <Button type="button" $small onClick={() => void act(() => onLoad(r))}>
+                    {t.loadRevision}
+                  </Button>
+                </Row>
               )}
             </li>
           ))}
