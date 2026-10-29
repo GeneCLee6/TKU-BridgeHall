@@ -19,6 +19,7 @@ import {
   type ClubSettings,
   type Permission,
 } from '../lib/api.ts'
+import { glossaryStrings } from '../glossary/strings.ts'
 import { formatDateTime } from '../lib/format.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { strings } from '../strings.ts'
@@ -60,6 +61,9 @@ function AdminOrEditor() {
       <AuditPanel />
       <Muted>
         <Link to="/integrations/table">{tableReport.adminLink}</Link>
+      </Muted>
+      <Muted>
+        <Link to="/glossary/edit">{glossaryStrings.editTitle}</Link>
       </Muted>
       {user?.admin && (
         <Muted>

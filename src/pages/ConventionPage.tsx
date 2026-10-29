@@ -12,6 +12,7 @@ import { SectionAccordion } from '../components/SectionAccordion.tsx'
 import { CardPlacesContext, SectionCardPlaces } from '../cards/placesContext.tsx'
 import { RichText } from '../components/Suit.tsx'
 import { Tag, TagList } from '../components/Tag.tsx'
+import { GlossaryProvider } from '../glossary/GlossaryProvider.tsx'
 import { basicHiddenIds } from '../lib/levels.ts'
 import { practicePath, hasQuestions } from '../lib/quiz.ts'
 import { sectionNumber } from '../lib/sectionNumber.ts'
@@ -177,6 +178,7 @@ export function ConventionPage() {
   const current = path[0]?.id
 
   return (
+    <GlossaryProvider>
     <CardPlacesContext.Provider value={cardPlaces}>
     <Columns $wide={wide}>
       <PrintConventionStyle name={convention.nameZh} />
@@ -333,6 +335,7 @@ export function ConventionPage() {
       )}
     </Columns>
     </CardPlacesContext.Provider>
+    </GlossaryProvider>
   )
 }
 

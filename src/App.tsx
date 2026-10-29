@@ -59,6 +59,11 @@ const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ 
 const SettingsPage = lazy(() => import('./pages/SettingsPage.tsx').then((m) => ({ default: m.SettingsPage })))
 const EbooksPage = lazy(() => import('./pages/EbookPages.tsx').then((m) => ({ default: m.EbooksPage })))
 const EbookPage = lazy(() => import('./pages/EbookPages.tsx').then((m) => ({ default: m.EbookPage })))
+// 名詞解釋 (e4-t05, e4-t07)
+const GlossaryPage = lazy(() => import('./glossary/GlossaryPage.tsx').then((m) => ({ default: m.GlossaryPage })))
+const GlossaryEditorPage = lazy(() =>
+  import('./glossary/GlossaryEditorPage.tsx').then((m) => ({ default: m.GlossaryEditorPage })),
+)
 
 // The reading pages read the reader's system profile; the editor and the admin page keep the club's content
 const handbook = (
@@ -84,6 +89,7 @@ export function App() {
                     <Route path="/c/:slug" element={<ConventionPage />} />
                     <Route path="/c/:slug/:sectionId" element={<ConventionPage />} />
                     <Route path="/library/:slug?" element={<Library />} />
+                    <Route path="/glossary" element={<GlossaryPage />} />
                     <Route path="*" element={<HomePage notFound />} />
                   </Route>
                   <Route
@@ -118,6 +124,7 @@ export function App() {
                   <Route path="/account" element={<AccountPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/glossary/edit" element={<GlossaryEditorPage />} />
                   <Route path="/new" element={<EditorPage />} />
                   <Route path="/edit/:slug" element={<EditorPage />} />
                   <Route path="/review" element={<ReviewPage />} />

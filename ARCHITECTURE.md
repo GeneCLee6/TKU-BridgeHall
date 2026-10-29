@@ -348,6 +348,14 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - 管理：`/admin` 的「分類」面板（bookEdit；跟著管理頁 lazy 載入，不進首頁 bundle）。改名、上下移、新增（代號自動產生 `c-<時間>`）、刪除，按「儲存分類」一次 `PUT /api/book/categories` `{ categories, baseVersion }` 整份取代。有特約（目前目錄裡的，含內建；隱藏的不算）的分類刪除鈕停用；Worker 另外擋還有線上特約的分類（409 `categoryInUse`），因為它只知道線上的特約。別人先存了回 409 `categoryConflict`，按「重新載入」拿對方的版本。存檔後重抓 manifest。
 - 型別 `BookCategory`、`BookCategories` 在 `lib/api.ts`，對應牌桌 `worker/book.ts`；上限（20 個、名稱 40 字、說明 200 字）兩邊一致。
 
+### 4.5.1 名詞解釋（`src/glossary/`、`state/glossaryContext.ts`，E4 e4-t05～t07）
+
+- 資料：`Term { term, aliases, definition, see? }`（`types/glossary.ts`）。內建一份在 `content/glossary.ts`（**空的，等幹部寫**；名詞解釋是社團的說法，不可依一般橋牌知識補）；線上一份存牌桌（`book:glossary`＋`bookpart:glossary:<i>`，`worker/glossary.ts`）。`GET /api/book/glossary` 不用登入，version 0＝沒在線上改過、用內建；存過就整份取代內建（`resolveGlossary`，即使刪到空）。`PUT /api/book/glossary` `{ terms, baseVersion }`（bookEdit）整份取代，別人先存回 409 `glossaryConflict`。上限 500 條、名詞 40 字、解釋 1000 字，名詞與別名不分大小寫不重複，兩邊一致（`glossary/drafts.ts`）。
+- 偵測：`compileGlossary` 把全部名詞與別名編成一個正規表達式（長的優先、不分大小寫；開頭或結尾是英數的名詞前後不能接英數＝完整詞，中文名詞沒有詞界）。`RichText` 有 `glossary` 時向 `GlossaryContext` 要標記函式，一個 `RichText`（一段、一條、一格）裡每個名詞只標第一次（別名算同一個）。**只包一層按鈕，文字原樣**（測試檢查切開再接回等於原文）。`BlockView` 的段落、附註、導讀、條列與 `ResponseTable` 的意義、附註有開；標題、摘要、目錄、搜尋結果沒開（避免按鈕包在按鈕裡）。
+- `GlossaryProvider` 只包特約頁與全書頁（lazy chunk）；`RichText` 只多讀一個 context（首頁 bundle 只多 `glossaryContext.ts`）。名詞表一次造訪抓一次（`useGlossary` 模組層快取，編輯器存檔後 `rememberGlossary` 更新）。沒有名詞時不提供 context，內文與之前完全一樣。
+- 浮動解釋（`TermMark`）：點線底線的 `<button aria-expanded aria-haspopup="dialog">`，點按、Enter、Space 開；Esc 或點外面關，焦點回名詞；靠右時往左移避免撐出橫向捲動；列印隱藏、底線拿掉。框內的解釋不再標名詞。
+- 頁面：`/glossary`（在 `HandbookShell` 裡，可篩選名詞、別名、解釋；每條錨點 `termAnchor`），`/glossary/edit`（`Frame`＋`Gate bookEdit`，整份編輯、別名逗號分隔、相關特約選單）。字串在 `glossary/strings.ts`（不進首頁）。審計 `book:glossary` 連到名詞頁。
+
 ### 4.6 個人檔案、頭像與圖片檔案（`lib/account.ts`、`components/Avatar.tsx`、`lib/imageUpload.ts`，E11 G1、G2）
 
 - **都在牌桌 Worker**，兩站共用。個人檔案是 `Me.profile`（`displayName`、`level`、`system`、`bio`，`PATCH /api/account/profile`），牌桌 e1-t15 已做好，橋譜只加型別與呼叫。「我的帳號 › 個人檔案」（G2，e11-t04）每次存整份（空白或不填就清掉那一項）。

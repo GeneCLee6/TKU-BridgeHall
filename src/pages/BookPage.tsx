@@ -2,6 +2,7 @@ import { startTransition } from 'react'
 import styled from 'styled-components'
 import { ConventionCard } from '../components/ConventionCard.tsx'
 import { PrintBook } from '../components/PrintSheet.tsx'
+import { GlossaryProvider } from '../glossary/GlossaryProvider.tsx'
 import { allKeys } from '../lib/sections.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useAuth } from '../state/AuthContext.tsx'
@@ -25,7 +26,7 @@ export function BookPage() {
   usePageTitle(strings.pages.book)
 
   return (
-    <>
+    <GlossaryProvider>
       <PageBar
         // Opening everything is the heaviest update on the page: as a transition the panel closes
         // at once and the page stays usable while React renders.
@@ -64,7 +65,7 @@ export function BookPage() {
           </Group>
         )
       })}
-    </>
+    </GlossaryProvider>
   )
 }
 
