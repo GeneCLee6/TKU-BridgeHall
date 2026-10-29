@@ -38,6 +38,21 @@ export const libraryStrings = {
   backToLibrary: '回叢書',
   broken: (problem: string) => `這篇文章的格式有問題，暫時無法顯示（${problem}）。`,
   cover: (title: string) => `《${title}》封面`,
+  /** 閱讀進度 and 「繼續閱讀」 (e5-t14): the article page, the e-book page and 我的帳號 */
+  reading: {
+    title: '繼續閱讀',
+    loading: '載入閱讀進度中…',
+    none: '還沒有讀過的文章或電子書。',
+    toLibrary: '去叢書看看',
+    resume: (place: number, of: number) => `接著上次讀：第 ${place + 1}／${of} 段`,
+    article: (place: number, of: number) => `文章 · 讀到第 ${place + 1}／${of} 段`,
+    ebook: (page: number, of: number) => `電子書 · 讀到第 ${page}／${of} 頁`,
+    share: (title: string) => `《${title}》讀了多少`,
+    when: (date: string) => `${date} 讀`,
+    forget: (title: string) => `從繼續閱讀拿掉《${title}》`,
+    forgetShort: '拿掉',
+    more: (n: number) => `還有 ${n} 篇較早的`,
+  },
   /** 系列 on the admin page (e5-t06) */
   admin: {
     title: '叢書系列',

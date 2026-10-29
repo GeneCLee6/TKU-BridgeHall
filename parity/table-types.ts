@@ -38,6 +38,8 @@ import type * as QuizRecords from '../src/lib/quizRecords.ts'
 import type * as TableQuiz from '@table/shared/quiz.ts'
 import type * as Learning from '../src/lib/learning.ts'
 import type * as TableLearning from '@table/shared/learning.ts'
+import type * as Reading from '../src/lib/reading.ts'
+import type * as TableReading from '@table/shared/reading.ts'
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false
 type Assignable<From, To> = [From] extends [To] ? true : false
@@ -127,6 +129,12 @@ export type Checks = [
   Check<Same<Learning.SavedLearningPath, TableLearning.SavedLearningPath>>,
   Check<Same<Learning.PathProgress, TableLearning.PathProgress>>,
   Check<Same<Learning.PathProgressInput, TableLearning.PathProgressInput>>,
+
+  // ── 閱讀進度 (shared/reading.ts, e5-t14) ─────────────────────────────────────────────────────
+  Check<Same<typeof Reading.READING_KINDS, typeof TableReading.READING_KINDS>>,
+  Check<Same<typeof Reading.READING_LIMITS, typeof TableReading.READING_LIMITS>>,
+  Check<Same<Reading.ReadingInput, TableReading.ReadingInput>>,
+  Check<Same<Reading.ReadingPlace, TableReading.ReadingPlace>>,
 
   // ── System profiles (shared/protocol.ts) ─────────────────────────────────────────────────────
   // The one difference: the Worker keeps a replaced section as Record<string, unknown>, the
