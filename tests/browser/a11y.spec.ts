@@ -25,6 +25,7 @@ const pages = [
   { name: 'convention', path: '/c/jacoby-2nt' },
   { name: 'book', path: '/book' },
   { name: 'settings', path: '/settings' },
+  { name: 'lesson', path: '/learn/from-zero/lesson-1' },
 ]
 
 test.describe('axe', () => {

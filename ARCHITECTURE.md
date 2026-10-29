@@ -235,6 +235,10 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/practice` | 練習（E6，lazy，包在 `ProfiledContent`）：依制度集、特約、程度、題數抽意義題，答完顯示原文叫牌表與深層連結；`?c=<slug>` 只選這個特約（「練這個特約」）。題目由 `lib/quiz.ts` 的 `generateQuizzes` 在瀏覽器從解析後的內容產生，只用原文逐字，`pending` 不出題；套上幹部的修題，答完存成績（§4.8）。`?wrong=1` 只練錯題 |
 | `/practice/scores` | 成績與錯題本（E6 e6-t05，lazy，包在 `ProfiledContent`）：總答對率、各特約答對率、錯題本、最近的練習、清除 |
 | `/practice/fixes` | 修題（E6 e6-t06，bookEdit，lazy，包在 `ProfiledContent`）：停用、改正解或選項、手動出題；`?id=<題目 id>` 開一題 |
+| `/learn` | 學習路徑列表（E4 e4-t09，lazy）|
+| `/learn/:pathId` | 路徑頁（lazy，包在 `ProfiledContent`）：課次、登入後的完成進度與百分比、bookEdit 看得到「編輯路徑」 |
+| `/learn/:pathId/:lessonId` | 課次頁（lazy，包在 `ProfiledContent`）：目標、閱讀（特約或段落的深層連結；制度集不採用的特約顯示說明）、題目數（e4-t10 前只顯示數量）、自我檢核、標記完成、上一課／下一課 |
+| `/learn/:pathId/edit` | 路徑編輯（E4 e4-t12，bookEdit，lazy，不包 `ProfiledContent`：閱讀從社團版選）|
 | `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
 | `/account` | 我的帳號：權限、頭像、顯示（個人設定）、修改密碼 |
 | `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
@@ -381,6 +385,14 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - **錯題本與統計**：`quizStats(rounds)` 純函式：總數、各特約（答對率低的在前）、錯題（每題最後一次的答案是錯的）。錯題 id 在目前制度集已不出題時，成績頁顯示「已不在目前的制度集」。
 - **修題**：`GET /api/book/quiz/fixes`（不需登入）→ `applyFixes(made, fixes, conventions, profileId)`：自動題的修正只在 `basis`（叫品、正解，比較時忽略空白與句尾句號）與現在產生的題目相同時套用（停用、換正解——在選項裡取代原正解——或整組選項）；手動題只加進同一個制度集、且段落還在的。不套用的回在 `stale`，修題頁標出。`PUT`／`DELETE /api/book/quiz/fixes` 要 bookEdit，牌桌只檢查形狀（`worker/quiz.ts`），存在 `book:quizfix:<id>`（每日備份）。
 - 題目的 `kind: 'call'`（手動的叫品題）在練習頁顯示牌（`Hand`）與「你叫什麼？」，選項是叫品。自動的叫品題是 e6-t07。
+
+### 4.9 學習路徑（`lib/learning.ts`、`content/paths.ts`，E4 e4-t08、t09、t11、t12）
+
+- 型別對應牌桌 `shared/learning.ts`（`LearningPath`、`Lesson`、`PathProgress` …、`LEARNING_LIMITS`），對拍在 `parity/table-types.ts`；呼叫在 `learningApi`。頁面在 `pages/LearnPages.tsx`、`pages/LearnEditorPage.tsx`，文字在 `pages/learnStrings.ts`（都 lazy，不進首頁 bundle）。
+- **內建路徑**：`content/paths.ts` 的「從零開始」（`from-zero`）只是手冊既有入門特約的排列，課次標題＝特約名稱，`goal`、`checklist` 空白，留給幹部線上寫（CLAUDE.md 規則 1）；課次頁對空白的目標與檢核顯示「幹部還沒寫」。
+- **線上版本**：`GET /api/book/paths`（不需登入，牌桌 `book:path:<id>`，每日備份）→ `mergePaths`：線上版本取代同 id 的內建路徑，只有線上的路徑排在後面。一次頁面載入只抓一次（`useLearningPaths`，抓不到就用內建）。`PUT`／`DELETE /api/book/paths` 要 bookEdit（審計 `path:save`／`path:reset`）；`DELETE` 回到內建版本。牌桌只檢查形狀。
+- **進度**：只有登入的社員記（AC-4.6）：`GET`／`PUT /api/book/paths/progress`（`{ pathId, lessonId, done }`），牌桌 `pathprogress:<userId>:<pathId>`，刪帳號一起刪。`usePathProgress` 標記時先顯示、失敗就退回。`pathProgress` 只算還在路徑裡的課次。我的帳號有「學習進度」。
+- **首頁**：「第一次來」（`HomeBlocks.tsx` 的 `FirstSteps`，lazy）顯示「從零開始」的前三課（連到課次頁）與「看全部 n 課」。
 
 ## 5. UI 函式庫選擇
 

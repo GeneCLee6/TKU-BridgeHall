@@ -13,6 +13,7 @@ import { accountStrings } from '../strings-account.ts'
 import { strings } from '../strings.ts'
 import { Frame, Gate } from './Frame.tsx'
 import { MyTeams } from './MyTeams.tsx'
+import { MyPathProgress } from './LearnPages.tsx'
 
 /**
  * 我的帳號: what this member may do here, their profile and avatar (shared with 淡江牌桌), their teams,
@@ -77,6 +78,7 @@ function AccountBody() {
       <ProfilePanel user={user} />
       <AvatarPanel user={user} />
       <MyTeams user={user} />
+      <MyPathProgress />
       {/* 我的帳號 › 顯示 (e9-t15): the same choices as the 個人設定 page */}
       <Panel aria-labelledby="account-display">
         <PanelTitle id="account-display">{settingsStrings.display}</PanelTitle>

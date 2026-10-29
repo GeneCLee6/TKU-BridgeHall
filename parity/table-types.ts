@@ -35,6 +35,8 @@ import type * as Library from '../src/types/article.ts'
 import type * as Series from '../src/lib/series.ts'
 import type * as QuizRecords from '../src/lib/quizRecords.ts'
 import type * as TableQuiz from '@table/shared/quiz.ts'
+import type * as Learning from '../src/lib/learning.ts'
+import type * as TableLearning from '@table/shared/learning.ts'
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false
 type Assignable<From, To> = [From] extends [To] ? true : false
@@ -112,6 +114,15 @@ export type Checks = [
   Check<Same<QuizRecords.ManualQuiz, TableQuiz.ManualQuiz>>,
   Check<Same<QuizRecords.QuizFixInput, TableQuiz.QuizFixInput>>,
   Check<Same<QuizRecords.QuizFix, TableQuiz.QuizFix>>,
+
+  // ── 學習路徑 (shared/learning.ts, e4-t08 e4-t11) ─────────────────────────────────────────────
+  Check<Same<typeof Learning.LEARNING_LIMITS, typeof TableLearning.LEARNING_LIMITS>>,
+  Check<Same<Learning.LessonReading, TableLearning.LessonReading>>,
+  Check<Same<Learning.Lesson, TableLearning.Lesson>>,
+  Check<Same<Learning.LearningPath, TableLearning.LearningPath>>,
+  Check<Same<Learning.SavedLearningPath, TableLearning.SavedLearningPath>>,
+  Check<Same<Learning.PathProgress, TableLearning.PathProgress>>,
+  Check<Same<Learning.PathProgressInput, TableLearning.PathProgressInput>>,
 
   // ── System profiles (shared/protocol.ts) ─────────────────────────────────────────────────────
   // The one difference: the Worker keeps a replaced section as Record<string, unknown>, the
