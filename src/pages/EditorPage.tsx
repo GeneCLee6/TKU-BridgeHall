@@ -155,6 +155,7 @@ function EditorLoader() {
       reviewDraft={draftId ? null : (reviewDraft ?? null)}
       savedNotice={(location.state as { notice?: string } | null)?.notice}
       highlight={params.get('rev') ?? undefined}
+      focus={params.get('section') ?? undefined}
     />
   )
 }
@@ -174,6 +175,7 @@ function EditorBody({
   reviewDraft,
   savedNotice,
   highlight,
+  focus,
 }: {
   slug?: string
   initial: Convention
@@ -185,6 +187,8 @@ function EditorBody({
   savedNotice?: string
   /** A version to point at in the history (?rev=) */
   highlight?: string
+  /** A section to open first (?section=), e.g. from the 待確認 panel (e8-t08) */
+  focus?: string
 }) {
   const content = useContent()
   const { can } = useAuth()
@@ -200,7 +204,7 @@ function EditorBody({
   const [draft, setDraft] = useState<Convention>(initial)
   const [base, setBase] = useState(baseVersion)
   const [generation, setGeneration] = useState(0)
-  const [selected, setSelected] = useState('info')
+  const [selected, setSelected] = useState(() => (focus && findPlace(initial.sections, focus) ? focus : 'info'))
   const [formKey, setFormKey] = useState(0)
   const [dirty, setDirty] = useState(Boolean(source))
   const [busy, setBusy] = useState(false)

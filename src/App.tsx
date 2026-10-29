@@ -20,6 +20,7 @@ const Library = lazy(() => import('./pages/LibraryPage.tsx').then((m) => ({ defa
 const AdminPage = lazy(() => import('./pages/AdminPage.tsx').then((m) => ({ default: m.AdminPage })))
 const EditorPage = lazy(() => import('./pages/EditorPage.tsx').then((m) => ({ default: m.EditorPage })))
 // 審核 (e8-t04)
+const PendingPage = lazy(() => import('./pages/PendingPage.tsx').then((m) => ({ default: m.PendingPage })))
 const ReviewPage = lazy(() => import('./pages/ReviewPage.tsx').then((m) => ({ default: m.ReviewPage })))
 const ImportPage = lazy(() => import('./pages/ImportPage.tsx').then((m) => ({ default: m.ImportPage })))
 const TableReportPage = lazy(() => import('./pages/TableReportPage.tsx').then((m) => ({ default: m.TableReportPage })))
@@ -153,6 +154,7 @@ export function App() {
               <Route path="/edit/:slug" element={<EditorPage />} />
               <Route path="/review" element={<ReviewPage />} />
               <Route path="/review/:slug" element={<ReviewPage />} />
+              <Route path="/pending" element={<PendingPage />} />
               <Route path="/import" element={<ImportPage />} />
               <Route path="/integrations/table" element={<TableReportPage />} />
               <Route path="/profiles/:id/edit" element={<ProfileEditorPage />} />

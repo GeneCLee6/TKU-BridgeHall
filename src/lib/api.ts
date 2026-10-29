@@ -137,6 +137,7 @@ export type AuditAction =
   | 'book:hide'
   | 'book:reset'
   | 'book:categories'
+  | 'book:pending'
   | 'book:glossary'
   | 'article:publish'
   | 'article:hide'
@@ -164,6 +165,40 @@ export interface AuditEntry {
   /** The saved version's id (BookRevision.id), for publishing, hiding and resets */
   revisionId?: string
   note?: string
+}
+
+/** 未處理, 處理中, 已確認 (closed by publishing only), 擱置 (TKU-BridgeTable worker/pending.ts, e8-t06) */
+export type PendingStatus = 'open' | 'working' | 'confirmed' | 'parked'
+
+/**
+ * A 待確認 note's record (TKU-BridgeTable worker/pending.ts PendingMeta): only notes someone has
+ * touched have one. It finds its note by section and text; `index` is where it was last written.
+ */
+export interface PendingMeta {
+  slug: string
+  sectionId: string
+  index: number
+  text: string
+  status: PendingStatus
+  /** A username */
+  assignee?: string
+  note?: string
+  /** 關閉依據 */
+  resolution?: string
+  updatedAt: number
+  updatedBy: string
+  closedAt?: number
+  closedBy?: string
+  closedVersion?: number
+}
+
+/** GET /api/book/pending */
+export interface PendingList {
+  open: PendingMeta[]
+  /** The newest 100 closed */
+  closed: PendingMeta[]
+  /** Who may be assigned: the members with bookEdit */
+  editors: string[]
 }
 
 /** An online entry without its content: `meta` is the manifest entry, null when hidden */
