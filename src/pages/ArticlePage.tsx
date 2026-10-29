@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { BlockView } from '../components/BlockView.tsx'
 import { CopyLinkButton } from '../components/CopyLinkButton.tsx'
@@ -8,6 +8,7 @@ import { Button } from '../components/ui.tsx'
 import { libraryStrings } from '../libraryStrings.ts'
 import { api, ApiError, errorText, type ArticleFiles } from '../lib/api.ts'
 import { onlineArticle } from '../lib/articles.ts'
+import { AT_PARAM, placeParam, useReadingMark, useReadingPlaces } from '../lib/reading.ts'
 import { articlePath, resolveSeries } from '../lib/series.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useAuth } from '../state/AuthContext.tsx'
@@ -102,7 +103,34 @@ export function ArticlePage() {
       </Page>
     )
 
-  const { article, files } = state
+  return <ArticleView key={state.article.slug} article={state.article} files={state.files} trail={trail} signedIn={!!user} />
+}
+
+/**
+ * The article itself. A signed-in reader's place (the block they have reached) is kept with their
+ * account as they scroll (e5-t14, AC-5.8); `?at=` opens the article at a block, which is where
+ * 「繼續閱讀」 on 我的帳號 goes, and an article opened without it offers to go back to that place.
+ */
+function ArticleView({ article, files, trail, signedIn }: { article: Article; files: ArticleFiles; trail: ReactNode; signedIn: boolean }) {
+  const body = useRef<HTMLDivElement>(null)
+  const [params] = useSearchParams()
+  const last = article.blocks.length - 1
+  const at = placeParam(params.get(AT_PARAM), 0, last)
+  const { places } = useReadingPlaces(signedIn && at === undefined)
+  const saved = places?.find((p) => p.kind === 'article' && p.id === article.slug)?.place
+  const [resumed, setResumed] = useState(false)
+  const resume = saved !== undefined && saved > 0 && saved <= last && !resumed ? saved : undefined
+
+  // Opened at a block: bring it to the top once it is drawn
+  useEffect(() => {
+    if (at !== undefined) blockAt(body, at)?.scrollIntoView?.()
+  }, [at, article.slug])
+
+  const mark = useReadingMark(
+    signedIn && article.blocks.length ? { kind: 'article', id: article.slug, title: article.title, of: article.blocks.length } : undefined,
+  )
+  useReadingPlace(body, mark)
+
   return (
     <ArticleFilesContext.Provider value={files}>
       <Page>
@@ -123,16 +151,65 @@ export function ArticlePage() {
               <span>{s.licenses[article.license]}</span>
             </Meta>
           </TitleBlock>
+          {resume !== undefined && (
+            <Resume data-print="hide">
+              <Button
+                type="button"
+                $small
+                onClick={() => {
+                  setResumed(true)
+                  blockAt(body, resume)?.scrollIntoView?.()
+                }}
+              >
+                {s.reading.resume(resume, article.blocks.length)}
+              </Button>
+            </Resume>
+          )}
           {article.summary && <Lede>{article.summary}</Lede>}
-          <Body>
+          <Body ref={body}>
             {article.blocks.map((block, i) => (
-              <BlockView key={i} block={block} />
+              <Place key={i} data-reading-block={i}>
+                <BlockView block={block} />
+              </Place>
             ))}
           </Body>
         </article>
       </Page>
     </ArticleFilesContext.Provider>
   )
+}
+
+const blockAt = (body: RefObject<HTMLDivElement | null>, place: number) =>
+  body.current?.querySelector<HTMLElement>(`[data-reading-block="${place}"]`)
+
+/**
+ * Tells `mark` the block the reader has reached as they scroll: the last one whose top is above a
+ * line a third of the way down the window, or the last block at the bottom of the page.
+ */
+function useReadingPlace(body: RefObject<HTMLDivElement | null>, mark: (place: number) => void) {
+  useEffect(() => {
+    let frame = 0
+    const measure = () => {
+      frame = 0
+      const blocks = body.current?.querySelectorAll<HTMLElement>('[data-reading-block]')
+      if (!blocks?.length) return
+      const line = window.innerHeight / 3
+      const atEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2
+      let place = 0
+      if (atEnd) place = blocks.length - 1
+      else for (const [i, block] of blocks.entries()) if (block.getBoundingClientRect().top <= line) place = i
+      mark(place)
+    }
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure)
+    }
+    measure()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [body, mark])
 }
 
 /** About 68 characters of body text (DESIGN-V2.md §4) */
@@ -199,6 +276,15 @@ const Body = styled.div`
   flex-direction: column;
   gap: ${({ theme }) => theme.space(3)};
   line-height: 1.75;
+`
+
+/** One block; under the header when 「繼續閱讀」 brings it to the top */
+const Place = styled.div`
+  scroll-margin-top: calc(${({ theme }) => theme.layout.headerHeight} + 16px);
+`
+
+const Resume = styled.p`
+  margin: ${({ theme }) => theme.space(3)} 0 0;
 `
 
 const Muted = styled.p`
