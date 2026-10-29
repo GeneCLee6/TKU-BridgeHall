@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
+import { brownStickerForms } from '../cards/bsc.ts'
 import { CardSheet, Ink } from '../cards/CardSheet.tsx'
 import { cellSummary, describeSlots, PAPER_WIDTH, type SlotInfo } from '../cards/describe.ts'
 import { fillProfileCard, setCardEdit, storedSlot } from '../cards/edits.ts'
 import type { CardEdit, FillProblem, FilledCard, FilledCell } from '../cards/fill.ts'
-import { cardTemplates } from '../cards/templates/index.ts'
+import { cardTemplates, profileTemplates } from '../cards/templates/index.ts'
 import type { CardTemplate } from '../cards/types.ts'
 import { fetchCard, type LoadedCard as Loaded } from '../cards/load.ts'
 import { PrintStyle } from '../cards/PrintStyle.tsx'
@@ -21,7 +22,7 @@ import { useContent } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
 import { cardColors, layout, mobile } from '../styles/tokens.ts'
 import { CardTabs, CardVersions, WordDownload } from './CardOutputs.tsx'
-import { cardStrings as t } from './cardStrings.ts'
+import { CTCBA_CARDS_URL, cardStrings as t } from './cardStrings.ts'
 import { Frame } from './Frame.tsx'
 
 /**
@@ -36,14 +37,21 @@ import { Frame } from './Frame.tsx'
  *
  * Read the way the profile is readable: signed out, the club's only. When the Worker cannot be
  * reached the club's card is filled from the handbook's own content.
+ *
+ * A convention the profile plays that is marked Brown Sticker adds a tab for its announcement form
+ * (/cards/:profileId/bsc-opening/:form, e3-t12, cards/bsc.ts), filled from that convention alone;
+ * its hand edits are kept per convention, and it has no versions.
  */
 export function CardPage() {
-  const { profileId = CLUB_PROFILE_ID, templateId = '' } = useParams()
+  const { profileId = CLUB_PROFILE_ID, templateId = '', form } = useParams()
   const template = cardTemplates.find((x) => x.id === templateId)
-  if (!templateId) return <Navigate to={`/cards/${encodeURIComponent(profileId)}/${cardTemplates[0]!.id}`} replace />
+  if (!templateId) return <Navigate to={`/cards/${encodeURIComponent(profileId)}/${profileTemplates[0]!.id}`} replace />
+  const known = template && !!template.brownSticker === (form !== undefined)
   return (
     <Frame wide>
-      <Main id="main">{template ? <Card key={profileId} profileId={profileId} template={template} /> : <NotFound />}</Main>
+      <Main id="main">
+        {known ? <Card key={profileId} profileId={profileId} template={template} form={form} /> : <NotFound />}
+      </Main>
     </Frame>
   )
 }
@@ -58,7 +66,7 @@ function NotFound() {
   )
 }
 
-function Card({ profileId, template }: { profileId: string; template: CardTemplate }) {
+function Card({ profileId, template, form }: { profileId: string; template: CardTemplate; form?: string }) {
   const content = useContent()
   const { user, can } = useAuth()
   const navigate = useNavigate()
@@ -101,9 +109,14 @@ function Card({ profileId, template }: { profileId: string; template: CardTempla
     () => (ready && profile ? resolveProfile(ready.chain, profile.id, ready.content) : undefined),
     [ready, profile],
   )
-  const card = useMemo(() => (resolution ? fillProfileCard(template, resolution, own) : undefined), [template, resolution, own])
+  const forms = useMemo(() => (resolution ? brownStickerForms(resolution) : []), [resolution])
+  const card = useMemo(() => {
+    if (!resolution) return undefined
+    return form === undefined ? fillProfileCard(template, resolution, own) : fillProfileCard(template, resolution, own, form)
+  }, [template, resolution, own, form])
   const slots = useMemo(() => describeSlots(template), [template])
-  const name = template.nameZh ?? template.name
+  const formOf = form === undefined ? undefined : forms.find((f) => f.template.id === template.id && f.convention.slug === form)
+  const name = formOf ? t.bsc.tab(template.nameZh ?? template.name, formOf.convention.nameZh) : (template.nameZh ?? template.name)
   usePageTitle(profile ? t.pageTitle(profile.name, name) : t.title)
 
   // Edits are kept per profile: switching templates keeps them; only the card's own ids count here
@@ -141,7 +154,32 @@ function Card({ profileId, template }: { profileId: string; template: CardTempla
         </ErrorText>
       </Toolbar>
     )
-  if (!ready || !profile || !card || !resolution) return null
+  if (!ready || !profile || !resolution) return null
+  const tabs = (
+    <CardTabs
+      current={form === undefined ? template.id : `${template.id}/${form}`}
+      to={(key) => `/cards/${encodeURIComponent(profile.id)}/${key}`}
+      forms={forms.map((f) => ({
+        key: `${f.template.id}/${f.convention.slug}`,
+        label: t.bsc.tab(f.template.nameZh ?? f.template.name, f.convention.nameZh),
+      }))}
+    />
+  )
+  if (!card)
+    return (
+      <Toolbar>
+        <h1>
+          {t.title} · {profile.name}
+        </h1>
+        {tabs}
+        <Muted role="status">{t.bsc.none(template.nameZh ?? template.name)}</Muted>
+        <Muted>
+          <a href={CTCBA_CARDS_URL} target="_blank" rel="noreferrer">
+            {t.bsc.policy}
+          </a>
+        </Muted>
+      </Toolbar>
+    )
 
   const access = ready.access
   // Saving sends the whole profile, so only someone who also reads its notes may save it
@@ -187,7 +225,7 @@ function Card({ profileId, template }: { profileId: string; template: CardTempla
           </Muted>
         </Head>
         <Controls>
-          <CardTabs current={template.id} to={(x) => `/cards/${encodeURIComponent(profile.id)}/${x}`} />
+          {tabs}
           <Row>
             {ready.summaries.length > 1 && (
               <Field>
@@ -196,7 +234,7 @@ function Card({ profileId, template }: { profileId: string; template: CardTempla
                   value={profile.id}
                   onChange={(e) => {
                     if (dirty && !window.confirm(t.edit.leave)) return
-                    navigate(`/cards/${encodeURIComponent(e.target.value)}/${template.id}`)
+                    navigate(`/cards/${encodeURIComponent(e.target.value)}/${template.id}${form === undefined ? '' : `/${form}`}`)
                   }}
                 >
                   {ready.summaries.map((s) => (
@@ -210,14 +248,27 @@ function Card({ profileId, template }: { profileId: string; template: CardTempla
             <Button type="button" onClick={() => window.print()}>
               {t.print}
             </Button>
-            <WordDownload template={template} card={card} profileName={profile.name} />
+            <WordDownload template={template} card={card} profileName={form === undefined ? profile.name : `${profile.name}-${form}`} />
             <Button type="button" $variant="primary" onClick={() => window.print()} aria-describedby="card-pdf-hint">
               {t.pdf}
             </Button>
           </Row>
         </Controls>
-        <Muted>{t.intro}</Muted>
-        <Muted id="card-pdf-hint">{t.pdfHint}</Muted>
+        {formOf ? (
+          <>
+            <Muted>{t.bsc.intro(formOf.convention.nameZh, template.nameZh ?? template.name)}</Muted>
+            <Muted>
+              <a href={CTCBA_CARDS_URL} target="_blank" rel="noreferrer">
+                {t.bsc.policy}
+              </a>
+              {' · '}
+              {t.bsc.noVersions}
+            </Muted>
+          </>
+        ) : (
+          <Muted>{t.intro}</Muted>
+        )}
+        <Muted id="card-pdf-hint">{t.pdfHint(template.paper)}</Muted>
         {template.pending && (
           <Muted>
             <PendingWord>{t.pending}</PendingWord> {t.templatePending}
@@ -255,15 +306,17 @@ function Card({ profileId, template }: { profileId: string; template: CardTempla
         )}
       </Toolbar>
 
-      <CardVersions
-        template={template}
-        profile={profile}
-        card={card}
-        signedIn={!!user && !ready.offline}
-        canPublish={canEdit}
-        dirty={dirty}
-        canShare={!!access?.share || (profile.id === CLUB_PROFILE_ID && can('bookEdit'))}
-      />
+      {form === undefined && (
+        <CardVersions
+          template={template}
+          profile={profile}
+          card={card}
+          signedIn={!!user && !ready.offline}
+          canPublish={canEdit}
+          dirty={dirty}
+          canShare={!!access?.share || (profile.id === CLUB_PROFILE_ID && can('bookEdit'))}
+        />
+      )}
 
       <Layout>
         <SheetScroll aria-label={name} role="region" tabIndex={0} data-card-scroll>
@@ -287,13 +340,13 @@ function Card({ profileId, template }: { profileId: string; template: CardTempla
               info={slots.get(selected)!}
               cell={card.cells[selected]}
               card={card}
-              own={own?.[storedSlot(template, selected)]}
+              own={own?.[storedSlot(template, selected, form)]}
               canEdit={canEdit}
               signedIn={!!user}
               sourceLink={sourceLink}
               onEdit={(edit) => {
                 setNotice('')
-                setOwn((prev) => setCardEdit(prev, storedSlot(template, selected), edit))
+                setOwn((prev) => setCardEdit(prev, storedSlot(template, selected, form), edit))
               }}
             />
           ) : (

@@ -30,7 +30,13 @@ export function describeSlots(template: CardTemplate): Map<string, SlotInfo> {
         out.set(id, { id, label: block.title, ...(block.help && { help: block.help }), kind: 'text', block })
         break
       case 'text':
-        out.set(id, { id, label: block.label, ...(block.help && { help: block.help }), kind: 'text', block })
+        out.set(id, {
+          id,
+          label: block.suffix ? `${block.label} … ${block.suffix}` : block.label,
+          ...(block.help && { help: block.help }),
+          kind: 'text',
+          block,
+        })
         break
       case 'check':
         out.set(id, { id, label: block.label, ...(block.help && { help: block.help }), kind: 'check', block })

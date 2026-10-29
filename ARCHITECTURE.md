@@ -32,7 +32,7 @@ TKU-BridgeHall/
 │  ├─ types/convention.ts   內容模型（特約的 schema）；types/article.ts 叢書文章（E5，§3.2）
 │  ├─ cards/                制度卡（E3）：types（CardTemplate）、slots（格子 id）、templates/（每個版型一個檔案，檔名＝id）、
 │  │                        cardSlots（特約的格子對應）、fill（fillCard 填卡）、edits（補格）、docx（Word 輸出，`docx` 套件）、
-│  │                        places（段落在卡上的位置）、load（讀制度集）、PrintStyle；網站程式只能 lazy 載入（placesContext 除外）
+│  │                        places（段落在卡上的位置）、bsc（棕標申報表）、load（讀制度集）、PrintStyle；網站程式只能 lazy 載入（placesContext 除外）
 │  ├─ lib/                  calls（叫品解析）、sections（走訪、key、深層連結）、search、content（線上內容合併與檢查）、
 │  │                        editing（編輯器的樹與文字轉換）、docText（讀 .doc/.docx）、importResult、sse、api（唯一有網路的模組）、
 │  │                        profiles（制度集解析，E1）
@@ -87,6 +87,7 @@ interface Convention {
   level?: Level
   prerequisites?: string[]   // 先讀的特約 slug（E4 學習路徑）
   cardSlots?: string[]       // 制度卡位置：'<格子> [= 值] <- <出處>'（src/cards/cardSlots.ts、CONTENT_GUIDE.md §2.2）；不進 manifest
+  brownSticker?: 'opening' | 'overcall'  // 棕標開叫／蓋叫（e3-t12）：制度卡頁多一張這個特約的申報表；牌桌 worker/book.ts 同名欄位
   tags: string[]; summary: string
   source: { title: string; note?: string }; updated: string
   sections: Section[]
@@ -188,6 +189,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - **Word**（`cards/docx.ts`，只能動態 `import()`；`docx` 套件約 425 kB，獨立 chunk）：`cardDocument(template, card, { font, title, notesTitle })` 把版型重建成表格——欄寬、列高全用 twips 固定（`tblLayout fixed`，沒有 auto），每個版型頁一節（A4、邊界同列印），`nUp` 的版型並排 n 份，最後一節是補充說明。列高是 `EXACT`：卡面跟紙本一樣不會長高、不會跨頁，比格子長的字在 Word 會被截掉。字型 `CARD_FONTS`：Arial 或 Gill Sans MT（只給 WBF 卡選），中文微軟正黑體，勾選框用 Segoe UI Symbol。卡頁、版本頁的「下載 Word」都在瀏覽器產生（`pages/cardOutput.ts` 的 `makeDocx`）。
 - **版本與分享**（`lib/cardApi.ts`，不進首頁；型別 `CardSnapshotMeta`／`CardSnapshot`／`CardSnapshotInput`／`CARD_SNAPSHOT_LIMITS` 在 `api.ts`，與牌桌對拍）：`GET /api/book/cards/:profileId` 列表；`POST` 發布（能編輯制度集的人；送 `FilledCard` 原樣＋Word 檔 base64）；`GET …/:templateId/:n[/docx]`；`PATCH …/:n { shared }`（有 `share` 的人）；`DELETE …/:n`。分享中的版本 Worker 在登入檢查之前就回。卡頁的「版本與分享」（`pages/CardOutputs.tsx` 的 `CardVersions`）有未存的補格時不給發布。版本頁用當下的版型畫快照的格子；版型後來改過、有對不上的格子時會提示以當時的 Word 檔為準。
 - **段落旁的位置**（`cards/placesContext.tsx`、`cards/places.ts`、`cards/CardPlaces.tsx`）：特約頁用 `CardPlacesContext` 提供 `cardSlots` 與讀者的制度集 id，`SectionAccordion` 每段放 `SectionCardPlaces`；`mentions` 先用字串判斷有沒有 `<- 段落` 的引用，有才 lazy 載入版型算格子名稱。整本一頁、列印沒有 provider，不顯示。雙面簡易卡共用單面卡的格子，只列單面卡。
+- **棕標申報表**（D5，`e3-t12`，`cards/bsc.ts`）：版型 `bsc-opening`、`bsc-overcall`（`CardTemplate.brownSticker`，A4 直式，照 CTCBA 的 WBF BSC .docx 格線）不是每個制度集都有的卡（`profileTemplates` 不含它們），而是制度集採用的特約裡每個標了 `Convention.brownSticker` 的一張：`/cards/:profileId/bsc-opening/:form`（`form`＝特約 slug），分頁接在三張卡後面。`fillProfileCard(template, resolution, own, form)` 先用 `formResolution` 把制度集縮成那一個特約（特約沒寫這張表的格子時補 `description <- *`），所以別的特約的位置不會進來。補格存在 `bsc-opening.<slug>.<格子>`（`editPrefix(template, form)`），兩個同類棕標特約不互相蓋。申報表沒有版本與分享（快照以 templateId 為鍵）；有 Systems Policy 的連結（中華橋協下載專區）。`text` 格可有 `suffix`（蓋叫表「at ___ vulnerability」）。段落旁的位置只在特約標了對應的棕標時列出表上的格子。全隊制度卡不印申報表。
 - **入口**：`TeamBlocks.tsx` 的 `ProfileEntries` 多「制度卡」（`/cards/:id`）；隊伍頁多「印全隊制度卡」。`cards/load.ts` 的 `fetchCard` 是卡頁與全隊頁共用的讀取（制度集、上層、全部特約）。
 
 ### 3.2 文章（`Article`，E5 J1：`src/types/article.ts`、`lib/articles.ts`）
@@ -229,6 +231,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/profiles/:id/compare` | 與母制度集比較（e1-t15，社員）：這一層的採用、覆寫（原文 vs 覆寫後）、失效的覆寫 |
 | `/teams` | 隊伍列表（e2-t05，社員）：隊長、人數，自己的隊伍在前，已封存另列 |
 | `/cards/:profileId/:templateId` | 制度卡（E3，lazy）：見 §4 的「制度卡頁」；`?cell=<格子 id>` 打開時選好那一格（段落旁的位置連結用） |
+| `/cards/:profileId/bsc-opening/:form`、`bsc-overcall/:form` | 棕標申報表（e3-t12，lazy）：`form` 是標了棕標的特約 slug；制度集沒採用或沒標時顯示說明 |
 | `/cards/:profileId/:templateId/v/:n` | 制度卡的第 n 版（e3-t09，lazy）：發布時的卡，唯讀；讀得到制度集的人，或分享中時任何人（不用登入） |
 | `/teams/:id/cards[/:templateId]` | 全隊制度卡（e3-t11，社員，lazy）：每對搭檔的卡接著畫，一次列印 |
 | `/teams/:id` | 隊伍頁（e2-t05，社員）：隊員、隊伍制度集入口（讀制度、比較、有 `access.edit` 時編輯）、各搭檔相對隊伍的覆寫／不採用／另採用數 |

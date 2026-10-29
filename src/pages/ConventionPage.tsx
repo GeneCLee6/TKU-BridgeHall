@@ -84,7 +84,14 @@ export function ConventionPage() {
   // 練這個特約 (e6-t09): only when the convention has a table questions can be made from
   const practice = useMemo(() => Boolean(loaded && hasQuestions(loaded)), [loaded])
   // 在制度卡的位置 (e3-t10): the cells this convention fills on the reader's profile's cards
-  const cardPlaces = useMemo(() => ({ cardSlots: loaded?.cardSlots, profileId: activeId }), [loaded, activeId])
+  const cardPlaces = useMemo(
+    () => ({
+      cardSlots: loaded?.cardSlots,
+      profileId: activeId,
+      ...(loaded && { slug: loaded.slug, brownSticker: loaded.brownSticker }),
+    }),
+    [loaded, activeId],
+  )
   const path = convention && sectionId ? findSectionPath(convention, sectionId) : []
   // 入門版 (e4-t02): 「這頁顯示全部」 shows this convention in full until the reader moves on; a link
   // to a section 入門版 hides shows the page in full too, or there would be nothing to scroll to

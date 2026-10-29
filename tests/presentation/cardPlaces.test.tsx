@@ -24,8 +24,8 @@ const lebensohl = conventionBySlug('lebensohl')!
 describe('cardPlaces', () => {
   it('lists the cells a section or the whole convention fills, under the template that owns them', () => {
     expect(cardPlaces(lebensohl.cardSlots, '*')).toEqual([
-      { templateId: 'wbf', slot: 'wbf.summary.special-bids', label: expect.stringMatching(/SPECIAL BIDS/i) },
-      { templateId: 'ctcba-simple', slot: 'ctcba-simple.comp.more', label: expect.any(String) },
+      { templateId: 'wbf', path: 'wbf', slot: 'wbf.summary.special-bids', label: expect.stringMatching(/SPECIAL BIDS/i) },
+      { templateId: 'ctcba-simple', path: 'ctcba-simple', slot: 'ctcba-simple.comp.more', label: expect.any(String) },
     ])
     expect(cardPlaces(lebensohl.cardSlots, 'other-uses')).toEqual([
       expect.objectContaining({ templateId: 'wbf', slot: 'wbf.defence.vs-preempts' }),

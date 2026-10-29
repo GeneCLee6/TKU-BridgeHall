@@ -139,7 +139,7 @@ function BlockView({ block }: { block: CardBlock }) {
     case 'text':
       return (
         <Boxed>
-          <Slot slot={id} lines={block.lines} label={block.label} alert={block.alert} />
+          <Slot slot={id} lines={block.lines} label={block.label} alert={block.alert} suffix={block.suffix} />
         </Boxed>
       )
     case 'check':
@@ -307,6 +307,7 @@ function Slot({
   lines,
   label,
   alert,
+  suffix,
   tick,
   bare,
 }: {
@@ -315,6 +316,8 @@ function Slot({
   /** A text block's label, printed at the start of its first line */
   label?: string
   alert?: boolean
+  /** Printed after the fill-in, a blank's width away when it is empty */
+  suffix?: string
   /** A table column of tick boxes */
   tick?: boolean
   /** Inside a table cell, which has its own rules */
@@ -382,6 +385,12 @@ function Slot({
         )}
         {label && cell?.text && ' '}
         {cell?.text ? <Ink text={cell.text} /> : cell?.checked ? '✓' : null}
+        {suffix && (
+          <>
+            {cell?.text ? ' ' : <Gap aria-hidden="true" />}
+            <Label>{suffix}</Label>
+          </>
+        )}
       </>
     )
   })()
@@ -631,6 +640,11 @@ const Blank = styled.span`
   min-width: 3em;
   border-bottom: 0.5pt solid ${c.ink};
   line-height: 1.2;
+`
+
+const Gap = styled.span`
+  display: inline-block;
+  width: 6em;
 `
 
 const Label = styled.span`

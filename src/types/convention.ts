@@ -137,6 +137,14 @@ export type Level = 'basic' | 'intermediate' | 'advanced'
 
 export const levels: readonly Level[] = ['basic', 'intermediate', 'advanced']
 
+/**
+ * A Brown Sticker method under the WBF Systems Policy (2.5): an opening bid or an overcall. The
+ * convention card page adds the matching announcement form (E3 e3-t12).
+ */
+export type BrownSticker = 'opening' | 'overcall'
+
+export const brownStickers: readonly BrownSticker[] = ['opening', 'overcall']
+
 export interface Convention {
   /** URL-safe and unique: /c/:slug */
   slug: string
@@ -153,6 +161,8 @@ export interface Convention {
   prerequisites?: string[]
   /** Where the convention goes on the convention card (E3); the slot ids are defined there */
   cardSlots?: string[]
+  /** Marked by the officers when the WBF would call it Brown Sticker; absent when it is not */
+  brownSticker?: BrownSticker
   tags: string[]
   /** One line, shown on the collapsed card */
   summary: string
