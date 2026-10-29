@@ -28,6 +28,7 @@ import type * as Audit from '@table/worker/audit.ts'
 import type * as TableArticles from '@table/worker/articles.ts'
 import type * as Articles from '../src/lib/articles.ts'
 import type * as Library from '../src/types/article.ts'
+import type * as Series from '../src/lib/series.ts'
 import type * as QuizRecords from '../src/lib/quizRecords.ts'
 import type * as TableQuiz from '@table/shared/quiz.ts'
 import type * as Learning from '../src/lib/learning.ts'
@@ -90,6 +91,10 @@ export type Checks = [
   Check<Reads<Book.ArticleRevision, TableArticles.ArticleRevision>>,
   Check<Same<Omit<Book.ArticleRevision, 'article'>, Omit<TableArticles.ArticleRevision, 'article'>>>,
   Check<Same<typeof Articles.ARTICLE_TITLE_MAX, typeof TableArticles.ARTICLE_LIMITS.titleMax>>,
+  // The library's series (e5-t06)
+  Check<Same<Library.ArticleSeries, TableArticles.ArticleSeries>>,
+  Check<Same<Book.ArticleSeriesList, TableArticles.ArticleSeriesList>>,
+  Check<Same<typeof Series.SERIES_LIMITS, typeof TableArticles.SERIES_LIMITS>>,
 
   // ── Practice results and question fixes (shared/quiz.ts, E6 e6-t04 e6-t06) ───────────────────
   Check<Same<typeof QuizRecords.QUIZ_LIMITS, typeof TableQuiz.QUIZ_LIMITS>>,

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { CategoriesPanel } from '../components/admin/CategoriesPanel.tsx'
 import { ProfilesPanel } from '../components/admin/ProfilesPanel.tsx'
+import { SeriesPanel } from '../components/admin/SeriesPanel.tsx'
 import { AuditPanel, DraftsPanel } from '../components/admin/ReviewPanels.tsx'
 import { TeamsPanel } from '../components/admin/TeamsPanel.tsx'
 import { DataTable, TableScroll } from '../components/DataTable.tsx'
@@ -53,6 +54,7 @@ function AdminOrEditor() {
       {/* Not about accounts: editors' too */}
       <DraftsPanel />
       <CategoriesPanel />
+      <SeriesPanel />
       <TeamsPanel />
       <ProfilesPanel />
       <AuditPanel />

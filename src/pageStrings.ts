@@ -27,6 +27,7 @@ export const pageStrings = {
     lastUpdated: (date: string, by: string) => `最後更新 ${date}${by ? ` ${by}` : ''}`,
     read: '讀制度',
     practice: '練習叫牌',
+    library: '叢書',
     firstTime: '第一次來？從這裡開始',
     lesson: (n: number) => `第 ${n} 課`,
     wholePath: (name: string, n: number) => `看「${name}」全部 ${n} 課`,

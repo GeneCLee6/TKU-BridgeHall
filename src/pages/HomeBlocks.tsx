@@ -1,4 +1,4 @@
-import { BookOpen, Dumbbell, LogIn } from 'lucide-react'
+import { BookOpen, Dumbbell, Library, LogIn } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { Button } from '../components/ui.tsx'
@@ -64,6 +64,10 @@ export function ProfileCard() {
         <Button as={Link} to="/practice" $small>
           <Dumbbell size={16} aria-hidden />
           {s.practice}
+        </Button>
+        <Button as={Link} to="/library" $small>
+          <Library size={16} aria-hidden />
+          {s.library}
         </Button>
         {user === null && (
           <Button as={Link} to="/login?next=%2F" $small>

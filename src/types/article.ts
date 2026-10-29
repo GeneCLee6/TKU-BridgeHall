@@ -65,5 +65,16 @@ export interface Article {
   license: License
 }
 
+/**
+ * A shelf of the library (e5-t06; TKU-BridgeTable worker/articles.ts): an article's `series` is its
+ * id. Edited online as one list (api.ts ArticleSeriesList); lib/series.ts has the built-in ones.
+ */
+export interface ArticleSeries {
+  id: string
+  label: string
+  description: string
+  order: number
+}
+
 /** An article without its blocks: what a shelf shows */
 export type ArticleMeta = Omit<Article, 'blocks'>
