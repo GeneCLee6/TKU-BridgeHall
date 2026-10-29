@@ -1,4 +1,5 @@
 import { createContext, lazy, Suspense, useContext } from 'react'
+import type { BrownSticker } from '../types/convention.ts'
 
 /**
  * 「在制度卡的位置」 beside a section (E3 e3-t10, AC-3.6). The convention page provides the
@@ -10,6 +11,9 @@ import { createContext, lazy, Suspense, useContext } from 'react'
 export interface CardPlacesSource {
   cardSlots: readonly string[] | undefined
   profileId: string
+  /** The convention, for its Brown Sticker form */
+  slug?: string
+  brownSticker?: BrownSticker
 }
 
 // oxlint-disable-next-line react/only-export-components
@@ -35,7 +39,12 @@ export function SectionCardPlaces({ target }: { target: string }) {
   return (
     // The marker lets the screenshots wait for the line (tests/browser/fixtures.ts)
     <Suspense fallback={<span hidden data-card-places-pending />}>
-      <CardPlaces cardSlots={source.cardSlots} profileId={source.profileId} target={target} />
+      <CardPlaces
+        cardSlots={source.cardSlots}
+        profileId={source.profileId}
+        target={target}
+        {...(source.slug && { convention: { slug: source.slug, brownSticker: source.brownSticker } })}
+      />
     </Suspense>
   )
 }

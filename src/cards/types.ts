@@ -6,8 +6,10 @@
 // Widths are always percentages (of the page, a table or a group), worked out from the
 // original file's twips or PDF points; each template file keeps the source measurements.
 //
-// Not imported by the site yet; when the card page lands it must be lazy-loaded so the home
-// page budget (scripts/check-budget.mjs) is unaffected.
+// Only the lazy-loaded card pages import the templates, so the home page budget
+// (scripts/check-budget.mjs) is unaffected.
+
+import type { BrownSticker } from '../types/convention.ts'
 
 export type CardTemplateId = 'wbf' | 'ctcba-simple' | 'ctcba-simple-2p' | 'bsc-opening' | 'bsc-overcall'
 
@@ -39,6 +41,12 @@ export interface CardTemplate {
    * cut in half); a page then describes one copy and its widths are percent of the copy
    */
   nUp?: number
+  /**
+   * A Brown Sticker announcement form (e3-t12): not a card every profile has but one form per
+   * convention marked `Convention.brownSticker` with this value, filled from that convention alone
+   * (src/cards/bsc.ts)
+   */
+  brownSticker?: BrownSticker
   pages: CardPage[]
   /**
    * Layout details that still need checking against the original file (shown as 待確認
@@ -153,8 +161,11 @@ export type CardBlock =
     }
   /** One of several printed options; `scope` names the table column it sits under, if any */
   | { kind: 'choice'; id: string; label: string; options: CardOption[]; scope?: string; help?: CardHelp }
-  /** A labelled fill-in of one or more lines (CATEGORY:, PSYCHICS:, 使用人, 其他特約) */
-  | { kind: 'text'; id: string; label: string; lines: number; alert?: boolean; help?: CardHelp }
+  /**
+   * A labelled fill-in of one or more lines (CATEGORY:, PSYCHICS:, 使用人, 其他特約); `suffix` is
+   * printed after the blank (BSC: at ___ vulnerability)
+   */
+  | { kind: 'text'; id: string; label: string; lines: number; alert?: boolean; suffix?: string; help?: CardHelp }
   /**
    * A boxed group with a label (簡易卡 無王／高花… at the side, 首攻 on top); `columns` lays its
    * blocks out row-major. `widths`, when given, are percent of the group: the side label, then

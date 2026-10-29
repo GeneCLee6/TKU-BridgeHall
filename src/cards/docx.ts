@@ -255,7 +255,18 @@ function block(ctx: Ctx, b: CardBlock, width: number): Child[] {
     case 'text': {
       const c = cellOf(ctx, b.id)
       const label = runs(`${b.label}${b.alert ? '*' : ''}${c?.text ? ' ' : ''}`, { bold: true })
-      return [table([row(ctx, [cell(lines(ctx, c?.text, label), width)], b.lines)], [width])]
+      const paragraphs = lines(ctx, c?.text, label)
+      if (b.suffix) {
+        // After the text on its last line, or after a blank's width of spaces
+        const last = paragraphs.length - 1
+        const text = (c?.text ?? '').split('\n')
+        paragraphs[last] = para(ctx, [
+          ...(last === 0 ? label : []),
+          ...runs(text[last] ?? ''),
+          ...runs(c?.text ? ` ${b.suffix}` : `${' '.repeat(16)}${b.suffix}`, { bold: true }),
+        ])
+      }
+      return [table([row(ctx, [cell(paragraphs, width)], b.lines)], [width])]
     }
     case 'check':
     case 'choice':

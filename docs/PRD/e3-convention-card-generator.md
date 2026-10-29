@@ -84,17 +84,18 @@ depends_on: [E1, E2]
 
 ## 驗收條件
 
-- [ ] AC-3.1 — 版型即資料：WBF、簡易單面、簡易雙面、BSC 開叫、BSC 蓋叫五個版型檔；新增版型只加檔案；每格有 `id`、種類、說明。
-      （D1b：WBF 與簡易卡兩版已對照原始檔，WBF 每個填寫格有 Guide 2017 的說明；簡易卡官方沒有說明文字，所以不填。BSC 兩版待 `e3-t12`，到時才勾。D2：WBF 版型改照 2.19。）
+- [x] AC-3.1 — 版型即資料：WBF、簡易單面、簡易雙面、BSC 開叫、BSC 蓋叫五個版型檔；新增版型只加檔案；每格有 `id`、種類、說明。
+      （D1b：WBF 與簡易卡兩版已對照原始檔，WBF 每個填寫格有 Guide 2017 的說明；簡易卡官方沒有說明文字，所以不填。BSC 兩版待 `e3-t12`，到時才勾。D2：WBF 版型改照 2.19。D5 #27：BSC 開叫、蓋叫兩版照原始 .docx 的格線定稿，說明摘自 2023 WBF Systems Policy。）
 - [x] AC-3.2 — 填入：`fillCard` 純函式有測試；內建特約透過 `cardSlots` 寫滿 WBF 卡的制度摘要、特殊叫品、開叫表、防守與競叫、首攻與信號、賭倍；長內容自動轉 `[Note n]` 與附頁；不採用不填、覆寫填覆寫值；社團預設制度集的結果由幹部確認。
       （D2：`fillCard` 與測試、內建特約的 `cardSlots`、`[Note n]` 附頁、不採用不填、覆寫填覆寫值都已完成；對應待幹部核對，有疑義的格子沒填（CONTENT_GUIDE.md §2.2），核對完才勾。）
 - [x] AC-3.3 — 人工補格：每格可編輯、標記、重設；存回制度集。（D3：`profile.cardEdits`，`tests/presentation/cardPage.test.tsx`）
 - [ ] AC-3.4 — PDF：五種版型 A4 列印在三個瀏覽器不跑版，與官方檔的格線、欄寬、字級一致；黑白。
 - [ ] AC-3.5 — `.docx`：WBF 卡（含 Gill Sans 版）、BSC 表可下載 Word 檔，Word 與 LibreOffice 開啟版面一致。
-      （D4 #26：WBF、簡易單面、雙面可下載，WBF 可選 Gill Sans；固定欄寬與列高（twips），Word 開啟卡面不跨頁（用 Word 轉 PDF 看過一次）。**LibreOffice 與實際印出還要人看**；BSC 表等 `e3-t12`，到時才勾。）
+      （D4 #26：WBF、簡易單面、雙面可下載，WBF 可選 Gill Sans；固定欄寬與列高（twips），Word 開啟卡面不跨頁（用 Word 轉 PDF 看過一次）。**LibreOffice 與實際印出還要人看**；BSC 表等 `e3-t12`，到時才勾。D5 #27：BSC 兩表 A4 直式可下載。）
 - [x] AC-3.6 — 連回：卡上每格連回段落；段落旁顯示在哪張卡的哪一格。（D3「§」；D4 #26 段落旁「在制度卡的位置」連到那一格，`tests/presentation/cardPlaces.test.tsx`）
 - [x] AC-3.7 — 版本與分享：發布快照、列表、開舊版；唯讀連結可關。（D4 #26、牌桌 #179：`/cards/:profileId/:templateId/v/:n`，`tests/presentation/cardVersions.test.tsx`、牌桌 `tests/worker/card-snapshots.test.ts`）
-- [ ] AC-3.8 — 棕標：特約可標 `brownSticker`，制度卡頁多一張申報表並自動填入；連到 Systems Policy 說明。
+- [x] AC-3.8 — 棕標：特約可標 `brownSticker`，制度卡頁多一張申報表並自動填入；連到 Systems Policy 說明。
+      （D5 #27、牌桌 #180：每個標了棕標的特約一張表，`/cards/:profileId/bsc-opening/:slug`；只由那個特約的 `cardSlots` 填，沒寫就整個特約進 Detailed Description（附頁）；補格依特約分開存；Systems Policy 連到中華橋協下載專區。內建特約都沒有標，要幹部判斷。）
 
 ## Task 拆分
 
@@ -111,7 +112,7 @@ depends_on: [E1, E2]
 - [x] `e3-t09` 版本快照（含輸出檔）、分享連結（可關）· AC-3.7 · #26、牌桌 #179（快照存填好的卡與當時的 Word 檔；PDF 仍走瀏覽器列印，從快照重畫）
 - [x] `e3-t10` 段落旁「在制度卡的位置」標示 · AC-3.6 · #26（`cards/placesContext.tsx`、`cards/places.ts`；只在特約頁、跟著讀者的制度集）
 - [x] `e3-t11` 搭檔頁與隊伍頁的「制度卡」入口；隊伍一鍵印全隊 · AC-3.4 · #26（`/teams/:id/cards/:templateId`）
-- [ ] `e3-t12` 棕標：`brownSticker` 欄位、BSC 開叫／蓋叫版型檔、自動填入、`.docx` 輸出、連到 Systems Policy · AC-3.8、AC-3.1、AC-3.5 · M · ← e3-t08
+- [x] `e3-t12` 棕標：`brownSticker` 欄位、BSC 開叫／蓋叫版型檔、自動填入、`.docx` 輸出、連到 Systems Policy · AC-3.8、AC-3.1、AC-3.5 · M · ← e3-t08 · D5 #27、牌桌 #180（`cards/bsc.ts`；申報表沒有版本與分享，全隊制度卡不印）
 
 **M2 · 選項**
 

@@ -281,6 +281,10 @@ export const strings = {
     prerequisites: '前置特約',
     prerequisitesHint: '讀這個特約之前應該先讀的特約，可以多選',
     prerequisitesMissing: (slug: string) => `（已不存在：${slug}）`,
+    brownSticker: '棕標（Brown Sticker）',
+    brownStickerNone: '不是棕標',
+    brownStickers: { opening: '棕標開叫', overcall: '棕標蓋叫' },
+    brownStickerHint: 'WBF 制度政策（2.5）認定為棕標的開叫或蓋叫才標；標了以後，制度卡頁會多一張這個特約的申報表。',
     // Sections
     sectionTitle: '段落標題',
     originalTitle: '原文標題',

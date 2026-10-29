@@ -7,7 +7,7 @@ import { fillProfileCard } from '../cards/edits.ts'
 import type { FilledCard } from '../cards/fill.ts'
 import { fetchCard } from '../cards/load.ts'
 import { PrintStyle } from '../cards/PrintStyle.tsx'
-import { cardTemplates } from '../cards/templates/index.ts'
+import { profileTemplates } from '../cards/templates/index.ts'
 import type { CardTemplate } from '../cards/types.ts'
 import { Button, ErrorText, Muted, Row } from '../components/ui.tsx'
 import { api, type ClubTeam, errorText } from '../lib/api.ts'
@@ -28,8 +28,9 @@ import { Frame, Gate } from './Frame.tsx'
  * edits of every layer), read-only here.
  */
 export function TeamCardsPage() {
-  const { id = '', templateId = cardTemplates[0]!.id } = useParams()
-  const template = cardTemplates.find((x) => x.id === templateId)
+  const { id = '', templateId = profileTemplates[0]!.id } = useParams()
+  // The Brown Sticker forms are one per convention: printed from each pair's own card page
+  const template = profileTemplates.find((x) => x.id === templateId)
   return (
     <Frame wide>
       <Main id="main">
@@ -139,7 +140,7 @@ function TeamCards({ teamId, template }: { teamId: string; template: CardTemplat
             {t.team.print}
           </Button>
         </Row>
-        <Muted>{t.pdfHint}</Muted>
+        <Muted>{t.pdfHint(template.paper)}</Muted>
       </Head>
       {cards.length === 0 ? (
         <Muted>{t.team.none}</Muted>

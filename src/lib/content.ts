@@ -1,7 +1,9 @@
 import {
+  brownStickers,
   conventionKinds,
   levels,
   type Block,
+  type BrownSticker,
   type Convention,
   type ConventionKind,
   type ConventionMeta,
@@ -56,13 +58,16 @@ export const isStrings = (value: unknown) => Array.isArray(value) && value.every
 export const isLevel = (value: unknown): value is Level => levels.includes(value as Level)
 export const optionalLevel = (value: unknown) => value === undefined || isLevel(value)
 
-/** A card's kind, level, prerequisites and card slots, the fields set only in the editor or files */
-export function classification(c: Partial<Pick<Convention, 'kind' | 'level' | 'prerequisites' | 'cardSlots'>> = {}) {
+/** A card's kind, level, prerequisites, card slots and Brown Sticker mark, the fields set only in the editor or files */
+export function classification(
+  c: Partial<Pick<Convention, 'kind' | 'level' | 'prerequisites' | 'cardSlots' | 'brownSticker'>> = {},
+) {
   return {
     ...(c.kind && { kind: c.kind }),
     ...(c.level && { level: c.level }),
     ...(c.prerequisites?.length && { prerequisites: [...c.prerequisites] }),
     ...(c.cardSlots?.length && { cardSlots: [...c.cardSlots] }),
+    ...(c.brownSticker && { brownSticker: c.brownSticker }),
   }
 }
 
@@ -89,6 +94,8 @@ export function conventionProblems(value: unknown, categories: string[]): string
   if (value.prerequisites !== undefined && !isStrings(value.prerequisites)) add('前置特約要是網址代稱清單')
   else if ((value.prerequisites as string[] | undefined)?.includes(value.slug as string)) add('前置特約不能是自己')
   if (value.cardSlots !== undefined && !isStrings(value.cardSlots)) add('制度卡位置要是文字清單')
+  if (value.brownSticker !== undefined && !brownStickers.includes(value.brownSticker as BrownSticker))
+    add('棕標只能是開叫或蓋叫')
   if (!isStrings(value.tags)) add('標籤要是文字清單')
   if (value.aliases !== undefined && !isStrings(value.aliases)) add('別名要是文字清單')
   if (!isString(value.summary)) add('缺少摘要')
@@ -383,6 +390,7 @@ export function tidyConvention(convention: Convention): Convention {
     ...(convention.level && { level: convention.level }),
     ...(prerequisites?.length && { prerequisites }),
     ...(cardSlots?.length && { cardSlots }),
+    ...(convention.brownSticker && { brownSticker: convention.brownSticker }),
     tags: convention.tags.filter((t) => t.trim()),
     summary: convention.summary,
     source: { title: convention.source.title, ...(text(convention.source.note) && { note: convention.source.note }) },

@@ -194,6 +194,20 @@ WBF 卡（2.19）：
 - **1♥／1♠ 的答叫兩處不一致**：Jacoby 2NT 的答叫表寫 1♠ 3♠ 為 3-5 點，Bergen 加叫寫 4-5 點，兩份都填進附頁，請幹部確認。
 - **WBF 卡英文**：先填中文原文（使用者 2026-10-25 決定）；英文的固定文字（`= 文字`）之後再定（PRD E3 未決問題）。
 
+#### 棕標申報表（`brownSticker`，e3-t12）
+
+- WBF 制度政策（Systems Policy 2023 §2.5）認定為棕標的開叫或蓋叫，在編輯器的「棕標」標 `opening`（開叫）或 `overcall`（蓋叫）。這是分類資訊，由幹部判斷；**內建特約目前都沒有標**（測試鎖住），不要依一般橋牌知識自己標。
+- 標了以後，採用這個特約的制度集，制度卡頁會多一張這個特約的申報表（`bsc-opening`／`bsc-overcall`，每個特約一張）。表上的格子只由這個特約自己的 `cardSlots` 填，寫法同上，例如：
+  ```
+  bsc-opening.bid = 2♦
+  bsc-opening.shows <- hands
+  bsc-opening.rebids <- responses#0
+  bsc-opening.vs-double <- after-double
+  ```
+  格子 id：開叫表 `names`、`country`、`event-name`、`bid`、`seat`、`vulnerability`、`shows`、`description`、`pass`、`rebids`、`vs-double`、`vs-overcall`、`after-double`、`after-overcall`、`defence`；蓋叫表 `names`、`country`、`event-name`、`their-bid`、`their-shows`、`bid`、`vulnerability`、`shows`、`applies`（選項 `opposite-ph`／`opposite-uph`／`always`）、`description`、`pass`、`advances`、`vs-double`、`vs-bid`、`after-double`、`after-advance-double`、`after-rebid`、`defence`。
+- 特約沒有寫任何這張表的格子時，自動用 `description <- *`：整個特約放進 Detailed Description，放不下的接在補充說明。
+- Names、Event 這類每對搭檔不同的格子在制度卡頁人工補；補格依特約分開存（`bsc-opening.<slug>.<格子>`）。
+
 ## 3. 各種內容區塊
 
 | `kind` | 用途 | 欄位 |

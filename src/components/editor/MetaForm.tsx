@@ -3,8 +3,10 @@ import styled from 'styled-components'
 import { splitList } from '../../lib/editing.ts'
 import { strings } from '../../strings.ts'
 import {
+  brownStickers,
   conventionKinds,
   levels,
+  type BrownSticker,
   type Category,
   type CategoryId,
   type Convention,
@@ -18,8 +20,8 @@ import { AutoTextArea } from './fields.tsx'
 const t = strings.editor
 
 /**
- * A convention's own fields: names, address, category, kind, level, prerequisites, tags, summary
- * and source. `conventions` is the catalogue the prerequisites are picked from.
+ * A convention's own fields: names, address, category, kind, level, Brown Sticker mark,
+ * prerequisites, tags, summary and source. `conventions` is the catalogue the prerequisites are picked from.
  */
 export function MetaForm({
   convention,
@@ -117,6 +119,23 @@ export function MetaForm({
             ))}
           </Select>
           <small>{t.levelHint}</small>
+        </Field>
+      </Columns>
+      <Columns>
+        <Field>
+          {t.brownSticker}
+          <Select
+            value={convention.brownSticker ?? ''}
+            onChange={(e) => set({ brownSticker: (e.target.value || undefined) as BrownSticker | undefined })}
+          >
+            <option value="">{t.brownStickerNone}</option>
+            {brownStickers.map((b) => (
+              <option key={b} value={b}>
+                {t.brownStickers[b]}
+              </option>
+            ))}
+          </Select>
+          <small>{t.brownStickerHint}</small>
         </Field>
       </Columns>
       <Choices>
