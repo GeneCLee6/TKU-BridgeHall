@@ -94,7 +94,6 @@ export function HandbookShell() {
           tabIndex={-1}
           aria-busy={profiles.status === 'loading'}
           $busy={profiles.status === 'loading'}
-          $centred={!catalogue}
           $measure={measure}
         >
           {status === 'offline' && <Status role="status">{strings.online.offline}</Status>}
@@ -191,9 +190,10 @@ const Scrim = styled.div`
   }
 `
 
-const Main = styled.main<{ $busy: boolean; $centred: boolean; $measure?: string }>`
+const Main = styled.main<{ $busy: boolean; $measure?: string }>`
   flex: 1;
-  ${({ $centred }) => ($centred ? 'margin: 0 auto;' : '')}
+  /* Centred in the room the catalogue leaves, so a wide screen is not all empty on the right */
+  margin: 0 auto;
   /* Switching profiles dims the page until the new one has loaded */
   opacity: ${({ $busy }) => ($busy ? 0.55 : 1)};
   transition: opacity 150ms ease;

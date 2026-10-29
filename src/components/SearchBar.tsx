@@ -68,6 +68,8 @@ const Wrap = styled.form`
   flex: 1;
   min-width: 0;
   max-width: 440px;
+  /* The account goes to the header's right end, as on pages without search (AppHeader's Spacer) */
+  margin-right: auto;
 `
 
 const Field = styled.div`
