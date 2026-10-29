@@ -1,5 +1,15 @@
 import { conventions } from '../../src/content/index.ts'
-import { drawQuizzes, filterQuizzes, generateQuizzes, quizBlockIndex, shuffle, CHOICES } from '../../src/lib/quiz.ts'
+import {
+  drawQuizzes,
+  filterQuizzes,
+  generateQuizzes,
+  isRight,
+  labelCall,
+  quizBlockIndex,
+  sameCall,
+  shuffle,
+  CHOICES,
+} from '../../src/lib/quiz.ts'
 import { walkSections } from '../../src/lib/sections.ts'
 import type { Convention, ResponseRow, Section } from '../../src/types/convention.ts'
 
@@ -32,8 +42,8 @@ describe('generateQuizzes (e6-t01, AC-6.2)', () => {
     '%s: every response row is asked or reported, word for word from the source',
     (slug, c) => {
       const rows = rowsById(c)
-      const quizzes = all.quizzes.filter((q) => q.slug === slug)
-      const skipped = all.skipped.filter((s) => s.id.startsWith(`${slug}/`))
+      const quizzes = all.quizzes.filter((q) => q.slug === slug && q.kind === 'meaning')
+      const skipped = all.skipped.filter((s) => s.id.startsWith(`${slug}/`) && !s.id.endsWith('/hand'))
       // A convention with any usable table gets questions
       const usable = [...rows.values()].filter((r) => !r.pending && strip(r.row.meaning) !== '同上')
       if (usable.length) expect(quizzes.length).toBeGreaterThan(0)
@@ -64,7 +74,7 @@ describe('generateQuizzes (e6-t01, AC-6.2)', () => {
   )
 
   it('asks something of every bundled convention that has a response table', () => {
-    const asked = new Set(all.quizzes.map((q) => q.slug))
+    const asked = new Set(all.quizzes.filter((q) => q.kind === 'meaning').map((q) => q.slug))
     const withTables = conventions.filter((c) => [...rowsById(c).values()].some((r) => !r.pending))
     expect(withTables.map((c) => c.slug).filter((slug) => !asked.has(slug))).toEqual([])
     expect(withTables.length).toBe(19)
@@ -73,7 +83,9 @@ describe('generateQuizzes (e6-t01, AC-6.2)', () => {
   it('gives every question a unique id from its place in the content', () => {
     const ids = all.quizzes.map((q) => q.id)
     expect(new Set(ids).size).toBe(ids.length)
-    all.quizzes.forEach((q) => expect(q.id).toMatch(/^[a-z0-9-]+\/[^/]+\/\d+\/\d+$/))
+    all.quizzes.forEach((q) =>
+      expect(q.id).toMatch(q.kind === 'call' ? /^[a-z0-9-]+\/[^/]+\/\d+\/hand$/ : /^[a-z0-9-]+\/[^/]+\/\d+\/\d+$/),
+    )
     expect(quizBlockIndex(all.quizzes[0])).toBe(Number(all.quizzes[0].id.split('/')[2]))
   })
 
@@ -164,6 +176,127 @@ describe('generateQuizzes (e6-t01, AC-6.2)', () => {
     )
     const first = quizzes.find((q) => q.id === 'tiny/a/0/0')!
     expect(first.choices).not.toContain('弱牌逃叫')
+  })
+})
+
+describe('call questions from the worked examples (e6-t07, AC-6.2)', () => {
+  const all = generateQuizzes(conventions, 'club')
+  const calls = all.quizzes.filter((q) => q.kind === 'call')
+
+  it('reads the call a hand label says to make, and nothing else', () => {
+    const said = ['叫4H', 'PASS', '叫4NT', 'PASS!', '叫3NT!!', 'PASS!!!', '(i) 應叫1H', '(iii) 應叫2C，絕不可叫1NT', '叫2D，Cue-Bid', '叫1NT', '2♠', 'X', 'XX', '3N']
+    expect(said.map(labelCall)).toEqual(['4H', 'P', '4NT', 'P', '3NT', 'P', '1H', '2C', '2D', '1NT', '2S', 'X', 'XX', '3NT'])
+    const other = [undefined, '', '可開3NT', 'EX) 可開3NT', '皆可開叫1NT', '改2S 通常比PASS好', '(EX) 何手牌較佳？', 'a.', '上', '牌型可能如右', 'EX) 1H ─ ─ ？ 叫 X；之後 1S、2C', '8H']
+    for (const label of other) expect(labelCall(label), String(label)).toBeUndefined()
+  })
+
+  it('asks exactly the bundled examples that say what to call, word for word', () => {
+    expect(calls.map((q) => q.id).sort()).toEqual(
+      [
+        'system-doubles/examples/1/hand',
+        'system-doubles/examples/2/hand',
+        'system-doubles/examples/4/hand',
+        'system-doubles/examples/6/hand',
+        'system-doubles/examples/7/hand',
+        'system-doubles/examples/8/hand',
+        'system-doubles/examples/9/hand',
+        'system-competition/preempts/5/hand',
+        'system-competition/preempts/6/hand',
+        'system-competition/preempts/7/hand',
+        'system-competition/preempts/8/hand',
+        'system-competition/preempts/9/hand',
+        'system-competition/preempts/10/hand',
+        'system-concepts/fit/18/hand',
+      ].sort(),
+    )
+    for (const q of calls) {
+      const c = conventions.find((x) => x.slug === q.slug)!
+      let blocks: Section['blocks']
+      walkSections(c.sections, (s) => {
+        if (s.id === q.sectionId) blocks = s.blocks
+      })
+      const index = quizBlockIndex(q)
+      const block = blocks![index]
+      expect(block.kind).toBe('hand')
+      if (block.kind !== 'hand') continue
+      // The hand, the answer and the example's paragraph are the source's own
+      expect(q.hand).toEqual(block.hand)
+      expect(q.answer).toBe(labelCall(block.label))
+      let above = index - 1
+      while (blocks![above].kind === 'hand') above--
+      const prompt = blocks![above]
+      expect(prompt.kind === 'paragraph' && prompt.text).toBe(q.prompt)
+      expect(q.prompt).toMatch(/^EX\d*\)/)
+      // Answered on a bidding box: no wrong calls are made up
+      expect(q.choices).toBeUndefined()
+      expect(q.source).toBe('auto')
+    }
+    expect(calls.find((q) => q.id === 'system-doubles/examples/4/hand')).toMatchObject({
+      prompt: 'EX2) 左敵 1♠，同伴 X，右敵 PASS，你？',
+      answer: '2C',
+    })
+  })
+
+  it('reports the hands it asks nothing about', () => {
+    const hands = all.skipped.filter((s) => s.id.endsWith('/hand'))
+    expect(hands.find((s) => s.id === 'system-concepts/hand-evaluation/2/hand')?.reason).toBe('noCall')
+    expect(hands.find((s) => s.id === 'system-concepts/fit/16/hand')?.reason).toBe('noCall')
+    expect(hands.find((s) => s.id === 'system-strong-and-preempts/gambling/3/hand')?.reason).toBe('noCall')
+  })
+
+  const example = (blocks: NonNullable<Section['blocks']>, extra: Partial<Section> = {}): Convention => ({
+    slug: 'ex',
+    nameZh: '例',
+    nameEn: 'Ex',
+    category: 'x',
+    tags: [],
+    summary: 's',
+    source: { title: 't' },
+    updated: '2026-10-29',
+    sections: [{ id: 'a', title: 'A', ...extra, blocks }],
+  })
+  const hand = { spades: 'AK2', hearts: 'Q32', diamonds: 'J432', clubs: '432' }
+  const ask = { kind: 'paragraph', text: 'EX) 同伴 1NT，你？' } as const
+
+  it('needs an example paragraph above, and nothing pending', () => {
+    const asked = generateQuizzes(
+      [example([ask, { kind: 'hand', label: '叫2C', hand }, { kind: 'hand', label: 'PASS', hand }])],
+      'club',
+    )
+    expect(asked.quizzes.map((q) => [q.id, q.answer, q.prompt])).toEqual([
+      ['ex/a/1/hand', '2C', 'EX) 同伴 1NT，你？'],
+      ['ex/a/2/hand', 'P', 'EX) 同伴 1NT，你？'],
+    ])
+    const noPrompt = generateQuizzes(
+      [example([{ kind: 'paragraph', text: '牌例如下' }, { kind: 'hand', label: '叫2C', hand }])],
+      'club',
+    )
+    expect(noPrompt.skipped).toEqual([{ id: 'ex/a/1/hand', reason: 'noPrompt' }])
+    const pendingPrompt = generateQuizzes(
+      [example([{ ...ask, pending: '原文不清' }, { kind: 'hand', label: '叫2C', hand }])],
+      'club',
+    )
+    expect(pendingPrompt.skipped).toEqual([{ id: 'ex/a/1/hand', reason: 'pending' }])
+    const pendingSection = generateQuizzes(
+      [example([ask, { kind: 'hand', label: '叫2C', hand }], { pending: '整段待確認' })],
+      'club',
+    )
+    expect(pendingSection.skipped).toEqual([{ id: 'ex/a/1/hand', reason: 'pending' }])
+  })
+
+  it('takes the same call written another way as right', () => {
+    expect(sameCall('1NT', '1N')).toBe(true)
+    expect(sameCall('PASS', 'P')).toBe(true)
+    expect(sameCall('4♥', '4H')).toBe(true)
+    expect(sameCall('4S', '4H')).toBe(false)
+    expect(isRight({ kind: 'call', answer: 'P' }, 'Pass')).toBe(true)
+    expect(isRight({ kind: 'meaning', answer: '問高花' }, '問高花')).toBe(true)
+    expect(isRight({ kind: 'meaning', answer: '問高花' }, '問高花。')).toBe(false)
+  })
+
+  it('filters by kind', () => {
+    expect(filterQuizzes(all.quizzes, { kind: 'call' })).toHaveLength(14)
+    expect(filterQuizzes(all.quizzes, { kind: 'meaning' }).every((q) => q.kind === 'meaning')).toBe(true)
   })
 })
 

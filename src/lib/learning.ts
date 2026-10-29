@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { bundledPaths } from '../content/paths.ts'
-import type { SectionOutline } from '../types/convention.ts'
+import type { Convention, Section, SectionOutline } from '../types/convention.ts'
 import { request, send } from './api.ts'
+import type { Quiz } from './quiz.ts'
 
 /**
  * 學習路徑 (E4: e4-t08, e4-t11, e4-t12). A path is lessons in order; a lesson names what to read
@@ -80,6 +81,55 @@ export const LEARN_PATH = '/learn'
 export const pathPage = (pathId: string) => `${LEARN_PATH}/${pathId}`
 export const lessonPage = (pathId: string, lessonId: string) => `${LEARN_PATH}/${pathId}/${lessonId}`
 export const pathEditPage = (pathId: string) => `${LEARN_PATH}/${pathId}/edit`
+/** 練這一課 (e4-t10): the practice page with the lesson's questions */
+export const lessonPracticePath = (pathId: string, lessonId: string) =>
+  `/practice?lesson=${encodeURIComponent(`${pathId}/${lessonId}`)}`
+
+// ── A lesson's questions (e4-t10) ─────────────────────────────────────────────────────────────
+
+/** A section and every section under it, by id */
+function sectionAndBelow(sections: readonly Section[], id: string): Set<string> {
+  const out = new Set<string>()
+  const walk = (list: readonly Section[], inside: boolean) => {
+    for (const s of list) {
+      const here = inside || s.id === id
+      if (here) out.add(s.id)
+      if (s.children) walk(s.children, here)
+    }
+  }
+  walk(sections, false)
+  return out
+}
+
+/** The questions made from a lesson's readings: a whole convention, or a section and those under it */
+export function readingQuizzes(
+  readings: readonly LessonReading[],
+  quizzes: readonly Quiz[],
+  conventions: readonly Convention[],
+): Quiz[] {
+  const bySlug = new Map(conventions.map((c) => [c.slug, c]))
+  const wanted = readings.map((r) => {
+    const convention = bySlug.get(r.slug)
+    return { slug: r.slug, sections: r.sectionId && convention ? sectionAndBelow(convention.sections, r.sectionId) : undefined }
+  })
+  return quizzes.filter((q) => wanted.some((w) => w.slug === q.slug && (!w.sections || w.sections.has(q.sectionId))))
+}
+
+/**
+ * The questions a lesson practises: the ones its editor chose (in that order, those the content
+ * still makes), or, when none were chosen, every question from its readings.
+ */
+export function lessonQuizzes(lesson: Lesson, quizzes: readonly Quiz[], conventions: readonly Convention[]): Quiz[] {
+  if (!lesson.quizIds?.length) return readingQuizzes(lesson.readings, quizzes, conventions)
+  const byId = new Map(quizzes.map((q) => [q.id, q]))
+  return lesson.quizIds.flatMap((id) => byId.get(id) ?? [])
+}
+
+/** `pathId/lessonId` from `?lesson=`; the path id has no slash */
+export function lessonParam(value: string | null): { pathId: string; lessonId: string } | undefined {
+  const at = value?.indexOf('/') ?? -1
+  return value && at > 0 ? { pathId: value.slice(0, at), lessonId: value.slice(at + 1) } : undefined
+}
 
 // ── Paths ─────────────────────────────────────────────────────────────────────────────────────
 

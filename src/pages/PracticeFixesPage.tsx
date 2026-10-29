@@ -8,6 +8,7 @@ import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, Panel
 import { errorText } from '../lib/api.ts'
 import { cellCall, cellText, DEFAULT_SEATS, normaliseCall } from '../lib/editing.ts'
 import type { Quiz } from '../lib/quiz.ts'
+import { BANK_CATEGORY, bankFile, exportQuizzes } from '../lib/quizExport.ts'
 import {
   basisOf,
   fixPath,
@@ -124,6 +125,8 @@ function Fixes() {
         )}
       </Panel>
 
+      <BankExport quizzes={data.quizzes} names={data.byId} profileName={profileName} />
+
       <Panel aria-labelledby="fix-list">
         <PanelTitle id="fix-list">{s.list(data.fixes.length)}</PanelTitle>
         {!data.fixes.length ? (
@@ -154,6 +157,61 @@ function Fixes() {
         )}
       </Panel>
     </>
+  )
+}
+
+/**
+ * 匯出給牌桌題庫 (e6-t08): the call questions as they are practised here (the profile's content,
+ * the fixes, the hand-made ones), as a file of the table's bidding question bank.
+ */
+function BankExport({
+  quizzes,
+  names,
+  profileName,
+}: {
+  quizzes: readonly Quiz[]
+  names: ReadonlyMap<string, Convention>
+  profileName: string
+}) {
+  const result = useMemo(
+    () => exportQuizzes(quizzes, new Map([...names].map(([slug, c]) => [slug, c.nameZh]))),
+    [quizzes, names],
+  )
+  const left = result.skipped.filter((x) => x.reason !== 'meaning' && x.reason !== 'disabled')
+  const download = () => {
+    const blob = new Blob([`${JSON.stringify(bankFile(result.questions), null, 2)}\n`], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${BANK_CATEGORY}.json`
+    document.body.append(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+  return (
+    <Panel aria-labelledby="fix-bank">
+      <PanelTitle id="fix-bank">{s.bankTitle}</PanelTitle>
+      <Muted>{s.bankIntro(profileName)}</Muted>
+      <Muted role="status">{s.bankCount(result.questions.length, left.length)}</Muted>
+      {left.length > 0 && (
+        <FixList>
+          {left.map((x) => (
+            <li key={x.id}>
+              <Link to={fixPath(x.id)}>
+                <code>{x.id}</code>
+              </Link>
+              ：{s.bankReasons[x.reason]}
+            </li>
+          ))}
+        </FixList>
+      )}
+      <Row>
+        <Button type="button" disabled={!result.questions.length} onClick={download}>
+          {s.bankDownload}
+        </Button>
+      </Row>
+    </Panel>
   )
 }
 
@@ -241,6 +299,7 @@ function AutoForm({
   stale: boolean
   onDone: () => void
 }) {
+  const isCall = quiz.kind === 'call'
   const madeOthers = (quiz.choices ?? []).filter((c) => c !== quiz.answer)
   const start = fix && !stale ? fix : undefined
   const [disabled, setDisabled] = useState(Boolean(start?.disabled))
@@ -251,11 +310,13 @@ function AutoForm({
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    const a = answer.trim()
-    const rest = lines(others)
+    const a = isCall ? normaliseCall(answer) : answer.trim()
+    const rest = isCall ? lines(others).map(normaliseCall) : lines(others)
     if (!a) return setError(s.answerRequired)
     const choices = choicesOf(a, rest)
-    if (choices.length < QUIZ_LIMITS.choicesMin || choices.length > QUIZ_LIMITS.choicesMax)
+    // A made call question may stay on the bidding box (no choices at all)
+    const boxOnly = isCall && !rest.length
+    if (!boxOnly && (choices.length < QUIZ_LIMITS.choicesMin || choices.length > QUIZ_LIMITS.choicesMax))
       return setError(s.choicesCount(QUIZ_LIMITS.choicesMin, QUIZ_LIMITS.choicesMax))
     const answerChanged = a !== quiz.answer
     const choicesChanged = rest.join('\n') !== madeOthers.join('\n')
@@ -266,7 +327,7 @@ function AutoForm({
       basis: basisOf(quiz),
       ...(disabled && { disabled: true }),
       ...(answerChanged && { answer: a }),
-      ...(choicesChanged && { choices }),
+      ...(choicesChanged && !boxOnly && { choices }),
       ...(note.trim() && { note: note.trim() }),
     })
   }
@@ -281,39 +342,64 @@ function AutoForm({
       </p>
       {quiz.caption && <Muted>{quiz.caption}</Muted>}
       {quiz.auction && <AuctionTable auction={quiz.auction} />}
-      <Source>
-        <dt>{p.call}</dt>
-        <dd>
-          <CallLabel call={quiz.call ?? ''} />
-        </dd>
-        <dt>{s.madeAnswer}</dt>
-        <dd>
-          <RichText text={quiz.answer} />
-        </dd>
-        <dt>{s.madeOthers}</dt>
-        <dd>
-          <ul>
-            {madeOthers.map((c, i) => (
-              <li key={i}>
-                <RichText text={c} />
-              </li>
-            ))}
-          </ul>
-        </dd>
-      </Source>
+      {isCall ? (
+        <Source>
+          {quiz.prompt && (
+            <>
+              <dt>{s.madePrompt}</dt>
+              <dd>
+                <RichText text={quiz.prompt} />
+              </dd>
+            </>
+          )}
+          <dt>{p.yourHand}</dt>
+          <dd>{quiz.hand && <Hand hand={quiz.hand} />}</dd>
+          <dt>{s.madeCall}</dt>
+          <dd>
+            <CallLabel call={quiz.answer} />
+          </dd>
+          <dt>{s.madeOthers}</dt>
+          <dd>{madeOthers.length ? madeOthers.map((c, i) => <CallLabel key={i} call={c} />) : s.boxOnly}</dd>
+        </Source>
+      ) : (
+        <Source>
+          <dt>{p.call}</dt>
+          <dd>
+            <CallLabel call={quiz.call ?? ''} />
+          </dd>
+          <dt>{s.madeAnswer}</dt>
+          <dd>
+            <RichText text={quiz.answer} />
+          </dd>
+          <dt>{s.madeOthers}</dt>
+          <dd>
+            <ul>
+              {madeOthers.map((c, i) => (
+                <li key={i}>
+                  <RichText text={c} />
+                </li>
+              ))}
+            </ul>
+          </dd>
+        </Source>
+      )}
       {stale && <Notice>{s.staleHere}</Notice>}
       <Check>
         <input type="checkbox" checked={disabled} onChange={(e) => setDisabled(e.target.checked)} />
         {s.disable}
       </Check>
       <Field>
-        {s.answer}
-        <TextArea rows={3} value={answer} maxLength={QUIZ_LIMITS.textMax} onChange={(e) => setAnswer(e.target.value)} />
+        {isCall ? s.answerCall : s.answer}
+        {isCall ? (
+          <Input value={answer} maxLength={QUIZ_LIMITS.textMax} onChange={(e) => setAnswer(e.target.value)} />
+        ) : (
+          <TextArea rows={3} value={answer} maxLength={QUIZ_LIMITS.textMax} onChange={(e) => setAnswer(e.target.value)} />
+        )}
       </Field>
       <Field>
         {s.others}
         <TextArea rows={4} value={others} onChange={(e) => setOthers(e.target.value)} />
-        <small>{s.othersHint}</small>
+        <small>{isCall ? s.othersBoxHint : s.othersHint}</small>
       </Field>
       <Field>
         {s.note}

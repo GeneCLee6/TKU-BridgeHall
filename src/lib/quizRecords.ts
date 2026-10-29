@@ -1,6 +1,6 @@
 import type { Convention } from '../types/convention.ts'
 import { request, send } from './api.ts'
-import { sameText, type Quiz } from './quiz.ts'
+import { isRight, sameText, type Quiz } from './quiz.ts'
 import { walkSections } from './sections.ts'
 
 /**
@@ -167,7 +167,7 @@ export const roundOf = (profileId: string, answers: { quiz: Quiz; picked: string
   profileId,
   answers: answers
     .slice(0, QUIZ_LIMITS.answersMax)
-    .map(({ quiz, picked }) => ({ id: quiz.id, slug: quiz.slug, right: picked === quiz.answer })),
+    .map(({ quiz, picked }) => ({ id: quiz.id, slug: quiz.slug, right: isRight(quiz, picked) })),
 })
 
 // ── 成績 and 錯題本 (e6-t05) ────────────────────────────────────────────────────────────────────
@@ -221,11 +221,23 @@ export const percent = (right: number, answered: number) => (answered ? Math.rou
 
 // ── Fixes (e6-t06) ────────────────────────────────────────────────────────────────────────────
 
-/** A made question's call and answer as they are now: what a new fix is written against */
-export const basisOf = (quiz: Quiz): QuizBasis => ({ call: quiz.call ?? '', answer: quiz.answer })
+/**
+ * A made question's call and answer as they are now: what a new fix is written against. A call
+ * question has no call asked about; its hand stands in (S.H.D.C), so a fix stops applying when the
+ * example's hand changes as well as when its answer does.
+ */
+export const basisOf = (quiz: Quiz): QuizBasis => ({
+  call: quiz.kind === 'call' && quiz.hand ? handText(quiz.hand) : (quiz.call ?? ''),
+  answer: quiz.answer,
+})
 
-const matches = (quiz: Quiz, basis: QuizBasis) =>
-  sameText(quiz.call ?? '') === sameText(basis.call) && sameText(quiz.answer) === sameText(basis.answer)
+/** A hand as one line, S.H.D.C */
+export const handText = (hand: QuizHand) => [hand.spades, hand.hearts, hand.diamonds, hand.clubs].join('.')
+
+const matches = (quiz: Quiz, basis: QuizBasis) => {
+  const now = basisOf(quiz)
+  return sameText(now.call) === sameText(basis.call) && sameText(now.answer) === sameText(basis.answer)
+}
 
 /** Section titles from the top down to `sectionId`, or undefined when the section is gone */
 function trailOf(convention: Convention | undefined, sectionId: string): string[] | undefined {
