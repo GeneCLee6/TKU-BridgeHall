@@ -1,7 +1,7 @@
 name: CI
 
 # Runs on every push and on pull requests targeting main: install -> lint -> typecheck -> test -> build
-# -> performance budget. A separate `lighthouse` job audits the home page, a convention page and 個人設定;
+# -> performance budget. A separate `lighthouse` job audits what a signed-out visitor gets (the login page);
 # `browser` runs the visual and accessibility regression in Playwright.
 # Deployment itself is handled by Vercel's Git integration (production on main, previews on PRs).
 on:
@@ -95,7 +95,8 @@ jobs:
       - name: Production build
         run: npm run build
 
-      # Config in lighthouserc.json: serves dist with `vite preview` and audits /, /c/jacoby-2nt and /settings.
+      # Config in lighthouserc.json: serves dist with `vite preview` (no Worker, so signed out) and audits /login
+      # and /c/jacoby-2nt, which goes to the login page too (the whole site needs an account, 2026-10-29).
       # Accessibility < 0.95 fails the job; performance and best practices only warn (runner noise).
       - name: Lighthouse CI
         run: npx --yes @lhci/cli@0.15.1 autorun

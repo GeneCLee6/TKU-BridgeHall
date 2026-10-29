@@ -139,8 +139,7 @@ describe('convention card output', () => {
     expect(sent.some((s) => s.method === 'PATCH' && (s.body as { shared: boolean }).shared)).toBe(true)
   })
 
-  it('shows a shared version to someone signed out, read-only, with the Word file kept then', async () => {
-    signedIn = false
+  it('shows a shared version read-only, with the Word file kept then', async () => {
     snapshots = [
       {
         profileId: 'team',
@@ -166,9 +165,15 @@ describe('convention card output', () => {
   })
 
   it('says so when a version is not shared any more', async () => {
-    signedIn = false
     renderAt('/cards/team/wbf/v/9')
     expect(await screen.findByText(t.snapshot.gone, {}, { timeout: 15_000 })).toBeInTheDocument()
+  })
+
+  it('sends someone signed out to the login page, shared link or not (the whole site is for members, 2026-10-29)', async () => {
+    signedIn = false
+    window.localStorage.removeItem('tku-bridgebook:me')
+    renderAt('/cards/team/wbf/v/3')
+    expect(await screen.findByRole('heading', { level: 1, name: '登入' }, { timeout: 15_000 })).toBeInTheDocument()
   })
 
   it('opens at the cell a section links to', async () => {

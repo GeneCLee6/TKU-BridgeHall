@@ -39,6 +39,17 @@ test.describe('axe', () => {
         await audit(page)
       })
 
+  // What a signed-out visitor gets for any address (2026-10-29)
+  for (const [sizeName, size] of [
+    ['desktop', DESKTOP],
+    ['phone', PHONE],
+  ] as const)
+    test(`login · ${sizeName}`, async ({ page }) => {
+      await open(page, '/c/jacoby-2nt', size, { theme: 'light' }, true)
+      await expect(page).toHaveURL(/\/login\?next=%2Fc%2Fjacoby-2nt$/)
+      await audit(page)
+    })
+
   for (const style of styles)
     for (const theme of ['light', 'dark'] as const) {
       test(`${style} · ${theme} · convention`, async ({ page }) => {

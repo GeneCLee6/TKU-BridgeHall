@@ -205,7 +205,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - **只有文章用的區塊不進 `Block`**：特約的編輯器、制度卡、AI 匯入、牌桌 `checkSections` 都不用認得它們。`BlockView` 收 `ArticleBlock`，三種新區塊在同一個 switch。`deal`、`play` 是 J2（e5-t02、e5-t03）。
 - **內建沒有文章**：文章只存在牌桌（`worker/articles.ts`，`article:entry:<slug>`、`article:rev:<slug>:<id>`、`article:version`，內容分段在 `bookpart:`，每日備份涵蓋），repo 裡不放文章內容，測試用假資料。`articleProblems`（＝牌桌 `checkArticle`）在載入時再檢查一次；區塊檢查共用 `lib/content.ts` 的 `blockProblems`，整理共用 `tidyBlock`／`emptyBlock`。`articleText` 給 e5-t13 的搜尋。
 - **圖片與封面存檔案 key，不存網址**（e5-t12）：key 是 G1 上傳回的 `article/<24 hex>.<ext>`（`isPictureKey`，不收縮圖 key 與外部網址；`uploadArticlePicture`）。牌桌每次讀文章順便簽好網址放在回應的 `files`，頁面用 `ArticleFilesContext` 提供，`image` 區塊查不到網址（R2 bucket 還沒建，牌桌 `filesOff` 時 `files` 是空的）就顯示替代文字框，文章照常讀。上傳遇到 503 `filesOff` 用 `filesOff(error)` 判斷。
-- **API**（`api.book.articles`／`article`／`saveArticle`／`hideArticle`／`articleRevisions`／`articleRevision`）：讀不用登入，未登入看不到 `members-only`（單篇 404 `articleGone`），隱藏的只有 bookEdit 看得到；發布、隱藏是 bookReview（`baseVersion` 不符 409 `articleConflict`），版本是 bookEdit。**目前只有已發布路徑**（同特約沒有草稿時的直接發布）；文章的草稿與送審（AC-5.2「送審走 E8」）跟文章編輯器 e5-t07 一起做。審計動作多 `article:publish`、`article:hide`。
+- **API**（`api.book.articles`／`article`／`saveArticle`／`hideArticle`／`articleRevisions`／`articleRevision`）：讀要登入（2026-10-29 起全站要登入，牌桌也一樣；`members-only` 因此和其他授權沒有差別），隱藏的只有 bookEdit 看得到；發布、隱藏是 bookReview（`baseVersion` 不符 409 `articleConflict`），版本是 bookEdit。**目前只有已發布路徑**（同特約沒有草稿時的直接發布）；文章的草稿與送審（AC-5.2「送審走 E8」）跟文章編輯器 e5-t07 一起做。審計動作多 `article:publish`、`article:hide`。
 - **叢書頁與文章頁**（e5-t05，`pages/LibraryPage.tsx`、`pages/ArticlePage.tsx`，字串 `libraryStrings.ts`）：每次打開都向牌桌讀（沒有快取，文章少）；登入狀態改變時重讀。書架依系列順序、每個書架新的在前，系列不在清單裡的文章放最後的「其他」，不會消失。沒有封面時用系列的顏色（`styles/avatarColors.ts` 的十色，依系列 id 固定）＋書名生成封面。
 - **系列**（e5-t06，`lib/series.ts`、`components/admin/SeriesPanel.tsx`，在管理頁）：與分類同法（§4.5），整份一次存 `PUT /api/book/series`（bookEdit，`libraryApi.saveSeries`；409 `seriesConflict`、`seriesInUse`），存在牌桌 `article:series`，隨 `GET /api/book/articles` 的 `series` 一起回來。**沒存過時用內建系列**（`BUILTIN_SERIES`：主打、擠牌、防守、叫牌理論、社課講義、社史，PRD 列的六個），存過以線上為準。還有文章的系列不能刪：牌桌只檢查它存過的系列，內建的由管理頁依看得到的文章檢查。審計動作 `article:series`。
 - **搜尋含文章**（e5-t13）：文章只在線上，不進建置時的 `search-index.json`。搜尋框第一次聚焦時另外抓 `GET /api/book/articles?text=1`（`libraryApi.loadArticleRecords`，lazy），牌桌回每篇的摘要與區塊文字（`searchText`，每篇最多 2 萬字；讀者看不到的文章不會有），`lib/search.ts` 的 `articleRecords` 每篇建一筆紀錄（`slug` 前綴 `library/`、`path` 是文章頁），跟特約的紀錄一起給 Fuse。叢書頁的搜尋框用同一份紀錄、只搜文章。抓不到時搜尋照常、只是沒有文章。`lib/articles.ts` 的 `articleText` 目前沒有用在搜尋（牌桌算好送來，省得下載全部內容）。
@@ -213,9 +213,9 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 ### 3.3 電子書（E5 J5：`src/lib/ebooks.ts`、`pages/EbookPages.tsx`、`components/PdfReader.tsx`）
 
 - **型別**是牌桌 `shared/ebooks.ts` 的逐字複本（`Ebook`、`EbookInput`、`EbookList`、`EbookResponse`、`FileUsage`、上限；`parity/table-types.ts` 與 `tests/lib/tableParity.test.ts` 對拍）。呼叫（`ebookApi`）也放在 `lib/ebooks.ts`，不進 `api.ts`，首頁不帶。
-- **上傳**：`POST /api/book/ebooks/ticket { size }`（bookReview）拿一次性憑證，`PUT` PDF（XHR，有進度），再 `POST /api/book/ebooks` 存資料；改資料是 `PUT /api/book/ebooks/:id`，下架 `DELETE`（PDF 一起刪）。PDF ≤ 50 MB、Worker 看檔頭 `%PDF-`。授權（`own`／`permitted`／`members-only`，同文章）必填、表單沒有預設值；封面沿用 G1 的圖片上傳（`uploadArticlePicture`，purpose `article`）。
+- **上傳**：`POST /api/book/ebooks/ticket { size }`（bookReview）拿一次性憑證，`PUT` PDF（XHR，有進度），再 `POST /api/book/ebooks` 存資料；改資料是 `PUT /api/book/ebooks/:id`，下架 `DELETE`（PDF 一起刪）。PDF ≤ 50 MB、Worker 看檔頭 `%PDF-`。授權（`own`／`permitted`／`members-only`，同文章）預設「經授權轉載」（`permitted`）、可改成「社團自撰」；「僅社員可看」在全站要登入後沒有意義（2026-10-29），表單只在那本書本來就是它時才列出（`offeredLicenses`），型別與牌桌的檢查不變；封面沿用 G1 的圖片上傳（`uploadArticlePicture`，purpose `article`）。
 - **直連 Worker**：PDF 的上傳與閱讀都用 `workerUrl(path)`（正式站是 `TABLE_SITE` 開頭，開發時走 Vite 的 `/api` proxy），不經 Vercel 的 `/api` 轉址；上傳路由與簽名網址的回應都有 CORS。
-- **可見範圍**（e5-t11, AC-5.6）：牌桌在未登入時就不給 `members-only` 的書（列表沒有、單本 404），PDF 的簽名網址 15 分鐘失效，所以連結與檔案都拿不到。文章的同一規則在 J1 已做（§3.2）。
+- **可見範圍**（e5-t11, AC-5.6）：原本未登入時不給 `members-only` 的書；2026-10-29 起全站要登入（§4.2），牌桌的電子書 API 也要登入，所以每位社員都看得到所有上架的書。PDF 的簽名網址 15 分鐘失效。
 - **閱讀器**（e5-t10, AC-5.5）：pdf.js（`pdfjs-dist`）一次畫一頁到 canvas，寬度貼齊容器（手機可用）× 縮放、依 `devicePixelRatio` 畫清楚；上一頁／下一頁（按鈕、方向鍵、左右滑）、輸入頁碼、全螢幕（Fullscreen API，沒有時改成蓋滿畫面的 fixed 層，例如 iPhone）。worker 是打包出的 `pdf.worker.min.mjs`；中文 PDF 沒嵌字型時要的 CMap、標準字型、影像解碼 wasm 從 jsDelivr 的同版本 `pdfjs-dist` 抓（PDF 需要時才抓）。`onPage` 留給閱讀進度（e5-t14）。
 - **用量提醒**（e5-t15）：牌桌記 `file:usage`，越過 8 GB 通知每位管理員一次（牌桌的通知，連到 `/library/book`），超過 10 GB 拒絕上傳；編輯者在列表看到用量。
 - **R2 bucket 還沒建時**（`filesOff`）：列表照讀、沒有封面，書頁說檔案讀不到，上傳說空間還沒開通。
@@ -231,7 +231,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/c/:slug` | 特約頁 `ConventionPage`：只有這個特約，展開並捲動到它；上方有回全書目錄的位置列 |
 | `/c/:slug/:sectionId` | 同上，再展開該段落的所有祖先段落，捲動並聚焦到段落標題；`?pending=k` 跳到該段的第 k 個待確認 |
 | `/library` | 叢書（E5 e5-t05，lazy，在 `HandbookShell` 裡）：依系列分書架、封面；依系列、程度、作者篩選（`?series=`、`?level=`、`?author=`）；叢書頁搜尋框（e5-t13）。§3.2 |
-| `/library/:slug` | 文章頁：書頁版面（約 68 字寬、襯線標題）、全部區塊、作者、程度、日期、授權；看不到的（下架、未登入的僅社員）顯示「找不到」與登入連結。與 `/library` 同一個 lazy chunk（`Library`），首頁只多一條路由 |
+| `/library/:slug` | 文章頁：書頁版面（約 68 字寬、襯線標題）、全部區塊、作者、程度、日期、授權；看不到的（下架）顯示「找不到」與回叢書的連結。與 `/library` 同一個 lazy chunk（`Library`），首頁只多一條路由 |
 | `/practice` | 練習（E6，lazy，包在 `ProfiledContent`）：依制度集、特約、程度、題數抽意義題，答完顯示原文叫牌表與深層連結；`?c=<slug>` 只選這個特約（「練這個特約」）。題目由 `lib/quiz.ts` 的 `generateQuizzes` 在瀏覽器從解析後的內容產生，只用原文逐字，`pending` 不出題；套上幹部的修題，答完存成績（§4.8）。`?wrong=1` 只練錯題 |
 | `/practice/scores` | 成績與錯題本（E6 e6-t05，lazy，包在 `ProfiledContent`）：總答對率、各特約答對率、錯題本、最近的練習、清除 |
 | `/practice/fixes` | 修題（E6 e6-t06，bookEdit，lazy，包在 `ProfiledContent`）：停用、改正解或選項、手動出題；`?id=<題目 id>` 開一題 |
@@ -239,7 +239,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/learn/:pathId` | 路徑頁（lazy，包在 `ProfiledContent`）：課次、登入後的完成進度與百分比、bookEdit 看得到「編輯路徑」 |
 | `/learn/:pathId/:lessonId` | 課次頁（lazy，包在 `ProfiledContent`）：目標、閱讀（特約或段落的深層連結；制度集不採用的特約顯示說明）、題目數（e4-t10 前只顯示數量）、自我檢核、標記完成、上一課／下一課 |
 | `/learn/:pathId/edit` | 路徑編輯（E4 e4-t12，bookEdit，lazy，不包 `ProfiledContent`：閱讀從社團版選）|
-| `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁 |
+| `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁。**未登入時唯一看得到的頁面**：其他路由都導來這裡（§4.2「全站要登入」） |
 | `/account` | 我的帳號：權限、頭像、顯示（個人設定）、修改密碼 |
 | `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
 | `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（草稿與送審、分類、隊伍、制度集、審計紀錄）編輯者也看得到（§4.2、§4.3.1） |
@@ -252,13 +252,13 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/teams` | 隊伍列表（e2-t05，社員）：隊長、人數，自己的隊伍在前，已封存另列 |
 | `/cards/:profileId/:templateId` | 制度卡（E3，lazy）：見 §4 的「制度卡頁」；`?cell=<格子 id>` 打開時選好那一格（段落旁的位置連結用） |
 | `/cards/:profileId/bsc-opening/:form`、`bsc-overcall/:form` | 棕標申報表（e3-t12，lazy）：`form` 是標了棕標的特約 slug；制度集沒採用或沒標時顯示說明 |
-| `/cards/:profileId/:templateId/v/:n` | 制度卡的第 n 版（e3-t09，lazy）：發布時的卡，唯讀；讀得到制度集的人，或分享中時任何人（不用登入） |
+| `/cards/:profileId/:templateId/v/:n` | 制度卡的第 n 版（e3-t09，lazy）：發布時的卡，唯讀；讀得到制度集的人，或分享中時任何社員（2026-10-29 起全站要登入，分享連結也要先登入；牌桌這支 API 仍不用登入） |
 | `/teams/:id/cards[/:templateId]` | 全隊制度卡（e3-t11，社員，lazy）：每對搭檔的卡接著畫，一次列印 |
 | `/teams/:id` | 隊伍頁（e2-t05，社員）：隊員、隊伍制度集入口（讀制度、比較、有 `access.edit` 時編輯）、各搭檔相對隊伍的覆寫／不採用／另採用數 |
 | `/u/:id` | 社員檔案頁（e11-t04，社員）：頭像、顯示名稱與帳號名稱、自評程度、常用制度、自我介紹、隊伍（含封存）與現役搭檔；自己的頁連到我的帳號（§4.6） |
 | `/pairs/:id` | 搭檔頁（e2-t06，社員）：兩人、所屬隊伍、接受／婉拒／收回／結束、這對的制度摘要與入口、從隊伍或另一對搭檔複製採用與覆寫（e2-t09，在瀏覽器組好 `ProfileInput` 用 `saveProfile` 存，備忘不複製；Worker 不需改動）。我的帳號的「我的隊伍與搭檔」列自己的隊伍、搭檔、邀請並可邀請搭檔 |
-| `/library/book` | 電子書（E5 e5-t09、e5-t11、e5-t15，lazy）：依系列列出看得到的書（封面、作者、年代、授權）；未登入時 `members-only` 的書不在列表（牌桌就不給），頁面提示登入。bookReview 有上傳表單（PDF ≤ 50 MB、授權必選、沒有預設），編輯者看得到檔案空間用量，超過 8 GB 顯示警告。見 §3.3 |
-| `/library/book/:id` | 一本電子書（lazy）：資料、授權說明、站內 PDF 閱讀器（`components/PdfReader.tsx`，再 lazy 一層，pdf.js 只在這裡載入）；bookReview 可修改資料、換 PDF、下架。看不到（含未登入看 `members-only`）時是 404，頁面請未登入的人先登入 |
+| `/library/book` | 電子書（E5 e5-t09、e5-t11、e5-t15，lazy）：依系列列出上架的書（封面、作者、年代、授權）。bookReview 有上傳表單（PDF ≤ 50 MB、授權預設「經授權轉載」），編輯者看得到檔案空間用量，超過 8 GB 顯示警告。見 §3.3 |
+| `/library/book/:id` | 一本電子書（lazy）：資料、授權說明、站內 PDF 閱讀器（`components/PdfReader.tsx`，再 lazy 一層，pdf.js 只在這裡載入）；bookReview 可修改資料、換 PDF、下架。找不到時是 404，頁面說找不到 |
 | 其他 | 顯示首頁並提示；找不到的 slug 也是首頁加提示，找不到的段落在特約頁提示 |
 
 管理、編輯、匯入三頁用 `React.lazy` 分開打包，讀者不會下載。
@@ -268,7 +268,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 **狀態**
 
 - `ExpansionContext`：一個 `Set<string>` 記錄所有打開的項目（特約 key 為 `slug`，段落為 `slug/sectionId`）。每一層 Radix Accordion 以 `openAmong(keys)` 取得 value、以 `setLevel(keys, open)` 回寫。全部展開／收合與深層連結因此能控制不屬於它們的收合元件。
-- `PreferencesContext`：個人設定（e9-t15）——主題（跟隨系統／淺／深，`themeChoice`；`mode` 是實際生效的淺或深，跟隨時監聽 `prefers-color-scheme`，夜讀風格跟隨時一律深色；舊版存的 `mode` 讀成固定選擇）、風格、版面、字體、字級（小／中／大／特大，`GlobalStyle` 依此設定根字級）、花色顏色（四色／雙色）、密度（舒適／緊湊）、閱讀版本 `reading`（完整版／入門版，e4-t02：入門版由 `lib/levels.ts` 決定隱藏哪些段落，`SectionAccordion` 用 `hidden` 屬性藏起來並顯示「還有 n 段」，列印同樣；連到被藏的段落時整頁改顯示全部）、`newcomerAsked`（「你是新生嗎？」問過沒，e4-t03：只問未登入的第一次訪客，提示 `NewcomerPrompt` lazy；在這之前就存過設定的人視為問過；「全部恢復預設」不重設它），存在 localStorage `tku-bridgebook:prefs`（失敗時忽略；`readStoredPrefs` 逐欄檢查，未知值退回預設）。還沒存帳號（要牌桌 API 加欄位）。風格 token 除了「一般」都在 `styles/themes/` 各自一個 chunk，`loadStyle()` 選到才下載，沒載到前顯示「一般」；`main.tsx` 在第一次渲染前先載入存好的風格。
+- `PreferencesContext`：個人設定（e9-t15）——主題（跟隨系統／淺／深，`themeChoice`；`mode` 是實際生效的淺或深，跟隨時監聽 `prefers-color-scheme`，夜讀風格跟隨時一律深色；舊版存的 `mode` 讀成固定選擇）、風格、版面、字體、字級（小／中／大／特大，`GlobalStyle` 依此設定根字級）、花色顏色（四色／雙色）、密度（舒適／緊湊）、閱讀版本 `reading`（完整版／入門版，e4-t02：入門版由 `lib/levels.ts` 決定隱藏哪些段落，`SectionAccordion` 用 `hidden` 屬性藏起來並顯示「還有 n 段」，列印同樣；連到被藏的段落時整頁改顯示全部）、`newcomerAsked`（「你是新生嗎？」問過沒，e4-t03：問這台裝置的第一次訪客（全站要登入之前只問未登入的，2026-10-29 起問社員），提示 `NewcomerPrompt` lazy；在這之前就存過設定的人視為問過；「全部恢復預設」不重設它），存在 localStorage `tku-bridgebook:prefs`（失敗時忽略；`readStoredPrefs` 逐欄檢查，未知值退回預設）。還沒存帳號（要牌桌 API 加欄位）。風格 token 除了「一般」都在 `styles/themes/` 各自一個 chunk，`loadStyle()` 選到才下載，沒載到前顯示「一般」；`main.tsx` 在第一次渲染前先載入存好的風格。
 - `useMediaQuery(mobileQuery)`：決定制度集下拉放在頁首（桌機）或目錄抽屜（手機），同一時間只渲染一組。
 - 不使用狀態管理函式庫；兩個 Context 就夠了。
 
@@ -291,13 +291,20 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 
 ### 4.2 帳號與權限（`AuthContext`、`lib/api.ts`）
 
-帳號在淡江牌桌（`TKU-BridgeTable` ARCHITECTURE.md §5.2）：註冊送出申請、管理員核准；忘記密碼用帳號＋邀請碼重設（管理員除外）。`Me.permissions`：`bookEdit`（線上編輯：草稿、送審）、`bookReview`（審核發布，e8-t01）、`bookImport`（匯入檔案），管理員全部都有。審核者一定也是編輯者：牌桌存權限時自動補上 `bookEdit`，管理頁勾「審核發布」會一起勾「線上編輯」、取消「線上編輯」會一起取消「審核發布」。閱讀不需要登入。`api.ts` 的型別要和牌桌的 `shared/protocol.ts`、`worker/book.ts` 一致。
+帳號在淡江牌桌（`TKU-BridgeTable` ARCHITECTURE.md §5.2）：註冊送出申請、管理員核准；忘記密碼用帳號＋邀請碼重設（管理員除外）。`Me.permissions`：`bookEdit`（線上編輯：草稿、送審）、`bookReview`（審核發布，e8-t01）、`bookImport`（匯入檔案），管理員全部都有。審核者一定也是編輯者：牌桌存權限時自動補上 `bookEdit`，管理頁勾「審核發布」會一起勾「線上編輯」、取消「線上編輯」會一起取消「審核發布」。`api.ts` 的型別要和牌桌的 `shared/protocol.ts`、`worker/book.ts` 一致。
+
+**全站要登入**（使用者決定，2026-10-29）：
+- `App.tsx` 的 `SignedIn` 是所有路由（`/login` 除外）的版面路由：未登入就 `<Navigate>` 到 `/login?next=<原網址>`（`/` 不帶 `next`），登入後 `LoginPage` 依 `next` 回去（只收站內路徑）。`ContentProvider`、`ProfileProvider`、`ExpansionProvider` 在 `SignedIn` 裡面，所以未登入時不會向牌桌抓任何內容；登出時它們卸載，狀態一起清掉。
+- `AuthContext` 把最後一次登入的 `Me` 存在 localStorage `tku-bridgebook:me`：開頁面時先用它畫（不必等 `/api/me`），`/api/me` 回 401 才算登出；連不到牌桌（離線、5xx）時沿用它，所以 PWA 離線照樣能讀。登出時清掉。頁面回到前景（`visibilitychange`）會重抓 `/api/me`，內容相同時保留同一個物件，不會重畫。
+- 牌桌那邊（牌桌 PR，2026-10-29）：橋館的讀取 API（manifest、content、分類、名詞、修題、學習路徑、文章、電子書、制度集）都要登入；只剩健康檢查、錯誤回報、登入／註冊／登出／忘記密碼、簽名網址的檔案、分享中的制度卡版本不用登入。
+- **擋不住的**：repo 是公開的，內建特約的內容在 repo 與打包後的靜態檔（`/assets/*.js` 的特約 chunk）、搜尋索引 `/search-index.json` 裡，知道網址就抓得到；介面的門檻只擋一般瀏覽。要真的保護內建內容得把它搬到牌桌（改 repo 為 private 也不夠，Vercel 的靜態檔仍公開），需要使用者決定。Service worker 快取過的 manifest 與內容在登出後仍留在那台裝置的快取。
+- 已經沒有作用、但還留著的未登入分支（無害，之後整理）：首頁社團預設制度卡的登入提示、學習路徑「登入後可以記錄」、練習「成績只存在這台裝置」、制度卡頁與版本頁的登入提示、手機工具列「我的」未登入時連到登入頁。「你是新生嗎？」（e4-t03）改成問這台裝置第一次來的社員。
 
 **角色**（使用者決定，2026-10-25；名稱暫時沿用）：**管理員**什麼都能管，包括使用者帳號；**編輯者**（有 `bookEdit`）能管帳號以外的所有東西，**但發布特約要審核者**（有 `bookReview`，E8 e8-t01，2026-10-28 起）。
 
 | 功能 | 社員 | 編輯者 | 管理員 |
 | --- | --- | --- | --- |
-| 閱讀；登入後讀制度集 | ✓ | ✓ | ✓ |
+| 閱讀（全站要登入）、讀制度集 | ✓ | ✓ | ✓ |
 | 編輯特約：存草稿、送審、捨棄草稿，版本紀錄、審計紀錄 | | ✓ | ✓ |
 | 發布特約（從草稿或直接發布）、退回草稿、隱藏、還原為內建（`bookReview`） | | 審核者 | ✓ |
 | 分類、制度集（新增、儲存、刪除、版本） | | ✓ | ✓ |
@@ -361,7 +368,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - **都在牌桌 Worker**，兩站共用。個人檔案是 `Me.profile`（`displayName`、`level`、`system`、`bio`，`PATCH /api/account/profile`），牌桌 e1-t15 已做好，橋譜只加型別與呼叫。「我的帳號 › 個人檔案」（G2，e11-t04）每次存整份（空白或不填就清掉那一項）。
 - **他人檔案頁 `/u/:id`**（e11-t04）：`GET /api/members/:id`（牌桌的 `MemberProfile`，橋館不顯示其中的 `recent` 牌局）＋`GET /api/club/members/:id/teams`（那位社員所在的隊伍含封存、現役搭檔；邀請中與已結束的不列）。**只有登入社員看得到**（和隊伍頁、搭檔頁一樣；M1 討論區也只給社員）。隊伍頁、搭檔頁的社員名字連到這裡；最近貼文等 G3。
 - **牌桌名牌**（e11-t19，牌桌 #174）：牌桌大廳的社員與座位帶 `displayName`，牌桌頁從大廳補上頭像與顯示名稱，所以兩站顯示同一個名字與頭像。
-- **頭像**：`Me.avatar`／`ClubMember.avatar` 是版本號，圖片在 `GET /api/avatar/:id?v=<版本>`（牌桌 `avatar:<id>`，瀏覽器裁好的 256×256、≤ 64 KB）。PRD 原寫 512×512 放 R2；牌桌已有這一套（e1-t34），兩站讀同一張，所以沿用。沒有圖片就用字首＋由 id 決定的顏色（`lib/avatar.ts`，和牌桌同一套 FNV 雜湊與十個顏色 `styles/avatarColors.ts`），同一個人在兩站顏色相同。`Avatar` 是裝飾（`aria-hidden`），名字一定在旁邊。「我的帳號」可上傳（`AvatarCropper` 就地裁切）或改回預設。`GET /api/club/members` 多回 `displayName`、`avatar`，給之後的討論區與隊伍頁畫別人的頭像。
+- **頭像**：`Me.avatar`／`ClubMember.avatar` 是版本號，圖片在 `GET /api/avatar/:id?v=<版本>`（牌桌 `avatar:<id>`，瀏覽器裁好的 256×256、≤ 64 KB）。PRD 原寫 512×512 放 R2；牌桌已有這一套（e1-t34），兩站讀同一張，所以沿用。沒有圖片就用字首＋由 id 決定的顏色（`lib/avatar.ts`，和牌桌同一套 FNV 雜湊與十個顏色 `styles/avatarColors.ts`），同一個人在兩站顏色相同。`Avatar` 是裝飾（`aria-hidden`），名字一定在旁邊。「我的帳號」可上傳（`AvatarCropper` 就地裁切）或改回預設。**用到的地方**：頁首帳號選單（24 px，顯示名稱優先於帳號名稱；`Avatar` 在選單裡 lazy，首頁 JS 預算）、我的帳號、社員檔案頁、隊伍頁與搭檔頁的社員（`MemberChip`）、隊伍列表的隊長。**同步**：兩站讀同一個 `avatar:<id>`（牌桌 `worker/service.ts`），版本號隨上傳改變，網址的 `?v=` 跟著變，所以不會讀到舊圖；橋館在頁面回到前景時重抓 `/api/me`（§4.2），在牌桌換了頭像，切回橋館就會更新。`GET /api/club/members` 多回 `displayName`、`avatar`，給之後的討論區與隊伍頁畫別人的頭像。
 - **圖片檔案**（貼文與文章用）：R2 bucket `bridgebook-files`（牌桌 `worker/files.ts`，ARCHITECTURE.md §5.14）。`uploadImage(file, purpose)` 在瀏覽器縮到長邊 2048 px（≤ 2 MB）與 480 px 縮圖（≤ 256 KB），拿一次性憑證（`POST /api/files/ticket`，每人每天 30 張）、`PUT` 原圖與縮圖；顯示用簽名短效網址 `/api/files/<key>?e=&s=`（一小時，不用登入），過期用 `POST /api/files/urls` 重簽。**bucket 還沒建時**牌桌回 503 `filesOff`（牌桌 DEPLOY.md §4.8）。
 - **文章的圖片**（E5 e5-t12）：見 §3.2。
 - **不進首頁**：這些型別與呼叫在 `lib/account.ts`，不在 `api.ts`；介面文字在 `strings-account.ts`，不在 `strings.ts`（首頁 JS 預算只剩 1 kB 左右）；只有 lazy 的頁面 import 它們。型別對拍在 `parity/table-types.ts`（牌桌 `shared/profile.ts`、`avatar.ts`、`files.ts`）。
@@ -415,7 +422,8 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
   - `tests/content`：內容 schema——slug 與段落 id 唯一且 URL 安全、必填欄位、叫品可解析、意義欄沒有殘留花色字母、待確認數量。
   - `tests/lib`：叫品格式化、搜尋結果（經由索引，並比對與全部內容的結果相同）、service worker（`sw.test.ts`，在假的 worker scope 執行 `public/sw.js`）與新版本提示。
   - `tests/presentation`：卡片展開、深層連結開啟路徑、全部展開／收合、待確認顯示。
-- **手機 App（PWA）**：`public/manifest.webmanifest`（名稱「淡江橋館」、全螢幕、圖示）、`public/sw.js`（service worker：頁面優先走網路、離線時用快取；`/assets/` 檔名含雜湊，走快取）、`src/lib/pwa.ts`（只在正式版註冊 service worker，保留瀏覽器的安裝邀請給「安裝 App」按鈕）。`vercel.json` 讓 `sw.js` 不被快取。v2 策略（e10-t05）：安裝時存下 app shell、首頁的建置檔（從 `index.html` 解析）、搜尋索引與線上 manifest，所以看過一次之後離線也能開、能搜；特約 chunk 看過才快取；線上內容與搜尋索引網路優先、離線用快取。`vite.config.ts` 的 `stampServiceWorker` 把建置雜湊寫進 `dist/sw.js`，每次建置都是新的 worker：新版本在背景裝好後等待，頁面顯示「有新版本可以使用」（`UpdatePrompt`、`lib/pwa.ts` 的 `watchForUpdates`／`useUpdate`），按「重新整理」才接手並重新載入；頁面回到前景時會檢查更新。快取名稱跨版本不變（`tku-bridge-book-v4`），看過的特約更新後仍可離線看；只有快取格式改變時才把 `CACHE` 加版號。制度集與制度卡的 API 出現後（A6、D3）加進網路優先的清單。
+  - **元件測試預設已登入**（2026-10-29，全站要登入）：`tests/setup.ts` 每個測試先在 localStorage 放一位社員（`READER`）並 stub `fetch`：`/api/me` 回那位社員、其他請求失敗（頁面退回內建內容）。要測未登入，`localStorage.removeItem('tku-bridgebook:me')` 並讓 `/api/me` 回 401；自己 stub `fetch` 的測試要回 `/api/me`。Playwright 的 `tests/browser/fixtures.ts` 同樣以社員開頁，`open(…, signedOut = true)` 看登入頁。
+- **手機 App（PWA）**：`public/manifest.webmanifest`（名稱「淡江橋館」、全螢幕、圖示）、`public/sw.js`（service worker：頁面優先走網路、離線時用快取；`/assets/` 檔名含雜湊，走快取）、`src/lib/pwa.ts`（只在正式版註冊 service worker，保留瀏覽器的安裝邀請給「安裝 App」按鈕）。`vercel.json` 讓 `sw.js` 不被快取。v2 策略（e10-t05）：安裝時存下 app shell、首頁的建置檔（從 `index.html` 解析）、搜尋索引與線上 manifest，所以看過一次之後離線也能開、能搜；特約 chunk 看過才快取；線上內容與搜尋索引網路優先、離線用快取。`vite.config.ts` 的 `stampServiceWorker` 把建置雜湊寫進 `dist/sw.js`，每次建置都是新的 worker：新版本在背景裝好後等待，頁面顯示「有新版本可以使用」（`UpdatePrompt`、`lib/pwa.ts` 的 `watchForUpdates`／`useUpdate`），按「重新整理」才接手並重新載入；頁面回到前景時會檢查更新。快取名稱跨版本不變（`tku-bridge-book-v4`），看過的特約更新後仍可離線看；只有快取格式改變時才把 `CACHE` 加版號。制度集與制度卡的 API 出現後（A6、D3）加進網路優先的清單。全站要登入後（2026-10-29），安裝時預存的線上 manifest 在未登入時會拿到 401，略過不存（安裝不受影響）；離線時靠 `tku-bridgebook:me` 知道是誰（§4.2）。
 - **CI**：GitHub Actions（`.github/workflows/ci.yml`）：`npm ci` → lint → typecheck → test → build → 效能預算（`npm run budget`）；另一個 job 跑 Lighthouse（見 §6.5）。
 - **部署計畫**：任何靜態主機皆可。部署平台是 Vercel（連接 GitHub，但 `main` 不自動部署，見 §7）。因為使用 BrowserRouter，主機需設定 SPA fallback（所有路徑回傳 `index.html`）：Cloudflare Pages 預設即支援；Vercel 用專案根目錄的 `vercel.json` rewrites（已加入，部署平台選定 Vercel）。若改用 GitHub Pages，可換成 HashRouter 或加 `404.html` 轉址。
 
@@ -445,7 +453,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 
 模組與 chunk 的對應來自 Vite 的 build manifest（`vite.config.ts` 的 `build.manifest: true`，輸出 `dist/.vite/manifest.json`），以 manifest 的 `src` 是否以 `src/content/conventions/` 開頭辨認特約 chunk。
 
-**Lighthouse**：CI 的 `lighthouse` job 重新 build，用 `vite preview` 起站，以 Lighthouse CI（`npx @lhci/cli`，設定在 `lighthouserc.json`）量 `/` 與 `/c/jacoby-2nt`，各跑 3 次取中位數。無障礙 < 0.95 會讓 job 失敗；效能 < 0.9、最佳做法 < 0.9 只警告——CI 機器的模擬節流分數浮動大，硬擋會常誤報，效能改由上面的 bundle 預算把關。報告上傳為 artifact `lighthouse-reports`（不上傳到公開的 temporary storage）。本機可跑 `npm run build && npx @lhci/cli@0.15.1 autorun`（需要 Chrome）。
+**Lighthouse**：CI 的 `lighthouse` job 重新 build，用 `vite preview` 起站，以 Lighthouse CI（`npx @lhci/cli`，設定在 `lighthouserc.json`）量 `/login` 與 `/c/jacoby-2nt`（2026-10-29 起全站要登入；`vite preview` 沒有牌桌，所以兩頁都是未登入看到的登入頁，後者含導向。登入後的頁面由上面的 bundle 預算與 Playwright 的 axe 把關），各跑 3 次取中位數。無障礙 < 0.95 會讓 job 失敗；效能 < 0.9、最佳做法 < 0.9 只警告——CI 機器的模擬節流分數浮動大，硬擋會常誤報，效能改由上面的 bundle 預算把關。報告上傳為 artifact `lighthouse-reports`（不上傳到公開的 temporary storage）。本機可跑 `npm run build && npx @lhci/cli@0.15.1 autorun`（需要 Chrome）。
 
 ## 7. CI/CD
 

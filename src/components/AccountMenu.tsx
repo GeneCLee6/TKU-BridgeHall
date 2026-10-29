@@ -1,14 +1,18 @@
-import { ChevronDown, LogIn, UserRound } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, LogIn } from 'lucide-react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 import type { Me, Permission } from '../lib/api.ts'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 
+// The avatar is a small chunk of its own: the first download has a size budget (scripts/check-budget.mjs)
+const Avatar = lazy(() => import('./Avatar.tsx').then((m) => ({ default: m.Avatar })))
+
 /**
- * The header's account corner: 登入 when signed out; otherwise the member's name opening a menu
- * with what their permissions allow (新增特約, 匯入檔案, 社團管理), 我的帳號 and 登出.
+ * The header's account corner: 登入 when signed out; otherwise the member's avatar (the same picture
+ * as on TKU-BridgeTable) and name opening a menu with what their permissions allow (新增特約,
+ * 匯入檔案, 社團管理), 我的帳號 and 登出.
  */
 export function AccountMenu({
   user,
@@ -57,22 +61,25 @@ export function AccountMenu({
   }
 
   const pending = user.applications ?? 0
+  const name = user.profile?.displayName || user.username
   return (
     <Wrap ref={wrap} data-print="hide">
       <Trigger
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={strings.account.menu(user.username)}
+        aria-label={strings.account.menu(name)}
         onClick={() => setOpen((o) => !o)}
       >
-        <UserRound size={18} aria-hidden />
-        <Name>{user.username}</Name>
+        <Suspense fallback={<Spot aria-hidden />}>
+          <Avatar id={user.id} name={name} size={24} avatar={user.avatar} />
+        </Suspense>
+        <Name>{name}</Name>
         {pending > 0 && <Count aria-hidden>{pending}</Count>}
         <ChevronDown size={14} aria-hidden />
       </Trigger>
       {open && (
-        <Menu role="menu" aria-label={strings.account.menu(user.username)}>
+        <Menu role="menu" aria-label={strings.account.menu(name)}>
           {can('bookEdit') && (
             <Item role="menuitem" to="/new">
               {strings.account.newConvention}
@@ -156,6 +163,14 @@ const Trigger = styled.button`
   &[aria-expanded='true'] {
     background: ${({ theme }) => theme.colors.primarySoft};
   }
+`
+
+/** Where the avatar goes while its chunk loads, so the button does not change size */
+const Spot = styled.span`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.primarySoft};
 `
 
 const Name = styled.span`

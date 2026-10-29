@@ -15,6 +15,12 @@ import type { FileTicket, UploadedFile } from './account.ts'
 export const EBOOK_TYPE = 'application/pdf'
 export const EBOOK_KEY = /^ebook\/[0-9a-f]{24}\.pdf$/
 export const EBOOK_LICENSES = ['own', 'permitted', 'members-only'] as const
+/**
+ * What the upload form offers: 僅社員可看 means nothing once the whole site is for members
+ * (2026-10-29); a book that already has it keeps it, and the form shows it for that book only
+ */
+export const offeredLicenses = (current: EbookLicense | '') =>
+  EBOOK_LICENSES.filter((license) => license !== 'members-only' || current === 'members-only')
 export type EbookLicense = (typeof EBOOK_LICENSES)[number]
 
 export const EBOOK_LIMITS = {
@@ -187,7 +193,8 @@ export const formOf = (book?: Ebook): EbookForm => ({
   authors: book?.authors.join('、') ?? '',
   series: book?.series ?? '',
   year: book?.year ? String(book.year) : '',
-  // No default: every book needs its license chosen (AC-5.4)
-  license: book?.license ?? '',
+  // 經授權轉載 unless the uploader says otherwise: with the whole site for members (2026-10-29) the
+  // license no longer decides who sees the book, so it is not a choice to force (it was, AC-5.4)
+  license: book?.license ?? 'permitted',
   pages: book?.pages ? String(book.pages) : '',
 })

@@ -7,7 +7,6 @@ import type { EbookLicense } from '../lib/ebooks.ts'
 export const ebookStrings = {
   listTitle: '電子書',
   listIntro: '社團的講義與學長寫的書，直接在站內閱讀。',
-  membersHint: '有些書僅限社員閱讀，登入後才會出現。',
   empty: '還沒有電子書。',
   loadFailed: '載不到電子書',
   filesOff: '電子書的檔案空間還沒開通，請聯絡管理員。',
@@ -19,8 +18,6 @@ export const ebookStrings = {
   library: '← 叢書',
   read: '閱讀',
   notFound: '找不到這本書。',
-  notFoundSignedOut: '找不到這本書；如果是僅限社員的書，請先登入。',
-  signIn: '登入',
   fileMissing: '這本書的檔案現在讀不到（檔案空間未開通或已移除）。',
 
   licenses: {
@@ -29,10 +26,11 @@ export const ebookStrings = {
     permitted: '經授權轉載',
     'members-only': '僅社員可看',
   } satisfies Record<EbookLicense, string>,
+  // The whole site is for members (2026-10-29), so a license only says where the book comes from
   licenseHints: {
-    own: '社員自己寫的，公開給所有人看',
-    permitted: '已取得作者或出版者同意，公開給所有人看',
-    'members-only': '只有登入的社員看得到書與檔案',
+    own: '社員自己寫的',
+    permitted: '已取得作者或出版者同意',
+    'members-only': '舊的分類；全站已改成登入才能看，和其他兩種一樣',
   } satisfies Record<EbookLicense, string>,
   licenseLabel: '授權',
 
@@ -48,7 +46,7 @@ export const ebookStrings = {
     year: '年代（西元，選填）',
     pages: '頁數（選填）',
     cover: '封面圖片（選填）',
-    license: '授權（必填）',
+    license: '授權',
     licensePick: '請選擇',
   },
   problems: {

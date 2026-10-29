@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bySeries, type Ebook, formatBytes, formOf, formToInput, nearlyFull, pdfProblem } from '../../src/lib/ebooks.ts'
+import { bySeries, type Ebook, formatBytes, formOf, formToInput, nearlyFull, offeredLicenses, pdfProblem } from '../../src/lib/ebooks.ts'
 
 /** 電子書 (e5-t09, e5-t15): the pure parts of the upload form and the list */
 
@@ -37,8 +37,10 @@ describe('e-books', () => {
     expect(formToInput({ ...form, pages: '1.5' }, 'k')).toBe('pages')
   })
 
-  it('starts a new book with no license chosen (AC-5.4: every book needs one)', () => {
-    expect(formOf().license).toBe('')
+  it('starts a new book as 經授權轉載, and offers 僅社員可看 only to a book that has it (2026-10-29)', () => {
+    expect(formOf().license).toBe('permitted')
+    expect(offeredLicenses('permitted')).toEqual(['own', 'permitted'])
+    expect(offeredLicenses('members-only')).toEqual(['own', 'permitted', 'members-only'])
     expect(formOf(book('a', 'A', 'S')).license).toBe('own')
   })
 

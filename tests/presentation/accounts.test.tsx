@@ -46,6 +46,8 @@ beforeAll(warmPages, 60_000)
 beforeEach(() => {
   // The admin page's team panel (e2-t07) and profile panel (e1-t14) read these whenever it opens
   routes = {
+    // Signed in as a plain member unless a test says otherwise (the whole site needs an account)
+    'GET /api/me': { body: { user: { id: 'u1', username: 'amy', admin: false, permissions: [] } } },
     'GET /api/club/teams': { body: { teams: [] } },
     'GET /api/club/members': { body: { members: [] } },
     'GET /api/book/profiles': { body: { profiles: [] } },
@@ -163,10 +165,36 @@ describe('what a member sees', () => {
     ])
   })
 
-  it('shows no edit buttons to readers, and asks them to sign in on member pages', async () => {
-    renderAt('/')
-    expect(await within(screen.getByRole('banner')).findByRole('link', { name: /登入/ })).toBeInTheDocument()
+  it('shows no edit buttons to readers', async () => {
+    renderAt('/book')
+    expect(await screen.findByRole('button', { name: 'amy 的帳號選單' })).toBeInTheDocument()
     expect(screen.queryAllByRole('link', { name: /^編輯：/ })).toEqual([])
+  })
+
+  it('sends a signed-out visitor to the login page from every page, and back after signing in (2026-10-29)', async () => {
+    delete routes['GET /api/me']
+    // Never signed in on this device (tests/setup.ts keeps a member as if they had)
+    window.localStorage.removeItem('tku-bridgebook:me')
+    routes['POST /api/login'] = { body: { user: { id: 'u1', username: 'amy', admin: false, permissions: [] } } }
+    const { unmount } = renderAt('/c/lebensohl?x=1')
+    expect(await screen.findByRole('heading', { level: 1, name: '登入' })).toBeInTheDocument()
+    // Nothing of the handbook before signing in: no catalogue, no content requests
+    expect(screen.queryByRole('navigation', { name: '特約目錄' })).toBeNull()
+    expect(sent.map((r) => r.path)).not.toContain('/api/book/manifest')
+    await userEvent.type(screen.getByLabelText('帳號'), 'amy')
+    await userEvent.type(screen.getByLabelText(/^密碼/), 'secret123')
+    await userEvent.click(screen.getByRole('button', { name: '登入' }))
+    expect(await screen.findByRole('navigation', { name: '特約目錄' })).toBeInTheDocument()
+    expect(sent.map((r) => r.path)).toContain('/api/book/manifest')
+    unmount()
+
+    // The home page and a page only editors see go the same way
+    for (const path of ['/', '/admin', '/settings']) {
+      window.localStorage.removeItem('tku-bridgebook:me')
+      const page = renderAt(path)
+      expect(await screen.findByRole('heading', { level: 1, name: '登入' })).toBeInTheDocument()
+      page.unmount()
+    }
   })
 
   it('shows the online version of a convention, and who changed it', async () => {
@@ -196,7 +224,9 @@ describe('the avatar on my account (e11-t03)', () => {
     const { container, unmount } = renderAt('/account')
     expect(await screen.findByRole('heading', { name: '頭像' })).toBeInTheDocument()
     const avatars = () => [...container.querySelectorAll('[data-avatar]')]
-    expect(avatars().map((a) => a.getAttribute('data-initials'))).toEqual(['王', '王'])
+    // The header's account menu has it too, the same picture as on TKU-BridgeTable
+    await waitFor(() => expect(avatars().map((a) => a.getAttribute('data-initials'))).toEqual(['王', '王', '王']))
+    expect(screen.getByRole('button', { name: '王小美 的帳號選單' })).toHaveTextContent('王小美')
     expect(container.querySelector('[data-avatar] img')).toBeNull()
     expect(screen.queryByRole('button', { name: '改回預設頭像' })).toBeNull()
     unmount()

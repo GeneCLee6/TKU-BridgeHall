@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from '../../src/App.tsx'
+import { READER } from '../setup.ts'
 import type { ArticleEntry, ArticleList } from '../../src/lib/api.ts'
 import type { Article } from '../../src/types/article.ts'
 
@@ -91,6 +92,7 @@ beforeAll(
 
 beforeEach(() => {
   routes = {
+    'GET /api/me': { body: { user: READER } },
     'GET /api/club/teams': { body: { teams: [] } },
     'GET /api/club/members': { body: { members: [] } },
     'GET /api/book/profiles': { body: { profiles: [] } },
@@ -190,12 +192,12 @@ describe('the article page (e5-t05)', () => {
     await waitFor(() => expect(document.title).toMatch(/^測試文章one｜/))
   })
 
-  it('tells a signed-out reader an article may be for members only', async () => {
-    routes['GET /api/book/articles/club-only'] = { status: 404, body: { error: '找不到這篇文章', code: 'articleGone' } }
-    renderAt('/library/club-only')
+  it('says so when an article is not there, with the way back to the library', async () => {
+    routes['GET /api/book/articles/gone'] = { status: 404, body: { error: '找不到這篇文章', code: 'articleGone' } }
+    renderAt('/library/gone')
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('找不到這篇文章')
-    expect(within(alert).getByRole('link', { name: '登入' })).toHaveAttribute('href', '/login?next=%2Flibrary%2Fclub-only')
+    expect(within(alert).getByRole('link', { name: '回叢書' })).toHaveAttribute('href', '/library')
   })
 
   it('does not show an article whose shape is broken', async () => {
