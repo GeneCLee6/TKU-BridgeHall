@@ -19,6 +19,8 @@ import type * as Account from '../src/lib/account.ts'
 import type * as TableProfile from '@table/shared/profile.ts'
 import type * as TableAvatar from '@table/shared/avatar.ts'
 import type * as TableFiles from '@table/shared/files.ts'
+import type * as Ebooks from '../src/lib/ebooks.ts'
+import type * as TableEbooks from '@table/shared/ebooks.ts'
 import type * as Forum from '../src/lib/forum.ts'
 import type * as TableForum from '@table/shared/forum.ts'
 import type * as Handbook from '../src/types/convention.ts'
@@ -160,6 +162,17 @@ export type Checks = [
   Check<Same<Account.FileTicket, TableFiles.FileTicket>>,
   Check<Same<Account.UploadedFile, TableFiles.UploadedFile>>,
   Check<Same<Account.FileUrls, TableFiles.FileUrls>>,
+  // E-books (shared/ebooks.ts, E5 e5-t09 e5-t11 e5-t15): a copy, so every type is the same
+  Check<Same<Ebooks.EbookLicense, TableEbooks.EbookLicense>>,
+  Check<Same<typeof Ebooks.EBOOK_LIMITS, typeof TableEbooks.EBOOK_LIMITS>>,
+  Check<Same<typeof Ebooks.STORAGE_LIMITS, typeof TableEbooks.STORAGE_LIMITS>>,
+  Check<Same<Ebooks.FileUsage, TableEbooks.FileUsage>>,
+  Check<Same<Ebooks.EbookTicketRequest, TableEbooks.EbookTicketRequest>>,
+  Check<Same<Ebooks.EbookInput, TableEbooks.EbookInput>>,
+  Check<Same<Ebooks.Ebook, TableEbooks.Ebook>>,
+  Check<Same<Ebooks.EbookFiles, TableEbooks.EbookFiles>>,
+  Check<Same<Ebooks.EbookList, TableEbooks.EbookList>>,
+  Check<Same<Ebooks.EbookResponse, TableEbooks.EbookResponse>>,
   // The handbook leaves out `recent` (the member's latest boards)
   Check<Reads<Account.MemberProfile, TableProfile.MemberProfile>>,
   Check<Same<Account.MemberProfile, Omit<TableProfile.MemberProfile, 'recent'>>>,

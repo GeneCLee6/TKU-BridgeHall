@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import * as account from '../../src/lib/account.ts'
 import * as api from '../../src/lib/api.ts'
+import * as ebooks from '../../src/lib/ebooks.ts'
 import * as forum from '../../src/lib/forum.ts'
 
 /**
@@ -71,6 +72,12 @@ describe.skipIf(!tableDir)('profile, avatar and file constants shared with TKU-B
   it('has the same file key pattern (e5-t12)', async () => {
     const { FILE_KEY } = await shared('files')
     expect(account.FILE_KEY.source).toBe(FILE_KEY.source)
+  })
+
+  it('has the same e-book key, licenses and limits (e5-t09, e5-t15)', async () => {
+    const table = await shared('ebooks')
+    for (const name of ['EBOOK_TYPE', 'EBOOK_LICENSES', 'EBOOK_LIMITS', 'STORAGE_LIMITS'] as const) expect(ebooks[name], name).toEqual(table[name])
+    expect(ebooks.EBOOK_KEY.source).toBe(table.EBOOK_KEY.source)
   })
 
   it('has the same forum boards, blocks, reactions and limits (e11-t05)', async () => {

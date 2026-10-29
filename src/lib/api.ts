@@ -136,6 +136,8 @@ export type AuditAction =
   | 'book:categories'
   | 'article:publish'
   | 'article:hide'
+  | 'ebook:save'
+  | 'ebook:remove'
   | 'profile:create'
   | 'profile:save'
   | 'profile:delete'
