@@ -86,6 +86,7 @@ export const review = {
   } satisfies Record<AuditAction, string>,
   categories: '分類',
   series: '叢書系列',
+  glossary: '名詞表',
 }
 
 /** Text for the differences between two versions (e8-t03, e8-t05) */
