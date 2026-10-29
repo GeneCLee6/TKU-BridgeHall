@@ -6,6 +6,7 @@ import { SuitPalette } from '../components/editor/fields.tsx'
 import { MetaForm } from '../components/editor/MetaForm.tsx'
 import { Outline, OutlineSelect } from '../components/editor/Outline.tsx'
 import { Preview } from '../components/editor/Preview.tsx'
+import { ComparePanel } from '../components/editor/ComparePanel.tsx'
 import { RevisionsPanel } from '../components/editor/RevisionsPanel.tsx'
 import { SectionForm, type SectionAction } from '../components/editor/SectionForm.tsx'
 import { Button, ErrorText, Input, Muted, Notice, Row } from '../components/ui.tsx'
@@ -36,7 +37,7 @@ import { mobile, mobileQuery } from '../styles/tokens.ts'
 import type { Convention, Section } from '../types/convention.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { Frame, Gate } from './Frame.tsx'
-import { review as r } from './reviewStrings.ts'
+import { diffText as d, review as r } from './reviewStrings.ts'
 
 const t = strings.editor
 
@@ -214,6 +215,10 @@ function EditorBody({
   const [rejectNote, setRejectNote] = useState('')
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [showHistory, setShowHistory] = useState(Boolean(highlight))
+  /** A version being compared (e8-t05), with the list to compare it with */
+  const [comparing, setComparing] = useState<{ from: BookRevision; revisions: BookRevision[] } | null>(null)
+  // Stable, so the history panel fetches the list once when it opens rather than on every edit
+  const loadRevisions = useCallback(() => api.book.revisions(slug ?? '').then((x) => x.revisions), [slug])
   const [tab, setTab] = useState<'form' | 'preview'>('form')
   const [restore, setRestore] = useState<Saved | null>(() => {
     try {
@@ -405,6 +410,7 @@ function EditorBody({
     if (problems.length) throw new Error(problems[0])
     replace(full.convention as Convention)
     setShowHistory(false)
+    setComparing(null)
     setNotice(t.loadedRevision(formatDateTime(revision.at)))
   }
 
@@ -458,7 +464,10 @@ function EditorBody({
         <Tools>
           <SuitPalette />
           {slug && (
-            <Button type="button" $small onClick={() => setShowHistory((s) => !s)} aria-expanded={showHistory} aria-label={t.history} title={t.history}>
+            <Button type="button" $small onClick={() => {
+                setShowHistory((s) => !s)
+                setComparing(null)
+              }} aria-expanded={showHistory} aria-label={t.history} title={t.history}>
               <History size={16} aria-hidden />
               <Wide>{t.history}</Wide>
             </Button>
@@ -556,6 +565,12 @@ function EditorBody({
               <>
                 <br />
                 {r.stale(wip.baseVersion, base)}
+              </>
+            )}
+            {slug && (
+              <>
+                <br />
+                <Link to={`/review/${slug}`}>{d.openReview}</Link>
               </>
             )}
             {reviewer && wip.status === 'in-review' && !dirty && (
@@ -669,15 +684,24 @@ function EditorBody({
             </Button>
           </Side>
         )}
-        <MainCol>
-          {phone && <OutlineSelect sections={draft.sections} selected={selected} onSelect={select} />}
-          {wide || tab === 'form' ? <FormBox>{form}</FormBox> : <PreviewCol aria-label={t.preview}>{preview}</PreviewCol>}
-        </MainCol>
-        {wide && <PreviewCol aria-label={t.preview}>{preview}</PreviewCol>}
+        {comparing ? (
+          <CompareBox $span={wide}>
+            <ComparePanel from={comparing.from} revisions={comparing.revisions} editing={draft} onClose={() => setComparing(null)} />
+          </CompareBox>
+        ) : (
+          <>
+            <MainCol>
+              {phone && <OutlineSelect sections={draft.sections} selected={selected} onSelect={select} />}
+              {wide || tab === 'form' ? <FormBox>{form}</FormBox> : <PreviewCol aria-label={t.preview}>{preview}</PreviewCol>}
+            </MainCol>
+            {wide && <PreviewCol aria-label={t.preview}>{preview}</PreviewCol>}
+          </>
+        )}
         {showHistory && slug && (
           <RevisionsPanel
-            load={() => api.book.revisions(slug).then((r) => r.revisions)}
+            load={loadRevisions}
             onLoad={loadRevision}
+            onCompare={(from, revisions) => setComparing({ from, revisions })}
             highlight={highlight}
             // Hiding and going back to the bundled one publish at once: reviewers' (e8-t01)
             onReset={
@@ -700,7 +724,10 @@ function EditorBody({
                   }
                 : undefined
             }
-            onClose={() => setShowHistory(false)}
+            onClose={() => {
+              setShowHistory(false)
+              setComparing(null)
+            }}
           />
         )}
       </Columns>
@@ -893,6 +920,11 @@ const FormBox = styled.div`
     overflow: visible;
     padding: ${({ theme }) => theme.space(3)};
   }
+`
+
+/** The comparison of two versions (e8-t05) in place of the form, and of the preview when wide */
+const CompareBox = styled(FormBox)<{ $span: boolean }>`
+  ${({ $span }) => ($span ? 'grid-column: span 2;' : '')}
 `
 
 /** Framed like the outline and the form, so the three columns read as one set */
