@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { Button } from '../components/ui.tsx'
 import { today } from '../lib/format.ts'
+import { FROM_ZERO } from '../content/paths.ts'
+import { lessonPage, pathPage, useLearningPaths } from '../lib/learning.ts'
 import { conventionPath } from '../lib/sections.ts'
 import { pageStrings } from '../pageStrings.ts'
 import { useAuth } from '../state/AuthContext.tsx'
@@ -18,8 +20,8 @@ import { strings } from '../strings.ts'
 
 const s = pageStrings.home
 
-/** 第一次來: the conventions a newcomer reads first, in order (only those the profile plays show) */
-const FIRST_STEPS = ['system-overview', 'notrump-responses', 'defensive-signals']
+/** 第一次來 shows the first lessons of 「從零開始」 (e4-t09) */
+const FIRST_STEPS = 3
 
 /** How many changes 最近更新 lists */
 const RECENT = 5
@@ -74,25 +76,30 @@ export function ProfileCard() {
   )
 }
 
-/** 第一次來: three lessons, each a convention with its own summary */
+/**
+ * 第一次來: the first lessons of 「從零開始」 (e4-t09), the editors' version when there is one, and the
+ * way to the whole path. A lesson without its goal written shows its first reading's summary.
+ */
 export function FirstSteps() {
   const { bySlug } = useContent()
-  const steps = FIRST_STEPS.map((slug) => bySlug(slug)).filter((c) => c !== undefined)
-  if (!steps.length) return null
+  const { paths } = useLearningPaths()
+  const path = paths.find((p) => p.id === FROM_ZERO)
+  if (!path?.lessons.length) return null
   return (
     <section aria-labelledby="home-first">
       <BlockTitle id="home-first">{s.firstTime}</BlockTitle>
       <Steps>
-        {steps.map((c, i) => (
-          <li key={c.slug}>
-            <Link to={conventionPath(c.slug)}>
+        {path.lessons.slice(0, FIRST_STEPS).map((lesson, i) => (
+          <li key={lesson.id}>
+            <Link to={lessonPage(path.id, lesson.id)}>
               <small>{s.lesson(i + 1)}</small>
-              <strong>{c.nameZh}</strong>
-              <span>{c.summary}</span>
+              <strong>{lesson.title}</strong>
+              <span>{lesson.goal || bySlug(lesson.readings[0]?.slug ?? '')?.summary}</span>
             </Link>
           </li>
         ))}
       </Steps>
+      <WholePath to={pathPage(path.id)}>{s.wholePath(path.name, path.lessons.length)}</WholePath>
     </section>
   )
 }
@@ -232,6 +239,13 @@ const Steps = styled.ol`
     font-size: 0.875rem;
     color: ${({ theme }) => theme.colors.textMuted};
   }
+`
+
+const WholePath = styled(Link)`
+  display: inline-block;
+  margin-top: ${({ theme }) => theme.space(2)};
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 0.875rem;
 `
 
 const Recent = styled.ul`

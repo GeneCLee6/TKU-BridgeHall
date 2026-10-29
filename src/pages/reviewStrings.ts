@@ -76,6 +76,8 @@ export const review = {
     'quiz:unfix': '刪除練習題的修正',
     'card:publish': '發布制度卡版本',
     'card:delete': '刪除制度卡版本',
+    'path:save': '儲存學習路徑',
+    'path:reset': '學習路徑還原為內建',
   } satisfies Record<AuditAction, string>,
   categories: '分類',
 }

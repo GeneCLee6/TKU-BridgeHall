@@ -143,6 +143,8 @@ export type AuditAction =
   | 'quiz:unfix'
   | 'card:publish'
   | 'card:delete'
+  | 'path:save'
+  | 'path:reset'
 
 export interface AuditEntry {
   id: string

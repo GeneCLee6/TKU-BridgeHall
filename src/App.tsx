@@ -36,6 +36,12 @@ const PracticeScoresPage = lazy(() =>
   import('./pages/PracticeScoresPage.tsx').then((m) => ({ default: m.PracticeScoresPage })),
 )
 const PracticeFixesPage = lazy(() => import('./pages/PracticeFixesPage.tsx').then((m) => ({ default: m.PracticeFixesPage })))
+// 學習路徑 (E4 e4-t09, e4-t12)
+const learn = () => import('./pages/LearnPages.tsx')
+const LearnIndexPage = lazy(() => learn().then((m) => ({ default: m.LearnIndexPage })))
+const PathPage = lazy(() => learn().then((m) => ({ default: m.PathPage })))
+const LessonPage = lazy(() => learn().then((m) => ({ default: m.LessonPage })))
+const LearnEditorPage = lazy(() => import('./pages/LearnEditorPage.tsx').then((m) => ({ default: m.LearnEditorPage })))
 // A member's profile page (e11-t04)
 const MemberPage = lazy(() => import('./pages/MemberPage.tsx').then((m) => ({ default: m.MemberPage })))
 // Kept out of the first download too, which has a size budget (scripts/check-budget.mjs)
@@ -97,6 +103,10 @@ export function App() {
                       </ProfiledContent>
                     }
                   />
+                  <Route path="/learn" element={<LearnIndexPage />} />
+                  <Route path="/learn/:pathId" element={<ProfiledContent><PathPage /></ProfiledContent>} />
+                  <Route path="/learn/:pathId/:lessonId" element={<ProfiledContent><LessonPage /></ProfiledContent>} />
+                  <Route path="/learn/:pathId/edit" element={<LearnEditorPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/account" element={<AccountPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
