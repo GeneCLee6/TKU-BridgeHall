@@ -236,13 +236,13 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/c/:slug/:sectionId` | 同上，再展開該段落的所有祖先段落，捲動並聚焦到段落標題；`?pending=k` 跳到該段的第 k 個待確認 |
 | `/library` | 叢書（E5 e5-t05，lazy，在 `HandbookShell` 裡）：依系列分書架、封面；依系列、程度、作者篩選（`?series=`、`?level=`、`?author=`）；叢書頁搜尋框（e5-t13）。§3.2 |
 | `/library/:slug` | 文章頁：書頁版面（約 68 字寬、襯線標題）、全部區塊、作者、程度、日期、授權；看不到的（下架）顯示「找不到」與回叢書的連結。與 `/library` 同一個 lazy chunk（`Library`），首頁只多一條路由 |
-| `/practice` | 練習（E6，lazy，包在 `ProfiledContent`）：依制度集、特約、程度、題數抽意義題，答完顯示原文叫牌表與深層連結；`?c=<slug>` 只選這個特約（「練這個特約」）。題目由 `lib/quiz.ts` 的 `generateQuizzes` 在瀏覽器從解析後的內容產生，只用原文逐字，`pending` 不出題；套上幹部的修題，答完存成績（§4.8）。`?wrong=1` 只練錯題 |
+| `/practice` | 練習（E6，lazy，包在 `ProfiledContent`）：依制度集、特約、程度、題數抽意義題，答完顯示原文叫牌表與深層連結；`?c=<slug>` 只選這個特約（「練這個特約」）。題目由 `lib/quiz.ts` 的 `generateQuizzes` 在瀏覽器從解析後的內容產生，只用原文逐字，`pending` 不出題；套上幹部的修題，答完存成績（§4.8）。`?wrong=1` 只練錯題；`?lesson=<pathId>/<lessonId>` 練一課的題目（e4-t10）；「題型」可只練意義題或叫品題，自動叫品題用叫牌盒作答（e6-t07） |
 | `/practice/scores` | 成績與錯題本（E6 e6-t05，lazy，包在 `ProfiledContent`）：總答對率、各特約答對率、錯題本、最近的練習、清除 |
-| `/practice/fixes` | 修題（E6 e6-t06，bookEdit，lazy，包在 `ProfiledContent`）：停用、改正解或選項、手動出題；`?id=<題目 id>` 開一題 |
+| `/practice/fixes` | 修題（E6 e6-t06，bookEdit，lazy，包在 `ProfiledContent`）：停用、改正解或選項、手動出題；`?id=<題目 id>` 開一題；「匯出給牌桌題庫」下載叫品題的題庫檔（e6-t08，§4.8） |
 | `/learn` | 學習路徑列表（E4 e4-t09，lazy）|
 | `/learn/:pathId` | 路徑頁（lazy，包在 `ProfiledContent`）：課次、登入後的完成進度與百分比、bookEdit 看得到「編輯路徑」 |
-| `/learn/:pathId/:lessonId` | 課次頁（lazy，包在 `ProfiledContent`）：目標、閱讀（特約或段落的深層連結；制度集不採用的特約顯示說明）、題目數（e4-t10 前只顯示數量）、自我檢核、標記完成、上一課／下一課 |
-| `/learn/:pathId/edit` | 路徑編輯（E4 e4-t12，bookEdit，lazy，不包 `ProfiledContent`：閱讀從社團版選）|
+| `/learn/:pathId/:lessonId` | 課次頁（lazy，包在 `ProfiledContent`）：目標、閱讀（特約或段落的深層連結；制度集不採用的特約顯示說明）、題目（「練這一課的題目」連到 `/practice?lesson=`；幹部選了幾題，或從閱讀範圍出題，e4-t10）、自我檢核、標記完成、上一課／下一課 |
+| `/learn/:pathId/edit` | 路徑編輯（E4 e4-t12，bookEdit，lazy，不包 `ProfiledContent`：閱讀從社團版選；每課可從閱讀範圍產生的題目勾選 `quizIds`，e4-t10）|
 | `/login` | 登入、註冊、忘記密碼；`?next=` 登入後回到原頁。**未登入時唯一看得到的頁面**：其他路由都導來這裡（§4.2「全站要登入」） |
 | `/account` | 我的帳號：權限、頭像、顯示（個人設定）、修改密碼 |
 | `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
@@ -398,9 +398,12 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - **成績**：練完一次 `roundOf` 轉成 `{ profileId, answers: { id, slug, right }[] }`。登入 → `POST /api/book/quiz/rounds`（牌桌 `quizlog:<userId>:<時間>-<id>`，每人最新 100 次）；未登入 → localStorage `tku-bridgebook:quizRounds`（同樣上限，讀寫都 try/catch）。兩邊不合併，登入後只看帳號的。`useQuizRounds` 依登入狀態選一邊。
 - **錯題本與統計**：`quizStats(rounds)` 純函式：總數、各特約（答對率低的在前）、錯題（每題最後一次的答案是錯的）。錯題 id 在目前制度集已不出題時，成績頁顯示「已不在目前的制度集」。
 - **修題**：`GET /api/book/quiz/fixes`（不需登入）→ `applyFixes(made, fixes, conventions, profileId)`：自動題的修正只在 `basis`（叫品、正解，比較時忽略空白與句尾句號）與現在產生的題目相同時套用（停用、換正解——在選項裡取代原正解——或整組選項）；手動題只加進同一個制度集、且段落還在的。不套用的回在 `stale`，修題頁標出。`PUT`／`DELETE /api/book/quiz/fixes` 要 bookEdit，牌桌只檢查形狀（`worker/quiz.ts`），存在 `book:quizfix:<id>`（每日備份）。
-- 題目的 `kind: 'call'`（手動的叫品題）在練習頁顯示牌（`Hand`）與「你叫什麼？」，選項是叫品。自動的叫品題是 e6-t07。
+- 題目的 `kind: 'call'` 在練習頁顯示例題段落（`prompt`）、牌（`Hand`）與「你叫什麼？」。手動的叫品題選項是叫品；**自動的叫品題**（e6-t07，`lib/quiz.ts` 的 `callQuizzes`）沒有選項、用叫牌盒作答：只從 `hand` 區塊的標籤本身是叫品（`labelCall`：`叫4H`、`(i) 應叫1H`、`PASS!`、叫品後接「，理由」）且上面是 `EX)` 段落的例題出，id `slug/sectionId/blockIndex/hand`；對錯用 `isRight`（叫品題比 `sameCall`，同一叫品不同寫法算對）。修題的 `basis.call` 對叫品題是那手牌（`S.H.D.C`）。
+- **匯出給牌桌題庫**（e6-t08，`lib/quizExport.ts`）：`exportQuizzes(quizzes, names)` 把叫品題轉成牌桌 `eval/quiz.ts` 的 `QuizQuestion`（問的那家固定是南；發牌者由叫牌圖或逐家寫的例題算出；`vul: 'None'`、`status: 'pending'`；牌有 x、叫牌不合規則、讀不出叫牌過程的不匯出並回報原因）。型別在 `parity/table-types.ts` 對拍，`npm run parity` 還用牌桌的 `bankProblems` 檢查內建內容的匯出。`npm run quiz-bank -- <檔案>`（`scripts/export-quiz-bank.ts`）由內建內容寫出牌桌的 `tests/bidding-quiz/book.json`；修題頁的下載含線上修改與手動題。沒有 Worker API（題目只在瀏覽器產生）。
 
-### 4.9 學習路徑（`lib/learning.ts`、`content/paths.ts`，E4 e4-t08、t09、t11、t12）
+### 4.9 學習路徑（`lib/learning.ts`、`content/paths.ts`，E4 e4-t08～t12）
+
+- **課次的題目**（e4-t10）：`lessonQuizzes(lesson, quizzes, conventions)`：有 `quizIds` 就照順序取（目前內容不產生的略過），沒有就是 `readingQuizzes`——閱讀的整個特約，或那一段與其下的段落產生的題。練習頁 `?lesson=` 用讀者制度集的題目；編輯器勾選時用社團預設制度產生（題目 id 跨制度集相同）。
 
 - 型別對應牌桌 `shared/learning.ts`（`LearningPath`、`Lesson`、`PathProgress` …、`LEARNING_LIMITS`），對拍在 `parity/table-types.ts`；呼叫在 `learningApi`。頁面在 `pages/LearnPages.tsx`、`pages/LearnEditorPage.tsx`，文字在 `pages/learnStrings.ts`（都 lazy，不進首頁 bundle）。
 - **內建路徑**：`content/paths.ts` 的「從零開始」（`from-zero`）只是手冊既有入門特約的排列，課次標題＝特約名稱，`goal`、`checklist` 空白，留給幹部線上寫（CLAUDE.md 規則 1）；課次頁對空白的目標與檢核顯示「幹部還沒寫」。

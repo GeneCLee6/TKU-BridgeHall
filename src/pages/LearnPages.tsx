@@ -6,6 +6,7 @@ import { today } from '../lib/format.ts'
 import {
   LEARN_PATH,
   lessonPage,
+  lessonPracticePath,
   outlineTrail,
   pathEditPage,
   pathPage,
@@ -215,10 +216,15 @@ export function LessonPage() {
         )}
       </Panel>
 
-      {Boolean(lesson.quizIds?.length) && (
+      {(Boolean(lesson.quizIds?.length) || lesson.readings.length > 0) && (
         <Panel aria-labelledby="lesson-quizzes">
           <PanelTitle id="lesson-quizzes">{t.quizzes}</PanelTitle>
-          <Muted>{t.quizCount(lesson.quizIds!.length)}</Muted>
+          <Muted>{lesson.quizIds?.length ? t.quizCount(lesson.quizIds.length) : t.quizFromReadings}</Muted>
+          <Row>
+            <Button as={Link} to={lessonPracticePath(path.id, lesson.id)} $variant="primary">
+              {t.practise}
+            </Button>
+          </Row>
         </Panel>
       )}
 

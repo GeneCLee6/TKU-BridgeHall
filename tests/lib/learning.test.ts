@@ -1,8 +1,14 @@
 import { conventionBySlug } from '../../src/content/index.ts'
 import { manifest } from '../../src/content/manifest.ts'
 import { bundledPaths, FROM_ZERO } from '../../src/content/paths.ts'
+import { conventions } from '../../src/content/index.ts'
+import { generateQuizzes } from '../../src/lib/quiz.ts'
 import {
   LEARNING_LIMITS,
+  lessonParam,
+  lessonPracticePath,
+  lessonQuizzes,
+  readingQuizzes,
   mergePaths,
   newLessonId,
   outlineSections,
@@ -134,5 +140,42 @@ describe('the editor’s helpers', () => {
     expect(newLessonId(path)).toBe('lesson-4')
     expect(newLessonId({ ...path, lessons: [path.lessons[2]] })).toBe('lesson-2')
     expect(newLessonId({ ...path, lessons: [{ ...path.lessons[0], id: 'lesson-2' }] })).toBe('lesson-3')
+  })
+})
+
+describe('a lesson’s questions (e4-t10)', () => {
+  const { quizzes } = generateQuizzes(conventions, 'club')
+  const lesson = (readings: { slug: string; sectionId?: string }[], quizIds?: string[]) => ({
+    id: 'l',
+    title: 'L',
+    goal: '',
+    readings,
+    checklist: [],
+    ...(quizIds && { quizIds }),
+  })
+
+  it('practises its readings when no questions were chosen: a whole convention or a section and those under it', () => {
+    const whole = readingQuizzes([{ slug: 'notrump-responses' }], quizzes, conventions)
+    expect(whole.length).toBeGreaterThan(0)
+    expect(whole.every((q) => q.slug === 'notrump-responses')).toBe(true)
+    // A top-level section with questions in it or under it
+    const top = conventionBySlug('notrump-responses')!.sections.find((s) => whole.some((q) => q.trail[0] === s.title))!
+    const part = readingQuizzes([{ slug: 'notrump-responses', sectionId: top.id }], quizzes, conventions)
+    expect(part.length).toBeGreaterThan(0)
+    expect(part.length).toBeLessThan(whole.length)
+    expect(part).toEqual(whole.filter((q) => q.trail[0] === top.title))
+    expect(lessonQuizzes(lesson([{ slug: 'system-overview' }]), quizzes, conventions)).toEqual([])
+  })
+
+  it('practises the chosen questions in their order, those still made', () => {
+    const ids = [quizzes[5].id, 'gone/x/0/0', quizzes[2].id]
+    expect(lessonQuizzes(lesson([{ slug: 'lebensohl' }], ids), quizzes, conventions).map((q) => q.id)).toEqual([quizzes[5].id, quizzes[2].id])
+  })
+
+  it('links to the practice page and reads the link back', () => {
+    expect(lessonPracticePath('from-zero', 'lesson-2')).toBe('/practice?lesson=from-zero%2Flesson-2')
+    expect(lessonParam('from-zero/lesson-2')).toEqual({ pathId: 'from-zero', lessonId: 'lesson-2' })
+    expect(lessonParam(null)).toBeUndefined()
+    expect(lessonParam('from-zero')).toBeUndefined()
   })
 })

@@ -36,6 +36,10 @@ import type * as Library from '../src/types/article.ts'
 import type * as Series from '../src/lib/series.ts'
 import type * as QuizRecords from '../src/lib/quizRecords.ts'
 import type * as TableQuiz from '@table/shared/quiz.ts'
+import type * as QuizExport from '../src/lib/quizExport.ts'
+import type * as TableBank from '@table/eval/quiz.ts'
+import type * as TableCards from '@table/shared/cards.ts'
+import type * as TableBoard from '@table/shared/board.ts'
 import type * as Learning from '../src/lib/learning.ts'
 import type * as TableLearning from '@table/shared/learning.ts'
 import type * as Reading from '../src/lib/reading.ts'
@@ -119,6 +123,16 @@ export type Checks = [
   Check<Same<QuizRecords.QuizAuction, TableQuiz.QuizAuction>>,
   Check<Same<QuizRecords.ManualQuiz, TableQuiz.ManualQuiz>>,
   Check<Same<QuizRecords.QuizFixInput, TableQuiz.QuizFixInput>>,
+  // The bidding question bank the export writes (e6-t08, eval/quiz.ts)
+  Check<Same<QuizExport.TableSeat, TableCards.Seat>>,
+  Check<Same<QuizExport.TableVulnerability, TableBoard.Vulnerability>>,
+  Check<Same<QuizExport.TableRobotKind, Protocol.RobotKind>>,
+  Check<Same<QuizExport.TableQuizStatus, TableBank.QuizStatus>>,
+  // The table types a call as its Call union; the export writes the same strings
+  Check<Assignable<TableBank.QuizQuestion, QuizExport.TableQuizQuestion>>,
+  Check<KnownKeys<QuizExport.TableQuizQuestion, TableBank.QuizQuestion>>,
+  Check<KnownKeys<TableBank.QuizQuestion, QuizExport.TableQuizQuestion>>,
+  Check<Same<keyof QuizExport.TableQuizFile, keyof TableBank.QuizFile>>,
   Check<Same<QuizRecords.QuizFix, TableQuiz.QuizFix>>,
 
   // ── 學習路徑 (shared/learning.ts, e4-t08 e4-t11) ─────────────────────────────────────────────
