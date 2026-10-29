@@ -68,6 +68,7 @@ export const review = {
     'book:hide': '隱藏',
     'book:reset': '改回內建',
     'book:categories': '改分類',
+    'book:pending': '更新待確認',
     'book:glossary': '改名詞表',
     'profile:create': '新增制度集',
     'profile:save': '儲存制度集',

@@ -27,6 +27,7 @@ import type * as Handbook from '../src/types/convention.ts'
 import type * as Protocol from '@table/shared/protocol.ts'
 import type * as Worker from '@table/worker/book.ts'
 import type * as Audit from '@table/worker/audit.ts'
+import type * as TablePending from '@table/worker/pending.ts'
 import type * as TableGlossary from '@table/worker/glossary.ts'
 import type * as Glossary from '../src/types/glossary.ts'
 import type * as TableArticles from '@table/worker/articles.ts'
@@ -86,6 +87,9 @@ export type Checks = [
   Check<Same<Book.BookDraftSummary, Worker.BookDraftSummary>>,
   Check<Same<Book.AuditAction, Audit.AuditAction>>,
   Check<Same<Book.AuditEntry, Audit.AuditEntry>>,
+  // The 待確認 panel (e8-t06)
+  Check<Same<Book.PendingStatus, TablePending.PendingStatus>>,
+  Check<Same<Book.PendingMeta, TablePending.PendingMeta>>,
   // The library's articles (e5-t01, e5-t04); `article` is `unknown` here: lib/articles.ts checks it
   Check<Same<Library.License, TableArticles.ArticleLicense>>,
   Check<Same<Library.ArticleMeta, TableArticles.ArticleMeta>>,

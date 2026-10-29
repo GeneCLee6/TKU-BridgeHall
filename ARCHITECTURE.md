@@ -199,10 +199,13 @@ type ArticleBlock = Block                                   // 特約的區塊�
   | { kind: 'heading'; level: 2 | 3; text: string }          // 文章沒有段落樹，用小標題分段
   | { kind: 'quote'; text: string; cite?: string }
   | { kind: 'image'; src: string; alt: string; caption?: string } // src 是上傳檔案的 key
+  | { kind: 'deal'; deal: Deal; caption?: string }            // J2：lib/board.ts 的 Deal（論壇同一形狀）
+  | { kind: 'play'; contract: string; declarer: Seat; tricks: Card[][]; caption?: string } // J2
 interface Article { slug; title; authors: string[]; series; level?; summary; cover?; blocks: ArticleBlock[]; published; updated; license: 'own' | 'permitted' | 'members-only' }
 ```
 
-- **只有文章用的區塊不進 `Block`**：特約的編輯器、制度卡、AI 匯入、牌桌 `checkSections` 都不用認得它們。`BlockView` 收 `ArticleBlock`，三種新區塊在同一個 switch。`deal`、`play` 是 J2（e5-t02、e5-t03）。
+- **只有文章用的區塊不進 `Block`**：特約的編輯器、制度卡、AI 匯入、牌桌 `checkSections` 都不用認得它們。`BlockView` 收 `ArticleBlock`，五種新區塊在同一個 switch。
+- **牌例與出牌過程**（J2，e5-t02、e5-t03，`components/board/ArticleBoards.tsx`，`BlockView` 用 `React.lazy` 載入，首頁不帶）：`deal` 用 G4 的 `DealDiagram` 畫、下面放說明；形狀與論壇的 `deal` 相同（`DealInput` 的輸出直接可用），**可以有空的一家**（文章常只畫莊家兩手；空的一家只顯示座位名），每張牌只出現一次、每家最多 13 張、至少一張。`play` 的合約用牌桌叫品寫法加賭倍（`4S`、`3N`、`4HX`、`6NXX`），每墩從領出的人開始寫；首攻是莊家左手，之後由上一墩贏的人領出，贏墩照牌桌 `trickWinner`（`lib/play.ts`）。只有最後一墩可以沒出完（文章可以停在要討論的那張牌）；牌不重複，但**不檢查跟牌**（沒有四家牌可對）。畫面：逐墩（上一墩／下一墩，十字排列、文字標「領出」「贏」）、到這墩為止兩方的墩數、「展開全部 n 墩」的表格（列印時一律印出表格，不印逐墩）。牌桌 `worker/articles.ts` `checkArticleBlock` 做同樣的檢查；搜尋文字只收兩者的說明，不收牌與合約。文章編輯器的表單（四家牌用 `DealInput`）是 J4。
 - **內建沒有文章**：文章只存在牌桌（`worker/articles.ts`，`article:entry:<slug>`、`article:rev:<slug>:<id>`、`article:version`，內容分段在 `bookpart:`，每日備份涵蓋），repo 裡不放文章內容，測試用假資料。`articleProblems`（＝牌桌 `checkArticle`）在載入時再檢查一次；區塊檢查共用 `lib/content.ts` 的 `blockProblems`，整理共用 `tidyBlock`／`emptyBlock`。`articleText` 給 e5-t13 的搜尋。
 - **圖片與封面存檔案 key，不存網址**（e5-t12）：key 是 G1 上傳回的 `article/<24 hex>.<ext>`（`isPictureKey`，不收縮圖 key 與外部網址；`uploadArticlePicture`）。牌桌每次讀文章順便簽好網址放在回應的 `files`，頁面用 `ArticleFilesContext` 提供，`image` 區塊查不到網址（R2 bucket 還沒建，牌桌 `filesOff` 時 `files` 是空的）就顯示替代文字框，文章照常讀。上傳遇到 503 `filesOff` 用 `filesOff(error)` 判斷。
 - **API**（`api.book.articles`／`article`／`saveArticle`／`hideArticle`／`articleRevisions`／`articleRevision`）：讀要登入（2026-10-29 起全站要登入，牌桌也一樣；`members-only` 因此和其他授權沒有差別），隱藏的只有 bookEdit 看得到；發布、隱藏是 bookReview（`baseVersion` 不符 409 `articleConflict`），版本是 bookEdit。**目前只有已發布路徑**（同特約沒有草稿時的直接發布）；文章的草稿與送審（AC-5.2「送審走 E8」）跟文章編輯器 e5-t07 一起做。審計動作多 `article:publish`、`article:hide`。
@@ -244,7 +247,8 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/settings` | 個人設定（e9-t15，lazy）：風格、版面、明暗、字體、字級、花色顏色、密度 |
 | `/admin` | 社團管理（bookEdit）：帳號面板（待審核的申請、橋譜權限、重設密碼、邀請碼與人數上限）只給管理員；其他面板（草稿與送審、分類、隊伍、制度集、審計紀錄）編輯者也看得到（§4.2、§4.3.1） |
 | `/review`、`/review/:slug` | 審核（bookEdit 看、bookReview 發布或退回）：草稿清單、草稿與已發布版本的段落差異（§4.3.1，e8-t04） |
-| `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約；`?rev=<id>` 打開版本紀錄並標出那一版（審計紀錄的連結） |
+| `/pending` | 待確認面板（社員都能看，bookEdit 指派與更新；§4.3.1，e8-t07） |
+| `/edit/:slug`、`/new` | 線上編輯器（bookEdit）；`?draft=<id>&n=<i>` 打開匯入草稿的第 i 個特約；`?rev=<id>` 打開版本紀錄並標出那一版（審計紀錄的連結）；`?section=<id>` 先選好那個段落（待確認面板的連結） |
 | `/import` | 匯入檔案（bookImport） |
 | `/integrations/table` | 牌桌整合（bookEdit）：同步制度集到牌桌機器人、差異報告（§4.7） |
 | `/profiles/:id/edit` | 編輯制度集（e1-t14，社員；沒有 `access.edit` 唯讀）：採用、叫品改寫、段落替換、備忘（§3.1） |
@@ -333,6 +337,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - **審核頁**（e8-t04，`pages/ReviewPage.tsx`，lazy，bookEdit 才進得去）：`/review` 列全部草稿（送審中、編輯中兩組，含編輯者的說明與退回理由）；`/review/:slug` 是那份草稿和讀者現在看到的版本（線上版本，沒有就內建版本，新特約則全部算新增）的差異、編輯者的說明，審核者在下面「發布」（`PUT /api/book/conventions/:slug` 帶 `draftRevision`，發布說明空白時牌桌用草稿的說明）或「退回」（附理由，送審中才有）。單欄，手機可用。不包 `ProfiledContent`，看的是社團版原文。通知見下方「通知」。
 - **差異**（e8-t03，`lib/diff.ts` 的 `diffConventions(舊, 新)`）：特約欄位逐欄比；段落以 `id` 對齊（不管在樹的哪裡），搬到別的上層記「上層段落」、同層換順序記「順序」（不在最長同序列裡的才算）；段落內每個區塊拆成「行」（段落文字、條列每一條、叫品表每一列的意義／附註／待確認／牌力條件、表格標題、叫牌過程、牌例、導讀各項、待確認），行用最長共同子序列對齊，叫品列以 `call`（同表第 n 個同叫品）對齊，其他行在同一個空檔裡同種類的配成「修改」，其餘是新增或刪除。只回傳不同的行；`inlineDiff` 再標出一行裡改了哪幾個字（超過 250,000 字元平方就整行標）。畫面是 `components/DiffView.tsx`（上下排、刪去的畫線、新增的加底色，螢幕報讀唸「原本／改成」），審核頁與編輯器共用。
 - **版本比較**（e8-t05）：編輯器「版本紀錄」每個儲存的版本多「與這版比較」，比較框取代表單（寬螢幕連預覽一起），「比較對象」可選編輯中的內容或任一其他版本，舊的一律在前（`components/editor/ComparePanel.tsx`）。舊版本只檢查形狀，不檢查分類是否還在。
+- **待確認面板**（e8-t06–t08，`pages/PendingPage.tsx`，lazy；呼叫 `lib/pendingApi.ts`、文字 `pages/pendingStrings.ts`）：待確認本身仍寫在內容的 `pending`；牌桌另存有人動過的那幾則的紀錄（`pendingmeta:<slug>/<sectionId>/<n>`：狀態 未處理／處理中／擱置、負責人、備註、關閉依據；`GET /api/book/pending` 社員可讀、`PUT /api/book/pending/:slug/:sectionId/:n` bookEdit）。`lib/pending.ts` 的 `pendingRows()` 把 manifest 的每則待確認配上紀錄（以段落＋原文比對，同文字兩則先配同位置；改寫過的原文回到未處理）。不能手動設「已確認」：編輯者寫好關閉依據後按「寫依據並修改內容」，存紀錄並開編輯器 `/edit/:slug?section=<id>`，拿掉待確認、送審；審核者發布時牌桌把新版本裡找不到的待確認關閉（記發布者、版本、依據，沒寫依據就用版本說明），列在面板的「最近關閉」。側欄的待確認不再列每一則，改成連到面板的連結，數字＝內容裡還在的待確認（關閉只發生在發布，所以就是面板的總數）。看的是社團版原文，不包 `ProfiledContent`。
 - 呼叫在 `lib/reviewApi.ts`、文字在 `pages/reviewStrings.ts`（差異與審核頁的在 `diffText`），只有編輯器、審核頁與管理頁（都 lazy）import，不進首頁；型別在 `lib/api.ts`，`parity/table-types.ts` 對拍。
 - **通知**（F4，e8-t10、e8-t11、e2-t08；牌桌 `worker/book-notices.ts`）：通知在淡江牌桌的鈴鐺，連回這裡。發布（審核頁、編輯器直接發布）時帶 `changedSections`（`lib/diff.ts` 的 `changedSectionIds`：改到的段落＋所在的上層段落，和讀者現在看到的版本比；Worker 沒有內建特約，所以由這裡算），**沒帶就不通知**（幹部補手牌條件就不帶）。牌桌通知：關注者（特約頁「關注這個特約」，`components/FollowButton.tsx`，`GET`／`PUT /api/book/follows/:slug`）、現役隊伍／搭檔制度集裡採用該特約的成員、送審的人（`bookPublished`）；制度集的列覆寫或整段覆寫落在改到的段落時，成員改收 `bookOverrideChanged`（連到比較頁）。送審通知審核者（`bookReviewRequested`）、退回通知送審的人（`bookReturned`）。**建議統一**：隊伍頁搭檔的「比較」連到 `/profiles/:id/compare?team=&pair=`，隊長（或編輯者）每條覆寫旁有「建議統一」（`POST /api/club/teams/:id/suggest-unify`，覆寫以 `lib/teams.ts` 的 `overrideRef` 命名，與牌桌相同）；搭檔收到 `bookSuggestUnify`，連到 `?unify=<ref>`，比較頁頂端顯示那條覆寫與「改回」（`withoutOverride` 後 `saveProfile`）。呼叫在 lazy 的 `lib/noticeApi.ts`。
 - **還沒做**：隊伍與搭檔制度集照舊直接儲存；`club` 制度集也還是編輯者直接儲存（PRD 目標要走送審，之後再排）。
