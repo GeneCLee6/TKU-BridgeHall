@@ -76,9 +76,9 @@ M0 的治理靠人：44 項「待確認」沒有負責人與狀態；線上版�
 
 - [x] `e8-t10` 通知種類 `book:*` 進牌桌通知中心；關注／取消關注特約；發布觸發 · AC-8.5 · M · ← e8-t04 · #39（牌桌 #190；種類沿用牌桌命名 `bookPublished`、`bookReviewRequested`、`bookReturned`、`bookOverrideChanged`、`bookSuggestUnify`）
 - [x] `e8-t11` 覆寫過該段的制度集成員自動通知（E1 的 `origin` 反查）· AC-8.5 · S · ← e8-t10, e1-t08 · #39（橋館送改到的段落 `changedSections`，牌桌比對制度集的覆寫）
-- [ ] `e8-t12` `GET /api/book/export`（JSON 與生成 `.ts`）· AC-8.4 · M
+- [ ] `e8-t12` `GET /api/book/export`（內建＋線上合併後的全部特約，JSON 與生成 `.ts`）· AC-8.4 · M（L0 後：牌桌已有內建層，匯出不必再由橋館合併）
 - [ ] `e8-t13` GitHub Action：排程匯出、跑內容測試、開 PR 到 `content-backup`；失敗通知 · AC-8.4 · M · ← e8-t12
-- [ ] `e8-t14` 文件改寫：`README.md`、`CONTENT_GUIDE.md`、`CLAUDE.md` 規則 5 改為「線上為真相」· AC-8.4 · S · ← e8-t13
+- [ ] `e8-t14` 文件改寫：`README.md`、`CONTENT_GUIDE.md`、`CLAUDE.md` 規則 5 改為「線上為真相」· AC-8.4 · S · ← e8-t13（L0 已先把規則 3、5 改成「內容在牌桌、`.ts` 是種子」；這裡只補匯出備份的部分）
 
 ## 風險與對策
 

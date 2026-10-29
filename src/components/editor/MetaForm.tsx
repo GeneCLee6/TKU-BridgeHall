@@ -15,9 +15,10 @@ import {
   type Level,
 } from '../../types/convention.ts'
 import { Field, Input, Select } from '../ui.tsx'
-import { AutoTextArea } from './fields.tsx'
+import { AutoTextArea } from './fields.tsx'
+import { editorStrings } from './editorStrings.ts'
 
-const t = strings.editor
+const t = editorStrings
 
 /**
  * A convention's own fields: names, address, category, kind, level, Brown Sticker mark,

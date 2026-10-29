@@ -11,9 +11,9 @@ import type { ForumRuleItem, PostBlock } from '../lib/forum.ts'
 import { mentionParts } from '../lib/forumPosts.ts'
 import { blockText, conventionPath, findSectionPath, sectionPath } from '../lib/sections.ts'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
-import { strings } from '../strings.ts'
 import type { Section } from '../types/convention.ts'
-import { forumStrings as t } from './forumStrings.ts'
+import { forumStrings as t } from './forumStrings.ts'
+import { boardStrings } from '../components/board/boardStrings.ts'
 
 /** Signed addresses of uploaded pictures, by key; they are short-lived, so fetched with each read */
 export type PostFiles = Record<string, { url: string; thumbUrl?: string }>
@@ -122,7 +122,7 @@ export function PostBlockView({ block, members, files }: { block: PostBlock; mem
       )
     case 'hand':
       return (
-        <HandFigure role="group" aria-label={block.label ?? strings.board.hand}>
+        <HandFigure role="group" aria-label={block.label ?? boardStrings.hand}>
           {block.label && <Caption as="span">{block.label}</Caption>}
           <HandSuits cards={block.cards} inline />
         </HandFigure>
@@ -137,7 +137,7 @@ export function PostBlockView({ block, members, files }: { block: PostBlock; mem
     case 'auction':
       return (
         <figure>
-          <AuctionTable auction={toBookAuction(block.auction, strings.board.seatNames)} />
+          <AuctionTable auction={toBookAuction(block.auction, boardStrings.seatNames)} />
           {block.caption && <Caption>{block.caption}</Caption>}
         </figure>
       )

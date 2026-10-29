@@ -1,18 +1,21 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { categories as bundledCategories } from '../content/categories.ts'
-import { loadBundled } from '../content/loaders.ts'
-import { manifest as bundledManifest } from '../content/manifest.ts'
 import { api, type BookEntry, type BookManifest } from '../lib/api.ts'
 import { knownCategoryIds, resolveCategories } from '../lib/categories.ts'
 import { mergeManifest, onlineConvention, type OnlineInfo, type Skipped } from '../lib/content.ts'
+import { MANIFEST_CACHE_KEY } from '../lib/memberCache.ts'
 import type { Category, Convention, ConventionMeta } from '../types/convention.ts'
+import { builtinSource } from './builtinSource.ts'
 
 /**
- * The conventions the handbook shows: the bundled manifest with the online changes laid over it
- * (lib/content.ts). The catalogue renders at once from the manifest, or from the online manifest
- * this browser saw last time, then fetches the current one. Content is loaded one convention at a
- * time (`load`, `useConvention`): the bundled chunk, or the online entry when it was changed online.
- * Without a connection it keeps what it has.
+ * The conventions the handbook shows: the built-in conventions with the online changes laid over
+ * them (lib/content.ts). Both come from the Worker, members only (L0, e10-t20): the manifest's
+ * `builtin` is the catalogue the online entries are merged into, as the bundled manifest was. The
+ * catalogue renders at once from the manifest this browser saw last time, then fetches the current
+ * one. Content is loaded one convention at a time (`load`, `useConvention`): the built-in one
+ * (`GET /api/book/builtin/:slug`), or the online entry when it was changed online. Without a
+ * connection it keeps what it has (and the service worker answers from its cache).
+ * "Bundled" in the names below means built-in: the site shipped these until L0.
  */
 
 type Status = 'loading' | 'live' | 'offline'
@@ -21,7 +24,7 @@ export interface Content {
   /** The catalogue: every convention shown, without content */
   conventions: ConventionMeta[]
   bySlug: (slug: string) => ConventionMeta | undefined
-  /** The convention as it ships with the site, before online changes */
+  /** The built-in convention, before online changes */
   bundledBySlug: (slug: string) => ConventionMeta | undefined
   /** The catalogue's groups in order: the online list, or the bundled one (lib/categories.ts) */
   categories: Category[]
@@ -48,8 +51,8 @@ export interface Content {
   reload: () => Promise<void>
 }
 
-const CACHE_KEY = 'tku-bridge-book-manifest'
-const bundledIndex = new Map(bundledManifest.map((c) => [c.slug, c]))
+// Cleared on signing out with the rest of what only members may read
+const CACHE_KEY = MANIFEST_CACHE_KEY
 
 function cached(): BookManifest | null {
   try {
@@ -76,11 +79,13 @@ export function ContentProvider({
   children,
   loadManifest = api.book.manifest,
   loadEntry = api.book.entry,
+  loadBundled = builtinSource.load,
 }: {
   children: ReactNode
   /** Where the online changes come from; tests pass their own */
   loadManifest?: () => Promise<BookManifest>
   loadEntry?: (slug: string) => Promise<BookEntry>
+  loadBundled?: (slug: string) => Promise<Convention | undefined>
 }) {
   const [manifest, setManifest] = useState<BookManifest | null>(cached)
   const [status, setStatus] = useState<Status>('loading')
@@ -120,6 +125,8 @@ export function ContentProvider({
 
   const value = useMemo((): Content => {
     const categoryIds = knownCategoryIds(bundledCategories, manifest?.categories)
+    const bundledManifest = manifest?.builtin ?? builtinSource.fallback
+    const bundledIndex = new Map(bundledManifest.map((c) => [c.slug, c]))
     const merged = mergeManifest(bundledManifest, manifest?.entries ?? [], categoryIds)
     const categories = resolveCategories(bundledCategories, manifest?.categories, merged.conventions)
     const index = new Map(merged.conventions.map((c) => [c.slug, c]))
@@ -177,7 +184,7 @@ export function ContentProvider({
       status,
       reload,
     }
-  }, [manifest, contents, broken, status, reload, loadEntry, store])
+  }, [manifest, contents, broken, status, reload, loadEntry, loadBundled, store])
 
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>
 }

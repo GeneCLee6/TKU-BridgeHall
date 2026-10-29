@@ -16,10 +16,10 @@ import {
   type Seat,
   type Vulnerability,
 } from '../../lib/board.ts'
-import { strings } from '../../strings.ts'
 import { Button, Field, Row, Select } from '../ui.tsx'
 import { DealDiagram } from './DealDiagram.tsx'
-import { CardPanel } from './parts.tsx'
+import { CardPanel } from './parts.tsx'
+import { boardStrings } from './boardStrings.ts'
 
 /**
  * Enter four hands by clicking cards: each card goes to the chosen seat, and when that seat has
@@ -27,7 +27,7 @@ import { CardPanel } from './parts.tsx'
  * clicking one another seat holds moves it. The dealer and vulnerability are chosen below.
  */
 export function DealInput({ value, onChange }: { value: Deal; onChange: (deal: Deal) => void }) {
-  const b = strings.board
+  const b = boardStrings
   const [seat, setSeat] = useState<Seat>('N')
   const radioName = useId()
   const hands = value.hands

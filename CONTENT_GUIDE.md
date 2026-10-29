@@ -2,6 +2,12 @@
 
 給幹部的逐步說明。不需要懂 React，只要會編輯文字檔、跑幾個指令。有權限的社員也可以直接在網站上編輯或匯入檔案，見第 6 節。
 
+**內容在哪裡**（2026-10-29 起，L0）：特約內容只給登入的社員，存在淡江牌桌的 Worker，**不在網站的靜態檔裡**（`npm run budget` 會擋）。所以：
+
+- **新增特約，平常用網站**：「新增特約」（線上編輯，6.1）或「匯入檔案」（AI 整理，6.2），送審、發布就上線，不用動 repo。
+- **內建特約**是 `src/content/conventions/*.ts`（這個 repo 2026-10-29 起是 private）：它們是寫入牌桌的種子，也是測試資料。新增或修改它們之後，要跑 `npm run seed-builtin` 寫到牌桌才會上線（第 4 節）。
+- 淡江牌桌的 repo 是公開的，**特約內容絕對不要放進牌桌 repo**。
+
 ## 0. 準備
 
 1. 安裝 Node.js 22 與 Git。
@@ -240,7 +246,6 @@ WBF 卡（2.19）：
 ## 4. 登記與檢查
 
 1. 在 `src/content/index.ts` import 新檔，加進 `conventions` 陣列（順序即顯示順序）。檔名必須等於 slug（`<slug>.ts`）。
-1. 執行 `npm run manifest`，重新產生 `src/content/manifest.ts`（目錄、收合的卡片與深層連結用的輕量清單；內容在打開卡片時才下載）。改了名稱、標籤、摘要、段落標題或待確認之後也要跑；忘了跑時內容測試會失敗。
 2. 分類可以在網站的「社團管理 → 分類」線上新增、改名、排序（有 bookEdit 權限即可；ARCHITECTURE.md §4.5）。要在 repo 裡加內建分類，在 `src/content/categories.ts` 加上 `id`（小寫英數與連字號）、名稱、說明與 `order`。分類線上改過之後，網站以線上那份為準：新加的內建分類只要有特約在裡面，會自動接在最後，再到管理頁排到想要的位置並儲存。
 3. 執行：
 
@@ -251,8 +256,15 @@ WBF 卡（2.19）：
    ```
 
    「records the known 待確認 items」這個測試記錄了每個特約的待確認數量；新增或解決待確認項目時，一併更新測試中的數字。
-4. 在瀏覽器逐段對照原文再檢查一次，特別是點力範圍與花色。
+4. 在瀏覽器逐段對照原文再檢查一次，特別是點力範圍與花色（本機 `npm run dev` 讀本機的淡江牌桌，先對它寫入：`npm run seed-builtin -- --apply --base http://localhost:5173`）。
 5. 開分支、commit（格式見 `RULES.md`）、發 PR，請另一位幹部審核內容。
+6. **PR 合併後寫入牌桌**（不寫就不會上線）：
+   1. 權杖：淡江牌桌的 `BOOK_SEED_TOKEN`（管理員設定，牌桌 `DEPLOY.md` §4.9），放在專案根目錄的 `.env.seed`（一行 `BOOK_SEED_TOKEN=…`，不會 commit），或設成環境變數。
+   2. `npm run seed-builtin`：**預演**，只列出每個特約會 `new`／`changed`／`same`、有沒有線上版本，什麼都不寫。報告存在 `tmp/seed-builtin/`。
+   3. 看過沒問題：`npm run seed-builtin -- --apply`。先把牌桌上現有的內建特約存到 `tmp/seed-builtin/…-before.json`，寫入，再自動逐字比對（`--verify`）。
+   4. 有線上版本的特約（報告標「has an online version」）讀者看到的仍是線上版本，寫入不會動它（6.3）。
+   5. 從 `src/content/index.ts` 拿掉一個特約時，牌桌會拒絕，要加 `--allow-remove`。
+   6. 隨時可以 `npm run seed-builtin -- --verify` 確認牌桌上的內容和 repo 逐字相同。
 
 ## 5. 解決「待確認」
 
@@ -286,7 +298,7 @@ WBF 卡（2.19）：
 
 ### 6.3 線上版本與檔案的關係
 
-網站上改過的特約，以線上版本為準：之後再修改 `src/content/conventions/*.ts` 檔不會顯示出來。要改回檔案的版本，在編輯器的「版本紀錄」按「還原為網站內建的版本」。要把線上的修改保存進 Git，請開發者把線上內容寫回 `.ts` 檔，再還原。
+網站上改過的特約，以線上版本為準：之後再修改 `src/content/conventions/*.ts` 檔並 `seed-builtin`，讀者也看不到（內建那一層換了，線上版本還蓋在上面）。要改回內建版本，在編輯器的「版本紀錄」按「還原為網站內建的版本」（「內建」現在指牌桌上 seed 的那份）。要把線上的修改保存進 Git，請開發者把線上內容寫回 `.ts` 檔、`seed-builtin -- --apply`，再還原（L1 會把匯出自動化）。
 
 ### 6.4 學習路徑（`/learn`）
 

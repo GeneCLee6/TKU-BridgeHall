@@ -4,7 +4,6 @@ import styled from 'styled-components'
 import { AppHeader } from '../components/AppHeader.tsx'
 import { ProfilePill } from '../components/ProfilePill.tsx'
 import { ReadingSettingsButton, type ReadingActions } from '../components/ReadingSettingsButton.tsx'
-import { Sidebar } from '../components/Sidebar.tsx'
 import { references } from '../content/references.ts'
 import { formatDateTime } from '../lib/format.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
@@ -18,6 +17,12 @@ import { mobile, mobileQuery } from '../styles/tokens.ts'
 import { AccountCorner } from './Frame.tsx'
 
 // Only signed-in readers with more than one profile see the menu (e1-t12)
+// The catalogue (and Radix's accordion in it) is its own chunk, so the first page's JS stays small
+// (e10-t20). It starts downloading with the page, alongside the manifest it lists, which comes
+// from the Worker anyway (L0); until it is here its column stays empty, so nothing moves.
+const sidebarChunk = import('../components/Sidebar.tsx').then((m) => ({ default: m.Sidebar }))
+const Sidebar = lazy(() => sidebarChunk)
+
 const ProfileSwitch = lazy(() =>
   import('../components/ProfileSwitch.tsx').then((m) => ({ default: m.ProfileSwitch })),
 )
@@ -79,14 +84,16 @@ export function HandbookShell() {
       />
       <Layout>
         {catalogue && (
-          <Sidebar
-            categories={categories}
-            conventions={conventions}
-            references={references}
-            open={menuOpen}
-            onNavigate={() => setMenuOpen(false)}
-            actions={isMobile && choosable && profileSwitch('menu')}
-          />
+          <Suspense fallback={<SidebarSpace aria-hidden data-print="hide" />}>
+            <Sidebar
+              categories={categories}
+              conventions={conventions}
+              references={references}
+              open={menuOpen}
+              onNavigate={() => setMenuOpen(false)}
+              actions={isMobile && choosable && profileSwitch('menu')}
+            />
+          </Suspense>
         )}
         {menuOpen && <Scrim aria-hidden onClick={() => setMenuOpen(false)} data-print="hide" />}
         <Main
@@ -171,6 +178,17 @@ const SkipLink = styled.a`
     z-index: 100;
     padding: 8px 12px;
     background: ${({ theme }) => theme.colors.surface};
+  }
+`
+
+/** The catalogue's column while its chunk loads (desktop only: on phones it is a closed drawer) */
+const SidebarSpace = styled.div`
+  flex: none;
+  width: ${({ theme }) => theme.layout.sidebarWidth};
+  border-right: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  ${mobile} {
+    display: none;
   }
 `
 

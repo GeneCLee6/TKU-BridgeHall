@@ -9,12 +9,12 @@ import {
   type Trick,
 } from '../../lib/play.ts'
 import { libraryStrings } from '../../libraryStrings.ts'
-import { strings } from '../../strings.ts'
 import { mobile } from '../../styles/tokens.ts'
 import type { DealBlock, PlayBlock } from '../../types/article.ts'
 import { CallLabel, RichText, Suit } from '../Suit.tsx'
 import { Button } from '../ui.tsx'
-import { DealDiagram } from './DealDiagram.tsx'
+import { DealDiagram } from './DealDiagram.tsx'
+import { boardStrings } from './boardStrings.ts'
 
 /**
  * An article's bridge blocks (E5 e5-t02, e5-t03), loaded only when an article has one (BlockView
@@ -35,7 +35,7 @@ export function DealBlockView({ block }: { block: DealBlock }) {
   )
 }
 
-const seatName = (seat: Seat) => strings.board.seatNames[seat]
+const seatName = (seat: Seat) => boardStrings.seatNames[seat]
 
 /** ♠K: the suit (read as its name) and the rank */
 function CardLabel({ card }: { card: Card }) {

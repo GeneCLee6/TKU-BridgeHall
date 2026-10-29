@@ -8,9 +8,10 @@ import { formatDateTime } from '../../lib/format.ts'
 import { useContent } from '../../state/ContentContext.tsx'
 import { strings } from '../../strings.ts'
 import { mobile } from '../../styles/tokens.ts'
-import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PanelTitle, Row } from '../ui.tsx'
+import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PanelTitle, Row } from '../ui.tsx'
+import { categoriesStrings } from './categoriesStrings.ts'
 
-const t = strings.categories
+const t = categoriesStrings
 /** The Worker's limit (TKU-BridgeTable worker/book.ts CATEGORY_LIMITS) */
 export const CATEGORY_MAX = 20
 const LABEL_MAX = 40

@@ -6,7 +6,7 @@
  */
 
 import type { ArticleMeta, ArticleSeries } from '../types/article.ts'
-import type { ConventionMeta, Section } from '../types/convention.ts'
+import type { Convention, ConventionMeta, Section } from '../types/convention.ts'
 import type { Term } from '../types/glossary.ts'
 import type { Profile } from './account.ts'
 import type { SpecShows, SystemSpec } from './systemSpec.ts'
@@ -137,6 +137,8 @@ export type AuditAction =
   | 'book:hide'
   | 'book:reset'
   | 'book:categories'
+  /** The built-in conventions seeded from this repository (L0, e10-t20) */
+  | 'book:builtin'
   | 'book:pending'
   | 'book:glossary'
   | 'article:publish'
@@ -237,12 +239,17 @@ export interface BookGlossary {
   updatedBy?: string
 }
 
-/** GET /api/book/manifest: every online entry, without content, and the online categories */
+/**
+ * GET /api/book/manifest: every online entry, without content, the online categories and the
+ * built-in conventions (L0, e10-t20): the catalogue the online entries are laid over, in order
+ */
 export interface BookManifest {
   version: number
   entries: BookEntrySummary[]
   /** Absent from a Worker (or a manifest cached) before categories were data */
   categories?: BookCategory[]
+  /** Absent from a manifest cached before L0 (2026-10-29); the Worker always sends it */
+  builtin?: ConventionMeta[]
 }
 
 export interface BookRevision {
@@ -740,6 +747,8 @@ export const api = {
 
   book: {
     manifest: () => request<BookManifest>('/api/book/manifest'),
+    /** A built-in convention (L0, e10-t20): members only, as everything else; 404 when there is none */
+    builtin: (slug: string) => request<{ convention: Convention }>(`/api/book/builtin/${slug}`).then((r) => r.convention),
     /** One convention's online entry; 404 when it was never changed online */
     entry: (slug: string) => request<{ entry: BookEntry }>(`/api/book/content/${slug}`).then((r) => r.entry),
     /**

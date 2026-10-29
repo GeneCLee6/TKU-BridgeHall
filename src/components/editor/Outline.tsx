@@ -1,6 +1,6 @@
 import styled from 'styled-components'
-import { strings } from '../../strings.ts'
-import type { Section } from '../../types/convention.ts'
+import type { Section } from '../../types/convention.ts'
+import { editorStrings } from './editorStrings.ts'
 
 /** The convention's section tree in the editor; picking an item shows its form */
 export function Outline({
@@ -14,11 +14,11 @@ export function Outline({
   onSelect: (id: string) => void
 }) {
   return (
-    <Nav aria-label={strings.editor.outline}>
+    <Nav aria-label={editorStrings.outline}>
       <List>
         <li>
           <Item type="button" $depth={0} aria-current={selected === 'info' ? 'true' : undefined} onClick={() => onSelect('info')}>
-            {strings.editor.info}
+            {editorStrings.info}
           </Item>
         </li>
         <Tree sections={sections} depth={0} selected={selected} onSelect={onSelect} />
@@ -41,7 +41,7 @@ function Tree({
   return sections.map((s) => (
     <li key={s.id}>
       <Item type="button" $depth={depth} aria-current={selected === s.id ? 'true' : undefined} onClick={() => onSelect(s.id)}>
-        {s.title.trim() || strings.editor.untitled}
+        {s.title.trim() || editorStrings.untitled}
       </Item>
       {s.children?.length ? (
         <List>
@@ -62,15 +62,15 @@ export function OutlineSelect({
   selected: string
   onSelect: (id: string) => void
 }) {
-  const options: { id: string; label: string }[] = [{ id: 'info', label: strings.editor.info }]
+  const options: { id: string; label: string }[] = [{ id: 'info', label: editorStrings.info }]
   const walk = (list: Section[], depth: number) =>
     list.forEach((s) => {
-      options.push({ id: s.id, label: `${'　'.repeat(depth)}${s.title.trim() || strings.editor.untitled}` })
+      options.push({ id: s.id, label: `${'　'.repeat(depth)}${s.title.trim() || editorStrings.untitled}` })
       walk(s.children ?? [], depth + 1)
     })
   walk(sections, 0)
   return (
-    <SelectBox aria-label={strings.editor.outline} value={selected} onChange={(e) => onSelect(e.target.value)}>
+    <SelectBox aria-label={editorStrings.outline} value={selected} onChange={(e) => onSelect(e.target.value)}>
       {options.map((o) => (
         <option key={o.id} value={o.id}>
           {o.label}

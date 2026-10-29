@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { api, ApiError, type Me, type Permission, type RegisterResult } from '../lib/api.ts'
+import { forgetMemberData } from '../lib/memberCache.ts'
 
 /**
  * The signed-in member, with the same account as TKU BridgeTable (淡江牌桌). `undefined` while the
@@ -25,6 +26,8 @@ const AuthContext = createContext<Auth | null>(null)
  */
 const ME_KEY = 'tku-bridgebook:me'
 function keep(user: Me | null) {
+  // Signed out: what only members read goes too (the cached manifest and API answers, L0)
+  if (!user) void forgetMemberData()
   try {
     if (user) localStorage.setItem(ME_KEY, JSON.stringify(user))
     else localStorage.removeItem(ME_KEY)

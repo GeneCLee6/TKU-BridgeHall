@@ -10,11 +10,11 @@ import { formatDateTime, today } from '../lib/format.ts'
 import { draftBody, fromAiReply, importedItems, type ImportResult } from '../lib/importResult.ts'
 import { readReply, StreamError } from '../lib/sse.ts'
 import { useContent } from '../state/ContentContext.tsx'
-import { strings } from '../strings.ts'
 import type { ConventionMeta, SectionOutline } from '../types/convention.ts'
-import { Frame, Gate } from './Frame.tsx'
+import { Frame, Gate } from './Frame.tsx'
+import { importStrings } from './importStrings.ts'
 
-const t = strings.importer
+const t = importStrings
 const PDF_MAX_MB = 20
 
 /** What was taken out of the chosen file */
@@ -305,7 +305,7 @@ function DraftRow({
     <li>
       <div>
         <button type="button" className="link" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-          {strings.importer.draftLine(draft.fileName || '—', draft.createdBy, formatDateTime(draft.createdAt), draft.conventions)}
+          {importStrings.draftLine(draft.fileName || '—', draft.createdBy, formatDateTime(draft.createdAt), draft.conventions)}
         </button>
         {open && result && (
           <DraftItems>
@@ -318,7 +318,7 @@ function DraftRow({
         )}
       </div>
       <Button type="button" $small $variant="ghost" onClick={() => void onDelete()}>
-        {strings.importer.deleteDraft}
+        {importStrings.deleteDraft}
       </Button>
     </li>
   )

@@ -80,7 +80,7 @@ export function DraftsPanel() {
 function targetLink(entry: AuditEntry) {
   if (entry.action.startsWith('profile:'))
     return entry.action === 'profile:delete' ? null : `/profiles/${encodeURIComponent(entry.target)}/edit`
-  if (entry.action === 'book:categories') return null
+  if (entry.action === 'book:categories' || entry.action === 'book:builtin') return null
   if (entry.action === 'book:glossary') return '/glossary'
   // A 待確認 note (e8-t06): `<slug>/<sectionId>/<n>`
   if (entry.action === 'book:pending') return '/pending'

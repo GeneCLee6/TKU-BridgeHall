@@ -26,16 +26,16 @@
 | --- | --- | --- | --- | --- | --- |
 | [E1](e1-content-model-system-profiles.md) | 內容模型與制度集 | 16／16 | 7／7 | M1 | done |
 | [E2](e2-teams-partnerships.md) | 隊伍與搭檔 | 10／10 | 6／7 | M1 | in progress |
-| [E3](e3-convention-card-generator.md) | 制度卡產生器 | 11／13 | 4／8 | M1（t13 M2） | in progress |
+| [E3](e3-convention-card-generator.md) | 制度卡產生器 | 12／13 | 6／8 | M1（t13 M2） | in progress |
 | [E4](e4-levels-learning-path.md) | 分級與學習路徑 | 12／12 | 5／6 | M2 | in progress |
 | [E5](e5-library-articles-ebooks.md) | 橋藝叢書 | 13／15 | 6／8 | M2 | in progress |
 | [E6](e6-quiz-practice.md) | 練習與測驗 | 9／9 | 6／6 | M2 | done |
 | [E7](e7-bridgetable-integration.md) | 與淡江牌桌整合 | 5／8 | 2／5 | M2 | in progress |
 | [E8](e8-content-governance.md) | 內容治理 | 11／14 | 5／6 | M1、M2 | in progress |
 | [E9](e9-ui-redesign.md) | 介面重新設計（v2） | 18／18 | 6／10 | M1 | in progress |
-| [E10](e10-platform-performance-ops.md) | 平台、效能與維運 | 7／11 | 2／6 | M1、M2、M3 | in progress |
+| [E10](e10-platform-performance-ops.md) | 平台、效能與維運 | 10／14 | 3／7 | M1、M2、M3 | in progress |
 | [E11](e11-community-forum.md) | 社群與討論 | 12／21 | 3／9 | M1（t21 M2） | in progress |
-| | **合計** | **115／147** | **47／78** | | |
+| | **合計** | **128／150** | **55／79** | | |
 
 里程碑分布：M1 約 90 個 task、M2 約 54 個、M3 2 個（概數，以 ROADMAP 為準）。M0 的功能（F1–F18）在 2026-10-21～23 完成，沒有拆成 task。
 
