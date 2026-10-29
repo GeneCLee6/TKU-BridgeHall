@@ -155,3 +155,20 @@ describe('applyFixes (幹部修題, e6-t06)', () => {
     expect(isManualId(first.id)).toBe(false)
   })
 })
+
+describe('fixes to call questions (e6-t07)', () => {
+  it('writes a fix against the example’s hand and answer, and stops applying it when either changes', async () => {
+    const { generateQuizzes } = await import('../../src/lib/quiz.ts')
+    const { conventions } = await import('../../src/content/index.ts')
+    const { applyFixes, basisOf } = await import('../../src/lib/quizRecords.ts')
+    const made = generateQuizzes(conventions, 'club').quizzes.filter((q) => q.kind === 'call')
+    const quiz = made[0]
+    expect(basisOf(quiz)).toEqual({ call: 'T4.9863.9762.753', answer: '1H' })
+    const fix = { source: 'auto' as const, id: quiz.id, basis: basisOf(quiz), answer: '1S', by: 'ed', at: 1 }
+    expect(applyFixes([quiz], [fix], conventions, 'club').quizzes[0].answer).toBe('1S')
+    const otherHand = { ...quiz, hand: { ...quiz.hand!, clubs: '752' } }
+    const out = applyFixes([otherHand], [fix], conventions, 'club')
+    expect(out.quizzes[0].answer).toBe('1H')
+    expect(out.stale).toEqual([fix])
+  })
+})

@@ -4,6 +4,9 @@ import * as account from '../../src/lib/account.ts'
 import * as api from '../../src/lib/api.ts'
 import * as ebooks from '../../src/lib/ebooks.ts'
 import * as forum from '../../src/lib/forum.ts'
+import { conventions } from '../../src/content/index.ts'
+import { generateQuizzes } from '../../src/lib/quiz.ts'
+import { bankFile, exportQuizzes } from '../../src/lib/quizExport.ts'
 
 /**
  * The constants src/lib/api.ts copies from TKU-BridgeTable shared/protocol.ts (e10-t09). Runs only
@@ -104,5 +107,15 @@ describe.skipIf(!tableDir)('files shared with TKU-BridgeTable', () => {
     ).default as string
     // Line endings may differ between checkouts
     expect(local.replaceAll('\r\n', '\n')).toBe(table.replaceAll('\r\n', '\n'))
+  })
+})
+
+describe.skipIf(!tableDir)('the question bank export in the table (e6-t08, AC-6.5)', () => {
+  it('passes the table’s own checks of its bidding question bank', async () => {
+    const { bankProblems } = await import(/* @vite-ignore */ `${tableDir!.replaceAll('\\', '/')}/eval/quiz.ts`)
+    const { quizzes } = generateQuizzes(conventions, 'club')
+    const { questions } = exportQuizzes(quizzes, new Map(conventions.map((c) => [c.slug, c.nameZh])))
+    expect(questions.length).toBeGreaterThan(0)
+    expect(bankProblems([bankFile(questions)])).toEqual([])
   })
 })

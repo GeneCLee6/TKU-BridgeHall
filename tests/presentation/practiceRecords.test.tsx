@@ -162,3 +162,33 @@ describe('修題 (e6-t06, AC-6.6)', () => {
     expect(await screen.findByText(`符合條件的題目共 ${lebensohl.length - 1} 題。`, {}, WAIT)).toBeInTheDocument()
   })
 })
+
+describe('call questions in 修題 and the export (e6-t07, e6-t08)', () => {
+  it('fixes a call question’s answer and keeps it on the bidding box', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    routes['PUT /api/book/quiz/fixes'] = (body) => ({ body: { fix: { ...(body as { fix: object }).fix, by: 'amy', at: 1 } } })
+    const user = userEvent.setup()
+    const id = 'system-doubles/examples/4/hand'
+    renderAt(`/practice/fixes?id=${encodeURIComponent(id)}`)
+    expect(await screen.findByText('沒有選項：練習時用叫牌盒作答。', undefined, WAIT)).toBeInTheDocument()
+    const answer = screen.getByRole('textbox', { name: '正解（叫品）' })
+    expect(answer).toHaveValue('2C')
+    await user.clear(answer)
+    await user.type(answer, '2♦')
+    await user.click(screen.getByRole('button', { name: '儲存' }))
+    await waitFor(() => expect(sent.some((r) => r.method === 'PUT')).toBe(true))
+    // Written as the site writes calls, and no choices are added
+    expect(sent.find((r) => r.method === 'PUT')!.body).toEqual({
+      fix: { source: 'auto', id, basis: { call: 'QT97.64.764.9763', answer: '2C' }, answer: '2D' },
+    })
+  })
+
+  it('counts what goes to the table’s question bank and why the rest does not', async () => {
+    signedIn({ permissions: ['bookEdit'] })
+    renderAt('/practice/fixes')
+    const panel = within(await screen.findByRole('region', { name: '匯出給牌桌題庫' }, WAIT))
+    expect(await panel.findByText(/^可以匯出 7 題；7 題叫品題不能匯出/, undefined, WAIT)).toBeInTheDocument()
+    expect(panel.getAllByText(/例題沒有逐家寫出叫牌過程/)).toHaveLength(6)
+    expect(panel.getByRole('button', { name: '下載題庫檔（JSON）' })).toBeEnabled()
+  })
+})

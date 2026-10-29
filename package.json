@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "budget": "node scripts/check-budget.mjs",
     "parity": "node scripts/check-table-parity.mjs",
+    "quiz-bank": "node scripts/export-quiz-bank.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:browser": "playwright test"

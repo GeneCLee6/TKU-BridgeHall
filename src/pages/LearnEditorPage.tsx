@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import styled from 'styled-components'
+import { CallLabel, RichText } from '../components/Suit.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Row, Select, TextArea } from '../components/ui.tsx'
 import { errorText } from '../lib/api.ts'
 import { today } from '../lib/format.ts'
@@ -10,13 +11,16 @@ import {
   newLessonId,
   outlineSections,
   pathPage,
+  readingQuizzes,
   tidyPath,
   useLearningPaths,
   type LearningPath,
   type Lesson,
   type ShownPath,
 } from '../lib/learning.ts'
+import { generateQuizzes, type Quiz } from '../lib/quiz.ts'
 import { useContent } from '../state/ContentContext.tsx'
+import type { Convention } from '../types/convention.ts'
 import { Frame, Gate } from './Frame.tsx'
 import { learnStrings } from './learnStrings.ts'
 
@@ -25,7 +29,8 @@ const t = learnStrings.editor
 /**
  * 編輯學習路徑 (/learn/:pathId/edit, e4-t12, AC-4.3): editors change a path's name and lessons:
  * each lesson's title, goal, what to read (a convention of the club's handbook, or one of its
- * sections), and checklist. Saving keeps it online (TKU-BridgeTable `PUT /api/book/paths`) and it
+ * sections), the practice questions (e4-t10: chosen from those its readings make; none chosen
+ * practises them all), and checklist. Saving keeps it online (TKU-BridgeTable `PUT /api/book/paths`) and it
  * replaces the bundled path at once; 還原為內建版本 removes the online one. What a lesson says is the
  * editors' (CLAUDE.md rule 1). Outside ProfiledContent: readings choose from the club's content.
  */
@@ -182,6 +187,7 @@ function PathForm({ path, reload, notice, setNotice }: FormProps) {
                 </Row>
               )}
             </Readings>
+            <LessonQuizzes lesson={lesson} label={learnStrings.lesson(n)} onChange={(quizIds) => setLesson(i, { quizIds })} />
             <Field>
               {t.checklist}
               <TextArea rows={3} value={lesson.checklist.join('\n')} onChange={(e) => setLesson(i, { checklist: e.target.value.split('\n') })} />
@@ -225,6 +231,127 @@ function PathForm({ path, reload, notice, setNotice }: FormProps) {
     </form>
   )
 }
+
+/**
+ * A lesson's questions (e4-t10): the ones its readings make from the club's content, to tick. The
+ * content is loaded only when the list is opened. Ids no longer made are kept (the practice page
+ * skips them) so a change in the text does not quietly drop an editor's choice.
+ */
+function LessonQuizzes({ lesson, label, onChange }: { lesson: Lesson; label: string; onChange: (ids: string[]) => void }) {
+  const content = useContent()
+  const [open, setOpen] = useState(false)
+  const [result, setResult] = useState<{ slugs: string; list: Convention[] }>()
+  const slugs = [...new Set(lesson.readings.map((r) => r.slug).filter(Boolean))].join('|')
+  const { load } = content
+  useEffect(() => {
+    if (!open) return
+    let live = true
+    Promise.all(slugs.split('|').filter(Boolean).map((slug) => load(slug).catch(() => undefined))).then(
+      (list) => live && setResult({ slugs, list: list.filter((c): c is Convention => Boolean(c)) }),
+    )
+    return () => {
+      live = false
+    }
+  }, [open, slugs, load])
+  // What was loaded for other readings is not offered while the new ones load
+  const loaded = result?.slugs === slugs ? result.list : undefined
+  const offered = useMemo(
+    () => (loaded ? readingQuizzes(lesson.readings, generateQuizzes(loaded, 'club').quizzes, loaded) : []),
+    [loaded, lesson.readings],
+  )
+  const chosen = new Set(lesson.quizIds ?? [])
+  const gone = loaded ? [...chosen].filter((id) => !offered.some((q) => q.id === id)).length : 0
+  const toggle = (id: string) =>
+    onChange(chosen.has(id) ? (lesson.quizIds ?? []).filter((x) => x !== id) : [...(lesson.quizIds ?? []), id])
+
+  return (
+    <Quizzes>
+      <span>{t.quizzes}</span>
+      <Muted>
+        {t.quizzesHint} {t.quizzesChosen(chosen.size, LEARNING_LIMITS.quizzesMax)}
+      </Muted>
+      <Row>
+        <Button type="button" $small aria-expanded={open} onClick={() => setOpen(!open)}>
+          {open ? t.quizzesHide : t.quizzesShow(offered.length)}
+        </Button>
+        {chosen.size > 0 && (
+          <Button type="button" $small $variant="ghost" onClick={() => onChange([])}>
+            {t.quizzesClear}
+          </Button>
+        )}
+      </Row>
+      {open &&
+        (!loaded ? (
+          <Muted role="status">{t.quizzesLoading}</Muted>
+        ) : !offered.length ? (
+          <Muted>{t.quizzesNone}</Muted>
+        ) : (
+          <QuizList aria-label={`${label} ${t.quizzes}`}>
+            {offered.map((q) => (
+              <li key={q.id}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={chosen.has(q.id)}
+                    disabled={!chosen.has(q.id) && chosen.size >= LEARNING_LIMITS.quizzesMax}
+                    onChange={() => toggle(q.id)}
+                  />
+                  <QuizLine quiz={q} />
+                </label>
+              </li>
+            ))}
+          </QuizList>
+        ))}
+      {gone > 0 && <Muted>{t.quizzesGone(gone)}</Muted>}
+    </Quizzes>
+  )
+}
+
+function QuizLine({ quiz }: { quiz: Quiz }) {
+  return (
+    <span>
+      <small>
+        {quiz.kind === 'call' ? t.quizCall : t.quizMeaning} · {quiz.trail.join(' › ')}
+      </small>
+      <br />
+      {quiz.kind === 'call' ? (
+        <>
+          <RichText text={quiz.prompt ?? ''} /> → <CallLabel call={quiz.answer} />
+        </>
+      ) : (
+        <>
+          <CallLabel call={quiz.call ?? ''} />：<RichText text={quiz.answer} />
+        </>
+      )}
+    </span>
+  )
+}
+
+const Quizzes = styled.div`
+  display: grid;
+  gap: ${({ theme }) => theme.space(2)};
+`
+
+const QuizList = styled.ul`
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 24rem;
+  overflow: auto;
+  display: grid;
+  gap: ${({ theme }) => theme.space(2)};
+
+  label {
+    display: flex;
+    align-items: flex-start;
+    gap: ${({ theme }) => theme.space(2)};
+    line-height: 1.5;
+    cursor: pointer;
+  }
+  small {
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+`
 
 const LessonBox = styled.fieldset`
   display: grid;

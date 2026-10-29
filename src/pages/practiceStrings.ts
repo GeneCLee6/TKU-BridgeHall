@@ -5,7 +5,8 @@
  */
 export const practiceStrings = {
   title: '練習',
-  intro: '題目全部來自手冊原文：看叫牌過程與叫品，選出制度上的意義。待確認的內容不出題。',
+  intro:
+    '題目全部來自手冊原文：意義題看叫牌過程與叫品，選出制度上的意義；叫品題看原文的例題與牌，用叫牌盒叫出原文寫的叫品。待確認的內容不出題。',
   loading: '正在準備題目…',
   loadFailed: '有些特約載入失敗，題目只來自已載入的特約。',
   setup: '練習設定',
@@ -70,6 +71,15 @@ export const practiceStrings = {
   manual: '幹部出題',
   yourHand: '你的牌',
   callQuestion: '你叫什麼？',
+  biddingBox: '叫牌盒',
+  yourCall: '你叫的',
+  rightCall: '原文叫',
+  sourceHand: '原文的牌例',
+  kind: '題型',
+  kindAll: '全部題型',
+  kindMeaning: (n: number) => `意義題（${n}）`,
+  kindCall: (n: number) => `叫品題（${n}）`,
+  modeLesson: (title: string, n: number) => `這一課：${title}（${n} 題）`,
   fixThis: '修這題',
   fixes: '修題',
 
@@ -119,6 +129,22 @@ export const practiceStrings = {
     choicesChanged: '改選項',
     madeAnswer: '原文的意義（正解）',
     madeOthers: '自動產生的其他選項',
+    bankTitle: '匯出給牌桌題庫',
+    bankIntro: (profile: string) =>
+      `把「${profile}」的叫品題（含修正與手動出的題）存成淡江牌桌叫牌題庫的檔案（tests/bidding-quiz/book.json），讓機器人每次改版都答一遍。只匯出叫牌過程讀得出來的題；原文沒寫身價，一律匯出為無身價；全部標為待審核，由幹部在牌桌題庫確認。`,
+    bankCount: (n: number, left: number) => `可以匯出 ${n} 題${left ? `；${left} 題叫品題不能匯出：` : '。'}`,
+    bankDownload: '下載題庫檔（JSON）',
+    bankReasons: {
+      meaning: '意義題沒有牌',
+      hand: '牌裡有 x 或不是 13 張不同的牌',
+      noAuction: '例題沒有逐家寫出叫牌過程（例如「左敵 1♦，同伴 X，右敵 PASS，你？」）',
+      auction: '叫牌過程有題庫讀不懂的叫品，或叫牌不合規則',
+      disabled: '已停用',
+    },
+    madePrompt: '原文的例題',
+    madeCall: '原文的叫品（正解）',
+    boxOnly: '沒有選項：練習時用叫牌盒作答。',
+    othersBoxHint: '一行一個叫品；留空就用叫牌盒作答。',
     staleHere: '這筆修正是對著舊的原文寫的，現在不套用；確認後重新儲存，或刪除修正。',
     disable: '停用這題（不再出題）',
     answer: '正解',
