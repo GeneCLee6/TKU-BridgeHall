@@ -93,7 +93,8 @@ export interface FileTicket {
 
 export interface UploadedFile {
   key: string
-  type: FileType
+  /** A picture's, or a PDF's for an e-book (lib/ebooks.ts, e5-t09) */
+  type: FileType | 'application/pdf'
   size: number
   url: string
   thumbUrl?: string
