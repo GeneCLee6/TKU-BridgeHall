@@ -16,6 +16,7 @@ export const ebookStrings = {
   year: (y: number) => `${y} 年`,
   noCover: '沒有封面',
   back: '← 電子書',
+  library: '← 叢書',
   read: '閱讀',
   notFound: '找不到這本書。',
   notFoundSignedOut: '找不到這本書；如果是僅限社員的書，請先登入。',
@@ -23,9 +24,10 @@ export const ebookStrings = {
   fileMissing: '這本書的檔案現在讀不到（檔案空間未開通或已移除）。',
 
   licenses: {
-    own: '自撰',
-    permitted: '已取得授權',
-    'members-only': '僅限社員',
+    // The same words as the articles' (libraryStrings.licenses)
+    own: '社團自撰',
+    permitted: '經授權轉載',
+    'members-only': '僅社員可看',
   } satisfies Record<EbookLicense, string>,
   licenseHints: {
     own: '社員自己寫的，公開給所有人看',

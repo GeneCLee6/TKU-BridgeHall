@@ -5,10 +5,12 @@
  * shared/protocol.ts and worker/book.ts in TKU-BridgeTable; change them together.
  */
 
-import type { ArticleMeta } from '../types/article.ts'
+import type { ArticleMeta, ArticleSeries } from '../types/article.ts'
 import type { ConventionMeta, Section } from '../types/convention.ts'
 import type { Profile } from './account.ts'
 import type { SpecShows, SystemSpec } from './systemSpec.ts'
+
+export type { ArticleSeries }
 
 /** TKU BridgeTable (淡江牌桌), whose Worker holds the accounts */
 export const TABLE_SITE = 'https://tku-bridge-table.genelee-pro.workers.dev'
@@ -134,8 +136,10 @@ export type AuditAction =
   | 'book:hide'
   | 'book:reset'
   | 'book:categories'
+  | 'book:glossary'
   | 'article:publish'
   | 'article:hide'
+  | 'article:series'
   | 'ebook:save'
   | 'ebook:remove'
   | 'profile:create'
@@ -145,13 +149,15 @@ export type AuditAction =
   | 'quiz:unfix'
   | 'card:publish'
   | 'card:delete'
+  | 'path:save'
+  | 'path:reset'
 
 export interface AuditEntry {
   id: string
   at: number
   by: string
   action: AuditAction
-  /** A convention's or an article's slug, a profile's id, `<profile>/<template>` for a card, or 'categories' */
+  /** A convention's or an article's slug, a profile's id, `<profile>/<template>` for a card, 'categories' or 'series' */
   target: string
   version?: number
   /** The saved version's id (BookRevision.id), for publishing, hiding and resets */
@@ -227,11 +233,24 @@ export type ArticleEntrySummary = Omit<ArticleEntry, 'article'> & { meta: Articl
  */
 export type ArticleFiles = Record<string, { url: string; thumbUrl?: string }>
 
-/** GET /api/book/articles: what the reader may see, without blocks, and the covers' addresses */
+/** The series as edited online; an empty list means never, so the built-in ones apply (lib/series.ts) */
+export interface ArticleSeriesList {
+  version: number
+  series: ArticleSeries[]
+  updatedAt?: number
+  updatedBy?: string
+}
+
+/**
+ * GET /api/book/articles: what the reader may see, without blocks, the covers' addresses and the
+ * series; with `?text=1` (libraryApi.ts, for search, e5-t13) every article's words by slug
+ */
 export interface ArticleList {
   version: number
   entries: ArticleEntrySummary[]
   files: ArticleFiles
+  series: ArticleSeriesList
+  text?: Record<string, string>
 }
 
 /** GET /api/book/articles/:slug */

@@ -73,6 +73,7 @@ function Ebooks() {
 
   return (
     <>
+      <Link to="/library">{t.library}</Link>
       <PageTitle>{t.listTitle}</PageTitle>
       <Muted>{t.listIntro}</Muted>
       {user === null && (

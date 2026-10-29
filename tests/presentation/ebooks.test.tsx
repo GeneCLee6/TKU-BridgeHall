@@ -76,7 +76,7 @@ describe('e-books', () => {
     renderAt('/library/book')
     expect(await screen.findByRole('heading', { level: 2, name: '主打' }, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /主打技巧/ })).toHaveAttribute('href', '/library/book/b1')
-    expect(screen.getByText(/2024 年 · 自撰/)).toBeInTheDocument()
+    expect(screen.getByText(/2024 年 · 社團自撰/)).toBeInTheDocument()
     expect(await screen.findByText(/有些書僅限社員閱讀/)).toBeInTheDocument()
     // Only reviewers upload
     expect(screen.queryByRole('heading', { name: '上傳電子書' })).toBeNull()
@@ -98,8 +98,8 @@ describe('e-books', () => {
     await userEvent.type(screen.getByLabelText('書名'), '防守')
     await userEvent.type(screen.getByLabelText(/^作者/), '丙')
     await userEvent.type(screen.getByLabelText(/^系列/), '防守')
-    await userEvent.click(screen.getByRole('radio', { name: /僅限社員/ }))
-    expect(screen.getByRole('radio', { name: /僅限社員/ })).toBeChecked()
+    await userEvent.click(screen.getByRole('radio', { name: /僅社員可看/ }))
+    expect(screen.getByRole('radio', { name: /僅社員可看/ })).toBeChecked()
   })
 
   it("shows a book's details and license", async () => {
@@ -108,7 +108,7 @@ describe('e-books', () => {
     expect(await screen.findByRole('heading', { level: 1, name: '主打技巧' }, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.getByText('甲、乙')).toBeInTheDocument()
     expect(screen.getByText(/主打 · 2024 年 · 3.0 MB/)).toBeInTheDocument()
-    expect(screen.getByText(/授權：自撰/)).toBeInTheDocument()
+    expect(screen.getByText(/授權：社團自撰/)).toBeInTheDocument()
     // No signed address (no bucket yet): no reader
     expect(screen.getByRole('alert')).toHaveTextContent('這本書的檔案現在讀不到')
   })
