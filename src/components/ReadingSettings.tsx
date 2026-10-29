@@ -1,12 +1,12 @@
 import { ChevronsDownUp, ChevronsUpDown, Printer, Settings2, Smartphone, X } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { isStandalone, useInstallOffer } from '../lib/pwa.ts'
 import { pageStrings } from '../pageStrings.ts'
 import { readingModes, themeChoices, usePreferences } from '../state/PreferencesContext.tsx'
 import { strings } from '../strings.ts'
-import { mobile } from '../styles/tokens.ts'
+import { layout, mobile, mobileQuery } from '../styles/tokens.ts'
 import { IconButton } from './CopyLinkButton.tsx'
 import { InstallHelp } from './InstallHelp.tsx'
 import type { ReadingActions } from './ReadingSettingsButton.tsx'
@@ -27,7 +27,7 @@ export function ReadingSettings({
   printLabel = strings.reading.printPage,
   aboveToolbar = false,
 }: ReadingActions & { id: string; onClose: () => void; aboveToolbar?: boolean }) {
-  const { themeChoice, setThemeChoice, reading, update } = usePreferences()
+  const { themeChoice, setThemeChoice, reading, update, textSize } = usePreferences()
   const titleId = useId()
   const themeId = useId()
   const readingId = useId()
@@ -35,6 +35,27 @@ export function ReadingSettings({
 
   // Keyboard users land in the panel; Esc or × takes them back to the button
   useEffect(() => ref.current?.querySelector<HTMLElement>('[aria-pressed="true"]')?.focus(), [])
+
+  // Desktop: the panel stays inside the window. It opens upward when there is more room above the
+  // button (the 本頁 column's button can sit low), and scrolls when even that is not enough, as
+  // with 特大. Phones have their sheet above the toolbar instead.
+  const [fit, setFit] = useState<{ up: boolean; room: number }>()
+  useLayoutEffect(() => {
+    const place = () => {
+      const panel = ref.current
+      const anchor = panel?.parentElement
+      if (!panel || !anchor || window.matchMedia?.(mobileQuery).matches) return setFit(undefined)
+      const box = anchor.getBoundingClientRect()
+      const margin = 16
+      const below = window.innerHeight - box.bottom - margin
+      const above = box.top - parseFloat(layout.headerHeight) - margin
+      const up = panel.scrollHeight > below && above > below
+      setFit({ up, room: Math.max(up ? above : below, 160) })
+    }
+    place()
+    window.addEventListener('resize', place)
+    return () => window.removeEventListener('resize', place)
+  }, [textSize])
 
   // Install: the browser's own dialog when it offers one, otherwise the home-screen steps.
   // Hidden inside the installed app.
@@ -54,6 +75,8 @@ export function ReadingSettings({
       aria-labelledby={titleId}
       data-print="hide"
       $aboveToolbar={aboveToolbar}
+      $up={fit?.up ?? false}
+      style={fit && { maxHeight: fit.room }}
     >
       <Head>
         <h2 id={titleId}>{strings.reading.open}</h2>
@@ -142,13 +165,14 @@ export function ReadingSettings({
   )
 }
 
-const Panel = styled.div<{ $aboveToolbar: boolean }>`
+const Panel = styled.div<{ $aboveToolbar: boolean; $up: boolean }>`
   position: absolute;
-  top: calc(100% + ${({ theme }) => theme.space(2)});
+  ${({ $up }) => ($up ? 'bottom' : 'top')}: calc(100% + ${({ theme }) => theme.space(2)});
   right: 0;
   z-index: 40;
   width: 20rem;
   max-width: calc(100vw - ${({ theme }) => theme.space(8)});
+  overflow-y: auto;
   padding: ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(4)}
     ${({ theme }) => theme.space(4)};
   border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};

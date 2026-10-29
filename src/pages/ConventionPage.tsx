@@ -329,7 +329,9 @@ export function ConventionPage() {
       {wide && (
         <Rail aria-label={pageStrings.onThisPage} data-print="hide">
           <RailHeading>{pageStrings.onThisPage}</RailHeading>
-          <SectionList convention={convention} current={current} />
+          <RailList>
+            <SectionList convention={convention} current={current} />
+          </RailList>
           <ReadingSettingsButton toolbar {...actions} />
         </Rail>
       )}
@@ -647,13 +649,22 @@ const Rail = styled.aside`
   max-height: calc(
     100vh - ${({ theme }) => theme.layout.headerHeight} - ${({ theme }) => theme.space(12)}
   );
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: ${({ theme }) => theme.space(4)};
   padding-left: ${({ theme }) => theme.space(4)};
   border-left: 1px solid ${({ theme }) => theme.colors.border};
+`
+
+/**
+ * Only the list scrolls when it is longer than the screen: a scrolling rail would also clip the
+ * 閱讀設定 panel, which is wider than the rail and opens out of it
+ */
+const RailList = styled.div`
+  align-self: stretch;
+  min-height: 0;
+  overflow-y: auto;
 `
 
 const RailHeading = styled.h2`

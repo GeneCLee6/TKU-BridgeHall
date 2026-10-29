@@ -39,8 +39,11 @@ const Group = styled.div`
 const Option = styled.button<{ $size: TextSize }>`
   display: inline-grid;
   place-items: center;
-  width: 30px;
+  /* 特大 is two characters: its button widens instead of wrapping them onto two lines */
+  min-width: 30px;
   height: 28px;
+  padding: 0 4px;
+  white-space: nowrap;
   border: 0;
   border-radius: ${({ theme }) => theme.shape.tag};
   background: transparent;
