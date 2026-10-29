@@ -31,6 +31,7 @@ import { importedItems, type ImportedItem } from '../lib/importResult.ts'
 import { conventionPath } from '../lib/sections.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useAuth } from '../state/AuthContext.tsx'
+import { changedSectionIds } from '../lib/diff.ts'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile, mobileQuery } from '../styles/tokens.ts'
@@ -151,6 +152,7 @@ function EditorLoader() {
       initial={initial}
       baseVersion={info?.version ?? 0}
       hidden={!!info?.hidden}
+      published={info?.hidden ? null : (current ?? null)}
       draft={draft}
       reviewDraft={draftId ? null : (reviewDraft ?? null)}
       savedNotice={(location.state as { notice?: string } | null)?.notice}
@@ -170,6 +172,7 @@ function EditorBody({
   initial,
   baseVersion,
   hidden,
+  published,
   draft: source,
   reviewDraft,
   savedNotice,
@@ -179,6 +182,8 @@ function EditorBody({
   initial: Convention
   baseVersion: number
   hidden: boolean
+  /** What readers see now, for the notifications a publish sends (e8-t10); null when nothing */
+  published: Convention | null
   draft: DraftSource | null
   /** The convention's draft for review (e8-t02), null when it has none */
   reviewDraft: BookDraft | null
@@ -333,7 +338,8 @@ function EditorBody({
       let message: string
       let nextWip: BookDraft | null = null
       if (mode === 'publish') {
-        const { entry } = await api.book.save(tidy.slug, { ...common, ...(wip ? { draftRevision: wip.revision } : {}) })
+        const changedSections = changedSectionIds(published, tidy)
+        const { entry } = await api.book.save(tidy.slug, { ...common, changedSections, ...(wip ? { draftRevision: wip.revision } : {}) })
         await content.reload()
         setBase(entry.version)
         message = r.published(entry.version)

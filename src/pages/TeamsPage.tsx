@@ -12,7 +12,7 @@ import {
   type ProfileAccess,
   type SystemProfile,
 } from '../lib/api.ts'
-import { pairName, profileDiff, type ProfileDiff } from '../lib/teams.ts'
+import { pairComparePath, pairName, profileDiff, type ProfileDiff } from '../lib/teams.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { strings } from '../strings.ts'
@@ -250,7 +250,7 @@ function Team() {
                         <td>{diff ? diff.on : t.unknown}</td>
                         <td>
                           {diff && (
-                            <Link to={`/profiles/${encodeURIComponent(pair.profileId)}/compare`} aria-label={t.compareOf(name)}>
+                            <Link to={pairComparePath(pair.profileId, team.id, pair.id)} aria-label={t.compareOf(name)}>
                               {t.compare}
                             </Link>
                           )}

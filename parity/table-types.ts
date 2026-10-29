@@ -159,6 +159,9 @@ export type Checks = [
   Check<Same<Book.ClubMember, Protocol.ClubMember>>,
   Check<Same<typeof Book.TEAM_LIMITS, typeof Protocol.TEAM_LIMITS>>,
   Check<Same<typeof Book.PAIR_STATUSES, typeof Protocol.PAIR_STATUSES>>,
+  // Notifications (E8 e8-t10, E2 e2-t08)
+  Check<Same<Book.SuggestUnifyInput, Protocol.SuggestUnifyInput>>,
+  Check<Same<Book.BookFollow, Protocol.BookFollow>>,
 
   // ── The handbook → TKB (shared/protocol.ts, E7 e7-t03 e7-t04) ────────────────────────────────
   // The constant is in lib/tableSync.ts, which only the report page loads

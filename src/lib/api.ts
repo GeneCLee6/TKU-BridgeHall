@@ -514,6 +514,22 @@ export interface TeamPatch {
   membersEdit?: boolean
 }
 
+/**
+ * POST /api/club/teams/:id/suggest-unify (e2-t08): the captain suggests one of the team's
+ * partnerships drop an override (`ref`, as lib/teams.ts `overrideRef`); `name` is the convention's
+ * name as the handbook shows it. Calls are in lib/noticeApi.ts, out of the home page's bundle.
+ */
+export interface SuggestUnifyInput {
+  pairId: string
+  ref: string
+  name?: string
+}
+
+/** GET and PUT /api/book/follows/:slug (e8-t10): whether the member follows (關注) a convention */
+export interface BookFollow {
+  following: boolean
+}
+
 /** GET /api/club/members: who may be put on a team or invited as a partner, by username */
 export interface ClubMember {
   id: string
@@ -694,9 +710,13 @@ export const api = {
     /**
      * Publishes (a reviewer's, e8-t01). `baseVersion` is the published version the edit started
      * from: 0 for the bundled one or a new one. `draftRevision` when the edit started from the
-     * convention's draft, which is then used up.
+     * convention's draft, which is then used up. `changedSections` (lib/diff.ts `changedSectionIds`)
+     * has the club notified (e8-t10, e8-t11); left out, the publish is quiet.
      */
-    save: (slug: string, body: { convention: unknown; baseVersion: number; bundledUpdated?: string; note?: string; draftRevision?: number }) =>
+    save: (
+      slug: string,
+      body: { convention: unknown; baseVersion: number; bundledUpdated?: string; note?: string; draftRevision?: number; changedSections?: string[] },
+    ) =>
       send<{ entry: BookEntry }>('PUT', `/api/book/conventions/${slug}`, body),
     hide: (slug: string, baseVersion: number) =>
       post<{ entry: BookEntry }>(`/api/book/conventions/${slug}/hide`, { baseVersion }),

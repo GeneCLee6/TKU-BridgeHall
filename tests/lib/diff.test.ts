@@ -1,5 +1,5 @@
 import { conventions } from '../../src/content/index.ts'
-import { countDiff, diffConventions, inlineDiff, isEmptyDiff } from '../../src/lib/diff.ts'
+import { changedSectionIds, countDiff, diffConventions, inlineDiff, isEmptyDiff } from '../../src/lib/diff.ts'
 import type { Convention } from '../../src/types/convention.ts'
 
 const base: Convention = {
@@ -146,5 +146,28 @@ describe('inlineDiff', () => {
     const parts = inlineDiff(before, after)
     expect(parts.filter((p) => p.op !== 'added').map((p) => p.text).join('')).toBe(before)
     expect(parts.filter((p) => p.op !== 'removed').map((p) => p.text).join('')).toBe(after)
+  })
+})
+
+describe('changedSectionIds (e8-t10, e8-t11)', () => {
+  it('names nothing when nothing changed', () => {
+    expect(changedSectionIds(base, clone())).toEqual([])
+  })
+
+  it('names a changed section and the sections it sits in, not its siblings', () => {
+    const after = clone()
+    after.sections[0].children![0].title = '答叫（改）'
+    expect(changedSectionIds(base, after).sort()).toEqual(['one', 'one-a'])
+    const other = clone()
+    other.sections[1].blocks = [{ kind: 'note', tone: 'info', text: '改了' }]
+    expect(changedSectionIds(base, other)).toEqual(['two'])
+  })
+
+  it('names added and removed sections, and every section of a new convention', () => {
+    const after = clone()
+    after.sections[0].children = []
+    after.sections.push({ id: 'three', title: '新段', blocks: [] })
+    expect(changedSectionIds(base, after).sort()).toEqual(['one', 'one-a', 'three'])
+    expect(changedSectionIds(null, base).sort()).toEqual(['one', 'one-a', 'two'])
   })
 })
