@@ -67,6 +67,7 @@ export const review = {
     'book:hide': '隱藏',
     'book:reset': '改回內建',
     'book:categories': '改分類',
+    'book:glossary': '改名詞表',
     'profile:create': '新增制度集',
     'profile:save': '儲存制度集',
     'profile:delete': '刪除制度集',
@@ -78,4 +79,5 @@ export const review = {
     'card:delete': '刪除制度卡版本',
   } satisfies Record<AuditAction, string>,
   categories: '分類',
+  glossary: '名詞表',
 }

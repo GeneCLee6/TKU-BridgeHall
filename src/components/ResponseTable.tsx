@@ -25,11 +25,11 @@ export function ResponseTable({ rows }: { rows: ResolvedRow[] }) {
               <CallLabel call={row.call} />
             </th>
             <Meaning $origin={row.origin}>
-              <RichText text={row.meaning} />
+              <RichText text={row.meaning} glossary />
               <OriginMark origin={row.origin} />
               {row.note && (
                 <Note>
-                  <RichText text={row.note} />
+                  <RichText text={row.note} glossary />
                 </Note>
               )}
               {row.pending && <PendingNote text={row.pending} />}

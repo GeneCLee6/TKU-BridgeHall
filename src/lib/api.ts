@@ -7,6 +7,7 @@
 
 import type { ArticleMeta } from '../types/article.ts'
 import type { ConventionMeta, Section } from '../types/convention.ts'
+import type { Term } from '../types/glossary.ts'
 import type { Profile } from './account.ts'
 import type { SpecShows, SystemSpec } from './systemSpec.ts'
 
@@ -134,6 +135,7 @@ export type AuditAction =
   | 'book:hide'
   | 'book:reset'
   | 'book:categories'
+  | 'book:glossary'
   | 'article:publish'
   | 'article:hide'
   | 'profile:create'
@@ -178,6 +180,17 @@ export interface BookCategory {
 export interface BookCategories {
   version: number
   categories: BookCategory[]
+  updatedAt?: number
+  updatedBy?: string
+}
+
+/**
+ * GET /api/book/glossary (TKU-BridgeTable worker/glossary.ts BookGlossary, e4-t05). Version 0 means
+ * it was never edited online, so the bundled glossary applies.
+ */
+export interface BookGlossary {
+  version: number
+  terms: Term[]
   updatedAt?: number
   updatedBy?: string
 }
@@ -682,6 +695,10 @@ export const api = {
      */
     saveCategories: (categories: Omit<BookCategory, 'order'>[], baseVersion: number) =>
       send<BookCategories>('PUT', '/api/book/categories', { categories, baseVersion }),
+    glossary: () => request<BookGlossary>('/api/book/glossary'),
+    /** Replaces the whole glossary (e4-t07); 409 `glossaryConflict` when someone saved since `baseVersion` */
+    saveGlossary: (terms: Term[], baseVersion: number) =>
+      send<BookGlossary>('PUT', '/api/book/glossary', { terms, baseVersion }),
     /**
      * System profiles. Signed out, the list has the club's only and `profile` reads the club's
      * without its notes. Signed in, a member reads every profile but the members-only ones of teams

@@ -25,6 +25,8 @@ import type * as Handbook from '../src/types/convention.ts'
 import type * as Protocol from '@table/shared/protocol.ts'
 import type * as Worker from '@table/worker/book.ts'
 import type * as Audit from '@table/worker/audit.ts'
+import type * as TableGlossary from '@table/worker/glossary.ts'
+import type * as Glossary from '../src/types/glossary.ts'
 import type * as TableArticles from '@table/worker/articles.ts'
 import type * as Articles from '../src/lib/articles.ts'
 import type * as Library from '../src/types/article.ts'
@@ -62,6 +64,9 @@ export type Checks = [
   Check<Same<Handbook.PendingNote, Worker.PendingNoteRef>>,
   Check<Same<Book.BookCategory, Worker.BookCategory>>,
   Check<Same<Book.BookCategories, Worker.BookCategories>>,
+  // The glossary (e4-t05, e4-t07)
+  Check<Same<Glossary.Term, TableGlossary.GlossaryTerm>>,
+  Check<Same<Book.BookGlossary, TableGlossary.BookGlossary>>,
   // `categories` is optional in the handbook: a manifest cached before categories were data has none
   Check<Reads<Book.BookManifest, Worker.BookManifest>>,
   Check<Same<Omit<Book.BookManifest, 'categories'>, Omit<Worker.BookManifest, 'categories'>>>,
