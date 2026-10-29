@@ -51,6 +51,8 @@ const TeamCardsPage = lazy(() => import('./pages/TeamCardsPage.tsx').then((m) =>
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
 const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ default: m.AccountPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage.tsx').then((m) => ({ default: m.SettingsPage })))
+const EbooksPage = lazy(() => import('./pages/EbookPages.tsx').then((m) => ({ default: m.EbooksPage })))
+const EbookPage = lazy(() => import('./pages/EbookPages.tsx').then((m) => ({ default: m.EbookPage })))
 // 名詞解釋 (e4-t05, e4-t07)
 const GlossaryPage = lazy(() => import('./glossary/GlossaryPage.tsx').then((m) => ({ default: m.GlossaryPage })))
 const GlossaryEditorPage = lazy(() =>
@@ -131,6 +133,8 @@ export function App() {
                   <Route path="/teams/:id/cards/:templateId" element={<TeamCardsPage />} />
                   <Route path="/pairs/:id" element={<PairPage />} />
                   <Route path="/u/:id" element={<MemberPage />} />
+                  <Route path="/library/book" element={<EbooksPage />} />
+                  <Route path="/library/book/:id" element={<EbookPage />} />
                 </Routes>
               </Suspense>
             </ExpansionProvider>

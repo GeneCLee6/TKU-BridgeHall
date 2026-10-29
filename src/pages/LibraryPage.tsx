@@ -79,7 +79,9 @@ export function LibraryPage() {
       <PageBar lead={<Lead>{s.title}</Lead>} />
       <Intro>
         <h1>{s.title}</h1>
-        <p>{s.intro}</p>
+        <p>
+          {s.intro} <Link to="/library/book">{s.ebooks}</Link>
+        </p>
       </Intro>
 
       {error && (
