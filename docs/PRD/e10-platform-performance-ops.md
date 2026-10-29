@@ -70,9 +70,9 @@ M0 把 22 個特約全部打包進一個 bundle、整本放在一頁（3.2 萬�
 
 **M1 · 內容保護（L0，使用者 2026-10-29 決定）**
 
-- [x] `e10-t12` 內建特約搬到牌桌 Worker：`book:builtin:*` 存放、manifest 帶 `builtin`、`GET /api/book/builtin/:slug` 與搜尋索引 API、`PUT /api/book/builtin`（預設預演、不動線上版本、種子權杖）；橋館改讀 API，`npm run seed-builtin`（預演／`--apply`／`--verify` 逐字比對）；`npm run budget` 擋 `dist/` 裡的特約內容；拿掉內建 manifest、特約 chunk 與 `/search-index.json` · AC-10.7 · L · 牌桌 #194
-- [x] `e10-t13` 離線與登出：service worker 對 `/api/book/builtin/*`、`/api/book/search-index` 網路優先、離線用快取；登出（或 `/api/me` 回 401）清掉快取的 API 回應與 localStorage 的 manifest · AC-10.3、AC-10.7 · S · ← e10-t12
-- [x] `e10-t14` 首頁 JS 瘦身：目錄（含 Radix accordion）lazy 載入、跟頁面一起開始下載；`strings.ts` 拆出編輯器、匯入、分類、隊伍、牌例盒的文字（各自的 `*Strings.ts`）· AC-10.1、AC-10.7 · S
+- [x] `e10-t12` 內建特約搬到牌桌 Worker：`book:builtin:*` 存放、manifest 帶 `builtin`、`GET /api/book/builtin/:slug` 與搜尋索引 API、`PUT /api/book/builtin`（預設預演、不動線上版本、種子權杖）；橋館改讀 API，`npm run seed-builtin`（預演／`--apply`／`--verify` 逐字比對）；`npm run budget` 擋 `dist/` 裡的特約內容；拿掉內建 manifest、特約 chunk 與 `/search-index.json` · AC-10.7 · L · #44（牌桌 #194）
+- [x] `e10-t13` 離線與登出：service worker 對 `/api/book/builtin/*`、`/api/book/search-index` 網路優先、離線用快取；登出（或 `/api/me` 回 401）清掉快取的 API 回應與 localStorage 的 manifest · AC-10.3、AC-10.7 · S · ← e10-t12 · #44
+- [x] `e10-t14` 首頁 JS 瘦身：目錄（含 Radix accordion）lazy 載入、跟頁面一起開始下載；`strings.ts` 拆出編輯器、匯入、分類、隊伍、牌例盒的文字（各自的 `*Strings.ts`）· AC-10.1、AC-10.7 · S · #44
 
 **M2 · 維運**
 
