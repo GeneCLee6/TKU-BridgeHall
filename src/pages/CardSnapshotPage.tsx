@@ -167,7 +167,7 @@ function Snapshot({
             </Link>
           )}
         </Row>
-        <Muted id="card-pdf-hint">{t.pdfHint}</Muted>
+        <Muted id="card-pdf-hint">{t.pdfHint(template.paper)}</Muted>
       </Head>
       <SheetScroll aria-label={name} role="region" tabIndex={0} data-card-scroll>
         <div style={{ width: `${PAPER_WIDTH[template.paper]}pt`, margin: '0 auto' }}>

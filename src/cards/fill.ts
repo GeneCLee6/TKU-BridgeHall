@@ -136,7 +136,11 @@ export function slotSpaces(template: CardTemplate): Map<string, SlotSpace> {
           spaces.set(id, { lines: block.lines, chars: chars(width), label: 0 })
           break
         case 'text':
-          spaces.set(id, { lines: block.lines, chars: chars(width), label: textWidth(block.label) + 1 })
+          spaces.set(id, {
+            lines: block.lines,
+            chars: chars(width),
+            label: textWidth(block.label) + 1 + (block.suffix ? textWidth(block.suffix) + 1 : 0),
+          })
           break
         case 'check':
         case 'choice':

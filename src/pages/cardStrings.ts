@@ -3,6 +3,10 @@
 
 import type { Origin } from '../lib/profiles.ts'
 
+/** 中華民國橋藝協會 下載專區 › 比賽工具 › 制度卡: the forms and the WBF Systems Policy (docs/PRD/e3) */
+export const CTCBA_CARDS_URL =
+  'https://www.ctcba.org.tw/showpage.php?pg1=bfv94y50eg2j18xgypkj&pg2=ff7573p7wfgwdzd86lfg&lang=tw&infoid=49'
+
 export const cardStrings = {
   title: '制度卡',
   pageTitle: (profile: string, card: string) => `${card} · ${profile}`,
@@ -12,7 +16,8 @@ export const cardStrings = {
   profile: '制度集',
   print: '列印',
   pdf: '下載 PDF',
-  pdfHint: '「下載 PDF」會打開列印視窗，目的地選「另存為 PDF」。紙張 A4 橫式、邊界「預設」、不要縮放；背景圖形要勾選才會印出格子的灰底。',
+  pdfHint: (paper: 'A4-landscape' | 'A4-portrait') =>
+    `「下載 PDF」會打開列印視窗，目的地選「另存為 PDF」。紙張 A4 ${paper === 'A4-portrait' ? '直式' : '橫式'}、邊界「預設」、不要縮放；背景圖形要勾選才會印出格子的灰底。`,
   pending: '待確認',
   templatePending: '這張版型有幾處還沒和官方空白表核對：',
   intro:
@@ -125,6 +130,14 @@ export const cardStrings = {
     shared: '分享中：拿到連結的人都能看',
     private: '沒有分享：只有讀得到這個制度集的人能看',
     templateChanged: '版型在發布後改過，格子可能對不上；以發布時的 Word 檔為準。',
+  },
+  bsc: {
+    tab: (form: string, convention: string) => `${form} · ${convention}`,
+    intro: (convention: string, form: string) =>
+      `「${convention}」標為棕標，比賽前要另外交${form}。格子由這個特約的「制度卡位置」填入；特約沒有寫這張表的位置時，整個特約放進 Detailed Description，放不下的部分接在補充說明。`,
+    policy: 'WBF 制度政策（哪些算棕標、申報表要寫什麼）在中華民國橋藝協會的下載專區',
+    none: (form: string) => `這個制度集沒有採用標為${form}的特約。特約在編輯器標了「棕標」，制度卡頁才會多一張申報表。`,
+    noVersions: '申報表沒有版本與分享；下載 Word 交給主辦單位。',
   },
   places: {
     title: '在制度卡的位置：',

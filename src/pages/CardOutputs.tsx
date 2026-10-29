@@ -4,8 +4,8 @@ import styled from 'styled-components'
 import type { CardFont } from '../cards/docx.ts'
 import type { FilledCard } from '../cards/fill.ts'
 import { blobBase64 } from '../cards/load.ts'
-import { cardTemplates } from '../cards/templates/index.ts'
-import type { CardTemplate, CardTemplateId } from '../cards/types.ts'
+import { profileTemplates } from '../cards/templates/index.ts'
+import type { CardTemplate } from '../cards/types.ts'
 import { Button, ErrorText, Field, Input, Muted, Row, Select } from '../components/ui.tsx'
 import { type CardSnapshotMeta, errorText, type SystemProfile } from '../lib/api.ts'
 import { cardApi } from '../lib/cardApi.ts'
@@ -71,21 +71,27 @@ export function WordDownload({
   )
 }
 
-/** The template tabs of a card page: `to` gives each template's address */
+/**
+ * The template tabs of a card page: `to` gives each tab's address from its key, a template id or,
+ * for a Brown Sticker form, `<template id>/<convention slug>` (`forms`, after the cards)
+ */
 export function CardTabs({
   current,
   to,
+  forms = [],
 }: {
-  current: CardTemplateId
-  to: (id: CardTemplateId) => string
+  current: string
+  to: (key: string) => string
+  forms?: { key: string; label: string }[]
 }) {
+  const tabs = [...profileTemplates.map((x) => ({ key: x.id as string, label: x.nameZh ?? x.name })), ...forms]
   return (
     <nav aria-label={t.templates}>
       <Tabs>
-        {cardTemplates.map((x) => (
-          <li key={x.id}>
-            <Tab to={to(x.id)} aria-current={x.id === current ? 'page' : undefined}>
-              {x.nameZh ?? x.name}
+        {tabs.map((x) => (
+          <li key={x.key}>
+            <Tab to={to(x.key)} aria-current={x.key === current ? 'page' : undefined}>
+              {x.label}
             </Tab>
           </li>
         ))}

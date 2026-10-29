@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { cardStrings as t } from '../pages/cardStrings.ts'
+import type { Convention } from '../types/convention.ts'
 import { cardPlaces } from './places.ts'
 
 /** The cells a section fills on the convention cards, linked to them (e3-t10); see placesContext.tsx */
@@ -8,12 +9,14 @@ export default function CardPlaces({
   cardSlots,
   profileId,
   target,
+  convention,
 }: {
   cardSlots: readonly string[] | undefined
   profileId: string
   target: string
+  convention?: Pick<Convention, 'slug' | 'brownSticker'>
 }) {
-  const places = cardPlaces(cardSlots, target)
+  const places = cardPlaces(cardSlots, target, convention)
   if (!places.length) return null
   return (
     <Places data-print="hide" data-card-places>
@@ -22,7 +25,7 @@ export default function CardPlaces({
         <span key={p.slot}>
           {i > 0 && '、'}
           <Link
-            to={`/cards/${encodeURIComponent(profileId)}/${p.templateId}?cell=${encodeURIComponent(p.slot)}`}
+            to={`/cards/${encodeURIComponent(profileId)}/${p.path}?cell=${encodeURIComponent(p.slot)}`}
             aria-label={t.places.link(t.places.short[p.templateId], p.label)}
           >
             {t.places.short[p.templateId]} · {p.label}

@@ -109,6 +109,7 @@ export function App() {
                   <Route path="/profiles/:id/compare" element={<ProfileComparePage />} />
                   <Route path="/cards/:profileId" element={<CardPage />} />
                   <Route path="/cards/:profileId/:templateId" element={<CardPage />} />
+                  <Route path="/cards/:profileId/:templateId/:form" element={<CardPage />} />
                   <Route path="/cards/:profileId/:templateId/v/:n" element={<CardSnapshotPage />} />
                   <Route path="/teams" element={<TeamsPage />} />
                   <Route path="/teams/:id" element={<TeamPage />} />
