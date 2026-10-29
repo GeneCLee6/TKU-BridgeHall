@@ -17,6 +17,8 @@ const blocks = () => import('./HomeBlocks.tsx')
 const ProfileCard = lazy(() => blocks().then((m) => ({ default: m.ProfileCard })))
 const FirstSteps = lazy(() => blocks().then((m) => ({ default: m.FirstSteps })))
 const RecentChanges = lazy(() => blocks().then((m) => ({ default: m.RecentChanges })))
+// 社團新聞 and 最新討論 (e11-t16)
+const HomeForum = lazy(() => import('./HomeForum.tsx'))
 // 卡片總覽 (e9-t17): only readers who picked that 版面 download it
 const CardOverview = lazy(() => import('./CardOverview.tsx').then((m) => ({ default: m.CardOverview })))
 
@@ -30,8 +32,8 @@ export function HomePage({ notFound = false }: { notFound?: boolean }) {
 /**
  * The entrance (e9-t08, DESIGN-V2 §5.3): what the site is; in the main column the reader's system
  * profile, 第一次來 and every category with its conventions as links to their own pages; on the
- * right 最近更新 (the club news board takes that place in E11). One column on phones, in the same
- * order. It loads no convention content. Also shown for an unknown address, with a note.
+ * right 社團新聞 and 最近更新, and 最新討論 after the categories (e11-t16). One column on phones,
+ * in the same order. It loads no convention content. Also shown for an unknown address, with a note.
  */
 function Entrance({ notFound }: { notFound: boolean }) {
   const { conventions, categories } = useContent()
@@ -99,9 +101,13 @@ function Entrance({ notFound }: { notFound: boolean }) {
               )
             })}
           </Categories>
+          <Suspense fallback={<Reserve $h={12} />}>
+            <HomeForum part="discussions" />
+          </Suspense>
         </MainColumn>
         <Aside>
           <Suspense fallback={<Reserve $h={12} />}>
+            <HomeForum part="news" />
             <RecentChanges />
           </Suspense>
         </Aside>
@@ -153,6 +159,8 @@ const MainColumn = styled.div`
 `
 
 const Aside = styled.aside`
+  display: grid;
+  gap: ${({ theme }) => theme.space(8)};
   min-width: 0;
 `
 

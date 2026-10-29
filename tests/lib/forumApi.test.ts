@@ -35,6 +35,8 @@ describe('forum API (e11-t06, e11-t07)', () => {
     answer.body = { board: {}, pinned: [], posts: [post], page: 2, pages: 2 }
     expect((await forumApi.boardPage('deals', 2)).posts).toEqual([post])
     await forumApi.latest()
+    answer.body = { posts: [post], page: 3, pages: 3 }
+    expect((await forumApi.feed(3)).posts).toEqual([post])
     answer.body = { post }
     expect(await forumApi.createPost('deals', { blocks: post.blocks })).toEqual(post)
     await forumApi.updatePost('p1', { title: 't', blocks: post.blocks })
@@ -50,6 +52,7 @@ describe('forum API (e11-t06, e11-t07)', () => {
       'DELETE /api/forum/boards/x',
       'GET /api/forum/boards/deals/posts?page=2',
       'GET /api/forum/latest',
+      'GET /api/forum/feed?page=3',
       'POST /api/forum/boards/deals/posts',
       'PATCH /api/forum/posts/p1',
       'POST /api/forum/posts/p1/pin',
@@ -57,8 +60,8 @@ describe('forum API (e11-t06, e11-t07)', () => {
       'GET /api/forum/posts/p1',
       'DELETE /api/forum/posts/p1',
     ])
-    expect(sent[8].body).toEqual({ pinned: true })
-    expect(sent[9].body).toEqual({ locked: false })
+    expect(sent[9].body).toEqual({ pinned: true })
+    expect(sent[10].body).toEqual({ locked: false })
   })
 
   it('comments and reacts', async () => {

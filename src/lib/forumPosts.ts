@@ -3,6 +3,7 @@ import {
   FORUM_LIMITS,
   REACTION_EMOJIS,
   type CommentBlock,
+  type Post,
   type PostBlock,
   type ReactionEmoji,
   type Reactions,
@@ -291,4 +292,34 @@ export function timeAgo(ms: number, now: number, words: TimeWords, date: (ms: nu
   if (hours < 24) return words.hoursAgo(hours)
   const days = Math.floor(hours / 24)
   return days < 7 ? words.daysAgo(days) : date(ms)
+}
+
+// ── Lists (e11-t15, e11-t16) ─────────────────────────────────────────────────────────────────
+
+/** How long a post's line in a list may be, when it has no title */
+export const SUMMARY_MAX = 60
+
+/** A post in one line: its title, else the start of its first text, cut at SUMMARY_MAX characters; '' when it has neither */
+export function postSummary(post: Pick<Post, 'title' | 'blocks'>, max = SUMMARY_MAX): string {
+  if (post.title?.trim()) return post.title.trim()
+  const text = post.blocks.flatMap(blockWords).join(' ').replace(/\s+/g, ' ').trim()
+  const chars = [...text]
+  return chars.length > max ? `${chars.slice(0, max).join('')}…` : text
+}
+
+/** What a post carries besides text, for its line in a list: four hands, an auction, a hand */
+export const postHas = (post: Pick<Post, 'blocks'>) => ({
+  deal: post.blocks.some((b) => b.kind === 'deal'),
+  auction: post.blocks.some((b) => b.kind === 'auction'),
+  hand: post.blocks.some((b) => b.kind === 'hand'),
+})
+
+/** The members who posted last, most recent first, each once (the forum's 活躍的人) */
+export function recentAuthors(posts: readonly Pick<Post, 'authorId' | 'createdAt'>[], limit = 8): string[] {
+  const seen = new Set<string>()
+  for (const post of [...posts].sort((a, b) => b.createdAt - a.createdAt)) {
+    seen.add(post.authorId)
+    if (seen.size === limit) break
+  }
+  return [...seen]
 }

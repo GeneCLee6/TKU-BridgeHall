@@ -20,11 +20,22 @@ export function AccountCorner() {
  * (the editor) leave out `title` and set it themselves. Like the handbook's header v2 the bar has
  * no 字級 control: theme and 字級 are in 閱讀設定 (e9-t11, DESIGN-V2.md §5.1).
  */
-export function Frame({ title, children, wide }: { title?: string; children: ReactNode; wide?: boolean }) {
+export function Frame({
+  title,
+  children,
+  wide,
+  toolbar,
+}: {
+  title?: string
+  children: ReactNode
+  wide?: boolean
+  /** The page has the phone's bottom toolbar (the forum, e11-t15), whose 閱讀設定 opens the panel */
+  toolbar?: boolean
+}) {
   usePageTitle(title)
   return (
     <>
-      <AppHeader actions={<ReadingSettingsButton />} account={<AccountCorner />} />
+      <AppHeader actions={<ReadingSettingsButton toolbar={toolbar} />} account={<AccountCorner />} />
       {wide ? children : <PageMain id="main">{children}</PageMain>}
     </>
   )

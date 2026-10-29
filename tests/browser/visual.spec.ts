@@ -3,7 +3,7 @@ import type { DisplayPrefs } from '../../src/state/PreferencesContext.tsx'
 import { DESKTOP, open, PHONE, styles, type Size } from './fixtures.ts'
 
 /**
- * Visual regression (e9-t12, AC-9.7): the four reading pages in 「一般」 on a computer and a phone,
+ * Visual regression (e9-t12, AC-9.7): the four reading pages and the forum (e11-t15) in 「一般」 on a computer and a phone,
  * light and dark; every other style on a convention page (light and dark) and the phone's home
  * page; the other three layouts; the phone toolbar's drawer and panel. Compared with the baselines
  * in __screenshots__ (playwright.config.ts says how to update them).
@@ -21,6 +21,7 @@ const pages = [
   { name: 'convention', path: '/c/jacoby-2nt' },
   { name: 'book', path: '/book' },
   { name: 'settings', path: '/settings' },
+  { name: 'forum', path: '/forum' },
 ]
 
 /** At most this tall, so a long page is cut instead of growing with the content */

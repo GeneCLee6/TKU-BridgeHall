@@ -12,7 +12,10 @@ import {
   mentionParts,
   myReaction,
   newBlock,
+  postHas,
   postProblems,
+  postSummary,
+  recentAuthors,
   saveDraft,
   textLength,
   tidyBlocks,
@@ -142,5 +145,30 @@ describe('times', () => {
     expect(timeAgo(now - 3 * 3_600_000, now, words, () => 'date')).toBe('3時')
     expect(timeAgo(now - 2 * 86_400_000, now, words, () => 'date')).toBe('2天')
     expect(timeAgo(now - 8 * 86_400_000, now, words, () => 'date')).toBe('date')
+  })
+})
+
+describe('posts in lists (e11-t15, e11-t16)', () => {
+  it('sums a post up by its title, else its first words', () => {
+    expect(postSummary({ title: ' 大專盃報名 ', blocks: [{ kind: 'paragraph', text: '內文' }] })).toBe('大專盃報名')
+    expect(postSummary({ blocks: [{ kind: 'hand', cards: ['SA'] }, { kind: 'paragraph', text: '這副\n怎麼打？' }] })).toBe('這副 怎麼打？')
+    expect(postSummary({ blocks: [{ kind: 'paragraph', text: '一二三四五六' }] }, 4)).toBe('一二三四…')
+    expect(postSummary({ blocks: [{ kind: 'hand', cards: ['SA'] }] })).toBe('')
+  })
+
+  it('says what a post carries besides text', () => {
+    const blocks: PostBlock[] = [{ kind: 'hand', cards: ['SA'] }, { kind: 'paragraph', text: 'x' }]
+    expect(postHas({ blocks })).toEqual({ deal: false, auction: false, hand: true })
+  })
+
+  it('lists who posted last, each once', () => {
+    const posts = [
+      { authorId: 'a', createdAt: 1 },
+      { authorId: 'b', createdAt: 3 },
+      { authorId: 'a', createdAt: 4 },
+      { authorId: 'c', createdAt: 2 },
+    ]
+    expect(recentAuthors(posts)).toEqual(['a', 'b', 'c'])
+    expect(recentAuthors(posts, 2)).toEqual(['a', 'b'])
   })
 })

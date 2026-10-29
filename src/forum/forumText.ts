@@ -29,3 +29,6 @@ export function problemText(p: PostProblem, comment = false): string {
       return t.problems.titleTooLong(p.max)
   }
 }
+
+/** A board's page (e11-t15) */
+export const boardPath = (boardId: string) => `/forum/${encodeURIComponent(boardId)}`

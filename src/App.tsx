@@ -65,8 +65,11 @@ const GlossaryPage = lazy(() => import('./glossary/GlossaryPage.tsx').then((m) =
 const GlossaryEditorPage = lazy(() =>
   import('./glossary/GlossaryEditorPage.tsx').then((m) => ({ default: m.GlossaryEditorPage })),
 )
-// 討論區 (E11 G5: e11-t13, e11-t14); the board pages and the forum's frame are G6
+// 討論區 (E11): the forum's frame and board pages (e11-t15), a post (e11-t14), the compose box (e11-t13)
 const forum = () => import('./forum/ForumPages.tsx')
+const ForumShell = lazy(() => forum().then((m) => ({ default: m.ForumShell })))
+const FeedPage = lazy(() => forum().then((m) => ({ default: m.FeedPage })))
+const ForumBoardPage = lazy(() => forum().then((m) => ({ default: m.BoardPage })))
 const PostPage = lazy(() => forum().then((m) => ({ default: m.PostPage })))
 const NewPostPage = lazy(() => forum().then((m) => ({ default: m.NewPostPage })))
 
@@ -175,8 +178,12 @@ export function App() {
               <Route path="/u/:id" element={<MemberPage />} />
               <Route path="/library/book" element={<EbooksPage />} />
               <Route path="/library/book/:id" element={<EbookPage />} />
-              <Route path="/forum/new" element={<NewPostPage />} />
-              <Route path="/forum/p/:postId" element={<PostPage />} />
+              <Route path="/forum" element={<ForumShell />}>
+                <Route index element={<FeedPage />} />
+                <Route path="new" element={<NewPostPage />} />
+                <Route path="p/:postId" element={<PostPage />} />
+                <Route path=":boardId" element={<ForumBoardPage />} />
+              </Route>
             </Route>
           </Routes>
         </Suspense>

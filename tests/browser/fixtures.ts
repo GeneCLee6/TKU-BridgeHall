@@ -1,11 +1,12 @@
 import { expect, type Page } from '@playwright/test'
+import { BUILTIN_BOARDS, type Post } from '../../src/lib/forum.ts'
 import type { StyleName } from '../../src/styles/tokens.ts'
 import type { DisplayPrefs } from '../../src/state/PreferencesContext.tsx'
 
 /**
  * A fixed reader for the browser tests (e9-t12, e9-t13): a plain member (the whole site needs an
  * account, 2026-10-29) with no picture, nothing edited online, so the pages show the bundled
- * content, the same every time. The API is answered here; no Worker runs. `signedOut` gets the
+ * content, the same every time; the forum has the same few posts. The API is answered here; no Worker runs. `signedOut` gets the
  * login page instead.
  */
 
@@ -22,12 +23,48 @@ const NOW = new Date('2026-10-28T12:00:00+08:00')
 /** The member every page is opened as; no avatar, so the header shows their initials */
 const READER = { id: 'reader', username: 'reader', admin: false, permissions: [], profile: { displayName: '淡江社員' } }
 
+/** Two members and a few posts, for the forum and the home page's 社團新聞 and 最新討論 (e11-t15, e11-t16) */
+const MEMBERS = [
+  { id: 'reader', username: 'reader', displayName: '淡江社員' },
+  { id: 'bob', username: 'bob', displayName: '陳小柏' },
+]
+const post = (id: string, boardId: string, hoursAgo: number, extra: Partial<Post>): Post => ({
+  id,
+  boardId,
+  authorId: 'bob',
+  blocks: [],
+  createdAt: NOW.getTime() - hoursAgo * 3_600_000,
+  reactions: {},
+  commentCount: 0,
+  ...extra,
+})
+const POSTS: Post[] = [
+  post('p3', 'deals', 2, {
+    title: '今天社課這副 4♠ 怎麼做？',
+    blocks: [
+      { kind: 'paragraph', text: '西家首攻 ♥K，你會怎麼做？' },
+      { kind: 'hand', cards: ['SK', 'ST', 'S9', 'S7', 'S6', 'HA', 'H6', 'H3', 'DA', 'D2', 'CT', 'C7', 'C3'], label: '南家' },
+    ],
+    reactions: { '👍': ['reader'] },
+    commentCount: 2,
+  }),
+  post('p2', 'systems', 26, { blocks: [{ kind: 'paragraph', text: '1NT 開叫後 2♣ 問牌，對方賭倍怎麼辦？' }] }),
+  post('p1', 'news', 50, { title: '大專盃報名開始', pinned: true, blocks: [{ kind: 'paragraph', text: '11/2 截止，請找幹部報名。' }] }),
+]
+const FORUM: Record<string, unknown> = {
+  '/api/forum/boards': { boards: BUILTIN_BOARDS.map((b) => ({ ...b, pinnedPostIds: b.id === 'news' ? ['p1'] : [] })) },
+  '/api/club/members': { members: MEMBERS },
+  '/api/forum/latest': { news: POSTS.filter((p) => p.boardId === 'news'), discussions: POSTS.filter((p) => p.boardId !== 'news') },
+  '/api/forum/feed': { posts: POSTS, page: 1, pages: 1 },
+}
+
 async function serve(page: Page, signedOut: boolean) {
   await page.route('**/api/**', (route) => {
     const path = new URL(route.request().url()).pathname
     if (path === '/api/me' && !signedOut) return route.fulfill({ json: { user: READER } })
     if (path === '/api/book/manifest') return route.fulfill({ json: { version: 0, entries: [], categories: [] } })
     if (path === '/api/book/categories') return route.fulfill({ json: { version: 0, categories: [] } })
+    if (!signedOut && FORUM[path]) return route.fulfill({ json: FORUM[path] })
     return route.fulfill({ status: 401, json: { error: 'unauthorized' } })
   })
 }
