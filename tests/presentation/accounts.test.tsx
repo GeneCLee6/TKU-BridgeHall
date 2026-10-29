@@ -287,7 +287,7 @@ describe('the admin page', () => {
       },
     }
     renderAt('/admin')
-    expect(await screen.findByRole('link', { name: '打開：雷本索特約' }, { timeout: 5000 })).toHaveAttribute('href', '/edit/lebensohl')
+    expect(await screen.findByRole('link', { name: '打開：雷本索特約' }, { timeout: 5000 })).toHaveAttribute('href', '/review/lebensohl')
     expect(screen.getByText('送審中（amy）')).toBeInTheDocument()
     const audit = screen.getByRole('region', { name: '審計紀錄' })
     expect(within(audit).getByRole('link', { name: 'lebensohl' })).toHaveAttribute('href', '/edit/lebensohl?rev=00000000000002-abc')

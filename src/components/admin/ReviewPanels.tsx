@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { errorText, type AuditEntry, type BookDraftSummary } from '../../lib/api.ts'
 import { reviewApi } from '../../lib/reviewApi.ts'
 import { formatDateTime } from '../../lib/format.ts'
-import { review as t } from '../../pages/reviewStrings.ts'
+import { diffText, review as t } from '../../pages/reviewStrings.ts'
 import { DataTable, TableScroll } from '../DataTable.tsx'
 import { ErrorText, Muted, Panel, PanelTitle } from '../ui.tsx'
 
@@ -28,16 +28,18 @@ const loadDrafts = () => reviewApi.drafts()
 const loadAudit = () => reviewApi.audit()
 
 /**
- * 草稿與送審 on the admin page (e8-t02): every convention's draft, the ones in review first, with a
- * link to the editor, where a reviewer publishes it or sends it back. The review page (/review,
- * e8-t04) will replace it.
+ * 草稿與送審 on the admin page (e8-t02): every convention's draft, the ones in review first, each
+ * linked to its review page (/review/:slug, e8-t04), where it is compared with what is published
+ * and a reviewer publishes it or sends it back.
  */
 export function DraftsPanel() {
   const { value: drafts, error } = useLoaded<BookDraftSummary[]>(loadDrafts)
   return (
     <Panel aria-labelledby="admin-drafts">
       <PanelTitle id="admin-drafts">{t.draftsTitle}</PanelTitle>
-      <Muted>{t.draftsIntro}</Muted>
+      <Muted>
+        {t.draftsIntro} <Link to="/review">{diffText.openReview}</Link>
+      </Muted>
       {error && <ErrorText role="alert">{error}</ErrorText>}
       {drafts &&
         (drafts.length ? (
@@ -54,7 +56,7 @@ export function DraftsPanel() {
                 {drafts.map((d) => (
                   <tr key={d.slug}>
                     <td>
-                      <Link to={`/edit/${d.slug}`} aria-label={`${t.open}：${d.nameZh}`}>
+                      <Link to={`/review/${d.slug}`} aria-label={`${t.open}：${d.nameZh}`}>
                         {d.nameZh}
                       </Link>
                     </td>
