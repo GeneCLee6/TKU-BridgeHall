@@ -3,10 +3,11 @@
  * on the site, not bundled: the Worker keeps it (TKU-BridgeTable worker/articles.ts, `api.ts`
  * ArticleEntry) and the handbook checks its shape before showing it (lib/articles.ts).
  *
- * Its blocks are the handbook's (`Block`) plus three that only articles use: a heading, a quote and
- * a picture. `deal` and `play` come with e5-t02 and e5-t03.
+ * Its blocks are the handbook's (`Block`) plus five that only articles use: a heading, a quote, a
+ * picture, a deal (e5-t02) and a card-play sequence (e5-t03).
  */
 
+import type { Card, Deal, Seat } from '../lib/board.ts'
 import type { Block, Level } from './convention.ts'
 
 /** 小標題: the article's own outline, since an article has no sections */
@@ -36,7 +37,30 @@ export interface ImageBlock {
   caption?: string
 }
 
-export type ArticleBlock = Block | HeadingBlock | QuoteBlock | ImageBlock
+/**
+ * 牌例 (e5-t02): four hands, the dealer and the vulnerability in the forum's shape (lib/board.ts
+ * `Deal`, what `DealInput` gives), drawn by `DealDiagram`. A seat may be empty: an article often
+ * shows only declarer's two hands.
+ */
+export interface DealBlock {
+  kind: 'deal'
+  deal: Deal
+  caption?: string
+}
+
+/**
+ * 出牌過程 (e5-t03): the contract ('4S', '3N', '4HX'; lib/play.ts), declarer and the tricks in
+ * order, each from its leader on. Only the last trick may stop part-way.
+ */
+export interface PlayBlock {
+  kind: 'play'
+  contract: string
+  declarer: Seat
+  tricks: Card[][]
+  caption?: string
+}
+
+export type ArticleBlock = Block | HeadingBlock | QuoteBlock | ImageBlock | DealBlock | PlayBlock
 
 /**
  * 授權: written by the club (`own`), used with permission (`permitted`), or only for signed-in
