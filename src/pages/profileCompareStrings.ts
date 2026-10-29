@@ -49,4 +49,19 @@ export const profileCompare = {
   summary: '摘要',
   tags: '標籤',
   noTags: '（無）',
+
+  /** 建議統一 (e2-t08, AC-2.6): the captain suggests a partnership drop an override; the partners drop it */
+  unify: {
+    suggest: '建議統一',
+    suggestLabel: (place: string) => `建議統一：${place}`,
+    captainIntro: '你是這一隊的隊長：在覆寫旁按「建議統一」，會通知這對搭檔把那條覆寫改回隊伍的版本。',
+    suggested: '已通知這對搭檔。',
+    title: '隊長建議統一',
+    intro: '隊長建議把下面這條覆寫改回隊伍的版本。改回會刪掉這條覆寫並存檔，其他覆寫不變。',
+    revert: (parent: string) => `改回「${parent}」的版本`,
+    readOnly: '只有這對搭檔能改回。',
+    reverted: '已改回：這條覆寫已刪除。',
+    revertNote: '依隊長建議改回隊伍版',
+    gone: '隊長建議統一的那條覆寫已經不在了（可能已經改回）。',
+  },
 }

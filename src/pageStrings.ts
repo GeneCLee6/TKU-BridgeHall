@@ -14,6 +14,13 @@ export const pageStrings = {
   sectionCount: (n: number) => `${n} 節`,
   /** The convention page's way into 練習 (e6-t09) */
   practice: '練這個特約',
+  /** 關注 a convention (e8-t10): news of it comes to 淡江牌桌's notification centre */
+  follow: {
+    follow: '關注這個特約',
+    following: '已關注',
+    hint: '有新版本時會在淡江牌桌的通知中心告訴你',
+    followingHint: '有新版本時會通知你；再按一次取消關注',
+  },
   /** The home page's blocks (e9-t08, DESIGN-V2 §5.3); the categories stay in strings.ts */
   home: {
     profileEyebrow: (scope: string) => `目前的制度集 · ${scope}`,

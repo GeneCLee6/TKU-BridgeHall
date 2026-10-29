@@ -1,4 +1,4 @@
-import { CLUB_PROFILE_ID, type ClubMember, type ProfileInput, type ProfileSummary, type SystemProfile } from './api.ts'
+import { CLUB_PROFILE_ID, type ClubMember, type ProfileInput, type ProfileOverride, type ProfileSummary, type SystemProfile } from './api.ts'
 
 /**
  * 隊伍與搭檔 (E2 e2-t05, e2-t06, e2-t09): pure helpers for the team, partnership and account pages.
@@ -66,3 +66,21 @@ export function copyProfile(target: SystemProfile, source: Pick<SystemProfile, '
   if (target.cardEdits !== undefined) input.cardEdits = target.cardEdits
   return input
 }
+
+/**
+ * One override, as 建議統一 names it (e2-t08): `row:<slug>:<sectionId>:<block>:<row>`,
+ * `section:<slug>:<sectionId>` or `meta:<slug>`. TKU-BridgeTable worker/book-notices.ts has the same.
+ */
+export function overrideRef(o: ProfileOverride): string {
+  if (o.kind === 'row') return `row:${o.slug}:${o.sectionId}:${o.blockIndex}:${o.rowIndex}`
+  if (o.kind === 'section') return `section:${o.slug}:${o.sectionId}`
+  return `meta:${o.slug}`
+}
+
+/** The compare page of a team's partnership, from the team page: its captain may suggest there (e2-t08) */
+export const pairComparePath = (profileId: string, teamId: string, pairId: string) =>
+  `/profiles/${encodeURIComponent(profileId)}/compare?team=${encodeURIComponent(teamId)}&pair=${encodeURIComponent(pairId)}`
+
+/** The profile without one override, to save: 一鍵改回 the team's version (e2-t08, AC-2.6) */
+export const withoutOverride = (profile: SystemProfile, ref: string): ProfileInput =>
+  copyProfile(profile, { adopted: profile.adopted, overrides: profile.overrides.filter((o) => overrideRef(o) !== ref) })

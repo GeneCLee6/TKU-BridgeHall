@@ -379,6 +379,20 @@ export function diffConventions(before: Convention | null, after: Convention | n
   return { meta, sections: result }
 }
 
+/**
+ * The sections a publish changes, for the notifications (e8-t10, e8-t11; TKU-BridgeTable
+ * worker/book-notices.ts): each section with a change, and the sections it sits in, in either
+ * version, so the override of a whole section hears about a change in one of its subsections.
+ * Only the handbook can work this out: the Worker does not have the bundled conventions.
+ */
+export function changedSectionIds(before: Convention | null, after: Convention | null): string[] {
+  const trees = [before, after].map((c) => new Map(flatten(c?.sections ?? []).map((f) => [f.section.id, f.parent])))
+  const ids = new Set<string>()
+  for (const { id } of diffConventions(before, after).sections)
+    for (const parents of trees) for (let at: string | null | undefined = id; at; at = parents.get(at)) ids.add(at)
+  return [...ids]
+}
+
 // ---------------------------------------------------------------------------------------------
 // Words
 

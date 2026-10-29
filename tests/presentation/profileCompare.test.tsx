@@ -1,4 +1,5 @@
-import { configure, render, screen, within } from '@testing-library/react'
+import { configure, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from '../../src/App.tsx'
 import { conventions } from '../../src/content/index.ts'
@@ -59,6 +60,7 @@ const summary = ({ adopted, overrides, notes, ...p }: SystemProfile): ProfileSum
 })
 
 let routes: Record<string, unknown>
+let sent: { method: string; path: string; body: unknown }[]
 
 configure({ asyncUtilTimeout: 10_000 })
 vi.setConfig({ testTimeout: 40_000 })
@@ -74,6 +76,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   window.localStorage.clear()
+  sent = []
   routes = {
     'GET /api/me': { user: { id: 'u1', username: 'amy', admin: false, permissions: [] } },
     'GET /api/book/profiles': { profiles: PROFILES.map(summary) },
@@ -82,6 +85,7 @@ beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: string, init?: RequestInit) => {
+      if (init?.method && init.method !== 'GET') sent.push({ method: init.method, path: String(input), body: JSON.parse(String(init.body ?? '{}')) })
       const body = routes[`${init?.method ?? 'GET'} ${String(input)}`]
       return body === undefined
         ? new Response(JSON.stringify({ error: '沒有權限', code: 'forbidden' }), { status: 403 })
@@ -135,5 +139,57 @@ describe('the compare page', () => {
   it('shows the Worker’s refusal for a profile the member may not read', async () => {
     open('/profiles/secret/compare')
     expect(await screen.findByRole('alert')).toHaveTextContent('沒有權限')
+  })
+})
+
+describe('建議統一 (e2-t08, AC-2.6)', () => {
+  const ref = `row:${target.slug}:${target.sectionId}:${target.blockIndex}:0`
+  const team = { id: 't1', name: '甲隊', captainId: 'u1', memberIds: ['u1', 'u2', 'u3'], profileId: 'team', createdAt: 0 }
+  const pair = { id: 'x1', userIds: ['u2', 'u3'], teamId: 't1', profileId: 'pair', createdAt: 0, status: 'active' }
+
+  it("gives the team's captain a button by each override that tells the partners", async () => {
+    routes['GET /api/club/teams/t1'] = { team, pairs: [pair] }
+    routes['POST /api/club/teams/t1/suggest-unify'] = { ok: true }
+    open('/profiles/pair/compare?team=t1&pair=x1')
+    const overrides = await screen.findByRole('region', { name: '覆寫' })
+    const button = await within(overrides).findByRole('button', { name: /^建議統一：/ })
+    await userEvent.click(button)
+    expect(await screen.findByText('已通知這對搭檔。')).toBeInTheDocument()
+    expect(sent).toEqual([{ method: 'POST', path: '/api/club/teams/t1/suggest-unify', body: { pairId: 'x1', ref, name: target.convention.nameZh } }])
+  })
+
+  it('has no such button for someone who is not the captain', async () => {
+    routes['GET /api/club/teams/t1'] = { team: { ...team, captainId: 'u9' }, pairs: [pair] }
+    open('/profiles/pair/compare?team=t1&pair=x1')
+    await screen.findByRole('region', { name: '覆寫' })
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/club/teams/t1', expect.anything()))
+    expect(screen.queryByRole('button', { name: /^建議統一/ })).not.toBeInTheDocument()
+  })
+
+  it('shows a partner the suggested override on top, and drops it with one press', async () => {
+    const mine = PROFILES[2]
+    routes['GET /api/book/profiles/pair'] = { profile: mine, access: { notes: true, edit: true, share: true } }
+    routes['PUT /api/book/profiles/pair'] = { profile: { ...mine, version: 2 } }
+    open(`/profiles/pair/compare?unify=${encodeURIComponent(ref)}`)
+    const panel = await screen.findByRole('region', { name: '隊長建議統一' })
+    expect(within(panel).getByText(MEANING)).toBeInTheDocument()
+    await userEvent.click(within(panel).getByRole('button', { name: '改回「甲隊」的版本' }))
+    expect(await screen.findByText('已改回：這條覆寫已刪除。')).toBeInTheDocument()
+    expect(sent).toHaveLength(1)
+    const saved = sent[0].body as { profile: SystemProfile; baseVersion: number; note: string }
+    expect(sent[0]).toMatchObject({ method: 'PUT', path: '/api/book/profiles/pair' })
+    expect(saved.baseVersion).toBe(1)
+    expect(saved.profile.overrides).toEqual([override(GONE, 999)])
+    expect(saved.profile.adopted).toEqual(mine.adopted)
+  })
+
+  it('tells a reader who may not edit that only the partners may drop it, and says when it is gone', async () => {
+    const { unmount } = open(`/profiles/pair/compare?unify=${encodeURIComponent(ref)}`)
+    const panel = await screen.findByRole('region', { name: '隊長建議統一' })
+    expect(within(panel).getByText('只有這對搭檔能改回。')).toBeInTheDocument()
+    expect(within(panel).queryByRole('button')).not.toBeInTheDocument()
+    unmount()
+    open('/profiles/pair/compare?unify=row%3Anothing%3Ax%3A0%3A0')
+    expect(await screen.findByText(/已經不在了/)).toBeInTheDocument()
   })
 })
