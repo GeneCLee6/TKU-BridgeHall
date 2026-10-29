@@ -15,6 +15,7 @@ import { Tag, TagList } from '../components/Tag.tsx'
 import { GlossaryProvider } from '../glossary/GlossaryProvider.tsx'
 import { basicHiddenIds } from '../lib/levels.ts'
 import { practicePath, hasQuestions } from '../lib/quiz.ts'
+import { FollowButton } from '../components/FollowButton.tsx'
 import { sectionNumber } from '../lib/sectionNumber.ts'
 import {
   allKeys,
@@ -291,6 +292,7 @@ export function ConventionPage() {
             </Link>
           </Practice>
         )}
+        <FollowButton key={convention.slug} slug={convention.slug} />
 
         <Source>
           {strings.source}：{convention.source.title}

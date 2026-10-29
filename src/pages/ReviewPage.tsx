@@ -5,7 +5,7 @@ import { DiffView } from '../components/DiffView.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row, TextArea } from '../components/ui.tsx'
 import { api, ApiError, errorText, type BookDraft, type BookDraftSummary } from '../lib/api.ts'
 import { conventionProblems } from '../lib/content.ts'
-import { diffConventions } from '../lib/diff.ts'
+import { changedSectionIds, diffConventions } from '../lib/diff.ts'
 import { formatDateTime } from '../lib/format.ts'
 import { reviewApi } from '../lib/reviewApi.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
@@ -163,6 +163,8 @@ function ReviewDraft({ slug }: { slug: string }) {
         bundledUpdated: content.bundledBySlug(slug)?.updated,
         note: note.trim() || undefined,
         draftRevision: draft.revision,
+        // Who to notify (e8-t10, e8-t11): what changed from what readers see now
+        changedSections: changedSectionIds(before ?? null, draft.convention as Convention),
       })
       await content.reload()
       navigate('/review', { state: { notice: `${name}：${r.published(entry.version)}` } })

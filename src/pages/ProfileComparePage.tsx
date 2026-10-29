@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { AuctionTable } from '../components/AuctionTable.tsx'
 import { BlockView } from '../components/BlockView.tsx'
 import { OriginMark } from '../components/ProfileMarks.tsx'
 import { ResponseTable } from '../components/ResponseTable.tsx'
 import { RichText } from '../components/Suit.tsx'
-import { ErrorText, Muted, Notice, PageTitle, Panel, PanelTitle } from '../components/ui.tsx'
+import { Button, ErrorText, Muted, Notice, PageTitle, Panel, PanelTitle } from '../components/ui.tsx'
 import { api, CLUB_PROFILE_ID, errorText, type ProfileOverride, type SystemProfile } from '../lib/api.ts'
 import {
   changesNothing,
@@ -16,7 +16,9 @@ import {
   type ProfileComparison,
 } from '../lib/profileCompare.ts'
 import { summaryChain, type ProfileProblem, type ResolvedSection } from '../lib/profiles.ts'
+import { noticeApi } from '../lib/noticeApi.ts'
 import { conventionPath, sectionPath } from '../lib/sections.ts'
+import { overrideRef, withoutOverride } from '../lib/teams.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
@@ -29,6 +31,10 @@ import { profileCompare as t } from './profileCompareStrings.ts'
  * relative to its parent (lib/profileCompare.ts): the conventions it turns off or on, each
  * override with the parent's text next to the overridden one and a link to the place, and every
  * override or note that points at nothing. The club's own content is shown word for word.
+ *
+ * 建議統一 (e2-t08, AC-2.6): opened from the team page (`?team=&pair=`), the team's captain (or an
+ * editor) has a button by each override that tells the partners; their notification opens this page
+ * with `?unify=<ref>`, which shows that override on top with a button that drops it.
  */
 export function ProfileComparePage() {
   return (
@@ -47,8 +53,19 @@ type Loaded = { id: string; comparison: ProfileComparison; canEdit: boolean } | 
 function Compare() {
   const { id = '' } = useParams()
   const content = useContent()
-  const { can } = useAuth()
+  const { can, user } = useAuth()
+  const [params] = useSearchParams()
+  const unifyRef = params.get('unify')
+  const teamId = params.get('team')
+  const pairId = params.get('pair')
   const [loaded, setLoaded] = useState<Loaded | null>(null)
+  // Bumped after dropping an override, to compare again
+  const [generation, setGeneration] = useState(0)
+  /** The team whose captain is looking at one of its partnerships, so may suggest (e2-t08) */
+  const [captainOf, setCaptainOf] = useState<{ teamId: string; pairId: string } | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+  const [failure, setFailure] = useState('')
   const load = useRef(content.loadAll)
   useEffect(() => {
     load.current = content.loadAll
@@ -79,7 +96,22 @@ function Compare() {
     return () => {
       current = false
     }
-  }, [id, editor])
+  }, [id, editor, generation])
+
+  useEffect(() => {
+    if (!teamId || !pairId) return
+    let current = true
+    api.club.team(teamId).then(
+      ({ team, pairs }) => {
+        const mine = !team.archived && (editor || team.captainId === user?.id)
+        if (current && mine && pairs.some((p) => p.id === pairId && p.profileId === id)) setCaptainOf({ teamId, pairId })
+      },
+      () => {},
+    )
+    return () => {
+      current = false
+    }
+  }, [teamId, pairId, id, editor, user?.id])
 
   if (!loaded || loaded.id !== id) return <Muted role="status">{t.loading}</Muted>
   if ('error' in loaded) return <ErrorText role="alert">{loaded.error}</ErrorText>
@@ -88,6 +120,37 @@ function Compare() {
   const name = (slug: string) => content.bySlug(slug)?.nameZh ?? slug
   const off = adoptions.filter((a) => a.value === 'off')
   const on = adoptions.filter((a) => a.value === 'on')
+
+  const act = async (work: () => Promise<string>) => {
+    setBusy(true)
+    setMessage('')
+    setFailure('')
+    try {
+      setMessage(await work())
+    } catch (e) {
+      setFailure(errorText(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const suggest =
+    captainOf &&
+    ((change: Change) =>
+      act(async () => {
+        const ref = overrideRef(change.override)
+        await noticeApi.suggestUnify(captainOf.teamId, { pairId: captainOf.pairId, ref, name: name(change.override.slug) })
+        return t.unify.suggested
+      }))
+  // The override the captain suggested dropping, when it is still there
+  const suggested = unifyRef
+    ? conventions.flatMap((c) => c.changes.map((change) => ({ slug: c.slug, change }))).find((x) => overrideRef(x.change.override) === unifyRef)
+    : undefined
+  const revert = () =>
+    act(async () => {
+      await api.book.saveProfile(profile.id, withoutOverride(profile, unifyRef ?? ''), profile.version, t.unify.revertNote)
+      setGeneration((n) => n + 1)
+      return t.unify.reverted
+    })
 
   return (
     <>
@@ -106,6 +169,34 @@ function Compare() {
           <Link to={`/cards/${encodeURIComponent(profile.id)}/wbf`}>{t.card}</Link>
         </Links>
       </Panel>
+
+      {(message || failure) && (
+        <div aria-live="polite">
+          {message && <Notice role="status">{message}</Notice>}
+          {failure && <ErrorText role="alert">{failure}</ErrorText>}
+        </div>
+      )}
+
+      {unifyRef && !message && (
+        <Panel aria-labelledby="unify">
+          <PanelTitle id="unify">{t.unify.title}</PanelTitle>
+          {suggested ? (
+            <>
+              <Muted>{t.unify.intro}</Muted>
+              <ChangeView slug={suggested.slug} change={suggested.change} />
+              {canEdit ? (
+                <Button type="button" $variant="primary" disabled={busy} onClick={revert}>
+                  {t.unify.revert(parent?.name ?? t.handbook)}
+                </Button>
+              ) : (
+                <Muted>{t.unify.readOnly}</Muted>
+              )}
+            </>
+          ) : (
+            <Muted>{t.unify.gone}</Muted>
+          )}
+        </Panel>
+      )}
 
       {changesNothing(comparison) && <Notice role="status">{t.empty}</Notice>}
 
@@ -134,6 +225,7 @@ function Compare() {
       {conventions.length > 0 && (
         <Panel aria-labelledby="overrides">
           <PanelTitle id="overrides">{t.overridesTitle}</PanelTitle>
+          {suggest && <Muted>{t.unify.captainIntro}</Muted>}
           {conventions.map((c) => (
             <section key={c.slug} aria-labelledby={`compare-${c.slug}`}>
               <SubTitle id={`compare-${c.slug}`}>
@@ -141,7 +233,7 @@ function Compare() {
               </SubTitle>
               {!c.played && <Muted>{t.notPlayed}</Muted>}
               {c.changes.map((change, i) => (
-                <ChangeView key={i} slug={c.slug} change={change} />
+                <ChangeView key={i} slug={c.slug} change={change} suggest={suggest ? () => suggest(change) : undefined} busy={busy} />
               ))}
             </section>
           ))}
@@ -168,7 +260,18 @@ function Adoptions({ title, list }: { title: string; list: AdoptionChange[] }) {
   )
 }
 
-function ChangeView({ slug, change }: { slug: string; change: Change }) {
+function ChangeView({
+  slug,
+  change,
+  suggest,
+  busy,
+}: {
+  slug: string
+  change: Change
+  /** 建議統一 (e2-t08): the team's captain tells the partners */
+  suggest?: () => void
+  busy?: boolean
+}) {
   const link =
     change.kind === 'meta' ? (
       <Link to={conventionPath(slug)}>{t.goToConvention}</Link>
@@ -187,7 +290,14 @@ function ChangeView({ slug, change }: { slug: string; change: Change }) {
           {change.kind !== 'meta' && <Kind>{t.overrideKind[change.kind]}</Kind>}
           <RichText text={heading} />
         </strong>
-        {link}
+        <span>
+          {link}
+          {suggest && (
+            <Suggest type="button" $small disabled={busy} onClick={suggest} aria-label={t.unify.suggestLabel(heading)}>
+              {t.unify.suggest}
+            </Suggest>
+          )}
+        </span>
       </ItemHead>
       {change.kind === 'row' && (
         <>
@@ -388,6 +498,10 @@ const ItemHead = styled.div`
   align-items: baseline;
   justify-content: space-between;
   margin-bottom: ${({ theme }) => theme.space(2)};
+`
+
+const Suggest = styled(Button)`
+  margin-left: ${({ theme }) => theme.space(3)};
 `
 
 const Kind = styled.span`
