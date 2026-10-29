@@ -219,7 +219,8 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - **上傳**：`POST /api/book/ebooks/ticket { size }`（bookReview）拿一次性憑證，`PUT` PDF（XHR，有進度），再 `POST /api/book/ebooks` 存資料；改資料是 `PUT /api/book/ebooks/:id`，下架 `DELETE`（PDF 一起刪）。PDF ≤ 50 MB、Worker 看檔頭 `%PDF-`。授權（`own`／`permitted`／`members-only`，同文章）預設「經授權轉載」（`permitted`）、可改成「社團自撰」；「僅社員可看」在全站要登入後沒有意義（2026-10-29），表單只在那本書本來就是它時才列出（`offeredLicenses`），型別與牌桌的檢查不變；封面沿用 G1 的圖片上傳（`uploadArticlePicture`，purpose `article`）。
 - **直連 Worker**：PDF 的上傳與閱讀都用 `workerUrl(path)`（正式站是 `TABLE_SITE` 開頭，開發時走 Vite 的 `/api` proxy），不經 Vercel 的 `/api` 轉址；上傳路由與簽名網址的回應都有 CORS。
 - **可見範圍**（e5-t11, AC-5.6）：原本未登入時不給 `members-only` 的書；2026-10-29 起全站要登入（§4.2），牌桌的電子書 API 也要登入，所以每位社員都看得到所有上架的書。PDF 的簽名網址 15 分鐘失效。
-- **閱讀器**（e5-t10, AC-5.5）：pdf.js（`pdfjs-dist`）一次畫一頁到 canvas，寬度貼齊容器（手機可用）× 縮放、依 `devicePixelRatio` 畫清楚；上一頁／下一頁（按鈕、方向鍵、左右滑）、輸入頁碼、全螢幕（Fullscreen API，沒有時改成蓋滿畫面的 fixed 層，例如 iPhone）。worker 是打包出的 `pdf.worker.min.mjs`；中文 PDF 沒嵌字型時要的 CMap、標準字型、影像解碼 wasm 從 jsDelivr 的同版本 `pdfjs-dist` 抓（PDF 需要時才抓）。`onPage` 留給閱讀進度（e5-t14）。
+- **閱讀器**（e5-t10, AC-5.5）：pdf.js（`pdfjs-dist`）一次畫一頁到 canvas，寬度貼齊容器（手機可用）× 縮放、依 `devicePixelRatio` 畫清楚；上一頁／下一頁（按鈕、方向鍵、左右滑）、輸入頁碼、全螢幕（Fullscreen API，沒有時改成蓋滿畫面的 fixed 層，例如 iPhone）。worker 是打包出的 `pdf.worker.min.mjs`；中文 PDF 沒嵌字型時要的 CMap、標準字型、影像解碼 wasm 從 jsDelivr 的同版本 `pdfjs-dist` 抓（PDF 需要時才抓）。`onPage` 回報目前頁碼給閱讀進度。
+- **閱讀進度**（e5-t14, AC-5.8）：`lib/reading.ts`（型別對應牌桌 `shared/reading.ts`，`parity/table-types.ts` 對拍）。牌桌 `GET`／`PUT`／`DELETE /api/book/reading` 存每人最新 30 筆（`reading:<userId>`），文章記讀到的區塊（從 0 起，視窗上方三分之一那條線已經捲過的最後一塊，捲到底就是最後一塊），電子書記頁碼（從 1 起）。`useReadingMark` 停 2 秒才送、離開頁面或切到背景時立刻送、同一位置不重送、失敗不提示。`?at=`（文章）與 `?page=`（電子書）是「繼續閱讀」的連結；文章沒有 `?at=` 時頁首出「接著上次讀」按鈕（不自動跳），電子書沒有 `?page=` 時直接開在上次的頁。「我的帳號」的「繼續閱讀」面板列最新 5 筆，可拿掉。
 - **用量提醒**（e5-t15）：牌桌記 `file:usage`，越過 8 GB 通知每位管理員一次（牌桌的通知，連到 `/library/book`），超過 10 GB 拒絕上傳；編輯者在列表看到用量。
 - **R2 bucket 還沒建時**（`filesOff`）：列表照讀、沒有封面，書頁說檔案讀不到，上傳說空間還沒開通。
 
