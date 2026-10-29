@@ -1,7 +1,7 @@
 ---
 title: E7 — 與淡江牌桌整合
 date: 2026-10-24
-status: in progress
+status: done
 epic: E7
 owner: GeneCLee6
 milestones: [M2]
@@ -49,9 +49,9 @@ depends_on: [E1, E2]
 
 - [x] AC-7.1 — `toSystemSpec` 純函式：內建 22 個特約可轉換，`unresolved` 清單正確；牌桌載入指定制度集後機器人叫牌有說明且來自橋譜文字。
 - [x] AC-7.2 — 差異報告頁列出不一致與未解析的叫品；最後同步時間；可一鍵重新同步。
-- [ ] AC-7.3 — 牌桌 Alert 與叫牌盒提示有 `bookRef`；橋譜支援 `?profile=` 開指定制度集。
-- [ ] AC-7.4 — 牌桌紀錄頁叫牌過程 hover 顯示橋譜意義、點擊開橋譜段落。
-- [ ] AC-7.5 — 共用顯示元件有對拍測試；兩邊畫出來的花色、叫品、四家牌一致。
+- [x] AC-7.3 — 牌桌 Alert 與叫牌盒提示有 `bookRef`；橋譜支援 `?profile=` 開指定制度集。
+- [x] AC-7.4 — 牌桌紀錄頁叫牌過程 hover 顯示橋譜意義、點擊開橋譜段落。
+- [x] AC-7.5 — 共用顯示元件有對拍測試；兩邊畫出來的花色、叫品、四家牌一致。
 
 ## Task 拆分
 
@@ -61,9 +61,9 @@ depends_on: [E1, E2]
 - [x] `e7-t02` `toSystemSpec` 純函式（放牌桌 `shared/`，橋譜對拍）與測試快照 · AC-7.1 · M · ← e7-t01, e1-t08 — 牌桌 `shared/systemSpec.ts`（牌桌 #123），橋譜 `src/lib/systemSpec.ts` 逐字複本＋快照
 - [x] `e7-t03` Worker `GET /api/book/system-spec`；牌桌 `ClubConfig.systemProfileId` 與載入（牌桌 task）· AC-7.1 · M · ← e7-t02 — 牌桌 #168：spec 在橋館轉好、`PUT` 同步存在牌桌（Worker 沒有內建特約、CPU 不夠）；TKB 叫品附橋館原文，叫牌仍照牌桌已驗證的規則
 - [x] `e7-t04` 差異報告頁 `/integrations/table` · AC-7.2 · M · ← e7-t03 — PR #9：同步與最後同步時間、讀法不同／牌桌沒有規則／轉不出來的叫品
-- [ ] `e7-t05` `bookRef`：牌桌 Alert／叫牌盒提示的書圖示；橋譜 `?profile=` 支援 · AC-7.3 · S · ← e7-t03
-- [ ] `e7-t06` 牌桌紀錄頁的叫品意義 hover 與連結（牌桌 task）· AC-7.4 · S · ← e7-t03
-- [ ] `e7-t07` 共用元件對拍測試（`Suit`、`CallLabel`、`AuctionTable`、`DealDiagram`）· AC-7.5 · S · ← e5-t02
+- [x] `e7-t05` `bookRef`：牌桌 Alert／叫牌盒提示的書圖示；橋譜 `?profile=` 支援 · AC-7.3 · S · ← e7-t03 — PR #__HALL__（牌桌 #195）：`BookNote` 帶制度集，叫牌表上有橋館文字的叫品是連到 `/c/:slug/:sectionId?profile=` 的連結（新分頁），叫牌盒提示多一段橋館文字；`ProfileProvider` 讀 `?profile=`（有權限才生效、不改帳號的選擇）
+- [x] `e7-t06` 牌桌紀錄頁的叫品意義 hover 與連結（牌桌 task）· AC-7.4 · S · ← e7-t03 — 牌桌 #195：每副開始就載入橋館文字，真人在淡江制度下的叫品也帶 `book`，紀錄頁每個叫品 hover 顯示橋館意義、點了開那一段
+- [x] `e7-t07` 共用元件對拍測試（`Suit`、`CallLabel`、`AuctionTable`、`DealDiagram`）· AC-7.5 · S · ← e5-t02 — 兩邊元件實作不同（牌桌多語、卡面），改成同一份案例檔 `tests/shared-display/cases.ts`＋各自的 `shared-display` 測試畫出來比對；`npm run parity` 比對兩份案例檔
 - [x] `e7-t08` 幹部補手牌條件的 UI：在 `unresolved` 清單直接填「點力／張數／迫叫」存回段落的 `rows[].conditions`（新增選填欄位）· AC-7.1 · M · ← e7-t04 — PR #17（牌桌 #171）：報告頁「補條件」，存在社團版的叫品列（線上內容），`toSystemSpec` 轉成 `filled` 規則；`docs/SYSTEM-SPEC.md` §8
 
 ## 風險與對策

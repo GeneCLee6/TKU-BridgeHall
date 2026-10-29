@@ -187,4 +187,25 @@ describe('system profiles on the handbook page', () => {
     await waitFor(() => expect(menu).toHaveValue('club'))
     expect(within(catalogue()).getAllByText(dropped.nameZh)).not.toHaveLength(0)
   })
+
+  it('opens the profile a link names (?profile=, e7-t05), without changing the account’s choice', async () => {
+    signedIn({ bookProfile: 'team' })
+    renderAt(`/c/${target.slug}/${target.sectionId}?profile=pair`)
+    const menu = await screen.findByRole('combobox', { name: strings.profiles.label })
+    await waitFor(() => expect(menu).toHaveValue('pair'))
+    expect(await screen.findByText(MEANING)).toBeInTheDocument()
+    expect(sent.filter((r) => r.path === '/api/account/preferences')).toEqual([])
+
+    // Choosing another one is the reader's own choice again
+    await userEvent.selectOptions(menu, 'club')
+    await waitFor(() => expect(menu).toHaveValue('club'))
+    expect(sent).toContainEqual({ method: 'POST', path: '/api/account/preferences', body: { bookProfile: '' } })
+  })
+
+  it('ignores a linked profile the reader may not read', async () => {
+    signedIn({ bookProfile: 'team' })
+    renderAt(`/c/${target.slug}?profile=someone-elses`)
+    const menu = await screen.findByRole('combobox', { name: strings.profiles.label })
+    await waitFor(() => expect(menu).toHaveValue('team'))
+  })
 })
