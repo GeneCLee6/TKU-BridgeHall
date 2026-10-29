@@ -125,7 +125,7 @@ describe('入門版／完整版 (e4-t02)', () => {
 })
 
 describe('你是新生嗎？ (e4-t03)', () => {
-  it('asks a signed-out first visitor once; yes picks 入門版', async () => {
+  it('asks a first visitor once; yes picks 入門版', async () => {
     renderAt('/')
     const prompt = within(await screen.findByRole('region', { name: '你是新生嗎？' }, { timeout: 5000 }))
     await userEvent.click(prompt.getByRole('button', { name: '是，用入門版' }))

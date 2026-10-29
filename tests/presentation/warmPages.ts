@@ -14,4 +14,10 @@ export const warmPages = () =>
     import('../../src/pages/CardOverview.tsx'),
     import('../../src/pages/AccountPage.tsx'),
     import('../../src/pages/AdminPage.tsx'),
+    // What a signed-in member's handbook loads besides (the whole site needs an account, 2026-10-29)
+    import('../../src/components/ProfileSwitch.tsx'),
+    import('../../src/components/MobileToolbar.tsx'),
+    import('../../src/components/Avatar.tsx'),
+    import('../../src/pages/HomeBlocks.tsx'),
+    import('../../src/lib/profiles.ts'),
   ])

@@ -8,7 +8,7 @@ import type { Ebook } from '../../src/lib/ebooks.ts'
 /**
  * 電子書 (e5-t09, e5-t11, e5-t15) against a fake API. The reader itself (pdf.js on a canvas) is
  * not drawn in jsdom: these check the list, the book page's details, who gets the upload form, and
- * what the page says when the Worker leaves a members-only book out.
+ * what the page says about a book that is not there.
  */
 
 type Answer = { status?: number; body?: unknown }
@@ -44,6 +44,7 @@ beforeAll(() => import('../../src/pages/EbookPages.tsx'), 60_000)
 
 beforeEach(() => {
   routes = {}
+  signedIn({})
   sent = []
   vi.stubGlobal(
     'fetch',
@@ -71,18 +72,17 @@ const renderAt = (path: string) =>
   )
 
 describe('e-books', () => {
-  it('lists the books by series, and tells someone signed out that members-only ones need signing in', async () => {
+  it('lists the books by series', async () => {
     routes['GET /api/book/ebooks'] = { body: { ebooks: [book], files: {} } }
     renderAt('/library/book')
     expect(await screen.findByRole('heading', { level: 2, name: '主打' }, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /主打技巧/ })).toHaveAttribute('href', '/library/book/b1')
     expect(screen.getByText(/2024 年 · 社團自撰/)).toBeInTheDocument()
-    expect(await screen.findByText(/有些書僅限社員閱讀/)).toBeInTheDocument()
     // Only reviewers upload
     expect(screen.queryByRole('heading', { name: '上傳電子書' })).toBeNull()
   })
 
-  it('gives reviewers the upload form, with the license to choose, and editors the storage usage', async () => {
+  it('gives reviewers the upload form, 經授權轉載 already picked, and editors the storage usage', async () => {
     signedIn({ permissions: ['bookEdit', 'bookReview'] })
     routes['GET /api/book/ebooks'] = {
       body: { ebooks: [], files: {}, usage: { bytes: 8.5 * 1024 ** 3, warnBytes: 8 * 1024 ** 3, maxBytes: 10 * 1024 ** 3 } },
@@ -91,15 +91,16 @@ describe('e-books', () => {
     expect(await screen.findByRole('heading', { name: '上傳電子書' }, { timeout: 5000 })).toBeInTheDocument()
     expect(await screen.findByText('檔案空間已用 8.5 GB／10.0 GB')).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('快到免費上限')
+    // 僅社員可看 means nothing once the whole site is for members (2026-10-29)
     const licenses = screen.getAllByRole('radio')
-    expect(licenses).toHaveLength(3)
-    expect(licenses.every((r) => !(r as HTMLInputElement).checked)).toBe(true)
+    expect(licenses).toHaveLength(2)
+    expect(screen.getByRole('radio', { name: /經授權轉載/ })).toBeChecked()
 
     await userEvent.type(screen.getByLabelText('書名'), '防守')
     await userEvent.type(screen.getByLabelText(/^作者/), '丙')
     await userEvent.type(screen.getByLabelText(/^系列/), '防守')
-    await userEvent.click(screen.getByRole('radio', { name: /僅社員可看/ }))
-    expect(screen.getByRole('radio', { name: /僅社員可看/ })).toBeChecked()
+    await userEvent.click(screen.getByRole('radio', { name: /社團自撰/ }))
+    expect(screen.getByRole('radio', { name: /社團自撰/ })).toBeChecked()
   })
 
   it("shows a book's details and license", async () => {
@@ -113,11 +114,9 @@ describe('e-books', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('這本書的檔案現在讀不到')
   })
 
-  it('asks someone signed out to sign in when a book is not there for them (AC-5.6)', async () => {
+  it('says so when a book is not there', async () => {
     routes['GET /api/book/ebooks/b2'] = { status: 404, body: { error: '找不到這本書', code: 'ebookGone' } }
     renderAt('/library/book/b2')
-    expect(await screen.findByText(/如果是僅限社員的書，請先登入/, {}, { timeout: 5000 })).toBeInTheDocument()
-    const links = screen.getAllByRole('link', { name: '登入' }).map((a) => a.getAttribute('href'))
-    expect(links).toContain('/login?next=%2Flibrary%2Fbook%2Fb2')
+    expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toHaveTextContent('找不到這本書')
   })
 })

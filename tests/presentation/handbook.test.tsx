@@ -42,14 +42,13 @@ describe('home page', () => {
     expect(main.queryByRole('button', { name: /^雷本索特約/ })).toBeNull()
   })
 
-  it('shows the club profile, 第一次來 and 最近更新 to a signed-out reader (e9-t08)', async () => {
+  it('shows the club profile, 第一次來 and 最近更新 (e9-t08)', async () => {
     renderAt('/')
     const card = within(await screen.findByRole('region', { name: '社團預設制度' }, { timeout: 5000 }))
     expect(card.getByText('目前的制度集 · 社團')).toBeInTheDocument()
     expect(card.getByRole('link', { name: '讀制度' })).toHaveAttribute('href', '/book')
     // 練習 (e6-t09)
     expect(card.getByRole('link', { name: '練習叫牌' })).toHaveAttribute('href', '/practice')
-    expect(await card.findByRole('link', { name: '登入' })).toHaveAttribute('href', '/login?next=%2F')
 
     // The first lessons of 「從零開始」 (e4-t09), and the way to the whole path
     const lessons = within(screen.getByRole('region', { name: '第一次來？從這裡開始' })).getAllByRole('link')
@@ -82,7 +81,8 @@ describe('header v2 and 閱讀設定', () => {
     expect(header.getByRole('link', { name: /首頁$/ })).toHaveAttribute('href', '/')
     expect(header.getByText('社團預設')).toBeInTheDocument()
     expect(header.getByRole('searchbox')).toBeInTheDocument()
-    expect(await header.findByRole('link', { name: /登入/ })).toBeInTheDocument()
+    // The account menu, with the member's avatar
+    expect(await header.findByRole('button', { name: 'reader 的帳號選單' })).toBeInTheDocument()
     for (const name of ['全部展開', '全部收合', '列印', '安裝 App', '閱讀設定'])
       expect(header.queryByRole('button', { name })).toBeNull()
     expect(header.queryByRole('group', { name: '字級' })).toBeNull()
@@ -161,7 +161,8 @@ describe('header v2 and 閱讀設定', () => {
       await findTrigger(/^雷本索特約/)
       const header = within(screen.getByRole('banner'))
       expect(header.queryByText('社團預設')).toBeNull()
-      expect(header.queryByRole('button')).toBeNull()
+      // Only the account menu (the member's avatar; the name is hidden on a phone)
+      expect(header.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['reader 的帳號選單'])
       // The page's own 閱讀設定 button gives way to the toolbar's
       expect(within(screen.getByRole('main')).queryByRole('button', { name: '閱讀設定' })).toBeNull()
 
@@ -180,7 +181,7 @@ describe('header v2 and 閱讀設定', () => {
       expect(screen.queryByRole('dialog')).toBeNull()
       expect(reading).toHaveFocus()
       // Off a convention page the second place is 我的
-      expect(bar.getByRole('link', { name: '我的' })).toHaveAttribute('href', '/login')
+      expect(bar.getByRole('link', { name: '我的' })).toHaveAttribute('href', '/account')
     })
 
     it('opens the catalogue drawer and focuses search from the toolbar', async () => {

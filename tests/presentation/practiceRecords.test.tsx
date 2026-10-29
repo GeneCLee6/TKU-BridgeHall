@@ -38,6 +38,7 @@ beforeAll(
 beforeEach(() => {
   clearLocalRounds()
   routes = { 'GET /api/book/quiz/fixes': { body: { fixes: [] } } }
+  signedIn({})
   sent = []
   vi.stubGlobal(
     'fetch',
@@ -80,20 +81,6 @@ async function answerRound(user: ReturnType<typeof userEvent.setup>, n: number) 
 }
 
 describe('成績紀錄 (e6-t04)', () => {
-  it('keeps a round in this browser when signed out', async () => {
-    const user = userEvent.setup()
-    renderAt('/practice?c=lebensohl')
-    await screen.findByRole('checkbox', { name: /^雷本索特約/ }, WAIT)
-    expect(screen.getByText(/成績只存在這台裝置/)).toBeInTheDocument()
-    await answerRound(user, 5)
-    expect(await screen.findByText('成績已存在這台裝置。')).toBeInTheDocument()
-    const [round] = localRounds()
-    expect(round.answers).toHaveLength(5)
-    expect(round.answers.every((a) => a.slug === 'lebensohl')).toBe(true)
-    // Nothing was sent to the Worker
-    expect(sent.filter((r) => r.path === '/api/book/quiz/rounds')).toEqual([])
-  })
-
   it('keeps a round in the account when signed in', async () => {
     signedIn({})
     routes['GET /api/book/quiz/rounds'] = { body: { rounds: [] } }

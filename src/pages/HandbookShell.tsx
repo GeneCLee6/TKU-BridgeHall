@@ -21,7 +21,7 @@ import { AccountCorner } from './Frame.tsx'
 const ProfileSwitch = lazy(() =>
   import('../components/ProfileSwitch.tsx').then((m) => ({ default: m.ProfileSwitch })),
 )
-// A signed-out reader's first visit only (e4-t03)
+// A reader's first visit on this device (e4-t03; asked of members since the whole site needs an account, 2026-10-29)
 const NewcomerPrompt = lazy(() =>
   import('../components/NewcomerPrompt.tsx').then((m) => ({ default: m.NewcomerPrompt })),
 )
@@ -38,7 +38,7 @@ const MobileToolbar = lazy(() =>
  */
 export function HandbookShell() {
   const { conventions, categories, status, skipped } = useContent()
-  const { can, user } = useAuth()
+  const { can } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   // Esc closes the phone's catalogue drawer and gives the focus back to the toolbar (e9-t13)
   useEffect(() => {
@@ -101,7 +101,7 @@ export function HandbookShell() {
           {can('bookEdit') && skipped.length > 0 && (
             <Status role="status">{strings.online.skipped(skipped.length)}</Status>
           )}
-          {user === null && !newcomerAsked && (
+          {!newcomerAsked && (
             <Suspense fallback={null}>
               <NewcomerPrompt />
             </Suspense>

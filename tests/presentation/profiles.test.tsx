@@ -103,14 +103,6 @@ const renderAt = (path: string) =>
 const catalogue = () => screen.getByRole('navigation', { name: strings.catalogue })
 
 describe('system profiles on the handbook page', () => {
-  it('fetches nothing about profiles and shows no menu when signed out', async () => {
-    renderAt('/')
-    expect(await within(catalogue()).findAllByText(dropped.nameZh)).not.toHaveLength(0)
-    await waitFor(() => expect(sent.some((r) => r.path === '/api/me')).toBe(true))
-    expect(sent.some((r) => r.path.startsWith('/api/book/profiles'))).toBe(false)
-    expect(screen.queryByRole('combobox', { name: strings.profiles.label })).not.toBeInTheDocument()
-  })
-
   it("opens on the account's profile: leaves out what it does not play, marks overrides, shows notes", async () => {
     signedIn({ bookProfile: 'pair' })
     renderAt(`/c/${target.slug}/${target.sectionId}`)

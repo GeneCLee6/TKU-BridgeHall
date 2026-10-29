@@ -12,7 +12,7 @@ import {
   type ProfileAccess,
   type SystemProfile,
 } from '../lib/api.ts'
-import { memberName, pairName, profileDiff, type ProfileDiff } from '../lib/teams.ts'
+import { pairName, profileDiff, type ProfileDiff } from '../lib/teams.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { strings } from '../strings.ts'
@@ -74,7 +74,9 @@ function TeamList() {
                   {mine(team) && <Badge>{t.mine}</Badge>}
                 </Row>
               </td>
-              <td>{memberName(members, team.captainId)}</td>
+              <td>
+                <MemberChip members={members} id={team.captainId} />
+              </td>
               <td>{t.count(team.memberIds.length, TEAM_LIMITS.membersMax)}</td>
             </tr>
           ))}

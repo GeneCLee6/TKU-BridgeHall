@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { BlockView } from '../components/BlockView.tsx'
 import { CopyLinkButton } from '../components/CopyLinkButton.tsx'
@@ -34,7 +34,6 @@ type State =
 export function ArticlePage() {
   const { slug = '' } = useParams()
   const { user } = useAuth()
-  const { pathname } = useLocation()
   // What was loaded, for which article and reader; anything else is still loading
   const key = `${slug} ${user?.id ?? ''}`
   const [loaded, setLoaded] = useState<{ key: string; state: State }>()
@@ -96,11 +95,7 @@ export function ArticlePage() {
         {state.status === 'missing' && (
           <Notice role="alert">
             {s.notFound}{' '}
-            {user === null ? (
-              <Link to={`/login?next=${encodeURIComponent(pathname)}`}>{s.signIn}</Link>
-            ) : (
-              <Link to="/library">{s.backToLibrary}</Link>
-            )}
+            <Link to="/library">{s.backToLibrary}</Link>
           </Notice>
         )}
         {state.status === 'broken' && <Notice role="alert">{s.broken(state.problem)}</Notice>}

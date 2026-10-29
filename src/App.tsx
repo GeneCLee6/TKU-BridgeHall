@@ -1,9 +1,9 @@
 import { lazy, Suspense } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { UpdatePrompt } from './components/UpdatePrompt.tsx'
 import { HandbookShell } from './pages/HandbookShell.tsx'
 import { HomePage } from './pages/HomePage.tsx'
-import { AuthProvider } from './state/AuthContext.tsx'
+import { AuthProvider, useAuth } from './state/AuthContext.tsx'
 import { ContentProvider } from './state/ContentContext.tsx'
 import { ExpansionProvider } from './state/ExpansionContext.tsx'
 import { PreferencesProvider } from './state/PreferencesContext.tsx'
@@ -72,84 +72,106 @@ const handbook = (
   </ProfiledContent>
 )
 
+const loading = <p role="status">{strings.loading}</p>
+
+/**
+ * The whole site is for signed-in members (2026-10-29): a signed-out visitor only gets the login
+ * page, which brings them back here afterwards (`?next=`). The content and the reader's profile
+ * load only after signing in, since the Worker answers them only to members.
+ */
+function SignedIn() {
+  const { user } = useAuth()
+  const { pathname, search } = useLocation()
+  if (user === undefined) return loading
+  if (!user) {
+    const here = pathname + search
+    return <Navigate to={here === '/' ? '/login' : `/login?next=${encodeURIComponent(here)}`} replace />
+  }
+  return (
+    <ContentProvider>
+      <ProfileProvider>
+        <ExpansionProvider>
+          <Outlet />
+        </ExpansionProvider>
+      </ProfileProvider>
+    </ContentProvider>
+  )
+}
+
 export function App() {
   return (
     <PreferencesProvider>
       <GlobalStyle />
       <UpdatePrompt />
       <AuthProvider>
-        <ContentProvider>
-          <ProfileProvider>
-            <ExpansionProvider>
-              <Suspense fallback={<p role="status">{strings.loading}</p>}>
-                <Routes>
-                  <Route element={handbook}>
-                    <Route index element={<HomePage />} />
-                    <Route path="/book" element={<BookPage />} />
-                    <Route path="/c/:slug" element={<ConventionPage />} />
-                    <Route path="/c/:slug/:sectionId" element={<ConventionPage />} />
-                    <Route path="/library/:slug?" element={<Library />} />
-                    <Route path="/glossary" element={<GlossaryPage />} />
-                    <Route path="*" element={<HomePage notFound />} />
-                  </Route>
-                  <Route
-                    path="/practice"
-                    element={
-                      <ProfiledContent>
-                        <PracticePage />
-                      </ProfiledContent>
-                    }
-                  />
-                  <Route
-                    path="/practice/scores"
-                    element={
-                      <ProfiledContent>
-                        <PracticeScoresPage />
-                      </ProfiledContent>
-                    }
-                  />
-                  <Route
-                    path="/practice/fixes"
-                    element={
-                      <ProfiledContent>
-                        <PracticeFixesPage />
-                      </ProfiledContent>
-                    }
-                  />
-                  <Route path="/learn" element={<LearnIndexPage />} />
-                  <Route path="/learn/:pathId" element={<ProfiledContent><PathPage /></ProfiledContent>} />
-                  <Route path="/learn/:pathId/:lessonId" element={<ProfiledContent><LessonPage /></ProfiledContent>} />
-                  <Route path="/learn/:pathId/edit" element={<LearnEditorPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/account" element={<AccountPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/admin" element={<AdminPage />} />
-                  <Route path="/glossary/edit" element={<GlossaryEditorPage />} />
-                  <Route path="/new" element={<EditorPage />} />
-                  <Route path="/edit/:slug" element={<EditorPage />} />
-                  <Route path="/review" element={<ReviewPage />} />
-                  <Route path="/review/:slug" element={<ReviewPage />} />
-                  <Route path="/import" element={<ImportPage />} />
-                  <Route path="/integrations/table" element={<TableReportPage />} />
-                  <Route path="/profiles/:id/edit" element={<ProfileEditorPage />} />
-                  <Route path="/profiles/:id/compare" element={<ProfileComparePage />} />
-                  <Route path="/cards/:profileId" element={<CardPage />} />
-                  <Route path="/cards/:profileId/:templateId" element={<CardPage />} />
-                  <Route path="/cards/:profileId/:templateId/:form" element={<CardPage />} />
-                  <Route path="/cards/:profileId/:templateId/v/:n" element={<CardSnapshotPage />} />
-                  <Route path="/teams" element={<TeamsPage />} />
-                  <Route path="/teams/:id" element={<TeamPage />} />
-                  <Route path="/teams/:id/cards" element={<TeamCardsPage />} />
-                  <Route path="/teams/:id/cards/:templateId" element={<TeamCardsPage />} />
-                  <Route path="/pairs/:id" element={<PairPage />} />
-                  <Route path="/u/:id" element={<MemberPage />} />
-                  <Route path="/library/book" element={<EbooksPage />} />
-                  <Route path="/library/book/:id" element={<EbookPage />} />
-                </Routes>
-              </Suspense>
-            </ExpansionProvider>
-          </ProfileProvider>
-        </ContentProvider>
+        <Suspense fallback={loading}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={<SignedIn />}>
+              <Route element={handbook}>
+                <Route index element={<HomePage />} />
+                <Route path="/book" element={<BookPage />} />
+                <Route path="/c/:slug" element={<ConventionPage />} />
+                <Route path="/c/:slug/:sectionId" element={<ConventionPage />} />
+                <Route path="/library/:slug?" element={<Library />} />
+                <Route path="/glossary" element={<GlossaryPage />} />
+                <Route path="*" element={<HomePage notFound />} />
+              </Route>
+              <Route
+                path="/practice"
+                element={
+                  <ProfiledContent>
+                    <PracticePage />
+                  </ProfiledContent>
+                }
+              />
+              <Route
+                path="/practice/scores"
+                element={
+                  <ProfiledContent>
+                    <PracticeScoresPage />
+                  </ProfiledContent>
+                }
+              />
+              <Route
+                path="/practice/fixes"
+                element={
+                  <ProfiledContent>
+                    <PracticeFixesPage />
+                  </ProfiledContent>
+                }
+              />
+              <Route path="/learn" element={<LearnIndexPage />} />
+              <Route path="/learn/:pathId" element={<ProfiledContent><PathPage /></ProfiledContent>} />
+              <Route path="/learn/:pathId/:lessonId" element={<ProfiledContent><LessonPage /></ProfiledContent>} />
+              <Route path="/learn/:pathId/edit" element={<LearnEditorPage />} />
+              <Route path="/account" element={<AccountPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/glossary/edit" element={<GlossaryEditorPage />} />
+              <Route path="/new" element={<EditorPage />} />
+              <Route path="/edit/:slug" element={<EditorPage />} />
+              <Route path="/review" element={<ReviewPage />} />
+              <Route path="/review/:slug" element={<ReviewPage />} />
+              <Route path="/import" element={<ImportPage />} />
+              <Route path="/integrations/table" element={<TableReportPage />} />
+              <Route path="/profiles/:id/edit" element={<ProfileEditorPage />} />
+              <Route path="/profiles/:id/compare" element={<ProfileComparePage />} />
+              <Route path="/cards/:profileId" element={<CardPage />} />
+              <Route path="/cards/:profileId/:templateId" element={<CardPage />} />
+              <Route path="/cards/:profileId/:templateId/:form" element={<CardPage />} />
+              <Route path="/cards/:profileId/:templateId/v/:n" element={<CardSnapshotPage />} />
+              <Route path="/teams" element={<TeamsPage />} />
+              <Route path="/teams/:id" element={<TeamPage />} />
+              <Route path="/teams/:id/cards" element={<TeamCardsPage />} />
+              <Route path="/teams/:id/cards/:templateId" element={<TeamCardsPage />} />
+              <Route path="/pairs/:id" element={<PairPage />} />
+              <Route path="/u/:id" element={<MemberPage />} />
+              <Route path="/library/book" element={<EbooksPage />} />
+              <Route path="/library/book/:id" element={<EbookPage />} />
+            </Route>
+          </Routes>
+        </Suspense>
       </AuthProvider>
     </PreferencesProvider>
   )
