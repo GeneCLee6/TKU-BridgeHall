@@ -75,6 +75,8 @@ export const review = {
     'article:publish': '發布文章',
     'article:hide': '隱藏文章',
     'article:series': '改叢書系列',
+    'ebook:save': '上傳或修改電子書',
+    'ebook:remove': '下架電子書',
     'quiz:fix': '修改練習題',
     'quiz:unfix': '刪除練習題的修正',
     'card:publish': '發布制度卡版本',

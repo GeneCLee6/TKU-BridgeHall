@@ -210,6 +210,16 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - **系列**（e5-t06，`lib/series.ts`、`components/admin/SeriesPanel.tsx`，在管理頁）：與分類同法（§4.5），整份一次存 `PUT /api/book/series`（bookEdit，`libraryApi.saveSeries`；409 `seriesConflict`、`seriesInUse`），存在牌桌 `article:series`，隨 `GET /api/book/articles` 的 `series` 一起回來。**沒存過時用內建系列**（`BUILTIN_SERIES`：主打、擠牌、防守、叫牌理論、社課講義、社史，PRD 列的六個），存過以線上為準。還有文章的系列不能刪：牌桌只檢查它存過的系列，內建的由管理頁依看得到的文章檢查。審計動作 `article:series`。
 - **搜尋含文章**（e5-t13）：文章只在線上，不進建置時的 `search-index.json`。搜尋框第一次聚焦時另外抓 `GET /api/book/articles?text=1`（`libraryApi.loadArticleRecords`，lazy），牌桌回每篇的摘要與區塊文字（`searchText`，每篇最多 2 萬字；讀者看不到的文章不會有），`lib/search.ts` 的 `articleRecords` 每篇建一筆紀錄（`slug` 前綴 `library/`、`path` 是文章頁），跟特約的紀錄一起給 Fuse。叢書頁的搜尋框用同一份紀錄、只搜文章。抓不到時搜尋照常、只是沒有文章。`lib/articles.ts` 的 `articleText` 目前沒有用在搜尋（牌桌算好送來，省得下載全部內容）。
 
+### 3.3 電子書（E5 J5：`src/lib/ebooks.ts`、`pages/EbookPages.tsx`、`components/PdfReader.tsx`）
+
+- **型別**是牌桌 `shared/ebooks.ts` 的逐字複本（`Ebook`、`EbookInput`、`EbookList`、`EbookResponse`、`FileUsage`、上限；`parity/table-types.ts` 與 `tests/lib/tableParity.test.ts` 對拍）。呼叫（`ebookApi`）也放在 `lib/ebooks.ts`，不進 `api.ts`，首頁不帶。
+- **上傳**：`POST /api/book/ebooks/ticket { size }`（bookReview）拿一次性憑證，`PUT` PDF（XHR，有進度），再 `POST /api/book/ebooks` 存資料；改資料是 `PUT /api/book/ebooks/:id`，下架 `DELETE`（PDF 一起刪）。PDF ≤ 50 MB、Worker 看檔頭 `%PDF-`。授權（`own`／`permitted`／`members-only`，同文章）必填、表單沒有預設值；封面沿用 G1 的圖片上傳（`uploadArticlePicture`，purpose `article`）。
+- **直連 Worker**：PDF 的上傳與閱讀都用 `workerUrl(path)`（正式站是 `TABLE_SITE` 開頭，開發時走 Vite 的 `/api` proxy），不經 Vercel 的 `/api` 轉址；上傳路由與簽名網址的回應都有 CORS。
+- **可見範圍**（e5-t11, AC-5.6）：牌桌在未登入時就不給 `members-only` 的書（列表沒有、單本 404），PDF 的簽名網址 15 分鐘失效，所以連結與檔案都拿不到。文章的同一規則在 J1 已做（§3.2）。
+- **閱讀器**（e5-t10, AC-5.5）：pdf.js（`pdfjs-dist`）一次畫一頁到 canvas，寬度貼齊容器（手機可用）× 縮放、依 `devicePixelRatio` 畫清楚；上一頁／下一頁（按鈕、方向鍵、左右滑）、輸入頁碼、全螢幕（Fullscreen API，沒有時改成蓋滿畫面的 fixed 層，例如 iPhone）。worker 是打包出的 `pdf.worker.min.mjs`；中文 PDF 沒嵌字型時要的 CMap、標準字型、影像解碼 wasm 從 jsDelivr 的同版本 `pdfjs-dist` 抓（PDF 需要時才抓）。`onPage` 留給閱讀進度（e5-t14）。
+- **用量提醒**（e5-t15）：牌桌記 `file:usage`，越過 8 GB 通知每位管理員一次（牌桌的通知，連到 `/library/book`），超過 10 GB 拒絕上傳；編輯者在列表看到用量。
+- **R2 bucket 還沒建時**（`filesOff`）：列表照讀、沒有封面，書頁說檔案讀不到，上傳說空間還沒開通。
+
 ## 4. 路由、狀態與內容載入
 
 **路由**（`react-router-dom`，BrowserRouter）
@@ -247,6 +257,8 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 | `/teams/:id` | 隊伍頁（e2-t05，社員）：隊員、隊伍制度集入口（讀制度、比較、有 `access.edit` 時編輯）、各搭檔相對隊伍的覆寫／不採用／另採用數 |
 | `/u/:id` | 社員檔案頁（e11-t04，社員）：頭像、顯示名稱與帳號名稱、自評程度、常用制度、自我介紹、隊伍（含封存）與現役搭檔；自己的頁連到我的帳號（§4.6） |
 | `/pairs/:id` | 搭檔頁（e2-t06，社員）：兩人、所屬隊伍、接受／婉拒／收回／結束、這對的制度摘要與入口、從隊伍或另一對搭檔複製採用與覆寫（e2-t09，在瀏覽器組好 `ProfileInput` 用 `saveProfile` 存，備忘不複製；Worker 不需改動）。我的帳號的「我的隊伍與搭檔」列自己的隊伍、搭檔、邀請並可邀請搭檔 |
+| `/library/book` | 電子書（E5 e5-t09、e5-t11、e5-t15，lazy）：依系列列出看得到的書（封面、作者、年代、授權）；未登入時 `members-only` 的書不在列表（牌桌就不給），頁面提示登入。bookReview 有上傳表單（PDF ≤ 50 MB、授權必選、沒有預設），編輯者看得到檔案空間用量，超過 8 GB 顯示警告。見 §3.3 |
+| `/library/book/:id` | 一本電子書（lazy）：資料、授權說明、站內 PDF 閱讀器（`components/PdfReader.tsx`，再 lazy 一層，pdf.js 只在這裡載入）；bookReview 可修改資料、換 PDF、下架。看不到（含未登入看 `members-only`）時是 404，頁面請未登入的人先登入 |
 | 其他 | 顯示首頁並提示；找不到的 slug 也是首頁加提示，找不到的段落在特約頁提示 |
 
 管理、編輯、匯入三頁用 `React.lazy` 分開打包，讀者不會下載。
