@@ -7,6 +7,8 @@ import type { License } from './types/article.ts'
 export const libraryStrings = {
   title: '叢書',
   intro: '社團的文章：主打、擠牌、防守、叫牌理論與社課講義。',
+  /** To the e-books (E5 J5, /library/book) */
+  ebooks: '電子書（PDF）→',
   loading: '載入叢書中…',
   failed: '叢書暫時載入不了，請稍後再試。',
   retry: '再試一次',
