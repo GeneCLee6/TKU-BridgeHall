@@ -1,6 +1,6 @@
 # NEXT — 接下來怎麼做（給 AI 協作者與自己的交接手冊）
 
-最後更新 2026-10-30（L1 匯出與備份）。**完整順序在 [`ROADMAP.md`](ROADMAP.md)**（一批一個 PR）；這份只記「現在的位置」與工作方式。每完成一批就更新「現在的位置」；每個 AI session 開頭只需要讀 `CLAUDE.md` 和這一份。
+最後更新 2026-10-30（G8 討論區搜尋）。**完整順序在 [`ROADMAP.md`](ROADMAP.md)**（一批一個 PR）；這份只記「現在的位置」與工作方式。每完成一批就更新「現在的位置」；每個 AI session 開頭只需要讀 `CLAUDE.md` 和這一份。
 
 ## 1. 現在的位置
 
@@ -67,7 +67,8 @@
 - **G6 討論區殼、板面頁與首頁兩塊**（PR #42，牌桌 #192，2026-10-29，`e11-t15` `e11-t16`）：`/forum`（所有板面新→舊，牌桌新增 `GET /api/forum/feed`）、`/forum/:boardId`（置頂在上），都有發文框與「載入更多」；左欄板面、右欄社團新聞與活躍的人，手機單欄＋板面頁籤＋底部工具列（手冊頁的工具列也多「討論」）。刪除貼文後回到板面。首頁主欄多「最新討論」、右欄多「社團新聞」（幹部有「發公告」），我的制度集卡片多「討論區」按鈕。**AC-11.7 完成。** 沒做：左欄「我的貼文」「我提到的」（沒有 API，看 G8）、首頁牌例縮圖（只標「牌例」）。首頁 JS +0.22 kB（149.53 kB）。
 - **L1 匯出與備份**（PR #45，牌桌 #196，2026-10-30，`e8-t12` `e8-t13` `e8-t14`）：牌桌 `GET /api/book/export`（內建＋線上合併後的全部特約、隱藏清單、線上分類；只給管理員或唯讀權杖 `BOOK_EXPORT_TOKEN`，牌桌 DEPLOY.md §4.10）。`npm run export-content` 寫成 `src/content` 格式的 `.ts`＋`export.json`＋`README.md`（`tmp/content-export/`）。workflow「Content backup」每天 03:30 匯出、跑內容測試、開 PR 到 private 備份 repo 的 `content-backup` 分支（綠燈自動合併、失敗開 issue）；repo 公開，log 不印內容。**沒設定時略過**：要人建 private repo、設 `CONTENT_BACKUP_REPO`、`BOOK_EXPORT_TOKEN`（牌桌與橋館兩邊）、`CONTENT_BACKUP_TOKEN`，跑一次後勾 AC-8.4（CONTENT_GUIDE.md §6.5）。「線上版本併回內建層」只評估：不自動做，維持手動「收回內建層」（ARCHITECTURE.md §4.1.1）。
 - **G7 通知、幹部與檢舉、討論區管理**（PR #47，牌桌 #198，2026-10-30，`e11-t08` `e11-t09` `e11-t17`）：牌桌通知中心多四種（`forumReply`、`forumMention`、`forumAnnouncement`、`forumPinned`，`worker/forum-notices.ts`），鈴鐺連到 `/forum/p/<id>`（留言帶 `#comment-<id>`，貼文頁捲過去）；公告＝只有幹部能發的板的新貼文，通知全部社員。新權限 `forumModerate`（管理頁「討論區幹部」）：幹部＝它＋管理員（`isOfficer`），貼文「⋯」多置頂、鎖定；社員可檢舉貼文與留言（`ReportForm`）。`/forum/manage`：檢舉清單（駁回、刪除內容）與板面管理（管理員：改名、說明、誰能發、排序、新增、刪除），左欄與 `/admin` 有連結。幹部動作寫審計 `forum:*`。**AC-11.2、AC-11.5、AC-11.6 完成。** 管理頁勾權限不再清掉牌桌的 `boardCurate`、`tkuSystem`。**要人看**：管理放在 `/forum/manage` 而不是 `/admin`（`/admin` 要 bookEdit）、公告通知全部社員、通知文案。
-- **下一批**：G8 搜尋與牌桌引用、L3 備份到 R2、L4 Worker 產 PDF。L2 錯誤回報與分析使用者決定先不做（2026-10-29）。
+- **G8 搜尋、我的貼文、牌桌紀錄引用**（PR #48，牌桌 #199，2026-10-30，`e11-t10` `e11-t18` `e11-t20`）：牌桌 `GET /api/forum/search?q=&page=`（標題與文字區塊 `LIKE`，每個詞都要有，最多 5 詞 50 字，文字存在 `forum_posts.body_text`；留言不搜）與 `feed?author=`／`feed?mentions=`；`DELETE /api/files/<key>` 開放給 `forumModerate`。討論區左欄多搜尋框（手機改「搜尋」頁籤，工具列「搜尋」也到 `/forum/search`）與「我的討論」：我的貼文 `/forum/mine`、提到我的 `/forum/mentions`（貼文或留言 `@` 到我）。頁首搜尋在特約結果下多「討論」分組（lazy `SearchForum`，登入才有）。發文框「牌桌紀錄」區塊貼牌桌紀錄頁網址，存 `tableRecordId` 並連到牌桌（牌例等牌桌 e13-t07）。**AC-11.9 完成；M1 社團制度庫＋討論區完成。** 首頁 JS +0.13 kB（123.88 kB）。**要人看**：「我提到的」做成「別人提到我的」、搜尋不含留言。
+- **下一批**：L3 備份到 R2、L4 Worker 產 PDF。L2 錯誤回報與分析使用者決定先不做（2026-10-29）。
 - **已拍板**（2026-10-24）：網站改名**淡江橋館 · TKU BridgeHall**，「橋譜」保留為制度區塊名；新標誌（屋簷＋拱門＋四花色）在 `design/logo/`，改名是 ROADMAP B0（`e9-t18`）。介面預設「一般」＝現行配色與圓角，另五種風格、四種版面、字體、字級、花色顏色、密度都放個人設定，不投票（E9，展示頁 `design/pitch.html`）；首頁保留第一版視覺稿的版面並加社團新聞與最新討論（`DESIGN-V2.md` §5.3）；制度卡以 WBF 卡為主力、內容寫進格子、輸出 .docx 與 PDF，簡易卡與棕標申報表也要能生成（E3）；**新增 E11 社群與討論**（頭像、板面、牌例友善的貼文與留言、通知、管理），先給社內測試，型別與 Worker 模組放牌桌 repo 以便日後搬到牌桌 E13（ROADMAP Phase G）。
 - **等人決定的事**（不卡 A 期）：程度名稱（E4）、制度負責人（E8）、WBF 卡英文濃縮文字由誰定稿（E3）。見 `docs/PRD/00-prd.md` §14。
 

@@ -12,8 +12,7 @@ import { mentionParts, recordUrl } from '../lib/forumPosts.ts'
 import { blockText, conventionPath, findSectionPath, sectionPath } from '../lib/sections.ts'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
 import type { Section } from '../types/convention.ts'
-import { forumStrings as t } from './forumStrings.ts'
-
+import { forumStrings as t } from './forumStrings.ts'
 import { boardStrings } from '../components/board/boardStrings.ts'
 
 /** Signed addresses of uploaded pictures, by key; they are short-lived, so fetched with each read */
