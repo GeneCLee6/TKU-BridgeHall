@@ -7,7 +7,7 @@
 // 1. Type-checks parity/table-types.ts with `@table/*` pointing at the table checkout. Only errors
 //    in that file count: the table's own files are checked by the table's CI, and are compiled here
 //    without its dependencies (a type that fails to resolve becomes `any` and fails a check).
-// 2. Runs tests/lib/tableParity.test.ts (the shared constants, and src/lib/systemSpec.ts, a copy of
+// 2. Runs tests/lib/tableParity.test.ts (the shared constants, tests/shared-display/cases.ts, and src/lib/systemSpec.ts, a copy of
 //    the table's shared/systemSpec.ts) with TABLE_DIR set.
 //
 // With no table checkout it prints why and exits 0, so it never fails a machine without one.

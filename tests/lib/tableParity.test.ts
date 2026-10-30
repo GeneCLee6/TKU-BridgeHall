@@ -108,6 +108,14 @@ describe.skipIf(!tableDir)('files shared with TKU-BridgeTable', () => {
     // Line endings may differ between checkouts
     expect(local.replaceAll('\r\n', '\n')).toBe(table.replaceAll('\r\n', '\n'))
   })
+
+  it('draws from the same display cases as the table (e7-t07, AC-7.5)', async () => {
+    const local = (await import('../shared-display/cases.ts?raw')).default
+    const table = (
+      await import(/* @vite-ignore */ `${tableDir!.replaceAll('\\', '/')}/tests/shared-display/cases.ts?raw`)
+    ).default as string
+    expect(local.replaceAll('\r\n', '\n')).toBe(table.replaceAll('\r\n', '\n'))
+  })
 })
 
 describe.skipIf(!tableDir)('the question bank export in the table (e6-t08, AC-6.5)', () => {
