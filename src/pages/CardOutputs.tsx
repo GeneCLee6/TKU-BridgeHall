@@ -72,6 +72,46 @@ export function WordDownload({
 }
 
 /**
+ * 下載 PDF (e3-t13, AC-3.4): the Worker prints the page's print layout to a PDF (cards/pdf.ts);
+ * when it cannot, the browser's print dialog opens instead, with a line saying why
+ */
+export function PdfDownload({
+  template,
+  profileName,
+  version,
+}: {
+  template: CardTemplate
+  profileName: string
+  version?: number
+}) {
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState('')
+  const download = async () => {
+    setBusy(true)
+    setNotice('')
+    const pdf = await import('../cards/pdf.ts')
+    const name = pdf.pdfFileName(template, profileName, version)
+    try {
+      const blob = await pdf.fetchCardPdf({ html: pdf.printableHtml(), paper: template.paper, name })
+      pdf.saveBlob(blob, `${name}.pdf`)
+    } catch (e) {
+      setNotice(t.pdfFallback(errorText(e)))
+      window.print()
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <>
+      <Button type="button" $variant="primary" onClick={() => void download()} disabled={busy} aria-describedby="card-pdf-hint">
+        {busy ? t.pdfMaking : t.pdf}
+      </Button>
+      {notice && <Muted role="status">{notice}</Muted>}
+    </>
+  )
+}
+
+/**
  * The template tabs of a card page: `to` gives each tab's address from its key, a template id or,
  * for a Brown Sticker form, `<template id>/<convention slug>` (`forms`, after the cards)
  */

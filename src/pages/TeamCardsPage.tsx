@@ -140,7 +140,7 @@ function TeamCards({ teamId, template }: { teamId: string; template: CardTemplat
             {t.team.print}
           </Button>
         </Row>
-        <Muted>{t.pdfHint(template.paper)}</Muted>
+        <Muted>{t.printHint(template.paper)}</Muted>
       </Head>
       {cards.length === 0 ? (
         <Muted>{t.team.none}</Muted>

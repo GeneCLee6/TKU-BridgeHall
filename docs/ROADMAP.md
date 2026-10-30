@@ -141,7 +141,7 @@ worktree 開分支、只讀需要的段落、lint+build+test 只看最後 5 行�
 | [x] L1 | `e8-t12` `e8-t13` `e8-t14` | （PR #45，牌桌 #196；評估寫在 ARCHITECTURE.md §4.1.1：不自動併回，維持手動收回；備份 repo 與 secret 待人設定）匯出與備份：L0 之後牌桌已經是唯一真相（內建＋線上），「寫回」改成匯出 API（合併後的全部特約）＋ GitHub Action 排程匯出到 private repo 的 `content-backup` 分支當備份與審計；`src/content` 文件改為「種子與測試資料」；評估把發布過的線上版本併回內建層 | F4、L0 |
 | [ ] L2 | `e10-t06` `e10-t07` | 錯誤回報、匿名分析（若決定做） | B6 |
 | [ ] L3 #22（牌桌 #89 等 R2 bucket；還原演練待部署） | `e10-t08` `e10-t09` | 每日備份到 R2 與還原演練、型別對拍自動化 | — |
-| [ ] L4 | `e3-t13` | Worker 端產 PDF（視 Browser Rendering 額度） | D3 |
+| [x] L4 #46（牌桌 #197） | `e3-t13` | Worker 端產 PDF（視 Browser Rendering 額度）：免費方案每天 10 分鐘夠用，卡頁與版本頁「下載 PDF」由牌桌 Browser Run 產生，失敗或額度用完退回瀏覽器列印 | D3 |
 
 **做完 L4 ＝ M2 學習與叢書完成。**
 

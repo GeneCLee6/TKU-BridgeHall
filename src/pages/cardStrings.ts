@@ -16,8 +16,12 @@ export const cardStrings = {
   profile: '制度集',
   print: '列印',
   pdf: '下載 PDF',
+  pdfMaking: '正在產生 PDF…',
   pdfHint: (paper: 'A4-landscape' | 'A4-portrait') =>
-    `「下載 PDF」會打開列印視窗，目的地選「另存為 PDF」。紙張 A4 ${paper === 'A4-portrait' ? '直式' : '橫式'}、邊界「預設」、不要縮放；背景圖形要勾選才會印出格子的灰底。`,
+    `「下載 PDF」由伺服器把卡印成 A4 ${paper === 'A4-portrait' ? '直式' : '橫式'}的 PDF；伺服器忙或連不上時會改開列印視窗，目的地選「另存為 PDF」、邊界「預設」、不要縮放，背景圖形要勾選才會印出格子的灰底。`,
+  pdfFallback: (reason: string) => `伺服器沒有產生 PDF（${reason}），已改開列印視窗：目的地選「另存為 PDF」。`,
+  printHint: (paper: 'A4-landscape' | 'A4-portrait') =>
+    `要存成 PDF：列印視窗的目的地選「另存為 PDF」。紙張 A4 ${paper === 'A4-portrait' ? '直式' : '橫式'}、邊界「預設」、不要縮放；背景圖形要勾選才會印出格子的灰底。`,
   pending: '待確認',
   templatePending: '這張版型有幾處還沒和官方空白表核對：',
   intro:
