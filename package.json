@@ -9,6 +9,7 @@
     "typecheck": "tsc -b",
     "lint": "oxlint",
     "seed-builtin": "node scripts/seed-builtin.ts",
+    "export-content": "node scripts/export-content.ts",
     "preview": "vite preview",
     "budget": "node scripts/check-budget.mjs",
     "parity": "node scripts/check-table-parity.mjs",

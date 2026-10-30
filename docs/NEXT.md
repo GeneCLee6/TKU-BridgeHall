@@ -1,6 +1,6 @@
 # NEXT — 接下來怎麼做（給 AI 協作者與自己的交接手冊）
 
-最後更新 2026-10-29（L0 內容搬到牌桌）。**完整順序在 [`ROADMAP.md`](ROADMAP.md)**（一批一個 PR）；這份只記「現在的位置」與工作方式。每完成一批就更新「現在的位置」；每個 AI session 開頭只需要讀 `CLAUDE.md` 和這一份。
+最後更新 2026-10-30（L1 匯出與備份）。**完整順序在 [`ROADMAP.md`](ROADMAP.md)**（一批一個 PR）；這份只記「現在的位置」與工作方式。每完成一批就更新「現在的位置」；每個 AI session 開頭只需要讀 `CLAUDE.md` 和這一份。
 
 ## 1. 現在的位置
 
@@ -65,7 +65,8 @@
 - **J4 文章編輯器、AI 匯入文章**（PR #44 併入 L0 一起合併（#43 關閉），牌桌 #193，2026-10-29，`e5-t07` `e5-t08`；**E5 全部完成**，AC-5.2、AC-5.3 勾）：`/library/new`、`/library/:slug/edit`（`pages/ArticleEditorPage.tsx`，lazy，bookEdit；文字 `pages/articleEditStrings.ts`）。文章資料（網址代稱只有新文章能填、避開 `new`／`book`／`edit`；授權新文章預設「僅社員可看」）、封面與圖片上傳、區塊：特約的五種沿用 `BlockEditor`，小標題、引文、圖片、**牌例用 G4 的 `DealInput`**、出牌過程（合約、莊家、一行一墩的文字，`lib/articleEdit.ts`）；預覽、花色按鈕、未存修改還原、版本紀錄。**送審同特約**：牌桌新增文章草稿（`article:wip:<slug>`；`GET/PUT/DELETE /api/book/articles/:slug/draft`、`POST …/reject`），編輯者存草稿／送審，審核者發布（帶 `draftRevision`）、退回、隱藏；審核頁 `/review` 一起列文章草稿。入口：叢書頁「新增文章」「匯入文章」、文章頁「編輯這篇」。**AI 匯入文章**：匯入頁「匯入成：叢書文章」（`/import?target=articles`），牌桌 `articleImportSchema`＋文章專用提示（逐字轉錄、不改寫不補充，有疑義寫待確認或 AI 說明；圖片轉不了列在說明；不判斷程度與授權），`importResult.ts` 的 `fromArticleReply` 對應（認不得的牌保留讓檢查指出來）；匯入草稿存 `result.articles`。文章送審沒有通知（F4 的通知只做特約）。首頁 JS 149.46 kB（+0.15，一條 lazy 路由）。**要人做**：用一份真的講義試匯入一次，逐段對照原檔（AI 費用照特約匯入）。
 - **K3 `bookRef`、牌桌紀錄連回橋館、共用元件對拍**（PR #41，牌桌 #195，2026-10-29，`e7-t05` `e7-t06` `e7-t07`；E7 全部完成）：牌桌的 `BookNote` 帶制度集，叫牌表（牌桌與紀錄頁）上有橋館文字的叫品是連到 `/c/:slug/:sectionId?profile=<id>` 的連結；每副開始就載入文字，真人在淡江制度下的叫品也帶；叫牌盒提示多一段橋館文字。橋館 `ProfileProvider` 讀 `?profile=`（在讀者的制度集清單裡才生效、不改帳號的選擇），未登入經 `?next=` 帶回。共用元件兩邊實作不同，改成同一份案例檔 `tests/shared-display/cases.ts` 各自畫出來比對，`npm run parity` 比對兩份案例檔。
 - **G6 討論區殼、板面頁與首頁兩塊**（PR #42，牌桌 #192，2026-10-29，`e11-t15` `e11-t16`）：`/forum`（所有板面新→舊，牌桌新增 `GET /api/forum/feed`）、`/forum/:boardId`（置頂在上），都有發文框與「載入更多」；左欄板面、右欄社團新聞與活躍的人，手機單欄＋板面頁籤＋底部工具列（手冊頁的工具列也多「討論」）。刪除貼文後回到板面。首頁主欄多「最新討論」、右欄多「社團新聞」（幹部有「發公告」），我的制度集卡片多「討論區」按鈕。**AC-11.7 完成。** 沒做：左欄「我的貼文」「我提到的」（沒有 API，看 G8）、首頁牌例縮圖（只標「牌例」）。首頁 JS +0.22 kB（149.53 kB）。
-- **下一批**：G7 通知與檢舉、G8 搜尋與牌桌引用（G6 合併後）、L1 匯出與備份（L0 後）、L3 備份到 R2、L4 Worker 產 PDF。L2 錯誤回報與分析使用者決定先不做（2026-10-29）。
+- **L1 匯出與備份**（PR #45，牌桌 #196，2026-10-30，`e8-t12` `e8-t13` `e8-t14`）：牌桌 `GET /api/book/export`（內建＋線上合併後的全部特約、隱藏清單、線上分類；只給管理員或唯讀權杖 `BOOK_EXPORT_TOKEN`，牌桌 DEPLOY.md §4.10）。`npm run export-content` 寫成 `src/content` 格式的 `.ts`＋`export.json`＋`README.md`（`tmp/content-export/`）。workflow「Content backup」每天 03:30 匯出、跑內容測試、開 PR 到 private 備份 repo 的 `content-backup` 分支（綠燈自動合併、失敗開 issue）；repo 公開，log 不印內容。**沒設定時略過**：要人建 private repo、設 `CONTENT_BACKUP_REPO`、`BOOK_EXPORT_TOKEN`（牌桌與橋館兩邊）、`CONTENT_BACKUP_TOKEN`，跑一次後勾 AC-8.4（CONTENT_GUIDE.md §6.5）。「線上版本併回內建層」只評估：不自動做，維持手動「收回內建層」（ARCHITECTURE.md §4.1.1）。
+- **下一批**：G7 通知與檢舉、G8 搜尋與牌桌引用（G6 合併後）、L3 備份到 R2、L4 Worker 產 PDF。L2 錯誤回報與分析使用者決定先不做（2026-10-29）。
 - **已拍板**（2026-10-24）：網站改名**淡江橋館 · TKU BridgeHall**，「橋譜」保留為制度區塊名；新標誌（屋簷＋拱門＋四花色）在 `design/logo/`，改名是 ROADMAP B0（`e9-t18`）。介面預設「一般」＝現行配色與圓角，另五種風格、四種版面、字體、字級、花色顏色、密度都放個人設定，不投票（E9，展示頁 `design/pitch.html`）；首頁保留第一版視覺稿的版面並加社團新聞與最新討論（`DESIGN-V2.md` §5.3）；制度卡以 WBF 卡為主力、內容寫進格子、輸出 .docx 與 PDF，簡易卡與棕標申報表也要能生成（E3）；**新增 E11 社群與討論**（頭像、板面、牌例友善的貼文與留言、通知、管理），先給社內測試，型別與 Worker 模組放牌桌 repo 以便日後搬到牌桌 E13（ROADMAP Phase G）。
 - **等人決定的事**（不卡 A 期）：程度名稱（E4）、制度負責人（E8）、WBF 卡英文濃縮文字由誰定稿（E3）。見 `docs/PRD/00-prd.md` §14。
 

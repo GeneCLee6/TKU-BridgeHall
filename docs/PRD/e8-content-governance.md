@@ -54,7 +54,7 @@ M0 的治理靠人：44 項「待確認」沒有負責人與狀態；線上版�
 - [x] AC-8.1 — 送審：草稿、送審、審核（差異、發布、退回）；`bookReview` 權限；讀者只看到已發布；審核頁手機可用。
 - [x] AC-8.2 — 待確認面板：指派、狀態、備註、關閉需附依據並走送審；側欄待確認數改讀面板資料。
 - [x] AC-8.3 — 版本差異：任兩版段落級 diff，叫品列以 `call` 對齊；在版本紀錄與審核頁都能看。
-- [ ] AC-8.4 — 寫回 Git：匯出 API、CI 排程、PR 自動開；`src/content` 文件改寫為「初始資料與備份」。
+- [ ] AC-8.4 — 寫回 Git：匯出 API、CI 排程、PR 自動開；`src/content` 文件改寫為「初始資料與備份」。（L1 #45，牌桌 #196：全部做好；**等人建 private 備份 repo 與 secret、Action 實際跑過一次再勾**，CONTENT_GUIDE.md §6.5）
 - [x] AC-8.5 — 變更通知：發布後訂閱者在牌桌通知中心看到；可關注／取消關注特約；覆寫過該段的制度集成員自動收到。（F4 #39，牌桌 #190）
 - [x] AC-8.6 — 審計：管理頁可查最近 200 筆；每筆連到版本。
 
@@ -76,9 +76,9 @@ M0 的治理靠人：44 項「待確認」沒有負責人與狀態；線上版�
 
 - [x] `e8-t10` 通知種類 `book:*` 進牌桌通知中心；關注／取消關注特約；發布觸發 · AC-8.5 · M · ← e8-t04 · #39（牌桌 #190；種類沿用牌桌命名 `bookPublished`、`bookReviewRequested`、`bookReturned`、`bookOverrideChanged`、`bookSuggestUnify`）
 - [x] `e8-t11` 覆寫過該段的制度集成員自動通知（E1 的 `origin` 反查）· AC-8.5 · S · ← e8-t10, e1-t08 · #39（橋館送改到的段落 `changedSections`，牌桌比對制度集的覆寫）
-- [ ] `e8-t12` `GET /api/book/export`（內建＋線上合併後的全部特約，JSON 與生成 `.ts`）· AC-8.4 · M（L0 後：牌桌已有內建層，匯出不必再由橋館合併）
-- [ ] `e8-t13` GitHub Action：排程匯出、跑內容測試、開 PR 到 `content-backup`；失敗通知 · AC-8.4 · M · ← e8-t12
-- [ ] `e8-t14` 文件改寫：`README.md`、`CONTENT_GUIDE.md`、`CLAUDE.md` 規則 5 改為「線上為真相」· AC-8.4 · S · ← e8-t13（L0 已先把規則 3、5 改成「內容在牌桌、`.ts` 是種子」；這裡只補匯出備份的部分）
+- [x] `e8-t12` `GET /api/book/export`（內建＋線上合併後的全部特約，JSON 與生成 `.ts`）· AC-8.4 · M（L0 後：牌桌已有內建層，匯出不必再由橋館合併）
+- [x] `e8-t13` GitHub Action：排程匯出、跑內容測試、開 PR 到 `content-backup`；失敗通知 · AC-8.4 · M · ← e8-t12
+- [x] `e8-t14` 文件改寫：`README.md`、`CONTENT_GUIDE.md`、`CLAUDE.md` 規則 5 改為「線上為真相」· AC-8.4 · S · ← e8-t13（L0 已先把規則 3、5 改成「內容在牌桌、`.ts` 是種子」；這裡只補匯出備份的部分）
 
 ## 風險與對策
 
