@@ -34,6 +34,14 @@ export const accountStrings = {
   profileSaved: '個人檔案已儲存',
   myPage: '看我的檔案頁',
 
+  // 我的帳號 › 通知 (F4 靜音)
+  notices: '通知',
+  noticesHint: '通知在淡江牌桌的鈴鐺裡。',
+  muteAdopted: '不接收採用特約的發布通知',
+  muteAdoptedHint:
+    '你的隊伍或搭檔制度集採用的特約發布新版本時，預設會通知你。勾選後不再收到這一類；你關注的特約、你送審的特約、改到你們覆寫段落的通知與建議統一照常。',
+  noticesSaved: '通知設定已儲存',
+
   // 他人檔案頁 /u/:id (e11-t04)
   memberTitle: '社員檔案',
   memberGone: '找不到這位社員',

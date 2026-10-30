@@ -78,7 +78,7 @@ M0 把 22 個特約全部打包進一個 bundle、整本放在一頁（3.2 萬�
 
 - [ ] `e10-t06` 錯誤回報 API 與 error boundary；管理頁清單 · AC-10.4 · S
 - [ ] `e10-t07` 匿名分析事件與管理頁圖表；關閉開關 · AC-10.4 · M
-- [x] `e10-t08` 每日備份到 R2（牌桌 Worker 排程）、保留策略、還原文件與演練 · AC-10.5 · #22，牌桌 #89（牌桌 PR 等 R2 bucket 建好才合併；程式、測試與文件完成；還原演練要真實環境，待部署後由人執行，清單在牌桌 `DEPLOY.md` §4.3，做完才勾 AC-10.5）
+- [x] `e10-t08` 每日備份到 R2（牌桌 Worker 排程）、保留策略、還原文件與演練 · AC-10.5 · #22，牌桌 #89（牌桌 PR 等 R2 bucket 建好才合併；程式、測試與文件完成；還原演練要真實環境，待部署後由人執行，清單在牌桌 `DEPLOY.md` §4.3，做完才勾 AC-10.5；2026-10-30 起備份也含討論區的五張 SQL 表 `forum_*`，格式第 3 版，還原一起還原）
 - [x] `e10-t09` `lib/api.ts` 與 `shared/protocol.ts` 型別對拍測試自動化（CI 從牌桌 repo 抓 `protocol.ts` 比對）· AC-10.1 · #22（workflow「Table type parity」、`npm run parity`；需要 secret `TABLE_REPO_TOKEN`）
 
 **M3 · 多社團預留**

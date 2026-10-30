@@ -74,7 +74,7 @@ M0 的治理靠人：44 項「待確認」沒有負責人與狀態；線上版�
 
 **M2 · 通知與寫回**
 
-- [x] `e8-t10` 通知種類 `book:*` 進牌桌通知中心；關注／取消關注特約；發布觸發 · AC-8.5 · M · ← e8-t04 · #39（牌桌 #190；種類沿用牌桌命名 `bookPublished`、`bookReviewRequested`、`bookReturned`、`bookOverrideChanged`、`bookSuggestUnify`）
+- [x] `e8-t10` 通知種類 `book:*` 進牌桌通知中心；關注／取消關注特約；發布觸發 · AC-8.5 · M · ← e8-t04 · #39（牌桌 #190；種類沿用牌桌命名 `bookPublished`、`bookReviewRequested`、`bookReturned`、`bookOverrideChanged`、`bookSuggestUnify`；2026-10-30 加靜音：「我的帳號 › 通知」可關掉「隊伍／搭檔制度集採用」這個原因的 `bookPublished`，牌桌帳號 `bookAdoptedNotice`）
 - [x] `e8-t11` 覆寫過該段的制度集成員自動通知（E1 的 `origin` 反查）· AC-8.5 · S · ← e8-t10, e1-t08 · #39（橋館送改到的段落 `changedSections`，牌桌比對制度集的覆寫）
 - [x] `e8-t12` `GET /api/book/export`（內建＋線上合併後的全部特約，JSON 與生成 `.ts`）· AC-8.4 · M（L0 後：牌桌已有內建層，匯出不必再由橋館合併）
 - [x] `e8-t13` GitHub Action：排程匯出、跑內容測試、開 PR 到 `content-backup`；失敗通知 · AC-8.4 · M · ← e8-t12
