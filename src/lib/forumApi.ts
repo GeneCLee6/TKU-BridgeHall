@@ -8,6 +8,7 @@ import type {
   CommentInput,
   ForumFeed,
   ForumLatest,
+  ForumSearch,
   Post,
   PostInput,
   PostThread,
@@ -32,6 +33,11 @@ import type {
 
 const id = (value: string) => encodeURIComponent(value)
 type Target = 'post' | 'comment'
+/** Which posts the feed lists (e11-t10) */
+export interface FeedFilter {
+  author?: string
+  mentions?: string
+}
 const targetPath = (target: Target, targetId: string) => `/api/forum/${target === 'post' ? 'posts' : 'comments'}/${id(targetId)}`
 
 export const forumApi = {
@@ -45,8 +51,19 @@ export const forumApi = {
 
   /** Pinned posts on page 1, then newest first, FORUM_LIMITS.pageSize a page */
   boardPage: (boardId: string, page = 1) => request<BoardPage>(`/api/forum/boards/${id(boardId)}/posts?page=${page}`),
-  /** Every board's posts newest first: the forum's front page (e11-t15) */
-  feed: (page = 1) => request<ForumFeed>(`/api/forum/feed?page=${page}`),
+  /**
+   * Every board's posts newest first: the forum's front page (e11-t15); `author` only that member's
+   * (我的貼文), `mentions` only those mentioning that member (我提到的, e11-t10)
+   */
+  feed: (page = 1, filter: FeedFilter = {}) => {
+    const query = new URLSearchParams({ page: String(page) })
+    if (filter.author) query.set('author', filter.author)
+    if (filter.mentions) query.set('mentions', filter.mentions)
+    return request<ForumFeed>(`/api/forum/feed?${query}`)
+  },
+  /** Posts whose title or text blocks hold every word of `query`, newest first (e11-t10); 400 when empty or too long */
+  search: (query: string, page = 1) =>
+    request<ForumSearch>(`/api/forum/search?${new URLSearchParams({ q: query, page: String(page) })}`),
   /** The home page's 社團新聞 and 最新討論 */
   latest: () => request<ForumLatest>('/api/forum/latest'),
 

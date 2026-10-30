@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { searchIndexJson } from '../../scripts/search-index.ts'
@@ -60,5 +60,32 @@ describe('search box', () => {
     const link = await screen.findByRole('link', { name: /^Bergen加叫（松濤版）（Bergen Raises）$/ })
     expect(link.parentElement).toHaveTextContent('種類：特約')
     expect(link.parentElement).toHaveTextContent('程度：高階')
+  })
+})
+
+describe('the 討論 group (e11-t18, AC-11.9)', () => {
+  it('lists the forum’s posts after the conventions, and links to the forum’s search page', async () => {
+    const post = { id: 'p9', boardId: 'systems', authorId: 'u2', title: 'Bergen 的問題', blocks: [], createdAt: 1, reactions: {}, commentCount: 0 }
+    const fetch = vi.fn(async (input: string) =>
+      input === '/api/forum/search?q=Bergen&page=1'
+        ? new Response(JSON.stringify({ posts: [post], page: 1, pages: 1, query: 'Bergen', total: 1 }))
+        : new Response(null, { status: 503 }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    renderHome()
+    await searchFor('Bergen')
+    const group = await screen.findByRole('region', { name: '討論' })
+    expect(await within(group).findByRole('link', { name: 'Bergen 的問題' })).toHaveAttribute('href', '/forum/p/p9')
+    expect(within(group).getByRole('link', { name: '在討論區看全部 1 則' })).toHaveAttribute('href', '/forum/search?q=Bergen')
+    // Asked once, after the typing stopped
+    expect(fetch.mock.calls.filter(([url]) => String(url).startsWith('/api/forum/search'))).toHaveLength(1)
+  })
+
+  it('says so when the forum cannot be searched', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 503 })))
+    renderHome()
+    await searchFor('Bergen')
+    const group = await screen.findByRole('region', { name: '討論' })
+    expect(await within(group).findByText('討論區暫時搜尋不了')).toBeInTheDocument()
   })
 })

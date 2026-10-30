@@ -15,6 +15,7 @@ import {
   loadDraft,
   newBlock,
   postProblems,
+  recordIdFrom,
   saveDraft,
   textLength,
   tidyBlocks,
@@ -234,6 +235,9 @@ export function PostComposer({
         <Button type="button" $small $variant="ghost" onClick={() => add({ kind: 'ref', slug: '' })}>
           {t.add.ref}
         </Button>
+        <Button type="button" $small $variant="ghost" onClick={() => add({ kind: 'record', tableRecordId: '' })}>
+          {t.add.record}
+        </Button>
       </Toolbar>
 
       {error && <ErrorText role="alert">{error}</ErrorText>}
@@ -356,10 +360,45 @@ function BlockEditor({
       ) : (
         <RefPicker onPick={(slug, sectionId) => onChange(sectionId ? { kind: 'ref', slug, sectionId } : { kind: 'ref', slug })} />
       )
+    case 'record':
+      return <RecordEditor id={block.tableRecordId} onChange={(tableRecordId) => onChange({ kind: 'record', tableRecordId })} />
     default:
-      // Kinds the compose box does not make (lists, notes, table records) are kept as they are
+      // Kinds the compose box does not make (lists, notes) are kept as they are
       return <PostBlockView block={block} members={members} files={files} />
   }
+}
+
+/**
+ * 牌桌紀錄 (e11-t20): the member pastes a record page's address from TKU-BridgeTable (or its id);
+ * the post keeps the id and links to the record. The deal itself shows once the table can share it (e13-t07)
+ */
+function RecordEditor({ id, onChange }: { id: string; onChange: (id: string) => void }) {
+  const [text, setText] = useState(id)
+  const hintId = useId()
+  const bad = text.trim() !== '' && !recordIdFrom(text)
+  return (
+    <>
+      <Field>
+        {t.recordInput}
+        <Input
+          value={text}
+          inputMode="url"
+          aria-describedby={hintId}
+          aria-invalid={bad || undefined}
+          onChange={(e) => {
+            setText(e.target.value)
+            onChange(recordIdFrom(e.target.value) ?? '')
+          }}
+        />
+      </Field>
+      {bad ? (
+        <ErrorText id={hintId}>{t.recordBad}</ErrorText>
+      ) : (
+        <Muted id={hintId}>{t.recordHint}</Muted>
+      )}
+      {id && <PostBlockView block={{ kind: 'record', tableRecordId: id }} members={[]} files={{}} />}
+    </>
+  )
 }
 
 const Box = styled.section`

@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react'
-import { useId, useMemo, useState } from 'react'
+import { lazy, Suspense, useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import type { SearchFn } from '../lib/search.ts'
@@ -8,8 +8,12 @@ import { strings } from '../strings.ts'
 import { KindLevel } from './KindLevel.tsx'
 import { RichText } from './Suit.tsx'
 
+// The forum's posts (e11-t18): lazy, with the forum's API
+const SearchForum = lazy(() => import('./SearchForum.tsx'))
+
 /**
  * Searches convention names, aliases, tags, bids and meanings, and the library's articles; results are deep links.
+ * Signed-in members also get the forum's posts, as a 討論 group after them (e11-t18).
  * `onFocus` lets the page load the content to search while the reader starts typing.
  */
 export function SearchBar({ search, onFocus }: { search: SearchFn; onFocus?: () => void }) {
@@ -57,6 +61,9 @@ export function SearchBar({ search, onFocus }: { search: SearchFn; onFocus?: () 
               </li>
             ))}
           </ul>
+          <Suspense fallback={null}>
+            <SearchForum query={query} onPick={() => setQuery('')} />
+          </Suspense>
         </Results>
       )}
     </Wrap>

@@ -292,4 +292,28 @@ describe('the compose box (e11-t13)', () => {
     fireEvent.click(await screen.findByRole('button', { name: '雷本索特約（Lebensohl）' }))
     expect(await screen.findByRole('link', { name: /^引用：雷本索特約/ })).toHaveAttribute('href', '/c/lebensohl')
   })
+
+  it('points at a BridgeTable record by its address, keeping the id and linking to it (e11-t20)', async () => {
+    open('/forum/new?board=deals')
+    fireEvent.change(await screen.findByRole('combobox', { name: '文字' }), { target: { value: '這副怎麼打' } })
+    fireEvent.click(screen.getByRole('button', { name: '牌桌紀錄' }))
+    const record = screen.getByRole('region', { name: '第 2 塊：牌桌紀錄' })
+    const input = within(record).getByRole('textbox', { name: '淡江牌桌紀錄的網址或代號' })
+    fireEvent.change(input, { target: { value: 'https://example.com/nothing' } })
+    expect(within(record).getByText(/看不出是哪一筆紀錄/)).toBeInTheDocument()
+    expect(input).toHaveAttribute('aria-invalid', 'true')
+    fireEvent.change(input, { target: { value: 'https://tku-bridge-table.genelee-pro.workers.dev/history/Ab12cd34' } })
+    expect(within(record).getByRole('link', { name: '到淡江牌桌看這副牌' })).toHaveAttribute(
+      'href',
+      'https://tku-bridge-table.genelee-pro.workers.dev/history/Ab12cd34',
+    )
+    fireEvent.click(screen.getByRole('button', { name: '發布' }))
+    await waitFor(() => expect(sent('POST', '/api/forum/boards/deals/posts')).toHaveLength(1))
+    expect(sent('POST', '/api/forum/boards/deals/posts')[0].body).toEqual({
+      blocks: [
+        { kind: 'paragraph', text: '這副怎麼打' },
+        { kind: 'record', tableRecordId: 'Ab12cd34' },
+      ],
+    })
+  })
 })

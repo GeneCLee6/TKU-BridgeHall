@@ -26,6 +26,7 @@ const pages = [
   { name: 'book', path: '/book' },
   { name: 'settings', path: '/settings' },
   { name: 'forum', path: '/forum' },
+  { name: 'forum-search', path: '/forum/search?q=1NT' },
   { name: 'lesson', path: '/learn/from-zero/lesson-1' },
 ]
 
