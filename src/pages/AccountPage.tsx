@@ -3,6 +3,8 @@ import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
 import { AvatarCropper } from '../components/AvatarCropper.tsx'
 import { DisplaySettings } from '../components/DisplaySettings.tsx'
+import { WithSectionNav } from '../components/SectionNav.tsx'
+import { ExternalLink, UserRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, PasswordInput, Select, TextArea } from '../components/ui.tsx'
 import { accountApi, AVATAR_INPUT_TYPES, PROFILE_FIELD_LIMITS, PROFILE_LEVELS, type Profile, type ProfileLevel } from '../lib/account.ts'
@@ -54,7 +56,7 @@ function AccountBody() {
 
   if (!user) return null
   return (
-    <>
+    <WithSectionNav>
       <Panel>
         <Who>
           <Avatar id={user.id} name={user.profile?.displayName || user.username} size={48} avatar={user.avatar} />
@@ -69,11 +71,15 @@ function AccountBody() {
               : strings.me.none}
         </Muted>
         <Links>
-          <Link to={`/u/${encodeURIComponent(user.id)}`}>{accountStrings.myPage}</Link>
-          <a href={TABLE_SITE} target="_blank" rel="noreferrer">
+          <Button as={Link} to={`/u/${encodeURIComponent(user.id)}`} $small>
+            <UserRound size={16} aria-hidden />
+            {accountStrings.myPage}
+          </Button>
+          <Button as="a" href={TABLE_SITE} target="_blank" rel="noreferrer" $small>
+            <ExternalLink size={16} aria-hidden />
             {strings.me.toTable}
-            {strings.opensInNewTab}
-          </a>
+            <span className="visually-hidden">{strings.opensInNewTab}</span>
+          </Button>
         </Links>
       </Panel>
       <ProfilePanel user={user} />
@@ -115,7 +121,7 @@ function AccountBody() {
           </div>
         </Form>
       </Panel>
-    </>
+    </WithSectionNav>
   )
 }
 
@@ -347,14 +353,9 @@ const Form = styled.form`
   max-width: 420px;
 `
 
-const Links = styled.p`
+const Links = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: ${({ theme }) => theme.space(4)};
-  margin: ${({ theme }) => theme.space(3)} 0 0;
-
-  & > a {
-    color: ${({ theme }) => theme.colors.primary};
-    font-weight: 600;
-  }
+  gap: ${({ theme }) => theme.space(2)};
+  margin: ${({ theme }) => theme.space(4)} 0 0;
 `

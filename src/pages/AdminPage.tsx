@@ -1,3 +1,4 @@
+import { BookA, ExternalLink, FileBarChart, MessagesSquare } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
@@ -8,6 +9,7 @@ import { AuditPanel, DraftsPanel } from '../components/admin/ReviewPanels.tsx'
 import { TeamsPanel } from '../components/admin/TeamsPanel.tsx'
 import { AnalyticsPanel, ErrorsPanel } from '../components/admin/TelemetryPanels.tsx'
 import { DataTable, TableScroll } from '../components/DataTable.tsx'
+import { WithSectionNav } from '../components/SectionNav.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import {
   api,
@@ -53,7 +55,7 @@ function AdminOrEditor() {
   const { user } = useAuth()
   const t = strings.admin
   return (
-    <>
+    <WithSectionNav>
       {user?.admin ? <AccountPanels /> : <Muted>{t.editorIntro}</Muted>}
       {/* Not about accounts: editors' too */}
       <DraftsPanel />
@@ -64,27 +66,36 @@ function AdminOrEditor() {
       <AuditPanel />
       <AnalyticsPanel />
       <ErrorsPanel />
-      <Muted>
-        <Link to="/integrations/table">{tableReport.adminLink}</Link>
-      </Muted>
-      <Muted>
-        <Link to="/glossary/edit">{glossaryStrings.editTitle}</Link>
-      </Muted>
-      {(user?.admin || user?.permissions.includes('forumModerate')) && (
-        <Muted>
-          <Link to="/forum/manage">{review.forumManage}</Link>
-        </Muted>
-      )}
-      {user?.admin && (
-        <Muted>
-          {t.more}{' '}
-          <a href={`${TABLE_SITE}/admin`} target="_blank" rel="noreferrer">
-            {t.tableAdmin}
-            {strings.opensInNewTab}
-          </a>
-        </Muted>
-      )}
-    </>
+      <Panel aria-labelledby="admin-tools">
+        <PanelTitle id="admin-tools">{t.tools}</PanelTitle>
+        <Tools>
+          <Button as={Link} to="/integrations/table" $small>
+            <FileBarChart size={16} aria-hidden />
+            {tableReport.adminLink}
+          </Button>
+          <Button as={Link} to="/glossary/edit" $small>
+            <BookA size={16} aria-hidden />
+            {glossaryStrings.editTitle}
+          </Button>
+          {(user?.admin || user?.permissions.includes('forumModerate')) && (
+            <Button as={Link} to="/forum/manage" $small>
+              <MessagesSquare size={16} aria-hidden />
+              {review.forumManage}
+            </Button>
+          )}
+        </Tools>
+        {user?.admin && (
+          <Tools>
+            <Muted>{t.more}</Muted>
+            <Button as="a" href={`${TABLE_SITE}/admin`} target="_blank" rel="noreferrer" $small>
+              <ExternalLink size={16} aria-hidden />
+              {t.tableAdmin}
+              <span className="visually-hidden">{strings.opensInNewTab}</span>
+            </Button>
+          </Tools>
+        )}
+      </Panel>
+    </WithSectionNav>
   )
 }
 
@@ -365,5 +376,15 @@ const SettingsFields = styled.div`
 
   ${mobile} {
     grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+const Tools = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(2)};
+  & + & {
+    margin-top: ${({ theme }) => theme.space(3)};
   }
 `

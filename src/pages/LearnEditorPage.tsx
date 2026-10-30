@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { CallLabel, RichText } from '../components/Suit.tsx'
-import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Row, Select, TextArea } from '../components/ui.tsx'
+import { BackLink, Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Row, Select, TextArea } from '../components/ui.tsx'
 import { errorText } from '../lib/api.ts'
 import { today } from '../lib/format.ts'
 import {
@@ -226,7 +226,7 @@ function PathForm({ path, reload, notice, setNotice }: FormProps) {
             {t.reset}
           </Button>
         )}
-        <Link to={pathPage(path.id)}>{learnStrings.backToPath(path.name)}</Link>
+        <BackLink to={pathPage(path.id)}>{learnStrings.backToPath(path.name)}</BackLink>
       </Row>
     </form>
   )

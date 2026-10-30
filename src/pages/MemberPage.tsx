@@ -1,8 +1,9 @@
+import { Pencil } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
-import { ErrorText, Muted, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
+import { Button, ErrorText, Muted, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import { accountApi, type MemberProfile, type MemberTeams } from '../lib/account.ts'
 import { api, ApiError, errorText, type ClubMember } from '../lib/api.ts'
 import { memberName } from '../lib/teams.ts'
@@ -86,9 +87,12 @@ function Member() {
         </div>
       </Header>
       {mine && (
-        <Muted>
-          <Link to="/account">{t.editMine}</Link>
-        </Muted>
+        <Row>
+          <Button as={Link} to="/account" $small>
+            <Pencil size={16} aria-hidden />
+            {t.editMine}
+          </Button>
+        </Row>
       )}
 
       <Panel aria-labelledby="member-bio">

@@ -1,5 +1,6 @@
-import { Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useState, type InputHTMLAttributes } from 'react'
+import { Link, type LinkProps } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
@@ -157,7 +158,7 @@ export const PanelTitle = styled.h2`
 
 /** The frame of a page other than the handbook itself */
 export const PageMain = styled.main`
-  width: min(100%, 1040px);
+  width: min(100%, ${({ theme }) => theme.layout.pageMax});
   margin: 0 auto;
   padding: ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(16)};
   display: grid;
@@ -249,6 +250,32 @@ const EyeButton = styled.button`
 
   &:hover {
     background: ${({ theme }) => theme.colors.surfaceAlt};
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+/** 「回到…」: the way back to the page this one belongs to, an arrow and quiet words */
+export function BackLink({ children, ...props }: LinkProps) {
+  return (
+    <Back {...props}>
+      <ArrowLeft size={16} aria-hidden />
+      {children}
+    </Back>
+  )
+}
+
+const Back = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  align-self: start;
+  justify-self: start;
+  gap: ${({ theme }) => theme.space(1)};
+  min-height: 2rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.875rem;
+  font-weight: 600;
+
+  &:hover {
     color: ${({ theme }) => theme.colors.primary};
   }
 `

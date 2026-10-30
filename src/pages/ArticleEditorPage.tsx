@@ -1,12 +1,12 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { BlockView } from '../components/BlockView.tsx'
 import { DealInput } from '../components/board/DealInput.tsx'
 import { BlockEditor } from '../components/editor/BlockEditor.tsx'
 import { AutoTextArea, MiniButton, SuitPalette } from '../components/editor/fields.tsx'
-import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row, Select } from '../components/ui.tsx'
+import { BackLink, Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row, Select } from '../components/ui.tsx'
 import { libraryStrings } from '../libraryStrings.ts'
 import { api, ApiError, errorText, type ArticleDraft, type ArticleEntry, type ArticleFiles, type ArticleRevision } from '../lib/api.ts'
 import {
@@ -347,7 +347,7 @@ function Editor({ slug, initial, loaded, savedNotice }: { slug?: string; initial
     <Page>
       <PageTitle>{slug ? t.titleEdit(article.title || slug) : imported ? t.titleImported(imported.fileName) : t.titleNew}</PageTitle>
       <Bar>
-        <Link to={slug && loaded.entry ? articlePath(slug) : '/library'}>← {slug && loaded.entry ? t.view : s.backToLibrary}</Link>
+        <BackLink to={slug && loaded.entry ? articlePath(slug) : '/library'}>{slug && loaded.entry ? t.view : s.backToLibrary}</BackLink>
       </Bar>
 
       {imported && (

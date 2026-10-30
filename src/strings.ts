@@ -31,6 +31,7 @@ export const strings = {
     toBook: '看全書目錄（整本一頁）',
     homeIntro: '從左邊的目錄或下面的分類挑一個特約開始讀；每個段落都有可分享的連結。',
     trail: '目前位置',
+    sections: '本頁段落',
   },
   textSize: '字級',
   textSizeNames: { small: '小', medium: '中', large: '大', xlarge: '特大' },
@@ -87,6 +88,17 @@ export const strings = {
   backToBook: '回到橋譜',
 
   // Header: account menu
+  // The header's sections (SiteNav)
+  nav: {
+    label: '網站導覽',
+    book: '橋譜',
+    library: '叢書',
+    learn: '學習',
+    practice: '練習',
+    forum: '討論區',
+    teams: '隊伍',
+  },
+
   account: {
     signIn: '登入',
     menu: (name: string) => `${name} 的帳號選單`,
@@ -148,6 +160,7 @@ export const strings = {
   admin: {
     title: '社團管理',
     intro: '這裡和淡江牌桌的管理頁管理同一批帳號。',
+    tools: '其他工具',
     applications: '待審核的申請',
     noApplications: '目前沒有待審核的申請',
     about: '自我介紹',

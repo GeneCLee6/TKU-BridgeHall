@@ -1,7 +1,8 @@
+import { UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { DataTable, TableScroll } from '../components/DataTable.tsx'
-import { ErrorText, Muted, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
+import { Button, ErrorText, Muted, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import {
   api,
   errorText,
@@ -92,9 +93,12 @@ function TeamList() {
         <Stack>
           <Muted>{t.teamsIntro}</Muted>
           {open.length ? list(open, t.teamsTitle) : <Muted>{t.noTeams}</Muted>}
-          <Muted>
-            <Link to="/account#my-teams">{t.toMine}</Link>
-          </Muted>
+          <Row>
+            <Button as={Link} to="/account#my-teams" $small>
+              <UserRound size={16} aria-hidden />
+              {t.toMine}
+            </Button>
+          </Row>
         </Stack>
       </Panel>
       {archived.length > 0 && (

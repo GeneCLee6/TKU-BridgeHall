@@ -463,10 +463,10 @@ const PopupHead = styled.div`
   }
 `
 
-/** Text and 本頁 side by side; the text keeps a book's measure (about 44rem) */
+/** Text and 本頁 side by side; the text keeps a book's measure (about 52rem, room for the tables) */
 const Columns = styled.div<{ $wide: boolean }>`
   display: grid;
-  grid-template-columns: ${({ $wide }) => ($wide ? 'minmax(0, 44rem) 13rem' : 'minmax(0, 44rem)')};
+  grid-template-columns: ${({ $wide }) => ($wide ? 'minmax(0, 52rem) 15rem' : 'minmax(0, 52rem)')};
   gap: ${({ theme }) => theme.space(8)};
   align-items: start;
 

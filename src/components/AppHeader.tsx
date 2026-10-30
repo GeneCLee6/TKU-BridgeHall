@@ -6,11 +6,12 @@ import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 import { LogoMark } from './Logo.tsx'
 import { SearchBar } from './SearchBar.tsx'
+import { SiteNav } from './SiteNav.tsx'
 
 /**
- * The header v2 (e9-t03, DESIGN-V2 §5.1): four things only, the logo, the system profile, search
- * and the account. Theme, 字級, expand / collapse and print live in the 閱讀設定 panel. On phones
- * the catalogue opens from the bottom toolbar (e9-t09, MobileToolbar). Pages other than the
+ * The header v2 (e9-t03, DESIGN-V2 §5.1): the logo, the system profile, search, the site's
+ * sections (SiteNav, 2026-10-30) and the account. Theme, 字級, expand / collapse and print live in
+ * the 閱讀設定 panel. On phones the catalogue opens from the bottom toolbar (e9-t09, MobileToolbar). Pages other than the
  * handbook leave out the search, and may add `actions` of their own.
  */
 export function AppHeader({
@@ -43,6 +44,7 @@ export function AppHeader({
       </Brand>
       {profile}
       {search ? <SearchBar search={search} onFocus={onSearchFocus} /> : <Spacer />}
+      <SiteNav />
       {actions}
       {account}
     </Bar>

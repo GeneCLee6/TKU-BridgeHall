@@ -25,7 +25,19 @@ export const GlobalStyle = createGlobalStyle`
     font-weight: ${({ theme }) => theme.headingWeight};
   }
 
-  a { color: ${({ theme }) => theme.colors.primary}; }
+  /*
+   * A plain link keeps a quiet underline, so a link in a sentence is not told apart by colour alone
+   * (WCAG 1.4.1); it turns solid when pointed at. Links drawn as buttons, tabs and rows (styled,
+   * so they have a class) have none.
+   */
+  a {
+    color: ${({ theme }) => theme.colors.primary};
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  }
+  a:hover { text-decoration-color: currentColor; }
+  :where(a[class]) { text-decoration: none; }
 
   :focus-visible {
     outline: 3px solid ${({ theme }) => theme.colors.focus};

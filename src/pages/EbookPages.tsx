@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
-import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
+import { BackLink, Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import { ApiError, errorText } from '../lib/api.ts'
 import {
   bySeries,
@@ -157,7 +157,7 @@ function Book() {
     }
   }, [id, tick, user])
 
-  const back = <Link to="/library/book">{t.back}</Link>
+  const back = <BackLink to="/library/book">{t.back}</BackLink>
   if (!loaded) return <Muted role="status">{strings.loading}</Muted>
   if ('error' in loaded)
     return (

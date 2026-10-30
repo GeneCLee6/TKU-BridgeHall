@@ -62,9 +62,11 @@ export function HandbookShell() {
   // 版面 (e9-t15): 專注單欄 and 卡片總覽 have no catalogue column; phones keep their drawer
   const { layout, newcomerAsked } = usePreferences()
   const catalogue = isMobile || layout === 'whole' || layout === 'three'
-  const home = useLocation().pathname === '/'
-  // Without the catalogue the column is centred: a book's measure for a page, room for the tiles at home
-  const measure = catalogue ? undefined : home ? (layout === 'cards' ? '84rem' : undefined) : '48rem'
+  const path = useLocation().pathname
+  // Pages of lists and tiles (home, 叢書, 詞彙) use the width (layout.pageMax); a convention keeps a
+  // book's measure, centred in the whole window when there is no catalogue
+  const lists = path === '/' || path === '/library' || path === '/glossary'
+  const measure = lists || catalogue ? undefined : '48rem'
   const profiles = useProfiles()
   const choosable = profiles.list.length > 1
   const profileSwitch = (variant: 'bar' | 'menu') => (
@@ -102,6 +104,7 @@ export function HandbookShell() {
           aria-busy={profiles.status === 'loading'}
           $busy={profiles.status === 'loading'}
           $measure={measure}
+          $lists={lists}
         >
           {status === 'offline' && <Status role="status">{strings.online.offline}</Status>}
           {profiles.status === 'failed' && <Status role="status">{strings.profiles.failed}</Status>}
@@ -208,7 +211,7 @@ const Scrim = styled.div`
   }
 `
 
-const Main = styled.main<{ $busy: boolean; $measure?: string }>`
+const Main = styled.main<{ $busy: boolean; $measure?: string; $lists: boolean }>`
   flex: 1;
   /* Centred in the room the catalogue leaves, so a wide screen is not all empty on the right */
   margin: 0 auto;
@@ -219,7 +222,7 @@ const Main = styled.main<{ $busy: boolean; $measure?: string }>`
     transition: none;
   }
   min-width: 0;
-  max-width: ${({ theme, $measure }) => $measure ?? theme.layout.contentMax};
+  max-width: ${({ theme, $measure, $lists }) => $measure ?? ($lists ? theme.layout.pageMax : theme.layout.contentMax)};
   padding: ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(6)}
     ${({ theme }) => theme.space(16)};
   outline: none;

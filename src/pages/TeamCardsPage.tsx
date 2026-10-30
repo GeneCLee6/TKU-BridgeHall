@@ -9,7 +9,7 @@ import { fetchCard } from '../cards/load.ts'
 import { PrintStyle } from '../cards/PrintStyle.tsx'
 import { profileTemplates } from '../cards/templates/index.ts'
 import type { CardTemplate } from '../cards/types.ts'
-import { Button, ErrorText, Muted, Row } from '../components/ui.tsx'
+import { BackLink, Button, ErrorText, Muted, Row } from '../components/ui.tsx'
 import { api, type ClubTeam, errorText } from '../lib/api.ts'
 import { resolveProfile } from '../lib/profiles.ts'
 import { conventionPath, sectionPath } from '../lib/sections.ts'
@@ -121,9 +121,7 @@ function TeamCards({ teamId, template }: { teamId: string; template: CardTemplat
       <PrintStyle template={template} />
       <Head data-print="hide">
         <h1>{t.team.title(team.name)}</h1>
-        <Muted>
-          <Link to={`/teams/${encodeURIComponent(team.id)}`}>{t.team.back}</Link>
-        </Muted>
+        <BackLink to={`/teams/${encodeURIComponent(team.id)}`}>{t.team.back}</BackLink>
         <CardTabs
           current={template.id}
           to={(x) => `/teams/${encodeURIComponent(team.id)}/cards/${x}`}

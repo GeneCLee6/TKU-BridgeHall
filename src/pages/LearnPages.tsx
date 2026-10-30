@@ -61,7 +61,7 @@ export function LearnIndexPage() {
     <Frame title={t.title}>
       <PageTitle>{t.title}</PageTitle>
       <Muted>{t.intro}</Muted>
-      <Lessons>
+      <Lessons $tiles>
         {paths.map((path) => (
           <li key={path.id}>
             <Link to={pathPage(path.id)}>
@@ -333,9 +333,11 @@ const ProgressBox = styled.div`
   }
 `
 
-const Lessons = styled.ol`
+/** A path's lessons in order; `$tiles` lays the paths of /learn side by side on a wide screen */
+const Lessons = styled.ol<{ $tiles?: boolean }>`
   display: grid;
-  gap: ${({ theme }) => theme.space(2)};
+  grid-template-columns: ${({ $tiles }) => ($tiles ? 'repeat(auto-fill, minmax(18rem, 1fr))' : 'minmax(0, 1fr)')};
+  gap: ${({ theme, $tiles }) => theme.space($tiles ? 3 : 2)};
   margin: ${({ theme }) => theme.space(4)} 0 0;
   padding: 0;
   list-style: none;
@@ -344,6 +346,7 @@ const Lessons = styled.ol`
     display: flex;
     flex-direction: column;
     gap: ${({ theme }) => theme.space(1)};
+    height: 100%;
     padding: ${({ theme }) => theme.space(3)} ${({ theme }) => theme.space(4)};
     border: ${({ theme }) => theme.borders.panel} ${({ theme }) => theme.colors.border};
     border-radius: ${({ theme }) => theme.shape.panel};

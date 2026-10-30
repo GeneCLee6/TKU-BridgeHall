@@ -1,9 +1,10 @@
-import { MessagesSquare, Plus } from 'lucide-react'
+import { ArrowRight, MessagesSquare, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
 import { Tag, TagList } from '../components/Tag.tsx'
+import { Button } from '../components/ui.tsx'
 import { api, type ClubMember } from '../lib/api.ts'
 import { NEWS_BOARD_ID, type Board, type ForumLatest } from '../lib/forum.ts'
 import { forumApi } from '../lib/forumApi.ts'
@@ -94,12 +95,15 @@ function ClubNews() {
         <Note>{t.noNews}</Note>
       )}
       <More>
-        <Link to={boardPath(NEWS_BOARD_ID)}>{t.allNews} →</Link>
+        <Button as={Link} to={boardPath(NEWS_BOARD_ID)} $small>
+          {t.allNews}
+          <ArrowRight size={14} aria-hidden />
+        </Button>
         {isOfficer(user) && (
-          <Link to={`/forum/new?board=${NEWS_BOARD_ID}`}>
+          <Button as={Link} to={`/forum/new?board=${NEWS_BOARD_ID}`} $small $variant="ghost">
             <Plus size={14} aria-hidden />
             {t.postNews}
-          </Link>
+          </Button>
         )}
       </More>
     </section>
@@ -149,10 +153,11 @@ function LatestDiscussions() {
         <Note>{t.noDiscussions}</Note>
       )}
       <More>
-        <Link to="/forum">
+        <Button as={Link} to="/forum" $small>
           <MessagesSquare size={14} aria-hidden />
-          {t.toForum} →
-        </Link>
+          {t.toForum}
+          <ArrowRight size={14} aria-hidden />
+        </Button>
       </More>
     </section>
   )
@@ -229,17 +234,9 @@ const Byline = styled.div`
   font-size: 0.875rem;
 `
 
-const More = styled.p`
+const More = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: ${({ theme }) => theme.space(4)};
-  margin: ${({ theme }) => theme.space(2)} 0 0;
-  font-size: 0.875rem;
-  a {
-    display: inline-flex;
-    align-items: center;
-    gap: ${({ theme }) => theme.space(1)};
-    min-height: 32px;
-    color: ${({ theme }) => theme.colors.primary};
-  }
+  gap: ${({ theme }) => theme.space(2)};
+  margin: ${({ theme }) => theme.space(3)} 0 0;
 `

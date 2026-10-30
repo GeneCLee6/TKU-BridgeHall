@@ -6,10 +6,11 @@
 
 1. **一本可以翻、可以印的橋譜**：一特約一頁，段落像書的節，不是一張張卡片；目錄在左、本頁在右、上一／下一特約在底。
 2. **入口先於內容**：首頁回答「我讀哪一套制度」「新生從哪開始」「最近改了什麼」，再進內容。
-3. **工具退後**：頁首只有 Logo、制度集、搜尋、帳號；其他收進「閱讀設定」與「個人設定」。
+3. **工具退後**：頁首只有 Logo、制度集、搜尋、網站導覽、帳號；其他收進「閱讀設定」與「個人設定」。
 4. **內容優先、逐層揭露**：叫牌表要清楚、好掃讀；第一層段落預設展開，更深層需要時再展開。
 5. **不只靠顏色**：花色、狀態、覆寫都有符號或文字輔助。
 6. **外觀由讀者決定**：預設「一般」（淡江藍為主色，宮燈金與朱紅點綴）；另五種風格、四種版面、字體、字級、花色顏色、密度都在個人設定（§2.3）。
+7. **寬螢幕要用上**（2026-10-30）：列表、磁貼、面板頁面放寬到 84rem；一長串面板的頁面左側有段落目錄；動作是有圖示的按鈕，不是一段裸文字連結。
 
 ## 2. 色彩與風格
 
@@ -94,14 +95,17 @@ e9-t14 移除了舊名：`lantern` → `accent`、`vermilion` → `seal`、`shad
 - 4px 基準：`space(n) = n × 4px`（緊湊 3px）。
 - 圓角依角色（`shape`）。「一般」：`control` 6px（按鈕、輸入框、表格）、`popover` 10px（選單、搜尋結果、浮動提示）、`panel` 14px（面板、卡片）、`tag` 與 `badge` 膠囊、`note` 6px（提示框）。
 - 線（`borders.control`／`borders.panel`）只給寬度與樣式，元件自己加顏色；陰影 `shadows.panel`。
-- 頁首 60px、手機底部工具列 56px、側邊欄 19rem、內容最寬 60rem；`mobileBreakpoint` 900px（以下為手機）、`wideBreakpoint` 1100px（以上特約頁有右欄「本頁」）。
+- 頁首 60px、手機底部工具列 56px、側邊欄 19rem；閱讀頁（特約）主欄最寬 70rem（正文 52rem＋本頁 15rem），列表與面板頁（首頁、叢書、詞彙、帳號、管理等 `PageMain` 頁）最寬 84rem（`layout.pageMax`）；`mobileBreakpoint` 900px（以下為手機）、`wideBreakpoint` 1100px（以上特約頁有右欄「本頁」）。
 - 表單：短欄位兩兩並排，長文字獨佔一列；欄位一律靠上對齊。
 
 ## 5. 元件
 
 | 元件 | 檔案 | 說明 |
 | --- | --- | --- |
-| AppHeader | `components/AppHeader.tsx` | 頁首只有四件事：Logo（連結名稱是看得到的字＋「首頁」）、制度集（只有社團時是不能點的膠囊 `ProfilePill`，可選時是 `ProfileSwitch` 下拉；手機在目錄抽屜）、搜尋、帳號。 |
+| AppHeader | `components/AppHeader.tsx` | 頁首：Logo（連結名稱是看得到的字＋「首頁」）、制度集（只有社團時是不能點的膠囊 `ProfilePill`，可選時是 `ProfileSwitch` 下拉；手機在目錄抽屜）、搜尋、網站導覽、帳號。 |
+| SiteNav | `components/SiteNav.tsx` | 網站導覽：橋譜、叢書、學習、練習、討論區、隊伍；目前所在的一項 `aria-current` 並在頁首底線上畫 3px 主色條。≤ 1400px 只留字不留圖示；手機不顯示，改在帳號選單最上面。 |
+| WithSectionNav | `components/SectionNav.tsx` | 一長串面板的頁面（我的帳號、社團管理）：左側 13rem 黏住的段落目錄，從每個面板的 `h2` 自動產生、標出正在讀的面板；手機只有面板。 |
+| BackLink | `components/ui.tsx` | 「回到…」：左箭頭＋次要色字，取代「← 文字」的裸連結。 |
 | HandbookShell | `pages/HandbookShell.tsx` | 閱讀頁（首頁、特約頁、`/book`）共用的殼：跳到主要內容、頁首、目錄、主欄；依「版面」決定有沒有目錄欄；手機有底部工具列與目錄抽屜（Esc 關閉，焦點回工具列）。 |
 | HomePage、HomeBlocks | `pages/HomePage.tsx`、`HomeBlocks.tsx` | 兩欄：主欄「我的制度集」卡（未登入是社團預設＋登入提示）、「第一次來」三課、分類卡；右欄「最近更新」（E11 之前代替社團新聞）。區塊 lazy。 |
 | CardOverview | `pages/CardOverview.tsx` | 「卡片總覽」版面的首頁：分類頁籤、特約磁貼（程度、待確認、覆寫數）、右側預覽；手機兩欄磁貼。 |
@@ -121,7 +125,7 @@ e9-t14 移除了舊名：`lantern` → `accent`、`vermilion` → `seal`、`shad
 | DisplaySettings、SettingsPage | `components/DisplaySettings.tsx`、`pages/SettingsPage.tsx` | 個人設定（§2.3），也出現在「我的帳號 › 顯示」。 |
 | PrintSheet | `components/PrintSheet.tsx` | 列印用的封面、目錄、頁眉（§7），lazy。 |
 | AccountMenu | `components/AccountMenu.tsx` | 未登入是「登入」按鈕；登入後名字＋選單（依權限），待審核申請以 `seal` 數字標示。 |
-| 表單元件 | `components/ui.tsx` | Button（一般／主要／危險／ghost）、Input、TextArea、Select、Field、Panel、PasswordInput、ErrorText、Notice。全部讀風格 token：輸入框 `surface` 底、聚焦框 `structure`、危險 `seal`；面板用風格的 `borders`、`shape`、`shadows`。 |
+| 表單元件 | `components/ui.tsx` | Button（一般／主要／危險／ghost；連結做成按鈕用 `as={Link}`，前面放 16px lucide 圖示）、Input、TextArea、Select、Field、Panel、PasswordInput、ErrorText、Notice。全部讀風格 token：輸入框 `surface` 底、聚焦框 `structure`、危險 `seal`；面板用風格的 `borders`、`shape`、`shadows`。 |
 | DataTable | `components/DataTable.tsx` | 管理頁與牌桌報告的表格，與叫牌表同樣的細線；只在 lazy 頁面用。 |
 | 編輯器 | `components/editor/` | Outline、MetaForm、SectionForm、BlockEditor、Preview、RevisionsPanel、SuitPalette。桌機三欄填滿視窗、各自捲動；手機單欄。 |
 
@@ -136,7 +140,7 @@ e9-t14 移除了舊名：`lantern` → `accent`、`vermilion` → `seal`、`shad
 | 專注單欄 | 沒有目錄欄，正文置中（48rem） |
 | 卡片總覽 | 首頁換成 `CardOverview`；沒有目錄欄 |
 
-有目錄欄時，主欄（最寬 60rem）在目錄以外的空間置中，寬螢幕左右留白一樣；沒有目錄欄時在整個視窗置中。頁首的帳號在最右端。特約頁右欄「本頁」只有段落清單捲動，閱讀設定面板（比右欄寬）不會被裁掉；桌機面板下方空間不夠時往上開，再不夠就在面板內捲動。
+有目錄欄時，主欄（特約頁最寬 70rem，首頁、叢書、詞彙 84rem）在目錄以外的空間置中，寬螢幕左右留白一樣；沒有目錄欄時在整個視窗置中。頁首的帳號在最右端。特約頁右欄「本頁」只有段落清單捲動，閱讀設定面板（比右欄寬）不會被裁掉；桌機面板下方空間不夠時往上開，再不夠就在面板內捲動。
 
 ```
 ┌ 頁首（sticky）：[拱門] 淡江橋館 · [社團預設]  [ 搜尋 ……… ]  [登入] ┐
