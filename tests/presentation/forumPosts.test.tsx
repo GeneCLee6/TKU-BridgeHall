@@ -88,6 +88,7 @@ beforeEach(() => {
     },
     'PATCH /api/forum/posts/p1': { post: { ...POST, title: '改過的標題', editedAt: Date.now() } },
     'DELETE /api/forum/posts/p1': { ok: true },
+    'GET /api/forum/boards/deals/posts?page=1': { board: { ...BUILTIN_BOARDS[1], pinnedPostIds: [] }, pinned: [], posts: [], page: 1, pages: 1 },
     'POST /api/forum/boards/systems/posts': { post: { ...POST, id: 'p9', boardId: 'systems', title: '新貼文', blocks: [{ kind: 'paragraph', text: '新的內容' }] } },
     'GET /api/forum/posts/p9': {
       post: { ...POST, id: 'p9', boardId: 'systems', title: '新貼文', blocks: [{ kind: 'paragraph', text: '新的內容' }], commentCount: 0 },
@@ -214,6 +215,9 @@ describe('the post page (e11-t14)', () => {
     fireEvent.click(await screen.findByRole('button', { name: '貼文操作' }))
     fireEvent.click(screen.getByRole('button', { name: '刪除' }))
     await waitFor(() => expect(sent('DELETE', '/api/forum/posts/p1')).toHaveLength(1))
+    // Back to the board it was on (G6)
+    expect(await screen.findByRole('heading', { name: '牌局討論', level: 1 })).toBeInTheDocument()
+    expect(await screen.findByText('這裡還沒有貼文，來發第一則吧。')).toBeInTheDocument()
   })
 
   it('takes no new comments on a locked post', async () => {

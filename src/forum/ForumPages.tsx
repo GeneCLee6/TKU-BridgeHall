@@ -1,29 +1,52 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { Link, NavLink, Outlet, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
+import { Avatar } from '../components/Avatar.tsx'
 import { Button, ErrorText, Muted, PageTitle } from '../components/ui.tsx'
 import { api, ApiError, errorText, type ClubMember } from '../lib/api.ts'
-import type { Board, Comment, Post } from '../lib/forum.ts'
+import { NEWS_BOARD_ID, type Board, type Comment, type ForumFeed, type Post } from '../lib/forum.ts'
 import { forumApi } from '../lib/forumApi.ts'
+import { memberLabel, postSummary, recentAuthors } from '../lib/forumPosts.ts'
+import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { Frame, Gate } from '../pages/Frame.tsx'
+import { useAuth } from '../state/AuthContext.tsx'
+import { mobile, mobileQuery } from '../styles/tokens.ts'
 import { CommentSection } from './Comments.tsx'
 import { forumStrings as t } from './forumStrings.ts'
-import { postPath } from './forumText.ts'
+import { ago, boardPath, postPath } from './forumText.ts'
 import { PostCard } from './PostCard.tsx'
 import { PostComposer } from './PostComposer.tsx'
 
+// Phones only (e9-t09), as in the handbook
+const MobileToolbar = lazy(() =>
+  import('../components/MobileToolbar.tsx').then((m) => ({ default: m.MobileToolbar })),
+)
+
 /**
- * The forum's pages so far (E11 G5): a post with its comments (`/forum/p/:postId`, e11-t14) and the
- * compose box on a page of its own (`/forum/new?board=`, e11-t13). The forum's frame with the board
- * list and the feed is G6 (e11-t15), which puts the same `PostComposer` and `PostCard` on the
- * board pages. Members only, like the rest of the site; one lazy chunk, out of the home page.
+ * 討論區 (E11): the forum's frame (e11-t15, DESIGN-V2.md §12), with the boards on the left, the page
+ * in the middle and 社團新聞 and 活躍的人 on the right. The pages: every board's feed `/forum`, one
+ * board `/forum/:boardId`, a post with its comments `/forum/p/:postId` (e11-t14) and the compose
+ * box on a page of its own `/forum/new?board=` (e11-t13). Phones get one column, the boards as tabs
+ * above it and the bottom toolbar. Members only, like the rest of the site; one lazy chunk, out of
+ * the home page.
  */
 
 interface Club {
   boards: Board[]
   members: ClubMember[]
 }
+
+/** What the frame gives its pages (Outlet context) */
+interface Forum {
+  club: Club
+  /** The first page of every board's posts: the front page's feed and the frame's 活躍的人 */
+  front?: ForumFeed
+  /** The front page and 社團新聞 again, after a post was added or deleted */
+  refresh: () => void
+}
+
+const useForum = () => useOutletContext<Forum>()
 
 /** The boards and the club's members (names, avatars, `@` mentions), which every forum page needs */
 function useClub(): { club?: Club; error?: string; retry: () => void } {
@@ -59,20 +82,16 @@ function Failed({ text, retry }: { text: string; retry?: () => void }) {
 
 export function PostPage() {
   return (
-    <Frame>
-      <Gate need="member">
-        <Column>
-          <PostThread />
-        </Column>
-      </Gate>
-    </Frame>
+    <Column>
+      <PostThread />
+    </Column>
   )
 }
 
 function PostThread() {
   const { postId = '' } = useParams()
   const navigate = useNavigate()
-  const { club, error: clubError, retry } = useClub()
+  const { club, refresh } = useForum()
   const [thread, setThread] = useState<{ id: string; post?: Post; comments?: Comment[]; error?: string; gone?: boolean }>()
   const [editing, setEditing] = useState(false)
 
@@ -92,9 +111,8 @@ function PostThread() {
   const ready = thread?.id === postId ? thread : undefined
   usePageTitle(ready?.post?.title || t.title)
 
-  if (clubError) return <Failed text={clubError} retry={retry} />
   if (ready?.error) return <Failed text={ready.gone ? t.postGone : ready.error} />
-  if (!club || !ready?.post || !ready.comments) return <Muted role="status">{t.loading}</Muted>
+  if (!ready?.post || !ready.comments) return <Muted role="status">{t.loading}</Muted>
   const { post, comments } = ready
 
   return (
@@ -118,7 +136,11 @@ function PostThread() {
           members={club.members}
           onChange={(changed) => setThread((now) => (now?.post ? { ...now, post: changed } : now))}
           onEdit={() => setEditing(true)}
-          onDelete={() => navigate('/', { replace: true })}
+          onDelete={() => {
+            // Back to the board it was on (G6; G5 went home)
+            refresh()
+            navigate(boardPath(post.boardId), { replace: true })
+          }}
         />
       )}
       <CommentSection
@@ -134,31 +156,29 @@ function PostThread() {
 }
 
 export function NewPostPage() {
+  usePageTitle(t.newPostTitle)
   return (
-    <Frame title={t.newPostTitle}>
-      <Gate need="member">
-        <Column>
-          <PageTitle>{t.newPostTitle}</PageTitle>
-          <NewPost />
-        </Column>
-      </Gate>
-    </Frame>
+    <Column>
+      <PageTitle>{t.newPostTitle}</PageTitle>
+      <NewPost />
+    </Column>
   )
 }
 
 function NewPost() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const { club, error, retry } = useClub()
-  if (error) return <Failed text={error} retry={retry} />
-  if (!club) return <Muted role="status">{t.loading}</Muted>
+  const { club, refresh } = useForum()
   return (
     <PostComposer
       startOpen
       boards={club.boards}
       members={club.members}
       boardId={params.get('board') ?? undefined}
-      onDone={(post) => navigate(postPath(post.id))}
+      onDone={(post) => {
+        refresh()
+        navigate(postPath(post.id))
+      }}
     />
   )
 }
@@ -170,4 +190,458 @@ const Column = styled.div`
   width: min(100%, 40rem);
   margin: 0 auto;
   min-width: 0;
+`
+
+export function ForumShell() {
+  const isMobile = useMediaQuery(mobileQuery)
+  return (
+    <Frame wide toolbar>
+      <Gate need="member">
+        <ForumFrame />
+      </Gate>
+      {isMobile && (
+        <Suspense fallback={null}>
+          <MobileToolbar search={false} />
+        </Suspense>
+      )}
+    </Frame>
+  )
+}
+
+function ForumFrame() {
+  const { club, error, retry } = useClub()
+  const [front, setFront] = useState<ForumFeed>()
+  const [news, setNews] = useState<Post[]>()
+  const [round, setRound] = useState(0)
+
+  useEffect(() => {
+    let current = true
+    forumApi.feed(1).then(
+      (feed) => current && setFront(feed),
+      () => current && setFront({ posts: [], page: 1, pages: 1 }),
+    )
+    forumApi.latest().then(
+      (latest) => current && setNews(latest.news),
+      () => current && setNews([]),
+    )
+    return () => {
+      current = false
+    }
+  }, [round])
+
+  if (error)
+    return (
+      <Main id="main">
+        <Failed text={error} retry={retry} />
+      </Main>
+    )
+  if (!club)
+    return (
+      <Main id="main">
+        <Muted role="status">{t.loading}</Muted>
+      </Main>
+    )
+  const boards = [...club.boards].sort((a, b) => a.order - b.order)
+  const context: Forum = { club, front, refresh: () => setRound((n) => n + 1) }
+
+  return (
+    <Layout>
+      <BoardNav aria-label={t.boards}>
+        <h2>{t.boards}</h2>
+        <ul>
+          <li>
+            <NavLink to="/forum" end>
+              {t.allBoards}
+            </NavLink>
+          </li>
+          {boards.map((board) => (
+            <li key={board.id}>
+              <NavLink to={boardPath(board.id)}>{board.name}</NavLink>
+            </li>
+          ))}
+        </ul>
+      </BoardNav>
+      <Main id="main" tabIndex={-1}>
+        <Suspense fallback={<Muted role="status">{t.loading}</Muted>}>
+          <Outlet context={context} />
+        </Suspense>
+      </Main>
+      <Aside>
+        <NewsBox news={news} members={club.members} />
+        <ActivePeople posts={front?.posts} members={club.members} />
+      </Aside>
+    </Layout>
+  )
+}
+
+/** 社團新聞: the news board's latest, pinned first; officers may post one from here */
+function NewsBox({ news, members }: { news?: Post[]; members: readonly ClubMember[] }) {
+  const { user } = useAuth()
+  return (
+    <Box aria-labelledby="forum-news">
+      <h2 id="forum-news">{t.news}</h2>
+      {!news ? (
+        <Muted role="status">{t.loading}</Muted>
+      ) : news.length ? (
+        <ul>
+          {news.map((post) => (
+            <li key={post.id}>
+              <Link to={postPath(post.id)}>{postSummary(post) || t.untitled}</Link>
+              <small>
+                {post.pinned && `${t.pinned} · `}
+                {memberLabel(members, post.authorId) ?? t.someone} · {ago(post.createdAt)}
+              </small>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <Muted>{t.noNews}</Muted>
+      )}
+      <BoxLinks>
+        <Link to={boardPath(NEWS_BOARD_ID)}>{t.allNews}</Link>
+        {user?.admin && <Link to={`/forum/new?board=${NEWS_BOARD_ID}`}>{t.postNews}</Link>}
+      </BoxLinks>
+    </Box>
+  )
+}
+
+/** 活躍的人: who posted last, from the front page's posts */
+function ActivePeople({ posts, members }: { posts?: Post[]; members: readonly ClubMember[] }) {
+  const people = recentAuthors(posts ?? []).flatMap((id) => members.filter((m) => m.id === id))
+  if (!people.length) return null
+  return (
+    <Box aria-labelledby="forum-active">
+      <h2 id="forum-active">{t.active}</h2>
+      <Muted>{t.activeHint}</Muted>
+      <People>
+        {people.map((member) => {
+          const name = member.displayName || member.username
+          return (
+            <li key={member.id}>
+              <Link to={`/u/${encodeURIComponent(member.id)}`}>
+                <Avatar id={member.id} name={name} avatar={member.avatar} size={32} />
+                <span>{name}</span>
+              </Link>
+            </li>
+          )
+        })}
+      </People>
+    </Box>
+  )
+}
+
+/** The front page `/forum`: every board's posts newest first */
+export function FeedPage() {
+  usePageTitle(t.title)
+  const { front } = useForum()
+  return (
+    <Column>
+      <Heading>
+        <PageTitle>{t.title}</PageTitle>
+        <Muted>{t.allBoardsIntro}</Muted>
+      </Heading>
+      <Posts key="all" first={front} />
+    </Column>
+  )
+}
+
+/** One board `/forum/:boardId`: its pinned posts first, then the others newest first */
+export function BoardPage() {
+  const { boardId = '' } = useParams()
+  const { club } = useForum()
+  const board = club.boards.find((b) => b.id === boardId)
+  usePageTitle(board?.name ?? t.title)
+  if (!board)
+    return (
+      <Column>
+        <ErrorText role="alert">{t.boardGone}</ErrorText>
+        <div>
+          <Link to="/forum">{t.allBoards}</Link>
+        </div>
+      </Column>
+    )
+  return (
+    <Column>
+      <Heading>
+        <PageTitle>{board.name}</PageTitle>
+        {board.description && <Muted>{board.description}</Muted>}
+      </Heading>
+      <Posts key={board.id} board={board} />
+    </Column>
+  )
+}
+
+/**
+ * The compose box and a list of posts, a page at a time: one board's (its pinned posts first), or
+ * every board's, starting from the frame's first page (`first`)
+ */
+function Posts({ board, first }: { board?: Board; first?: ForumFeed }) {
+  const { club, refresh } = useForum()
+  const [pinned, setPinned] = useState<Post[]>([])
+  const [posts, setPosts] = useState<Post[]>()
+  const [page, setPage] = useState({ at: 0, of: 1 })
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  const load = (at: number) => {
+    setBusy(true)
+    setError('')
+    const call: Promise<{ pinned: Post[]; posts: Post[]; page: number; pages: number }> = board
+      ? forumApi.boardPage(board.id, at)
+      : forumApi.feed(at).then((r) => ({ ...r, pinned: [] }))
+    call.then(
+      (r) => {
+        if (at === 1) setPinned(r.pinned)
+        // A post may move to the next page while reading; show it once
+        setPosts((now) => (at === 1 || !now ? r.posts : [...now, ...r.posts.filter((p) => !now.some((q) => q.id === p.id))]))
+        setPage({ at: r.page, of: r.pages })
+        setBusy(false)
+      },
+      (e) => {
+        setError(errorText(e))
+        setBusy(false)
+      },
+    )
+  }
+
+  // A board loads its own first page (the list is keyed by the board); the front page takes the frame's
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- once, when the list mounts
+  useEffect(() => void (board && load(1)), [])
+  useEffect(() => {
+    if (board || !first || page.at > 1) return
+    setPosts(first.posts)
+    setPage({ at: first.page, of: first.pages })
+  }, [board, first, page.at])
+
+  const change = (post: Post) => {
+    const swap = (list: Post[]) => list.map((p) => (p.id === post.id ? post : p))
+    setPosts((now) => now && swap(now))
+    setPinned(swap)
+  }
+  const remove = (id: string) => {
+    const drop = (list: Post[]) => list.filter((p) => p.id !== id)
+    setPosts((now) => now && drop(now))
+    setPinned(drop)
+    refresh()
+  }
+  const added = (post: Post) => {
+    if (!board || post.boardId === board.id) setPosts((now) => [post, ...(now ?? [])])
+    refresh()
+  }
+
+  const card = (post: Post) => (
+    <PostCard
+      key={post.id}
+      post={post}
+      boards={club.boards}
+      members={club.members}
+      onChange={change}
+      onDelete={() => remove(post.id)}
+    />
+  )
+
+  return (
+    <>
+      <PostComposer boards={club.boards} members={club.members} boardId={board?.id} onDone={added} />
+      {error && <Failed text={error} retry={() => load(posts ? page.at + 1 : 1)} />}
+      {posts ? (
+        <Feed aria-label={board ? board.name : t.feedLabel}>
+          {pinned.map(card)}
+          {posts.map(card)}
+          {!pinned.length && !posts.length && <Muted>{t.noPosts}</Muted>}
+        </Feed>
+      ) : (
+        !error && <Muted role="status">{t.loading}</Muted>
+      )}
+      {posts && page.at < page.of && (
+        <div>
+          <Button type="button" disabled={busy} onClick={() => load(page.at + 1)}>
+            {busy ? t.loadingMore : t.more}
+          </Button>
+        </div>
+      )}
+    </>
+  )
+}
+
+/** Wide screens: boards 14rem, the feed 40rem, news 18rem (DESIGN-V2.md §12); narrower, the news goes under the feed */
+const Layout = styled.div`
+  display: grid;
+  grid-template-columns: 14rem minmax(0, 40rem) 18rem;
+  justify-content: center;
+  align-items: start;
+  gap: ${({ theme }) => theme.space(8)};
+  padding: ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(16)};
+
+  @media (max-width: 1180px) {
+    grid-template-columns: 12rem minmax(0, 40rem);
+  }
+  ${mobile} {
+    grid-template-columns: minmax(0, 1fr);
+    gap: ${({ theme }) => theme.space(4)};
+    padding: 0 ${({ theme }) => theme.space(4)}
+      calc(${({ theme }) => theme.space(12)} + ${({ theme }) => theme.layout.toolbarHeight});
+  }
+`
+
+const Main = styled.main`
+  min-width: 0;
+  outline: none;
+`
+
+/** A column on the left; tabs across the top on phones */
+const BoardNav = styled.nav`
+  position: sticky;
+  top: ${({ theme }) => theme.space(20)};
+  h2 {
+    margin: 0 0 ${({ theme }) => theme.space(2)};
+    font-family: ${({ theme }) => theme.fonts.heading};
+    font-size: 0.9375rem;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+  ul {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 ${({ theme }) => theme.space(3)};
+    border-radius: ${({ theme }) => theme.shape.control};
+    color: ${({ theme }) => theme.colors.text};
+    text-decoration: none;
+  }
+  a:hover {
+    background: ${({ theme }) => theme.colors.surfaceAlt};
+  }
+  a[aria-current='page'] {
+    background: ${({ theme }) => theme.colors.surfaceAlt};
+    color: ${({ theme }) => theme.colors.primaryStrong};
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 ${({ theme }) => theme.colors.primary};
+  }
+
+  ${mobile} {
+    position: relative;
+    top: 0;
+    margin: 0 -${({ theme }) => theme.space(4)};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+    overflow-x: auto;
+    h2 {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    ul {
+      display: flex;
+      gap: 0;
+      padding: 0 ${({ theme }) => theme.space(2)};
+    }
+    a {
+      min-height: 44px;
+      white-space: nowrap;
+      border-radius: 0;
+    }
+    a[aria-current='page'] {
+      background: transparent;
+      box-shadow: inset 0 -2px 0 ${({ theme }) => theme.colors.seal};
+    }
+  }
+`
+
+const Aside = styled.aside`
+  display: grid;
+  gap: ${({ theme }) => theme.space(6)};
+  min-width: 0;
+  @media (max-width: 1180px) {
+    grid-column: 2;
+  }
+  ${mobile} {
+    grid-column: auto;
+  }
+`
+
+const Box = styled.section`
+  display: grid;
+  gap: ${({ theme }) => theme.space(2)};
+  h2 {
+    margin: 0;
+    padding-bottom: ${({ theme }) => theme.space(2)};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.accent};
+    font-family: ${({ theme }) => theme.fonts.heading};
+    font-size: 1.0625rem;
+  }
+  p {
+    margin: 0;
+  }
+  > ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  > ul > li {
+    display: grid;
+    gap: 2px;
+    padding: ${({ theme }) => theme.space(2)} 0;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  }
+  > ul a {
+    color: ${({ theme }) => theme.colors.text};
+    font-weight: 500;
+  }
+  small {
+    font-size: 0.8125rem;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+`
+
+const BoxLinks = styled.p`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.space(4)};
+  font-size: 0.875rem;
+  a {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+const People = styled.ul`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.space(2)};
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: ${({ theme }) => theme.space(2)};
+    min-height: 36px;
+    padding-right: ${({ theme }) => theme.space(2)};
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 0.875rem;
+    text-decoration: none;
+  }
+  a:hover span {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+const Heading = styled.div`
+  display: grid;
+  gap: ${({ theme }) => theme.space(1)};
+  p {
+    margin: 0;
+  }
+`
+
+const Feed = styled.section`
+  display: grid;
+  gap: ${({ theme }) => theme.space(4)};
 `

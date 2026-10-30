@@ -1,4 +1,4 @@
-import { BookOpen, Dumbbell, Library, LogIn } from 'lucide-react'
+import { BookOpen, Dumbbell, Library, LogIn, MessagesSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { Button } from '../components/ui.tsx'
@@ -68,6 +68,10 @@ export function ProfileCard() {
         <Button as={Link} to="/library" $small>
           <Library size={16} aria-hidden />
           {s.library}
+        </Button>
+        <Button as={Link} to="/forum" $small>
+          <MessagesSquare size={16} aria-hidden />
+          {s.forum}
         </Button>
         {user === null && (
           <Button as={Link} to="/login?next=%2F" $small>

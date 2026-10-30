@@ -6,6 +6,7 @@ import type {
   Comment,
   CommentBlock,
   CommentInput,
+  ForumFeed,
   ForumLatest,
   Post,
   PostInput,
@@ -39,6 +40,8 @@ export const forumApi = {
 
   /** Pinned posts on page 1, then newest first, FORUM_LIMITS.pageSize a page */
   boardPage: (boardId: string, page = 1) => request<BoardPage>(`/api/forum/boards/${id(boardId)}/posts?page=${page}`),
+  /** Every board's posts newest first: the forum's front page (e11-t15) */
+  feed: (page = 1) => request<ForumFeed>(`/api/forum/feed?page=${page}`),
   /** The home page's 社團新聞 and 最新討論 */
   latest: () => request<ForumLatest>('/api/forum/latest'),
 
