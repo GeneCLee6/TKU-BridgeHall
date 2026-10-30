@@ -4,9 +4,10 @@ import type { BookRevision } from '../../lib/api.ts'
 import { formatDateTime } from '../../lib/format.ts'
 import { diffText } from '../../pages/reviewStrings.ts'
 import { strings } from '../../strings.ts'
-import { Button, ErrorText, Muted, Row } from '../ui.tsx'
+import { Button, ErrorText, Muted, Row } from '../ui.tsx'
+import { editorStrings } from './editorStrings.ts'
 
-const t = strings.editor
+const t = editorStrings
 
 /**
  * The saved versions of a convention, newest first. Loading one puts it in the editor; saving

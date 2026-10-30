@@ -81,7 +81,8 @@ export type Checks = [
   Check<Same<Book.BookGlossary, TableGlossary.BookGlossary>>,
   // `categories` is optional in the handbook: a manifest cached before categories were data has none
   Check<Reads<Book.BookManifest, Worker.BookManifest>>,
-  Check<Same<Omit<Book.BookManifest, 'categories'>, Omit<Worker.BookManifest, 'categories'>>>,
+  // `builtin` (L0) is optional here: a manifest cached before it has none
+  Check<Same<Omit<Book.BookManifest, 'categories' | 'builtin'>, Omit<Worker.BookManifest, 'categories' | 'builtin'>>>,
   Check<Reads<Book.BookRevision, Worker.BookRevision>>,
   Check<Same<Omit<Book.BookRevision, 'convention'>, Omit<Worker.BookRevision, 'convention'>>>,
   Check<Same<Book.ImportDraftSummary, Worker.ImportDraftSummary>>,
@@ -102,6 +103,10 @@ export type Checks = [
   Check<Reads<Book.ArticleEntry, TableArticles.ArticleEntry>>,
   Check<Same<Omit<Book.ArticleEntry, 'article'>, Omit<TableArticles.ArticleEntry, 'article'>>>,
   Check<Same<Book.ArticleEntrySummary, TableArticles.ArticleEntrySummary>>,
+  // Article drafts and review (e5-t07)
+  Check<Reads<Book.ArticleDraft, TableArticles.ArticleDraft>>,
+  Check<Same<Omit<Book.ArticleDraft, 'article'>, Omit<TableArticles.ArticleDraft, 'article'>>>,
+  Check<Same<Book.ArticleDraftSummary, TableArticles.ArticleDraftSummary>>,
   Check<Same<Book.ArticleFiles, TableArticles.ArticleList['files']>>,
   Check<Same<Book.ArticleList, TableArticles.ArticleList>>,
   Check<Reads<Book.ArticleResponse, TableArticles.ArticleResponse>>,

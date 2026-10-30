@@ -1,12 +1,12 @@
 import styled from 'styled-components'
 import { HAND_SIZE, hcp, sortHand, type Card } from '../../lib/board.ts'
-import { strings } from '../../strings.ts'
 import { Button, Row } from '../ui.tsx'
-import { CardPanel, HandSuits } from './parts.tsx'
+import { CardPanel, HandSuits } from './parts.tsx'
+import { boardStrings } from './boardStrings.ts'
 
 /** Enter one hand: click up to thirteen cards; clicking a chosen card puts it back */
 export function HandInput({ value, onChange }: { value: Card[]; onChange: (cards: Card[]) => void }) {
-  const b = strings.board
+  const b = boardStrings
   const full = value.length >= HAND_SIZE
 
   const toggle = (card: Card) => {

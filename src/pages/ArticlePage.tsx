@@ -34,7 +34,7 @@ type State =
  */
 export function ArticlePage() {
   const { slug = '' } = useParams()
-  const { user } = useAuth()
+  const { user, can } = useAuth()
   // What was loaded, for which article and reader; anything else is still loading
   const key = `${slug} ${user?.id ?? ''}`
   const [loaded, setLoaded] = useState<{ key: string; state: State }>()
@@ -97,13 +97,29 @@ export function ArticlePage() {
           <Notice role="alert">
             {s.notFound}{' '}
             <Link to="/library">{s.backToLibrary}</Link>
+            {/* A hidden article is only gone for readers: editors may bring it back (e5-t07) */}
+            {can('bookEdit') && (
+              <>
+                {' '}
+                <Link to={`${articlePath(slug)}/edit`}>{s.editArticle}</Link>
+              </>
+            )}
           </Notice>
         )}
         {state.status === 'broken' && <Notice role="alert">{s.broken(state.problem)}</Notice>}
       </Page>
     )
 
-  return <ArticleView key={state.article.slug} article={state.article} files={state.files} trail={trail} signedIn={!!user} />
+  return (
+    <ArticleView
+      key={state.article.slug}
+      article={state.article}
+      files={state.files}
+      trail={trail}
+      signedIn={!!user}
+      editable={can('bookEdit')}
+    />
+  )
 }
 
 /**
@@ -111,7 +127,20 @@ export function ArticlePage() {
  * account as they scroll (e5-t14, AC-5.8); `?at=` opens the article at a block, which is where
  * 「繼續閱讀」 on 我的帳號 goes, and an article opened without it offers to go back to that place.
  */
-function ArticleView({ article, files, trail, signedIn }: { article: Article; files: ArticleFiles; trail: ReactNode; signedIn: boolean }) {
+function ArticleView({
+  article,
+  files,
+  trail,
+  signedIn,
+  editable,
+}: {
+  article: Article
+  files: ArticleFiles
+  trail: ReactNode
+  signedIn: boolean
+  /** An editor's: a link to the article editor (e5-t07) */
+  editable: boolean
+}) {
   const body = useRef<HTMLDivElement>(null)
   const [params] = useSearchParams()
   const last = article.blocks.length - 1
@@ -140,6 +169,11 @@ function ArticleView({ article, files, trail, signedIn }: { article: Article; fi
             <TitleRow>
               <Title id="article-title">{article.title}</Title>
               <span data-print="hide">
+                {editable && (
+                  <Button as={Link} to={`${articlePath(article.slug)}/edit`} $small $variant="ghost">
+                    {s.editArticle}
+                  </Button>
+                )}
                 <CopyLinkButton path={articlePath(article.slug)} label={article.title} />
               </span>
             </TitleRow>
@@ -236,7 +270,10 @@ const TitleRow = styled.div`
   align-items: flex-start;
   gap: ${({ theme }) => theme.space(2)};
 
-  span {
+  & > span {
+    display: inline-flex;
+    align-items: center;
+    gap: ${({ theme }) => theme.space(1)};
     margin-left: auto;
   }
 `

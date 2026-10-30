@@ -3,14 +3,14 @@ import { useState } from 'react'
 import styled from 'styled-components'
 import { cellCall, cellText, DEFAULT_SEATS, normaliseCall, parseResponseLines, rulesToText, suitSymbols, textToRules } from '../../lib/editing.ts'
 import { pageStrings } from '../../pageStrings.ts'
-import { strings } from '../../strings.ts'
 import type { AuctionCall, Block, ResponseRow } from '../../types/convention.ts'
 import { Button, Field, Input, Row, Select } from '../ui.tsx'
-import { AutoTextArea, MiniButton } from './fields.tsx'
+import { AutoTextArea, MiniButton } from './fields.tsx'
+import { editorStrings } from './editorStrings.ts'
 
 type Of<K extends Block['kind']> = Extract<Block, { kind: K }>
 
-const t = strings.editor
+const t = editorStrings
 
 /** A block kind's name; 導讀's lives with the lazy page strings, off the home page's bundle */
 // oxlint-disable-next-line react/only-export-components

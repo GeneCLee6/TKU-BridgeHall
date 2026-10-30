@@ -35,7 +35,7 @@ describe('search box', () => {
     const index = JSON.parse(searchIndexJson()) as SearchIndex
     index.records.push({ slug: 'lebensohl', label: '雷本索特約 › 索引專屬', name: '', tags: '', bids: '', text: '只在索引裡的句子' })
     const fetch = vi.fn(async (input: string) =>
-      input === '/search-index.json'
+      input === '/api/book/search-index'
         ? new Response(JSON.stringify(index), { headers: { 'Content-Type': 'application/json' } })
         : new Response(null, { status: 503 }),
     )

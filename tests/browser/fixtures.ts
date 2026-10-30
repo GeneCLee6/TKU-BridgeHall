@@ -1,13 +1,18 @@
 import { expect, type Page } from '@playwright/test'
+import { builtinPayload } from '../../scripts/builtin-payload.ts'
+import { conventionMeta } from '../../src/lib/sections.ts'
 import type { StyleName } from '../../src/styles/tokens.ts'
 import type { DisplayPrefs } from '../../src/state/PreferencesContext.tsx'
 
 /**
  * A fixed reader for the browser tests (e9-t12, e9-t13): a plain member (the whole site needs an
- * account, 2026-10-29) with no picture, nothing edited online, so the pages show the bundled
- * content, the same every time. The API is answered here; no Worker runs. `signedOut` gets the
- * login page instead.
+ * account, 2026-10-29) with no picture, nothing edited online, so the pages show the built-in
+ * content, the same every time. The API is answered here as a seeded Worker would (L0: the built-in
+ * conventions, their manifest and search index); no Worker runs. `signedOut` gets the login page instead.
  */
+
+const builtin = builtinPayload()
+const manifest = { version: 0, entries: [], categories: [], builtin: builtin.conventions.map(conventionMeta) }
 
 export const DESKTOP = { width: 1280, height: 800 }
 export const PHONE = { width: 390, height: 844 }
@@ -26,7 +31,12 @@ async function serve(page: Page, signedOut: boolean) {
   await page.route('**/api/**', (route) => {
     const path = new URL(route.request().url()).pathname
     if (path === '/api/me' && !signedOut) return route.fulfill({ json: { user: READER } })
-    if (path === '/api/book/manifest') return route.fulfill({ json: { version: 0, entries: [], categories: [] } })
+    const signedIn = !signedOut
+    if (signedIn && path === '/api/book/manifest') return route.fulfill({ json: manifest })
+    if (signedIn && path === '/api/book/search-index') return route.fulfill({ json: builtin.searchIndex })
+    const slug = path.match(/^\/api\/book\/builtin\/([\w-]+)$/)?.[1]
+    const convention = signedIn && builtin.conventions.find((c) => c.slug === slug)
+    if (convention) return route.fulfill({ json: { convention } })
     if (path === '/api/book/categories') return route.fulfill({ json: { version: 0, categories: [] } })
     return route.fulfill({ status: 401, json: { error: 'unauthorized' } })
   })

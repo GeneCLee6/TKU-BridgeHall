@@ -6,7 +6,7 @@ import source from '../../public/sw.js?raw'
  */
 type Listener = (event: Record<string, unknown>) => void
 
-function startWorker(site: Record<string, string>) {
+function startWorker(site: Record<string, string>, network: (request: unknown) => Promise<Response> = vi.fn()) {
   const listeners: Record<string, Listener> = {}
   const stored = new Map<string, Response>()
   const cache = {
@@ -27,13 +27,13 @@ function startWorker(site: Record<string, string>) {
     location: { origin: 'https://book.test' },
   }
   const caches = { open: vi.fn(async () => cache), keys: vi.fn(async () => []), delete: vi.fn() }
-  new Function('self', 'caches', 'fetch', source)(scope, caches, vi.fn())
+  new Function('self', 'caches', 'fetch', source)(scope, caches, network)
   const dispatch = async (type: string, event: Record<string, unknown> = {}) => {
     let work: Promise<unknown> = Promise.resolve()
     listeners[type]({ ...event, waitUntil: (p: Promise<unknown>) => (work = p) })
     await work
   }
-  return { scope, stored, dispatch }
+  return { scope, stored, cache, listeners, dispatch }
 }
 
 const home = `<!doctype html><script type="module" src="/assets/index-abc.js"></script>
@@ -43,7 +43,7 @@ describe('service worker', () => {
   it('stores the shell, the home page files, the search index and the online manifest on install', async () => {
     const { stored, dispatch } = startWorker({
       '/': home,
-      '/search-index.json': '{}',
+      '/api/book/search-index': '{}',
       '/api/book/manifest': '{}',
       '/assets/index-abc.js': '',
       '/assets/vendor-def.js': '',
@@ -53,7 +53,7 @@ describe('service worker', () => {
     expect([...stored.keys()]).toEqual(
       expect.arrayContaining([
         '/',
-        '/search-index.json',
+        '/api/book/search-index',
         '/api/book/manifest',
         '/assets/index-abc.js',
         '/assets/vendor-def.js',
@@ -66,7 +66,7 @@ describe('service worker', () => {
     const { stored, dispatch } = startWorker({ '/': home })
     await dispatch('install')
     expect(stored.has('/')).toBe(true)
-    expect(stored.has('/search-index.json')).toBe(false)
+    expect(stored.has('/api/book/search-index')).toBe(false)
   })
 
   it('waits for the page before taking over', async () => {
@@ -75,6 +75,24 @@ describe('service worker', () => {
     expect(scope.skipWaiting).not.toHaveBeenCalled()
     await dispatch('message', { data: { type: 'skip-waiting' } })
     expect(scope.skipWaiting).toHaveBeenCalled()
+  })
+
+  it('keeps the members-only content for offline reading, and no other API answer (L0)', async () => {
+    const network = vi.fn(async () => new Response('{}'))
+    const { cache, listeners } = startWorker({ '/': home }, network)
+    const answered: string[] = []
+    const fetchEvent = (path: string) =>
+      new Promise<void>((done) => {
+        const request = { url: `https://book.test${path}`, method: 'GET', mode: 'cors' }
+        let responded = false
+        listeners.fetch({ request, respondWith: (p: Promise<Response>) => ((responded = true), void p.then(() => done())) })
+        if (responded) answered.push(path)
+        else done()
+      })
+    for (const path of ['/api/book/manifest', '/api/book/builtin/lebensohl', '/api/book/content/lebensohl', '/api/book/search-index', '/api/me', '/api/book/profiles'])
+      await fetchEvent(path)
+    expect(answered).toEqual(['/api/book/manifest', '/api/book/builtin/lebensohl', '/api/book/content/lebensohl', '/api/book/search-index'])
+    await vi.waitFor(() => expect(cache.put).toHaveBeenCalledTimes(4))
   })
 
   it('carries a build stamp for vite.config.ts to fill in', () => {

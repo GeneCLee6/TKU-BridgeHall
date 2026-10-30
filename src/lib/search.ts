@@ -105,8 +105,9 @@ export function articleRecords(list: {
 }
 
 /**
- * The search index file, /search-index.json: the records of every bundled convention, built with
- * the site (scripts/search-index.ts) so readers search without downloading the content. Fuse
+ * The search index: the records of every built-in convention, built here (scripts/search-index.ts)
+ * and seeded into the Worker with them (GET /api/book/search-index, members only, L0), so readers
+ * search without downloading the content. Fuse
  * takes the records as they are; indexing them in the browser takes a few milliseconds.
  * Articles and glossary terms can join as records of their own.
  */

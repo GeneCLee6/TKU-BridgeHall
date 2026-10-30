@@ -38,9 +38,10 @@ import { mobile, mobileQuery } from '../styles/tokens.ts'
 import type { Convention, Section } from '../types/convention.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { Frame, Gate } from './Frame.tsx'
-import { diffText as d, review as r } from './reviewStrings.ts'
+import { diffText as d, review as r } from './reviewStrings.ts'
+import { editorStrings } from '../components/editor/editorStrings.ts'
 
-const t = strings.editor
+const t = editorStrings
 
 /**
  * The online editor. /edit/:slug edits a convention (its draft if it has one, else the online
@@ -107,7 +108,7 @@ function EditorLoader() {
       .then(({ draft: d }) => {
         const { items, reviewNotes } = importedItems(d.result)
         const item = items[index]
-        if (!item) throw new Error(strings.editor.notFound)
+        if (!item) throw new Error(editorStrings.notFound)
         setDraft({ id: d.id, index, fileName: d.fileName, reviewNotes, item })
       })
       .catch((e) => setError(errorText(e)))

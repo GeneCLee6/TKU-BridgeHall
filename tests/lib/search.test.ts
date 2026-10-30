@@ -1,6 +1,5 @@
 import { searchIndexJson } from '../../scripts/search-index.ts'
 import { conventions } from '../../src/content/index.ts'
-import { manifest } from '../../src/content/manifest.ts'
 import {
   buildRecords,
   createSearch,
@@ -12,7 +11,8 @@ import {
 import { conventionMeta } from '../../src/lib/sections.ts'
 import type { Convention } from '../../src/types/convention.ts'
 
-// What the site searches: the index file as built, with the manifest (no content loaded)
+// What the site searches: the index the Worker serves, with the manifest (no content loaded)
+const manifest = conventions.map(conventionMeta)
 const index = JSON.parse(searchIndexJson()) as SearchIndex
 const search = searchRecords(mergeIndex(index, manifest, () => true))
 const fromContent = createSearch(conventions)
