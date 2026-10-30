@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
 import { Button, ErrorText, Muted, PageTitle } from '../components/ui.tsx'
@@ -14,7 +14,7 @@ import { useAuth } from '../state/AuthContext.tsx'
 import { mobile, mobileQuery } from '../styles/tokens.ts'
 import { CommentSection } from './Comments.tsx'
 import { forumStrings as t } from './forumStrings.ts'
-import { ago, boardPath, postPath } from './forumText.ts'
+import { ago, boardPath, isOfficer, postPath } from './forumText.ts'
 import { PostCard } from './PostCard.tsx'
 import { PostComposer } from './PostComposer.tsx'
 
@@ -44,7 +44,12 @@ interface Forum {
   front?: ForumFeed
   /** The front page and 社團新聞 again, after a post was added or deleted */
   refresh: () => void
+  /** The boards and members again, after the boards were changed (e11-t17) */
+  reloadClub: () => void
 }
+
+// 討論區管理 (e11-t17): in this chunk too
+export { ManagePage } from './ManagePage.tsx'
 
 const useForum = () => useOutletContext<Forum>()
 
@@ -110,6 +115,14 @@ function PostThread() {
 
   const ready = thread?.id === postId ? thread : undefined
   usePageTitle(ready?.post?.title || t.title)
+
+  // A notification about a comment opens `#comment-<id>` (e11-t08): go to it once the comments are in
+  const { hash } = useLocation()
+  const loaded = !!ready?.comments
+  useEffect(() => {
+    if (!loaded || !hash.startsWith('#comment-')) return
+    document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView?.({ block: 'center' })
+  }, [loaded, hash])
 
   if (ready?.error) return <Failed text={ready.gone ? t.postGone : ready.error} />
   if (!ready?.post || !ready.comments) return <Muted role="status">{t.loading}</Muted>
@@ -210,6 +223,7 @@ export function ForumShell() {
 
 function ForumFrame() {
   const { club, error, retry } = useClub()
+  const officer = isOfficer(useAuth().user)
   const [front, setFront] = useState<ForumFeed>()
   const [news, setNews] = useState<Post[]>()
   const [round, setRound] = useState(0)
@@ -242,7 +256,7 @@ function ForumFrame() {
       </Main>
     )
   const boards = [...club.boards].sort((a, b) => a.order - b.order)
-  const context: Forum = { club, front, refresh: () => setRound((n) => n + 1) }
+  const context: Forum = { club, front, refresh: () => setRound((n) => n + 1), reloadClub: retry }
 
   return (
     <Layout>
@@ -259,6 +273,11 @@ function ForumFrame() {
               <NavLink to={boardPath(board.id)}>{board.name}</NavLink>
             </li>
           ))}
+          {officer && (
+            <li>
+              <NavLink to="/forum/manage">{t.manage}</NavLink>
+            </li>
+          )}
         </ul>
       </BoardNav>
       <Main id="main" tabIndex={-1}>
@@ -299,7 +318,7 @@ function NewsBox({ news, members }: { news?: Post[]; members: readonly ClubMembe
       )}
       <BoxLinks>
         <Link to={boardPath(NEWS_BOARD_ID)}>{t.allNews}</Link>
-        {user?.admin && <Link to={`/forum/new?board=${NEWS_BOARD_ID}`}>{t.postNews}</Link>}
+        {isOfficer(user) && <Link to={`/forum/new?board=${NEWS_BOARD_ID}`}>{t.postNews}</Link>}
       </BoxLinks>
     </Box>
   )

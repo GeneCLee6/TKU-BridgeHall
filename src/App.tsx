@@ -74,6 +74,7 @@ const FeedPage = lazy(() => forum().then((m) => ({ default: m.FeedPage })))
 const ForumBoardPage = lazy(() => forum().then((m) => ({ default: m.BoardPage })))
 const PostPage = lazy(() => forum().then((m) => ({ default: m.PostPage })))
 const NewPostPage = lazy(() => forum().then((m) => ({ default: m.NewPostPage })))
+const ForumManagePage = lazy(() => forum().then((m) => ({ default: m.ManagePage })))
 
 // The reading pages read the reader's system profile; the editor and the admin page keep the club's content
 const handbook = (
@@ -185,6 +186,7 @@ export function App() {
               <Route path="/forum" element={<ForumShell />}>
                 <Route index element={<FeedPage />} />
                 <Route path="new" element={<NewPostPage />} />
+                <Route path="manage" element={<ForumManagePage />} />
                 <Route path="p/:postId" element={<PostPage />} />
                 <Route path=":boardId" element={<ForumBoardPage />} />
               </Route>

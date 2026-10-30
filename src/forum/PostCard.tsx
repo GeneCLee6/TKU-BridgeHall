@@ -12,9 +12,10 @@ import { memberLabel, myReaction, withReaction } from '../lib/forumPosts.ts'
 import { formatDateTime } from '../lib/format.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { forumStrings as t } from './forumStrings.ts'
-import { ago, postPath } from './forumText.ts'
+import { ago, isOfficer, postPath } from './forumText.ts'
 import { PostBody, usePostFiles } from './PostBlocks.tsx'
 import { ReactionBar } from './ReactionBar.tsx'
+import { ReportForm } from './ReportForm.tsx'
 
 /** 2 小時前, with the full date and time for hovering and screen readers */
 export function When({ at, edited }: { at: number; edited?: number }) {
@@ -95,8 +96,9 @@ export function ActionMenu({ label, children }: { label: string; children: React
 /**
  * 貼文卡 (e11-t14, AC-11.3): the author, board and time; the post's blocks; the reactions and the
  * comment count. In a feed (`full` false) the title and count link to the post page; on the post
- * page the comments follow it. The author may edit and delete it; an officer (an admin until
- * e11-t09) may delete it too. A news post has the primary line on its left (DESIGN-V2.md §12).
+ * page the comments follow it. The author may edit and delete it; an officer (`isOfficer`, e11-t17)
+ * may delete it too, pin it and lock it; anyone else may report it to the officers. A news post has
+ * the primary line on its left (DESIGN-V2.md §12).
  */
 export function PostCard({
   post,
@@ -119,10 +121,12 @@ export function PostCard({
   const files = usePostFiles(post.blocks)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [reporting, setReporting] = useState(false)
+  const [reported, setReported] = useState(false)
   const react = useReact('post', post.id, post.reactions, (reactions) => onChange({ ...post, reactions }))
   const board = boards.find((b) => b.id === post.boardId)
   const mine = !!user && user.id === post.authorId
-  const officer = !!user?.admin
+  const officer = isOfficer(user)
   const Title = full ? 'h1' : 'h2'
 
   const remove = async () => {
@@ -131,6 +135,16 @@ export function PostCard({
     try {
       await forumApi.deletePost(post.id)
       onDelete?.()
+    } catch (e) {
+      setError(errorText(e))
+    }
+  }
+
+  /** Pin or lock it (officers): the card shows the Worker's answer */
+  const moderate = async (action: 'pin' | 'lock', on: boolean) => {
+    setError('')
+    try {
+      onChange(await (action === 'pin' ? forumApi.pin(post.id, on) : forumApi.lock(post.id, on)))
     } catch (e) {
       setError(errorText(e))
     }
@@ -179,6 +193,21 @@ export function PostCard({
               {t.edit}
             </MenuItem>
           )}
+          {officer && (
+            <MenuItem type="button" onClick={() => void moderate('pin', !post.pinned)}>
+              {post.pinned ? t.unpin : t.pin}
+            </MenuItem>
+          )}
+          {officer && (
+            <MenuItem type="button" onClick={() => void moderate('lock', !post.locked)}>
+              {post.locked ? t.unlock : t.lock}
+            </MenuItem>
+          )}
+          {user && !mine && (
+            <MenuItem type="button" onClick={() => setReporting(true)}>
+              {t.report}
+            </MenuItem>
+          )}
           {(mine || officer) && (
             <MenuItem type="button" $danger onClick={() => void remove()}>
               {t.delete}
@@ -189,6 +218,17 @@ export function PostCard({
       {copied && (
         <Copied role="status">{t.copied}</Copied>
       )}
+      {reporting && (
+        <ReportForm
+          target="post"
+          targetId={post.id}
+          onDone={(sent) => {
+            setReporting(false)
+            setReported(sent)
+          }}
+        />
+      )}
+      {reported && <Copied role="status">{t.reported}</Copied>}
 
       <Title id={`post-${post.id}`} className={post.title ? undefined : 'visually-hidden'}>
         {full ? post.title || t.title : <Link to={postPath(post.id)}>{post.title || t.readMore}</Link>}

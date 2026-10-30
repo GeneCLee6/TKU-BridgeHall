@@ -24,7 +24,7 @@ import { filesOff, isUploadType, uploadImage } from '../lib/imageUpload.ts'
 import { FORUM_LIMITS } from '../lib/forum.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { forumStrings as t } from './forumStrings.ts'
-import { postableBoards, problemText } from './forumText.ts'
+import { isOfficer, postableBoards, problemText } from './forumText.ts'
 import { MentionTextArea } from './MentionTextArea.tsx'
 import { PostBlockView, RefBlock, usePostFiles, type PostFiles } from './PostBlocks.tsx'
 import { RefPicker } from './RefPicker.tsx'
@@ -62,7 +62,7 @@ export function PostComposer({
   onCancel?: () => void
 }) {
   const { user } = useAuth()
-  const officer = !!user?.admin
+  const officer = isOfficer(user)
   const choices = postableBoards(boards, officer)
   const [draft] = useState(() => (post ? null : loadDraft()))
   const [open, setOpen] = useState(startOpen || !!post || !!draft)
