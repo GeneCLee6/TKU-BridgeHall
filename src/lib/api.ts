@@ -9,6 +9,7 @@ import type { ArticleMeta, ArticleSeries } from '../types/article.ts'
 import type { Convention, ConventionMeta, Section } from '../types/convention.ts'
 import type { Term } from '../types/glossary.ts'
 import type { Profile } from './account.ts'
+import { clubHeaders } from './club.ts'
 import type { SpecShows, SystemSpec } from './systemSpec.ts'
 
 export type { ArticleSeries }
@@ -28,6 +29,11 @@ export type Permission = 'bookEdit' | 'bookReview' | 'bookImport' | 'forumModera
 export const PERMISSIONS: Permission[] = ['bookEdit', 'bookReview', 'bookImport', 'forumModerate']
 
 export interface Me {
+  /**
+   * The club the account belongs to (e10-t11; TKU-BridgeTable e12-t02): each call carries it back
+   * (lib/club.ts). The Worker always sets it; 淡江 is `tku`
+   */
+  clubId?: string
   id: string
   username: string
   admin: boolean
@@ -803,8 +809,9 @@ export const errorText = (error: unknown) =>
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     credentials: 'same-origin',
-    headers: init?.body ? { 'Content-Type': 'application/json' } : undefined,
     ...init,
+    // The member's club goes with every call (e10-t11, lib/club.ts)
+    headers: clubHeaders(init?.headers ?? (init?.body ? { 'Content-Type': 'application/json' } : undefined)),
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok)

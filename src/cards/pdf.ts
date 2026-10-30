@@ -1,5 +1,6 @@
 import { ApiError, CARD_PDF_LIMITS, type CardPdfRequest } from '../lib/api.ts'
 import type { CardTemplate } from './types.ts'
+import { clubHeaders } from '../lib/club.ts'
 
 /**
  * 下載 PDF on the card pages (E3 e3-t13, AC-3.4): the page's own print layout, sent to the
@@ -53,7 +54,7 @@ export async function fetchCardPdf(input: CardPdfRequest): Promise<Blob> {
   const response = await fetch('/api/book/card-pdf', {
     method: 'POST',
     credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
+    headers: clubHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(input),
   })
   if (!response.ok || !(response.headers.get('Content-Type') ?? '').includes('application/pdf')) {

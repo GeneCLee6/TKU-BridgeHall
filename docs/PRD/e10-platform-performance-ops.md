@@ -55,7 +55,7 @@ M0 把 22 個特約全部打包進一個 bundle、整本放在一頁（3.2 萬�
 - [ ] AC-10.3 — 離線：manifest、索引、看過的特約、我的制度集與制度卡離線可開；新版本提示。（A2 完成 manifest、索引、看過的特約與新版本提示；制度集與制度卡等 A6、D3 有 API 後補上）
 - [x] AC-10.4 — 錯誤回報與匿名分析進管理頁；不含個資；可關閉。（#55，牌桌 #203：讀者在個人設定關、社團管理員在管理頁關；錯誤回報不受開關影響，個人設定寫明會送什麼）
 - [ ] AC-10.5 — 每日備份到 R2、保留 30 天、可還原（文件化步驟並演練一次）。（e10-t08 已完成程式與文件；建立 R2 bucket、部署後的還原演練還沒做）
-- [ ] AC-10.6 — `clubId` 進 key 與 API；單社團行為不變；測試覆蓋。
+- [x] AC-10.6 — `clubId` 進 key 與 API；單社團行為不變；測試覆蓋。（N1：採用每社團一個 Durable Object（使用者 2026-10-30 決定，牌桌 `e12-t02`），社團之間的資料由物件隔開，key 不加前綴；API 由 `X-Club-Id`／`?club=` 與 `Me.clubId` 帶社團；沒帶＝淡江，單社團行為不變；牌桌與橋館都有測試）
 - [x] AC-10.7 — 內建特約只給社員（使用者 2026-10-29 決定）：網站的靜態檔（`dist/`）不含任何特約內容（CI 擋）；manifest、內容與搜尋索引都由牌桌 Worker 給登入的社員；寫入牌桌的內容與 `src/content` 逐字相同（`seed-builtin --verify`）；離線快取在登出時清掉；首頁 JS 至少留 10 kB 餘裕。
 
 ## Task 拆分
@@ -83,8 +83,10 @@ M0 把 22 個特約全部打包進一個 bundle、整本放在一頁（3.2 萬�
 
 **M3 · 多社團預留**
 
-- [ ] `e10-t10` Worker key 加 `club:<clubId>:` 前綴與遷移；API 由帳號決定 `clubId` · AC-10.6 · M
-- [ ] `e10-t11` 前端 `clubId` 透傳與單社團回歸測試 · AC-10.6 · S · ← e10-t10
+- [x] `e10-t10` Worker key 加 `club:<clubId>:` 前綴與遷移；API 由帳號決定 `clubId` · AC-10.6 · M
+  - N1 實作（牌桌 #204）：改成每社團一個 Durable Object，**不加前綴、不遷移**：`shared/clubs.ts` 對應社團 id 與物件名稱（淡江 `tku` → 原本的 `club`），`worker/routing.ts` 依 `X-Club-Id`（WebSocket 用 `?club=`）轉給那個社團，沒帶是淡江、不認得的 404 `unknownClub`；`/api/me` 帶 `clubId`。牌桌與挑戰物件、D1 紀錄副本、每日備份檔名仍只有淡江一家，開第二個社團前由牌桌 `e12-t04` 分開。
+- [x] `e10-t11` 前端 `clubId` 透傳與單社團回歸測試 · AC-10.6 · S · ← e10-t10
+  - N1 實作：`lib/club.ts`，帳號的 `clubId` 隨每個 `/api` 呼叫送出（header，`sendBeacon` 與直接打牌桌的呼叫用 `?club=`）；未登入不帶。ARCHITECTURE.md §4.2「社團」，測試 `tests/lib/club.test.ts`。
 
 ## 風險與對策
 

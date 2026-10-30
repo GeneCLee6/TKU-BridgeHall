@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { clubHeaders } from '../lib/club.ts'
 import type { SearchFn, SearchIndex, SearchRecord } from '../lib/search.ts'
 import { useContent } from './ContentContext.tsx'
 
@@ -26,7 +27,7 @@ export function useSearch(): { search: SearchFn; prepare: () => void } {
     if (!articles) void import('../lib/libraryApi.ts').then((m) => m.loadArticleRecords()).then(setArticles)
     if (fetching.current || index) return
     fetching.current = true
-    Promise.all([fetch(SEARCH_INDEX_URL).then((r) => (r.ok ? r.json() : null)), searchLib])
+    Promise.all([fetch(SEARCH_INDEX_URL, { headers: clubHeaders() }).then((r) => (r.ok ? r.json() : null)), searchLib])
       .then(([value, { isSearchIndex }]) => {
         if (!isSearchIndex(value)) throw new Error('bad search index')
         setIndex(value)
