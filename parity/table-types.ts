@@ -85,6 +85,10 @@ export type Checks = [
   Check<Same<Omit<Book.BookManifest, 'categories' | 'builtin'>, Omit<Worker.BookManifest, 'categories' | 'builtin'>>>,
   Check<Reads<Book.BookRevision, Worker.BookRevision>>,
   Check<Same<Omit<Book.BookRevision, 'convention'>, Omit<Worker.BookRevision, 'convention'>>>,
+  // The backup's export (L1, e8-t12): the handbook reads `convention` as its Convention
+  Check<Same<Book.ExportedOnline, Worker.ExportedOnline>>,
+  Check<Same<Omit<Book.ExportedConvention, 'convention'>, Omit<Worker.ExportedConvention, 'convention'>>>,
+  Check<Same<Omit<Book.BookExport, 'conventions'>, Omit<Worker.BookExport, 'conventions'>>>,
   Check<Same<Book.ImportDraftSummary, Worker.ImportDraftSummary>>,
   Check<Same<Book.ImportDraft, Worker.ImportDraft>>,
   // Review (e8-t01, e8-t02) and the audit log (e8-t09)

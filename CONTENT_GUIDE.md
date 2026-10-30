@@ -298,12 +298,33 @@ WBF 卡（2.19）：
 
 ### 6.3 線上版本與檔案的關係
 
-網站上改過的特約，以線上版本為準：之後再修改 `src/content/conventions/*.ts` 檔並 `seed-builtin`，讀者也看不到（內建那一層換了，線上版本還蓋在上面）。要改回內建版本，在編輯器的「版本紀錄」按「還原為網站內建的版本」（「內建」現在指牌桌上 seed 的那份）。要把線上的修改保存進 Git，請開發者把線上內容寫回 `.ts` 檔、`seed-builtin -- --apply`，再還原（L1 會把匯出自動化）。
+網站上改過的特約，以線上版本為準：之後再修改 `src/content/conventions/*.ts` 檔並 `seed-builtin`，讀者也看不到（內建那一層換了，線上版本還蓋在上面）。要改回內建版本，在編輯器的「版本紀錄」按「還原為網站內建的版本」（「內建」現在指牌桌上 seed 的那份）。線上的修改每天自動匯出備份到一個 private repo（6.5）；要把某個線上版本收成內建，照 6.5 的「收回內建層」做。
 
 ### 6.4 學習路徑（`/learn`）
 
 內建的「從零開始」（`src/content/paths.ts`）**只排了順序**：8 課依序讀淡江自然制總覽、開叫1♣、開叫1♦、開叫1♥/1♠、開叫1NT/2NT（＋1NT的答叫）、開叫2♣與弱二、叫牌觀念與防禦、防守信號（都是入門程度的特約），課次標題就是特約名稱。**每課的目標、自我檢核、更好的課次標題與順序都要幹部寫**：登入有「編輯」權限的帳號，到 `/learn/from-zero` 按「編輯路徑」，存檔後馬上生效；「還原為內建版本」會刪掉線上的修改。閱讀只能選手冊裡已有的特約或段落。**題目**（e4-t10）：課次頁的「練這一課的題目」預設練閱讀範圍內的全部題目；幹部可在編輯器每課的「選題」從閱讀範圍產生的題目勾選（最多 40 題），勾了就只練那幾題。
 
+
+### 6.5 匯出備份（L1，`e8-t12`～`e8-t14`）
+
+牌桌是唯一的真相（內建層＋線上版本），`src/content` 只是種子與測試資料：網站上改過、新增或隱藏的特約不會回到這個 repo。**匯出備份**把讀者實際讀到的全部特約定期存成 Git 檔，當作備份與變更紀錄。
+
+- **API**：牌桌 `GET /api/book/export`（只給管理員或唯讀的匯出權杖 `BOOK_EXPORT_TOKEN`，牌桌 `DEPLOY.md` §4.10）。內建特約依目錄順序，有線上版本的換成線上版本，再接只有線上版本的新特約；隱藏的另外列；不含草稿。
+- **手動匯出**：`npm run export-content`（權杖放 `.env.seed` 的 `BOOK_EXPORT_TOKEN=…` 或環境變數；`--base <網址>` 換環境），寫到 `tmp/content-export/`（不會 commit）：
+  - `src/content/conventions/<slug>.ts`、`src/content/index.ts`：和這個 repo 同樣的格式，可以直接蓋進 `src/content` 跑測試；每個檔案開頭註明是內建層還是線上第幾版、誰在哪天發布。
+  - `src/content/categories.ts`：只在分類線上改過時才有。
+  - `export.json`（API 原樣，去掉匯出時間）、`README.md`（每個特約是哪一層、第幾版，隱藏了哪些）。
+- **排程備份**：GitHub Action「Content backup」（`.github/workflows/content-backup.yml`）每天台灣 03:30（也可以在 Actions 手動 Run workflow）：匯出 → 把匯出蓋進 `src/content` 跑內容測試（`tests/content/conventions.test.ts`；「待確認」數量那一項不跑，線上解決待確認是正常的）→ 對 private 備份 repo 的 `content-backup` 分支開 PR：測試通過就自動合併，失敗就留著 PR、workflow 失敗，並在備份 repo 開 issue（GitHub 也會寄信給 workflow 的擁有者）。沒有變動就不開 PR。
+- **這個 repo 是公開的，Action 的 log 也是公開的**：腳本只印數量、測試只印測試名稱，不上傳 artifact。特約內容只進 private 備份 repo。
+- **要先設定**（沒設定時 workflow 以 notice 略過）：建一個 private repo（至少一個 commit，例如 README）；橋館 repo 的 Actions 變數 `CONTENT_BACKUP_REPO`（`owner/name`）、secret `BOOK_EXPORT_TOKEN`（和牌桌 secret 同值）、secret `CONTENT_BACKUP_TOKEN`（只給那個 repo 的 fine-grained token：Contents、Pull requests、Issues 讀寫）。
+- 這份 Git 備份不取代牌桌每天到 R2 的完整備份（含帳號、版本紀錄，牌桌 `DEPLOY.md` §4.4）；還原線上內容用那一份。
+
+**收回內建層**（把發布過的線上版本變成內建，評估見 ARCHITECTURE.md §4.1.1；目前手動、一次一個）：
+
+1. 從備份 repo（或 `npm run export-content`）拿那個特約的 `.ts`，換掉 `src/content/conventions/<slug>.ts` 的內容（保留檔案開頭的出處註解，把「Generated」那兩行換成原本的說明；新特約另外在 `src/content/index.ts` 登記）。
+2. 照第 4 節檢查（待確認數量要一起更新）、開 PR、合併。
+3. `npm run seed-builtin -- --apply`：報告會標這個特約「has an online version」。
+4. 在編輯器的版本紀錄按「還原為網站內建的版本」：線上版本拿掉，讀者看到的換成剛寫入的內建版本（內容相同，版本紀錄保留在牌桌）。
 
 ### 雷本索特約（`lebensohl`）
 
