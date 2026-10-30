@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useLocation } from 'react-router-dom'
 import { api, CLUB_PROFILE_ID, type ProfileSummary } from '../lib/api.ts'
 import type { ProfileView } from '../lib/profiles.ts'
 import { useAuth } from './AuthContext.tsx'
@@ -19,6 +20,11 @@ import { ContentContext, useContent, type Content } from './ContentContext.tsx'
  * not save yet (offline) waits in localStorage and is sent again next time. lib/profiles.ts is
  * loaded only for a signed-in reader, and the profiles themselves only when the chosen one's chain
  * changes something. `ProfiledContent` gives the handbook page the profile's view of the content.
+ *
+ * A link may name a profile, `?profile=<id>` (e7-t05: 淡江牌桌's calls link to the profile their
+ * words came from): the page shows that one, for as long as the reader does not choose another,
+ * without changing the account's choice. Only a profile the reader may read (one in the list)
+ * takes effect; otherwise the reader's own shows.
  */
 
 type Status = 'idle' | 'loading' | 'failed'
@@ -90,8 +96,16 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }, [userId])
 
+  // A profile a link asked for (?profile=), until the reader chooses one
+  const asked = new URLSearchParams(useLocation().search).get('profile')
+  const [linked, setLinked] = useState<string | null>(null)
+  useEffect(() => {
+    if (asked) setLinked(asked)
+  }, [asked])
+
   const wanted = (choice?.user === userId ? choice?.id : user?.bookProfile) ?? CLUB_PROFILE_ID
-  const activeId = list.some((p) => p.id === wanted) ? wanted : CLUB_PROFILE_ID
+  const has = (id: string | null) => list.some((p) => p.id === id)
+  const activeId = has(linked) ? linked! : has(wanted) ? wanted : CLUB_PROFILE_ID
 
   // A choice made while the account could not be reached
   const savedId = user?.bookProfile ?? CLUB_PROFILE_ID
@@ -132,6 +146,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     (id: string) => {
       if (!userId) return
       const next = { user: userId, id }
+      setLinked(null)
       setChoice(next)
       keep(next)
       void save(next)

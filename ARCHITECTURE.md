@@ -136,7 +136,7 @@ interface ProfileNote { slug: string; sectionId?: string; text: string; by: stri
 - **壞參照不靜默消失**：覆寫或備忘指到不存在的特約、段落、區塊或列（或那個區塊不是答叫表），略過並放進 `problems`（`brokenOverride`、`brokenNote`、`unknownAdoption`），給「與母制度集比較」頁列出失效的覆寫（e1-t15）。
 
 **網站怎麼用**（A7：e1-t11、e1-t12、e1-t13、e1-t16）：
-- `state/ProfileContext.tsx` 的 `ProfileProvider`（在 `ContentProvider` 裡面）：未登入只有 `club`，**不抓任何制度集 API**，手冊照原樣顯示。登入後抓 `GET /api/book/profiles` 的摘要清單；目前選擇是帳號的 `Me.bookProfile`（牌桌 `POST /api/account/preferences` 的 `bookProfile`，空字串＝`club`），存不進帳號時（離線）暫存在 localStorage（`tku-bridgebook:profile`，`{ user, id }`），下次載入再送一次、送成功就清掉。選的制度集已不存在時顯示 `club`。
+- `state/ProfileContext.tsx` 的 `ProfileProvider`（在 `ContentProvider` 裡面）：未登入只有 `club`，**不抓任何制度集 API**，手冊照原樣顯示。登入後抓 `GET /api/book/profiles` 的摘要清單；目前選擇是帳號的 `Me.bookProfile`（牌桌 `POST /api/account/preferences` 的 `bookProfile`，空字串＝`club`），存不進帳號時（離線）暫存在 localStorage（`tku-bridgebook:profile`，`{ user, id }`），下次載入再送一次、送成功就清掉。選的制度集已不存在時顯示 `club`。網址帶 `?profile=<id>`（e7-t05：淡江牌桌的叫品連回橋館時帶該桌的制度集）且那個制度集在清單裡（讀者有權限）時，頁面改用它，直到讀者自己在選單換一個為止；不改帳號的選擇。沒有權限就照讀者自己的。未登入時 `?next=` 會連同 `?profile=` 一起帶回來。
 - `lib/profiles.ts` 只在登入後才動態載入（首頁 JS 預算）；`loadProfileView` 先看摘要的數量，整條鏈什麼都沒改（全部 0）就不抓制度集本體、直接照原樣顯示，否則只抓鏈上的制度集，做出 `profileView`。`profileView` 套用和 `resolveProfile` 同一套規則，但一次一個特約（內容是分片載入的）：`plays`、`changes`、`convention`（套覆寫，依物件快取）、`meta`（目錄項目：摘要、標籤與被換掉的段落大綱；`outline` 代替段落套用同一組覆寫）、`notes`。
 - `ProfiledContent` 只包住手冊頁（`App.tsx`），用同一個 `ContentContext` 提供制度集看到的內容：不採用的特約從目錄、`bySlug`、`load`、`loadAll`（列印）消失，其餘套覆寫。編輯器、管理頁仍讀社團版原文。`Content.changed(slug)` 對被覆寫的特約回傳含制度集版本的鍵，搜尋就改用載入後的內容建索引（與線上改過的特約同一條路）。
 - 頁首選單 `components/ProfileSwitch.tsx`（lazy；有兩個以上制度集才出現）：桌機在頁首，手機在目錄抽屜；原生 `<select>` 依社團／隊伍／搭檔分組，`role="status"` 報讀「目前顯示…」；切換時內容區變淡（`aria-busy`，減少動態時不做過場），舊內容留到新的載好，載入失敗顯示提示並退回社團版。
