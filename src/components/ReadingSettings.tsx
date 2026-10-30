@@ -5,16 +5,19 @@ import styled from 'styled-components'
 import { isStandalone, useInstallOffer } from '../lib/pwa.ts'
 import { pageStrings } from '../pageStrings.ts'
 import { readingModes, themeChoices, usePreferences } from '../state/PreferencesContext.tsx'
+import { useDisplayDraft } from '../state/useDisplayDraft.ts'
 import { strings } from '../strings.ts'
 import { layout, mobile, mobileQuery } from '../styles/tokens.ts'
 import { IconButton } from './CopyLinkButton.tsx'
+import { Button } from './ui.tsx'
 import { InstallHelp } from './InstallHelp.tsx'
-import type { ReadingActions } from './ReadingSettingsButton.tsx'
+import type { ReadingActions } from '../lib/readingActions.ts'
 import { TextSizeControl } from './TextSizeControl.tsx'
 
 /**
  * The 閱讀設定 panel (e9-t03, DESIGN-V2 §5.2): theme, 字級, this page's expand / collapse and
- * print, and installing the app. What the page cannot do (the home page has nothing to expand)
+ * print, and installing the app. Theme, 版本 and 字級 show at once as a preview and are kept on
+ * 儲存; closing the panel without it puts back what was stored (2026-10-30). What the page cannot do (the home page has nothing to expand)
  * is left out; the rest of 個人設定 is a link away. Loaded only when the reader opens it; ReadingSettingsButton owns opening, closing,
  * Esc and clicks outside.
  */
@@ -27,7 +30,9 @@ export function ReadingSettings({
   printLabel = strings.reading.printPage,
   aboveToolbar = false,
 }: ReadingActions & { id: string; onClose: () => void; aboveToolbar?: boolean }) {
-  const { themeChoice, setThemeChoice, reading, update, textSize } = usePreferences()
+  const { textSize } = usePreferences()
+  const draft = useDisplayDraft()
+  const { theme: themeChoice, reading } = draft.value
   const titleId = useId()
   const themeId = useId()
   const readingId = useId()
@@ -97,7 +102,7 @@ export function ReadingSettings({
               key={choice}
               type="button"
               aria-pressed={themeChoice === choice}
-              onClick={() => setThemeChoice(choice)}
+              onClick={() => draft.set({ theme: choice })}
             >
               {strings.reading.themes[choice]}
             </button>
@@ -112,7 +117,7 @@ export function ReadingSettings({
               key={mode}
               type="button"
               aria-pressed={reading === mode}
-              onClick={() => update({ reading: mode })}
+              onClick={() => draft.set({ reading: mode })}
             >
               {pageStrings.levels.modes[mode]}
             </button>
@@ -121,8 +126,26 @@ export function ReadingSettings({
       </Row>
       <Row>
         <span aria-hidden>{strings.textSize}</span>
-        <TextSizeControl />
+        <TextSizeControl value={draft.value.textSize} onChange={(size) => draft.set({ textSize: size })} />
       </Row>
+      <SaveRow>
+        {draft.dirty && <small role="status">{strings.reading.unsaved}</small>}
+        <Button type="button" $small disabled={!draft.dirty} onClick={draft.cancel}>
+          {strings.cancel}
+        </Button>
+        <Button
+          type="button"
+          $small
+          $variant="primary"
+          disabled={!draft.dirty}
+          onClick={() => {
+            draft.save()
+            onClose()
+          }}
+        >
+          {strings.save}
+        </Button>
+      </SaveRow>
       {/* 風格、版面、字體、花色顏色、密度 are on the 個人設定 page (e9-t15) */}
       <Actions>
         <Item as={Link} to="/settings" onClick={onClose}>
@@ -261,6 +284,21 @@ const Segments = styled.div`
   button[aria-pressed='true'] {
     background: ${({ theme }) => theme.colors.primarySoft};
     color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+const SaveRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: ${({ theme }) => theme.space(2)};
+  margin-top: ${({ theme }) => theme.space(2)};
+
+  small {
+    flex: 1;
+    color: ${({ theme }) => theme.colors.textMuted};
+    font-size: 0.8125rem;
   }
 `
 

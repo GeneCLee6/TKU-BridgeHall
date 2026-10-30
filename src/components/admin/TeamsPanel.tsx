@@ -5,7 +5,8 @@ import { api, errorText, TEAM_LIMITS, type ClubMember, type ClubTeam, type Partn
 import { formatDateTime } from '../../lib/format.ts'
 import { strings } from '../../strings.ts'
 import { mobile } from '../../styles/tokens.ts'
-import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PanelTitle, Row, Select } from '../ui.tsx'
+import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PanelTitle, Row, Select } from '../ui.tsx'
+
 import { teamsStrings } from './teamsStrings.ts'
 
 const t = teamsStrings
@@ -118,6 +119,14 @@ function TeamItem({ team, members, nameOf, run }: ItemProps) {
   const outside = members.filter((m) => !team.memberIds.includes(m.id))
   const full = team.memberIds.length >= TEAM_LIMITS.membersMax
   const locked = !!team.archived
+  // 隊長 and 隊員可編輯制度集 wait for 儲存 (2026-10-30)
+  const [captainId, setCaptainId] = useState(team.captainId)
+  const [membersEdit, setMembersEdit] = useState(!!team.membersEdit)
+  const dirty = captainId !== team.captainId || membersEdit !== !!team.membersEdit
+  const discard = () => {
+    setCaptainId(team.captainId)
+    setMembersEdit(!!team.membersEdit)
+  }
 
   const togglePairs = () => {
     setOpen(!open)
@@ -138,10 +147,10 @@ function TeamItem({ team, members, nameOf, run }: ItemProps) {
         <Field>
           {t.captain}
           <Select
-            value={team.captainId}
+            value={captainId}
             disabled={locked}
             aria-label={t.captainOf(team.name)}
-            onChange={(e) => update({ captainId: e.target.value })}
+            onChange={(e) => setCaptainId(e.target.value)}
           >
             {team.memberIds.map((id) => (
               <option key={id} value={id}>
@@ -153,13 +162,30 @@ function TeamItem({ team, members, nameOf, run }: ItemProps) {
         <Check>
           <input
             type="checkbox"
-            checked={!!team.membersEdit}
+            checked={membersEdit}
             disabled={locked}
-            onChange={(e) => update({ membersEdit: e.target.checked })}
+            onChange={(e) => setMembersEdit(e.target.checked)}
           />
           {t.membersEdit}
         </Check>
       </Grid>
+      {!locked && (
+        <Row>
+          <Button
+            type="button"
+            $small
+            $variant="primary"
+            disabled={!dirty}
+            onClick={() => update({ ...(captainId !== team.captainId && { captainId }), ...(membersEdit !== !!team.membersEdit && { membersEdit }) })}
+          >
+            {strings.save}
+          </Button>
+          <Button type="button" $small disabled={!dirty} onClick={discard}>
+            {strings.cancel}
+          </Button>
+          {dirty && <Small role="status">{t.unsaved}</Small>}
+        </Row>
+      )}
 
       <div>
         <Small>{t.members}</Small>
@@ -173,7 +199,9 @@ function TeamItem({ team, members, nameOf, run }: ItemProps) {
                   $small
                   $variant="ghost"
                   aria-label={t.remove(nameOf(id), team.name)}
-                  onClick={() => void run(() => api.club.removeMember(team.id, id))}
+                  onClick={() => {
+                    if (window.confirm(t.confirmRemove(nameOf(id), team.name))) void run(() => api.club.removeMember(team.id, id))
+                  }}
                 >
                   <X size={14} aria-hidden />
                 </Button>
@@ -207,7 +235,10 @@ function TeamItem({ team, members, nameOf, run }: ItemProps) {
         <Button type="button" $small aria-expanded={open} onClick={togglePairs}>
           {t.pairs(team.name)}
         </Button>
-        <Button type="button" $small $variant={locked ? undefined : 'danger'} onClick={() => update({ archived: !locked })}>
+        <Button type="button" $small $variant={locked ? undefined : 'danger'} onClick={() => {
+            if (window.confirm(locked ? t.confirmUnarchive(team.name) : t.confirmArchive(team.name))) update({ archived: !locked })
+          }}
+        >
           {locked ? t.unarchive : t.archive}
         </Button>
       </Row>

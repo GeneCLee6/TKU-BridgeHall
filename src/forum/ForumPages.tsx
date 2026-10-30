@@ -2,9 +2,9 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
-import { Button, ErrorText, Input, Muted, PageTitle } from '../components/ui.tsx'
+import { BackLink, Button, ErrorText, Input, Muted, PageTitle } from '../components/ui.tsx'
 import { api, ApiError, errorText, type ClubMember } from '../lib/api.ts'
-import { FORUM_LIMITS, NEWS_BOARD_ID, type Board, type Comment, type ForumFeed, type ForumSearch, type Post } from '../lib/forum.ts'
+import { FORUM_LIMITS, type Board, type Comment, type ForumFeed, type ForumSearch, type Post } from '../lib/forum.ts'
 import { forumApi, type FeedFilter } from '../lib/forumApi.ts'
 import { memberLabel, postSummary, recentAuthors, searchProblem, searchSnippet } from '../lib/forumPosts.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
@@ -16,6 +16,7 @@ import { CommentSection } from './Comments.tsx'
 import { forumStrings as t } from './forumStrings.ts'
 import { ago, boardPath, isOfficer, postPath } from './forumText.ts'
 import { PostCard } from './PostCard.tsx'
+import { NewsList } from './NewsList.tsx'
 import { PostComposer } from './PostComposer.tsx'
 
 // Phones only (e9-t09), as in the handbook
@@ -127,9 +128,11 @@ function PostThread() {
   if (ready?.error) return <Failed text={ready.gone ? t.postGone : ready.error} />
   if (!ready?.post || !ready.comments) return <Muted role="status">{t.loading}</Muted>
   const { post, comments } = ready
+  const board = club.boards.find((b) => b.id === post.boardId)
 
   return (
     <>
+      {board && <BackLink to={boardPath(board.id)}>{t.backToBoard(board.name)}</BackLink>}
       {editing ? (
         <PostComposer
           boards={club.boards}
@@ -223,6 +226,8 @@ export function ForumShell() {
 
 function ForumFrame() {
   const { club, error, retry } = useClub()
+  // 討論區管理 has tables: it takes the feed's and the news' columns (2026-10-30)
+  const manage = useLocation().pathname === '/forum/manage'
   const officer = isOfficer(useAuth().user)
   const [front, setFront] = useState<ForumFeed>()
   const [news, setNews] = useState<Post[]>()
@@ -259,7 +264,7 @@ function ForumFrame() {
   const context: Forum = { club, front, refresh: () => setRound((n) => n + 1), reloadClub: retry }
 
   return (
-    <Layout>
+    <Layout $manage={manage}>
       <BoardNav aria-label={t.boards}>
         <h2>{t.boards}</h2>
         <ul>
@@ -298,41 +303,22 @@ function ForumFrame() {
           <Outlet context={context} />
         </Suspense>
       </Main>
-      <Aside>
-        <NewsBox news={news} members={club.members} />
-        <ActivePeople posts={front?.posts} members={club.members} />
-      </Aside>
+      {!manage && (
+        <Aside>
+          <NewsBox news={news} />
+          <ActivePeople posts={front?.posts} members={club.members} />
+        </Aside>
+      )}
     </Layout>
   )
 }
 
-/** 社團新聞: the news board's latest, pinned first; officers may post one from here */
-function NewsBox({ news, members }: { news?: Post[]; members: readonly ClubMember[] }) {
-  const { user } = useAuth()
+/** 社團新聞: the news board's latest, pinned first; officers may post one from here. The same list as the home page's */
+function NewsBox({ news }: { news?: Post[] }) {
   return (
     <Box aria-labelledby="forum-news">
       <h2 id="forum-news">{t.news}</h2>
-      {!news ? (
-        <Muted role="status">{t.loading}</Muted>
-      ) : news.length ? (
-        <ul>
-          {news.map((post) => (
-            <li key={post.id}>
-              <Link to={postPath(post.id)}>{postSummary(post) || t.untitled}</Link>
-              <small>
-                {post.pinned && `${t.pinned} · `}
-                {memberLabel(members, post.authorId) ?? t.someone} · {ago(post.createdAt)}
-              </small>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <Muted>{t.noNews}</Muted>
-      )}
-      <BoxLinks>
-        <Link to={boardPath(NEWS_BOARD_ID)}>{t.allNews}</Link>
-        {isOfficer(user) && <Link to={`/forum/new?board=${NEWS_BOARD_ID}`}>{t.postNews}</Link>}
-      </BoxLinks>
+      <NewsList news={news} />
     </Box>
   )
 }
@@ -387,9 +373,7 @@ export function BoardPage() {
     return (
       <Column>
         <ErrorText role="alert">{t.boardGone}</ErrorText>
-        <div>
-          <Link to="/forum">{t.allBoards}</Link>
-        </div>
+        <BackLink to="/forum">{t.allBoards}</BackLink>
       </Column>
     )
   return (
@@ -660,16 +644,18 @@ function Posts({ board, first, filter, empty }: { board?: Board; first?: ForumFe
 }
 
 /** Wide screens: boards 14rem, the feed 40rem, news 18rem (DESIGN-V2.md §12); narrower, the news goes under the feed */
-const Layout = styled.div`
+const Layout = styled.div<{ $manage: boolean }>`
   display: grid;
-  grid-template-columns: 14rem minmax(0, 40rem) 18rem;
+  grid-template-columns: ${({ $manage }) => ($manage ? '14rem minmax(0, 1fr)' : '14rem minmax(0, 40rem) 18rem')};
+  max-width: ${({ $manage, theme }) => ($manage ? theme.layout.pageMax : 'none')};
+  margin: 0 auto;
   justify-content: center;
   align-items: start;
   gap: ${({ theme }) => theme.space(8)};
   padding: ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(6)} ${({ theme }) => theme.space(16)};
 
   @media (max-width: 1180px) {
-    grid-template-columns: 12rem minmax(0, 40rem);
+    grid-template-columns: ${({ $manage }) => ($manage ? '12rem minmax(0, 1fr)' : '12rem minmax(0, 40rem)')};
   }
   ${mobile} {
     grid-template-columns: minmax(0, 1fr);
@@ -807,16 +793,6 @@ const Box = styled.section`
   small {
     font-size: 0.8125rem;
     color: ${({ theme }) => theme.colors.textMuted};
-  }
-`
-
-const BoxLinks = styled.p`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${({ theme }) => theme.space(4)};
-  font-size: 0.875rem;
-  a {
-    color: ${({ theme }) => theme.colors.primary};
   }
 `
 

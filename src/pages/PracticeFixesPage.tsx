@@ -27,6 +27,7 @@ import { useProfiles } from '../state/ProfileContext.tsx'
 import { strings } from '../strings.ts'
 import { levels, type Convention, type Level } from '../types/convention.ts'
 import { Frame, Gate } from './Frame.tsx'
+import { WithSectionNav } from '../components/SectionNav.tsx'
 import { usePracticeQuizzes } from './practiceData.ts'
 import { practiceStrings as p } from './practiceStrings.ts'
 
@@ -82,80 +83,82 @@ function Fixes() {
       <Muted>{s.intro(profileName)}</Muted>
       {data.fixesFailed && <ErrorText role="alert">{s.loadFailed}</ErrorText>}
 
-      {id && (
-        <Panel aria-labelledby="fix-one">
-          <PanelTitle id="fix-one">{s.editing}</PanelTitle>
-          {isManualId(id) ? (
-            fix?.source === 'manual' ? (
-              <ManualForm key={id} id={id} fix={fix} conventions={data.loaded} profileId={fix.quiz.profileId} onDone={done} />
+      <WithSectionNav>
+        {id && (
+          <Panel aria-labelledby="fix-one">
+            <PanelTitle id="fix-one">{s.editing}</PanelTitle>
+            {isManualId(id) ? (
+              fix?.source === 'manual' ? (
+                <ManualForm key={id} id={id} fix={fix} conventions={data.loaded} profileId={fix.quiz.profileId} onDone={done} />
+              ) : (
+                <Notice>{s.noSuchQuestion}</Notice>
+              )
+            ) : made ? (
+              <AutoForm
+                key={id}
+                quiz={made}
+                convention={data.byId.get(made.slug)}
+                fix={fix?.source === 'auto' ? fix : undefined}
+                stale={staleIds.has(id)}
+                onDone={done}
+              />
             ) : (
-              <Notice>{s.noSuchQuestion}</Notice>
-            )
-          ) : made ? (
-            <AutoForm
-              key={id}
-              quiz={made}
-              convention={data.byId.get(made.slug)}
-              fix={fix?.source === 'auto' ? fix : undefined}
-              stale={staleIds.has(id)}
-              onDone={done}
-            />
+              <>
+                <Notice>{s.notMade}</Notice>
+                {fix && <RemoveFix id={id} onDone={done} />}
+              </>
+            )}
+          </Panel>
+        )}
+
+        <Panel aria-labelledby="fix-new">
+          <PanelTitle id="fix-new">{s.newTitle}</PanelTitle>
+          {creating ? (
+            <ManualForm conventions={data.loaded} profileId={activeId} onDone={done} onCancel={() => setCreating(false)} />
           ) : (
             <>
-              <Notice>{s.notMade}</Notice>
-              {fix && <RemoveFix id={id} onDone={done} />}
+              <Muted>{s.newHint(profileName)}</Muted>
+              <Row>
+                <Button type="button" $variant="primary" onClick={() => setCreating(true)}>
+                  {s.newButton}
+                </Button>
+              </Row>
             </>
           )}
         </Panel>
-      )}
 
-      <Panel aria-labelledby="fix-new">
-        <PanelTitle id="fix-new">{s.newTitle}</PanelTitle>
-        {creating ? (
-          <ManualForm conventions={data.loaded} profileId={activeId} onDone={done} onCancel={() => setCreating(false)} />
-        ) : (
-          <>
-            <Muted>{s.newHint(profileName)}</Muted>
-            <Row>
-              <Button type="button" $variant="primary" onClick={() => setCreating(true)}>
-                {s.newButton}
-              </Button>
-            </Row>
-          </>
-        )}
-      </Panel>
+        <BankExport quizzes={data.quizzes} names={data.byId} profileName={profileName} />
 
-      <BankExport quizzes={data.quizzes} names={data.byId} profileName={profileName} />
-
-      <Panel aria-labelledby="fix-list">
-        <PanelTitle id="fix-list">{s.list(data.fixes.length)}</PanelTitle>
-        {!data.fixes.length ? (
-          <Muted>{s.none}</Muted>
-        ) : (
-          <FixList>
-            {[...data.fixes]
-              .sort((a, b) => b.at - a.at)
-              .map((f) => (
-                <li key={f.id}>
-                  <Link to={fixPath(f.id)}>
-                    {data.byId.get(f.id.split('/')[0])?.nameZh ?? f.id.split('/')[0]} · <code>{f.id}</code>
-                  </Link>
-                  <div>
-                    {describe(f)}
-                    {staleIds.has(f.id) && <Stale> · {s.stale}</Stale>}
-                    {f.source === 'manual' && f.quiz.profileId !== activeId && (
-                      <Muted as="span"> · {s.otherProfile(list.find((x) => x.id === f.quiz.profileId)?.name ?? f.quiz.profileId)}</Muted>
-                    )}
-                  </div>
-                  <Muted as="div">
-                    {s.by(f.by, new Date(f.at).toLocaleString('zh-TW', { dateStyle: 'short', timeStyle: 'short' }))}
-                    {f.note && ` · ${f.note}`}
-                  </Muted>
-                </li>
-              ))}
-          </FixList>
-        )}
-      </Panel>
+        <Panel aria-labelledby="fix-list">
+          <PanelTitle id="fix-list">{s.list(data.fixes.length)}</PanelTitle>
+          {!data.fixes.length ? (
+            <Muted>{s.none}</Muted>
+          ) : (
+            <FixList>
+              {[...data.fixes]
+                .sort((a, b) => b.at - a.at)
+                .map((f) => (
+                  <li key={f.id}>
+                    <Link to={fixPath(f.id)}>
+                      {data.byId.get(f.id.split('/')[0])?.nameZh ?? f.id.split('/')[0]} · <code>{f.id}</code>
+                    </Link>
+                    <div>
+                      {describe(f)}
+                      {staleIds.has(f.id) && <Stale> · {s.stale}</Stale>}
+                      {f.source === 'manual' && f.quiz.profileId !== activeId && (
+                        <Muted as="span"> · {s.otherProfile(list.find((x) => x.id === f.quiz.profileId)?.name ?? f.quiz.profileId)}</Muted>
+                      )}
+                    </div>
+                    <Muted as="div">
+                      {s.by(f.by, new Date(f.at).toLocaleString('zh-TW', { dateStyle: 'short', timeStyle: 'short' }))}
+                      {f.note && ` · ${f.note}`}
+                    </Muted>
+                  </li>
+                ))}
+            </FixList>
+          )}
+        </Panel>
+      </WithSectionNav>
     </>
   )
 }

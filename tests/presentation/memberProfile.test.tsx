@@ -146,6 +146,10 @@ describe('我的帳號 › 通知 (F4 mute)', () => {
     expect(box).not.toBeChecked()
     routes['GET /api/me'] = { user: { ...ME, bookAdoptedNotice: false } }
     fireEvent.click(box)
+    // Kept on 儲存 (2026-10-30)
+    expect(calls.some((c) => c.method === 'POST')).toBe(false)
+    const form = within(screen.getByRole('form', { name: '通知' }))
+    fireEvent.click(form.getByRole('button', { name: '儲存' }))
     expect(await screen.findByText('通知設定已儲存')).toBeInTheDocument()
     expect(calls.find((c) => c.method === 'POST')?.body).toEqual({ bookAdoptedNotice: false })
     expect(screen.getByRole('checkbox', { name: '不接收採用特約的發布通知' })).toBeChecked()
@@ -153,6 +157,7 @@ describe('我的帳號 › 通知 (F4 mute)', () => {
     routes['GET /api/me'] = { user: { ...ME, bookAdoptedNotice: true } }
     routes['POST /api/account/preferences'] = { user: { ...ME, bookAdoptedNotice: true } }
     fireEvent.click(screen.getByRole('checkbox', { name: '不接收採用特約的發布通知' }))
+    fireEvent.click(within(screen.getByRole('form', { name: '通知' })).getByRole('button', { name: '儲存' }))
     await vi.waitFor(() => expect(calls.filter((c) => c.method === 'POST').at(-1)?.body).toEqual({ bookAdoptedNotice: true }))
     await vi.waitFor(() => expect(screen.getByRole('checkbox', { name: '不接收採用特約的發布通知' })).not.toBeChecked())
   })

@@ -3,17 +3,18 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled, { useTheme } from 'styled-components'
 import { CopyLinkButton, IconButton } from '../components/CopyLinkButton.tsx'
+import { Button } from '../components/ui.tsx'
 import { KindLevel } from '../components/KindLevel.tsx'
 import { Badge } from '../components/PendingNote.tsx'
 import { OriginMark, ProfileNotes } from '../components/ProfileMarks.tsx'
 import { PrintConventionStyle } from '../components/PrintSheet.tsx'
-import { ReadingSettingsButton, type ReadingActions } from '../components/ReadingSettingsButton.tsx'
 import { SectionAccordion } from '../components/SectionAccordion.tsx'
 import { CardPlacesContext, SectionCardPlaces } from '../cards/placesContext.tsx'
 import { RichText } from '../components/Suit.tsx'
 import { Tag, TagList } from '../components/Tag.tsx'
 import { GlossaryProvider } from '../glossary/GlossaryProvider.tsx'
 import { basicHiddenIds } from '../lib/levels.ts'
+import { usePageReadingActions } from '../lib/readingActions.ts'
 import { practicePath, hasQuestions } from '../lib/quiz.ts'
 import { FollowButton } from '../components/FollowButton.tsx'
 import { sectionNumber } from '../lib/sectionNumber.ts'
@@ -53,7 +54,7 @@ const tabletQuery = `(min-width: calc(${layout.mobileBreakpoint} + 1px))`
  * One convention on its own page (e9-t04), laid out like a page of a book (e9-t05, DESIGN-V2.md
  * §5.4): the catalogue on the left (HandbookShell), the text in the middle — where it sits in the
  * book, the title with its kind and level, the summary, the numbered sections, source and last
- * check, the neighbouring conventions — and 本頁 on the right: the sections and 閱讀設定. Below
+ * check, the neighbouring conventions — and 本頁 on the right: the sections (閱讀設定 is in the header). Below
  * 1100px the right column folds into a 本頁 list above the text.
  *
  * /c/:slug/:sectionId also opens the path down to that section, scrolls to it and focuses its
@@ -108,6 +109,16 @@ export function ConventionPage() {
     setShownAll(slug)
   const basic = reading === 'basic' && shownAll !== slug
   usePageTitle(convention?.nameZh)
+  // 閱讀設定 is in the header (2026-10-30); only this convention is on the page, so its content is there to print
+  usePageReadingActions(
+    convention
+      ? {
+          onExpandAll: () => open(allKeys(convention)),
+          onCollapseAll: () => close(allKeys(convention).slice(1)),
+          onPrint: () => window.print(),
+        }
+      : {},
+  )
 
   // Arriving at a convention opens its top-level sections. It depends on the manifest entry,
   // which stays the same object while other conventions load.
@@ -163,7 +174,6 @@ export function ConventionPage() {
   if (!convention && status === 'loading' && !conventions.length) return <Loading role="status">{strings.loading}</Loading>
   if (!convention) return <HomePage notFound />
 
-  const keys = allKeys(convention)
   const category = categories.find((c) => c.id === convention.category)
   const kind = (convention.kind ?? 'convention') as ConventionKind
   const order = categories.flatMap((c) => conventions.filter((x) => x.category === c.id))
@@ -172,12 +182,6 @@ export function ConventionPage() {
   const next = at >= 0 ? order[at + 1] : undefined
   const online = onlineNote(convention.slug)
   const canEdit = can('bookEdit')
-  const actions: ReadingActions = {
-    onExpandAll: () => open(keys),
-    onCollapseAll: () => close(keys.slice(1)),
-    // Only this convention is on the page, so its content is there to print
-    onPrint: () => window.print(),
-  }
   const current = path[0]?.id
 
   return (
@@ -198,11 +202,6 @@ export function ConventionPage() {
             <span aria-hidden> › </span>
             {strings.kinds[kind] ?? strings.kinds.convention}
           </Trail>
-          {!wide && (
-            <TopActions>
-              <ReadingSettingsButton toolbar {...actions} />
-            </TopActions>
-          )}
         </TopBar>
         {sectionId && path.length === 0 && <NotFound role="alert">{strings.notFound}</NotFound>}
         {phone && <OnThisPagePopup convention={convention} current={current} />}
@@ -288,10 +287,10 @@ export function ConventionPage() {
 
         {practice && (
           <Practice data-print="hide">
-            <Link to={practicePath(convention.slug)}>
+            <Button as={Link} to={practicePath(convention.slug)}>
               <Dumbbell size={16} aria-hidden />
               {pageStrings.practice}
-            </Link>
+            </Button>
           </Practice>
         )}
         <FollowButton key={convention.slug} slug={convention.slug} />
@@ -336,7 +335,6 @@ export function ConventionPage() {
           <RailList>
             <SectionList convention={convention} current={current} />
           </RailList>
-          <ReadingSettingsButton toolbar {...actions} />
         </Rail>
       )}
     </Columns>
@@ -488,12 +486,6 @@ const TopBar = styled.div`
   margin-bottom: ${({ theme }) => theme.space(3)};
 `
 
-const TopActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.space(2)};
-`
-
 const Trail = styled.nav`
   font-size: 0.8125rem;
   color: ${({ theme }) => theme.colors.textMuted};
@@ -587,23 +579,6 @@ const RetryButton = styled.button`
 
 const Practice = styled.p`
   margin: ${({ theme }) => theme.space(8)} 0 0;
-
-  a {
-    display: inline-flex;
-    align-items: center;
-    gap: ${({ theme }) => theme.space(2)};
-    min-height: 44px;
-    padding: 0 ${({ theme }) => theme.space(4)};
-    border: ${({ theme }) => theme.borders.control} ${({ theme }) => theme.colors.border};
-    border-radius: ${({ theme }) => theme.shape.control};
-    background: ${({ theme }) => theme.colors.surface};
-    color: ${({ theme }) => theme.colors.primaryStrong};
-    font-weight: 600;
-    text-decoration: none;
-  }
-  a:hover {
-    border-color: ${({ theme }) => theme.colors.structure};
-  }
 `
 
 const Source = styled.p`

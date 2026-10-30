@@ -1,8 +1,8 @@
-import { UserRound } from 'lucide-react'
+import { Printer, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { DataTable, TableScroll } from '../components/DataTable.tsx'
-import { Button, ErrorText, Muted, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
+import { BackLink, Button, ErrorText, Muted, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import {
   api,
   errorText,
@@ -181,9 +181,7 @@ function Team() {
         <PageTitle>{team.name}</PageTitle>
         {team.archived && <Badge>{t.archived}</Badge>}
       </Row>
-      <Muted>
-        <Link to="/teams">{t.teamsTitle}</Link>
-      </Muted>
+      <BackLink to="/teams">{t.teamsTitle}</BackLink>
 
       <Panel aria-labelledby="team-members">
         <PanelTitle id="team-members">
@@ -219,11 +217,12 @@ function Team() {
         <Stack>
           <Muted>{t.pairsIntro}</Muted>
           {pairs.length > 0 && (
-            <Muted>
-              <Link to={`/teams/${encodeURIComponent(team.id)}/cards`} title={t.teamCardsHint}>
+            <div>
+              <Button as={Link} to={`/teams/${encodeURIComponent(team.id)}/cards`} title={t.teamCardsHint} $small>
+                <Printer size={16} aria-hidden />
                 {t.teamCards}
-              </Link>
-            </Muted>
+              </Button>
+            </div>
           )}
           {pairs.length ? (
             <TableScroll>

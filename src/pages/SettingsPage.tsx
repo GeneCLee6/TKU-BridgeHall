@@ -1,8 +1,11 @@
+import { useState } from 'react'
+import styled from 'styled-components'
 import { DisplaySettings } from '../components/DisplaySettings.tsx'
-import { Muted, PageTitle, Panel, PanelTitle } from '../components/ui.tsx'
+import { Button, Muted, Notice, PageTitle, Panel, PanelTitle } from '../components/ui.tsx'
 import { analyticsOn, privacySignal } from '../lib/analytics.ts'
 import { settingsStrings } from '../settingsStrings.ts'
 import { usePreferences } from '../state/PreferencesContext.tsx'
+import { strings } from '../strings.ts'
 import { Frame } from './Frame.tsx'
 
 /**
@@ -23,27 +26,64 @@ export function SettingsPage() {
   )
 }
 
+/** 傳送匿名使用統計: changed in the form, kept on 儲存 (2026-10-30) */
 function Privacy() {
   const prefs = usePreferences()
   const t = settingsStrings
+  const stored = analyticsOn(prefs.analytics)
+  const [on, setOn] = useState(stored)
+  const [notice, setNotice] = useState('')
+  const dirty = on !== stored
   return (
     <Panel aria-labelledby="privacy">
       <PanelTitle id="privacy">{t.privacy}</PanelTitle>
-      <label>
-        <input
-          type="checkbox"
-          checked={analyticsOn(prefs.analytics)}
-          onChange={(e) => prefs.update({ analytics: e.target.checked })}
-          aria-describedby="analytics-hint"
-        />{' '}
-        {t.analytics}
-      </label>
-      <Muted id="analytics-hint">
-        {t.analyticsHint}
-        {prefs.analytics === undefined && privacySignal() && t.analyticsSignal}
-        {t.analyticsClub}
-      </Muted>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          prefs.update({ analytics: on })
+          setNotice(strings.saved)
+        }}
+      >
+        <label>
+          <input
+            type="checkbox"
+            checked={on}
+            onChange={(e) => {
+              setOn(e.target.checked)
+              setNotice('')
+            }}
+            aria-describedby="analytics-hint"
+          />{' '}
+          {t.analytics}
+        </label>
+        <Muted id="analytics-hint">
+          {t.analyticsHint}
+          {prefs.analytics === undefined && privacySignal() && t.analyticsSignal}
+          {t.analyticsClub}
+        </Muted>
+        <Actions>
+          <Button type="submit" $variant="primary" disabled={!dirty}>
+            {strings.save}
+          </Button>
+          <Button type="button" disabled={!dirty} onClick={() => setOn(stored)}>
+            {t.discard}
+          </Button>
+          {dirty ? <Muted role="status">{t.unsavedPlain}</Muted> : notice && <Notice role="status">{notice}</Notice>}
+        </Actions>
+      </form>
       <Muted>{t.errors}</Muted>
     </Panel>
   )
 }
+
+const Actions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(2)};
+  margin-top: ${({ theme }) => theme.space(2)};
+
+  p {
+    margin: 0;
+  }
+`

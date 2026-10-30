@@ -5,7 +5,8 @@ import { reviewApi } from '../../lib/reviewApi.ts'
 import { formatDateTime } from '../../lib/format.ts'
 import { diffText, review as t } from '../../pages/reviewStrings.ts'
 import { DataTable, TableScroll } from '../DataTable.tsx'
-import { ErrorText, Muted, Panel, PanelTitle } from '../ui.tsx'
+import { ClipboardCheck } from 'lucide-react'
+import { Button, ErrorText, Muted, Panel, PanelTitle } from '../ui.tsx'
 
 /** Loads once; `error` is the message when it cannot */
 function useLoaded<T>(load: () => Promise<T>) {
@@ -37,9 +38,13 @@ export function DraftsPanel() {
   return (
     <Panel aria-labelledby="admin-drafts">
       <PanelTitle id="admin-drafts">{t.draftsTitle}</PanelTitle>
-      <Muted>
-        {t.draftsIntro} <Link to="/review">{diffText.openReview}</Link>
-      </Muted>
+      <Muted>{t.draftsIntro}</Muted>
+      <div>
+        <Button as={Link} to="/review" $small>
+          <ClipboardCheck size={16} aria-hidden />
+          {diffText.openReview}
+        </Button>
+      </div>
       {error && <ErrorText role="alert">{error}</ErrorText>}
       {drafts &&
         (drafts.length ? (

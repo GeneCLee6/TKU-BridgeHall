@@ -8,6 +8,7 @@ export const accountStrings = {
   avatarHint: '兩站共用，淡江牌桌的名牌也會顯示。JPG、PNG 或 WebP；裁成正方形後上傳。',
   avatarChoose: '選擇圖片…',
   avatarRemove: '改回預設頭像',
+  avatarRemoveConfirm: '確定改回預設頭像？目前的照片會刪掉。',
   avatarSaved: '頭像已更新',
   avatarRemoved: '已改回預設頭像',
   avatarBadFormat: '頭像只能是 JPEG、PNG 或 WebP 圖片',

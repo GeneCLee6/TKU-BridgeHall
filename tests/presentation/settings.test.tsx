@@ -76,8 +76,10 @@ describe('個人設定 page', () => {
     expect(await screen.findByRole('link', { name: '更多顯示設定' }, { timeout: 5000 })).toHaveAttribute('href', '/settings')
   })
 
-  it('changes and remembers each setting, and goes back to the defaults', async () => {
+  it('previews each setting, keeps them on 儲存, and goes back to the defaults', async () => {
     renderAt('/settings')
+    // 隱私 below has its own 儲存 and 取消變更
+    const first = (name: string) => screen.getAllByRole('button', { name })[0]
     const group = async (name: string) => within(await screen.findByRole('group', { name }, { timeout: 5000 }))
     expect((await group('風格')).getByRole('radio', { name: /^一般/ })).toBeChecked()
     expect((await group('版面')).getByRole('radio', { name: /^整本一頁/ })).toBeChecked()
@@ -89,6 +91,20 @@ describe('個人設定 page', () => {
     await userEvent.click((await group('花色顏色')).getByRole('radio', { name: /^雙色/ }))
     await userEvent.click((await group('密度')).getByRole('radio', { name: /^緊湊/ }))
     await userEvent.click((await group('明暗')).getByRole('radio', { name: '深色' }))
+    // Nothing is kept before 儲存; 取消變更 puts the choices back
+    expect(stored()).toEqual(defaultPrefs)
+    expect(screen.getByRole('status')).toHaveTextContent('還沒儲存')
+    await userEvent.click(first('取消變更'))
+    expect((await group('風格')).getByRole('radio', { name: /^一般/ })).toBeChecked()
+    await userEvent.click((await group('風格')).getByRole('radio', { name: /^圓潤/ }))
+    await userEvent.click((await group('版面')).getByRole('radio', { name: /^卡片總覽/ }))
+    await userEvent.click((await group('字體')).getByRole('radio', { name: /^系統字型/ }))
+    await userEvent.click((await group('字級')).getByRole('radio', { name: '特大' }))
+    await userEvent.click((await group('花色顏色')).getByRole('radio', { name: /^雙色/ }))
+    await userEvent.click((await group('密度')).getByRole('radio', { name: /^緊湊/ }))
+    await userEvent.click((await group('明暗')).getByRole('radio', { name: '深色' }))
+    await userEvent.click(first('儲存'))
+    expect(screen.getByRole('status')).toHaveTextContent('已儲存')
     expect(stored()).toEqual({
       theme: 'dark',
       style: 'soft',
@@ -102,8 +118,9 @@ describe('個人設定 page', () => {
     })
 
     await userEvent.click(screen.getByRole('button', { name: '全部恢復預設' }))
+    expect(screen.getByRole('status')).toHaveTextContent('已換成預設值')
+    await userEvent.click(first('儲存'))
     expect(stored()).toEqual(defaultPrefs)
-    expect(screen.getByRole('status')).toHaveTextContent('已恢復預設')
   })
 })
 

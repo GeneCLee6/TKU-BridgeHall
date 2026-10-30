@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { DataTable, TableScroll } from '../components/DataTable.tsx'
 import { SectionForm } from '../components/editor/SectionForm.tsx'
+import { GitCompare } from 'lucide-react'
+import { WithSectionNav } from '../components/SectionNav.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row, Select, TextArea } from '../components/ui.tsx'
 import {
   api,
@@ -166,52 +168,59 @@ function Editor() {
     <>
       <PageTitle>{t.titleOf(profile.name)}</PageTitle>
       <Muted>
-        {strings.profiles.scopes[profile.scope]}・{parent ? t.parent(parent.name) : t.noParent}{' '}
-        <Link to={`/profiles/${encodeURIComponent(profile.id)}/compare`}>{t.compare}</Link>
+        {strings.profiles.scopes[profile.scope]}・{parent ? t.parent(parent.name) : t.noParent}
       </Muted>
+      <div>
+        <Button as={Link} to={`/profiles/${encodeURIComponent(profile.id)}/compare`} $small>
+          <GitCompare size={16} aria-hidden />
+          {t.compare}
+        </Button>
+      </div>
       <Muted>{t.intro}</Muted>
       {!editable && <Notice role="status">{t.readOnly}</Notice>}
-      <Fields disabled={!editable}>
-        <AdoptionPanel input={input} parents={parents} onChange={change} />
-        <RowPanel input={input} base={base} onChange={change} />
-        <SectionPanel input={input} base={base} onChange={change} />
-        <NotesPanel input={input} base={base} onChange={change} />
-      </Fields>
-      {editable && (
-        <Panel aria-labelledby="profile-save">
-          <PanelTitle id="profile-save">{t.saveTitle}</PanelTitle>
-          <Stack>
-            <Field>
-              {t.saveNote}
-              <Input value={saveNote} onChange={(e) => setSaveNote(e.target.value)} />
-            </Field>
-            {problems.length > 0 && (
-              <ErrorText role="alert">{problems.map(problemText).join('\n')}</ErrorText>
-            )}
-            <Row>
-              <Button
-                type="button"
-                $variant="primary"
-                disabled={saving || !dirty || problems.length > 0 || conflict}
-                onClick={() => void save()}
-              >
-                {saving ? t.saving : t.save}
-              </Button>
-              <Muted role="status">{dirty ? t.unsaved : !notice && t.noChanges}</Muted>
-            </Row>
-            {conflict && (
-              <ErrorText role="alert">
-                {t.conflict}{' '}
-                <Button type="button" $small onClick={() => void load()}>
-                  {t.reload}
+      <WithSectionNav>
+        <Fields disabled={!editable}>
+          <AdoptionPanel input={input} parents={parents} onChange={change} />
+          <RowPanel input={input} base={base} onChange={change} />
+          <SectionPanel input={input} base={base} onChange={change} />
+          <NotesPanel input={input} base={base} onChange={change} />
+        </Fields>
+        {editable && (
+          <Panel aria-labelledby="profile-save">
+            <PanelTitle id="profile-save">{t.saveTitle}</PanelTitle>
+            <Stack>
+              <Field>
+                {t.saveNote}
+                <Input value={saveNote} onChange={(e) => setSaveNote(e.target.value)} />
+              </Field>
+              {problems.length > 0 && (
+                <ErrorText role="alert">{problems.map(problemText).join('\n')}</ErrorText>
+              )}
+              <Row>
+                <Button
+                  type="button"
+                  $variant="primary"
+                  disabled={saving || !dirty || problems.length > 0 || conflict}
+                  onClick={() => void save()}
+                >
+                  {saving ? t.saving : t.save}
                 </Button>
-              </ErrorText>
-            )}
-            {notice && <Notice role="status">{notice}</Notice>}
-          </Stack>
-        </Panel>
-      )}
-      {error && <ErrorText role="alert">{error}</ErrorText>}
+                <Muted role="status">{dirty ? t.unsaved : !notice && t.noChanges}</Muted>
+              </Row>
+              {conflict && (
+                <ErrorText role="alert">
+                  {t.conflict}{' '}
+                  <Button type="button" $small onClick={() => void load()}>
+                    {t.reload}
+                  </Button>
+                </ErrorText>
+              )}
+              {notice && <Notice role="status">{notice}</Notice>}
+            </Stack>
+          </Panel>
+        )}
+        {error && <ErrorText role="alert">{error}</ErrorText>}
+      </WithSectionNav>
     </>
   )
 }

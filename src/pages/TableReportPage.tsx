@@ -50,6 +50,7 @@ import {
 import { SYSTEM_SPEC_LIMITS, tableSync } from '../lib/tableSync.ts'
 import { useContent } from '../state/ContentContext.tsx'
 import { Frame, Gate } from './Frame.tsx'
+import { WithSectionNav } from '../components/SectionNav.tsx'
 import { HandConditionsForm } from './HandConditionsForm.tsx'
 import { tableReport as t } from './tableReportStrings.ts'
 
@@ -240,207 +241,209 @@ function Report() {
   return (
     <>
       <Muted>{t.intro}</Muted>
-      <Panel aria-labelledby="sync">
-        <PanelTitle id="sync">{t.profile}</PanelTitle>
-        <Row>
-          <Field>
-            {t.profile}
-            <Select value={profileId} onChange={(e) => choose(e.target.value)}>
-              {profiles.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </Row>
-        {status && <Muted>{t.tableFollows(nameOf(status.tableProfileId))}</Muted>}
-        {!spec || !status ? (
-          !error && <Muted role="status">{t.converting}</Muted>
-        ) : (
-          <>
-            <p>
-              {status.synced
-                ? t.synced(
-                    formatDateTime(status.synced.syncedAt),
-                    status.synced.syncedByName ?? status.synced.syncedBy,
-                  )
-                : t.neverSynced}
-              {status.synced && ` ${sameSpec(status.synced.spec, spec) ? t.upToDate : t.outOfDate}`}
-            </p>
-            <Row>
-              <Button
-                type="button"
-                $variant="primary"
-                disabled={syncing}
-                onClick={() => void sync()}
-              >
-                {syncing ? t.syncing : t.sync}
-              </Button>
-            </Row>
-          </>
-        )}
-        {notice && <Notice role="status">{notice}</Notice>}
-        {error && <ErrorText role="alert">{error}</ErrorText>}
-      </Panel>
-
-      {spec && (
-        <Panel aria-labelledby="summary">
-          <PanelTitle id="summary">{t.summary}</PanelTitle>
-          <p>{t.counts(spec.rules.length, spec.unresolved.length)}</p>
-          <p role="status">
-            {(compare ? compare.done < compare.all && !compare.error : afters > 0)
-              ? t.comparing(compare?.done ?? 0, compare?.all ?? afters)
-              : t.compared(differ.length, missing.length)}
-          </p>
-          {compare?.error && (
-            <ErrorText role="alert">
-              {t.compareFailed}
-              {compare.error}{' '}
-              <Button type="button" $small onClick={retry}>
-                {t.retry}
-              </Button>
-            </ErrorText>
-          )}
-        </Panel>
-      )}
-
-      {spec && compare && (
-        <Panel aria-labelledby="differ">
-          <PanelTitle id="differ">{t.differTitle}</PanelTitle>
-          <Muted>{t.differIntro}</Muted>
-          {differ.length ? (
-            <MismatchTable rows={differ} conventionName={conventionName} />
-          ) : (
-            <Muted>{t.noDiffer}</Muted>
-          )}
-          {missing.length > 0 && (
-            <details>
-              <summary>
-                {t.missingTitle}（{t.rows(missing.length)}）
-              </summary>
-              <Muted>{t.missingIntro}</Muted>
-              <MismatchTable rows={missing} conventionName={conventionName} />
-            </details>
-          )}
-        </Panel>
-      )}
-
-      {filledNotice && (
-        <Notice role="status">{filledNotice}</Notice>
-      )}
-
-      {spec && filled.length > 0 && (
-        <Panel aria-labelledby="filled">
-          <PanelTitle id="filled">{t.filledTitle}</PanelTitle>
-          <Muted>{t.filledIntro}</Muted>
-          <TableScroll>
-            <Table>
-              <thead>
-                <tr>
-                  <th>{t.colConvention}</th>
-                  <th>{t.colAuction}</th>
-                  <th>{t.colCall}</th>
-                  <th>{t.colBook}</th>
-                  <th>{t.colConditions}</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {filled.map((f, i) => (
-                  <Fragment key={i}>
-                    <tr>
-                      <td>
-                        <Link to={`/c/${f.ref.slug}/${f.ref.sectionId}`}>{conventionName(f.ref.slug)}</Link>
-                      </td>
-                      <NoWrap>{f.after.map(auctionText).join(' / ')}</NoWrap>
-                      <NoWrap>{f.rules.map((r) => callText(r.call)).join('/')}</NoWrap>
-                      <td>{f.text}</td>
-                      <td>{f.shows && showsText(f.shows)}</td>
-                      <td>
-                        <Button
-                          type="button"
-                          $small
-                          aria-label={`${t.edit}：${conventionName(f.ref.slug)} ${f.rules.map((r) => callText(r.call)).join('/')}`}
-                          onClick={() => setOpen(`f${i}`)}
-                        >
-                          {t.edit}
-                        </Button>
-                      </td>
-                    </tr>
-                    {conditionsForm(`f${i}`, f, true, 6)}
-                  </Fragment>
+      <WithSectionNav>
+        <Panel aria-labelledby="sync">
+          <PanelTitle id="sync">{t.profile}</PanelTitle>
+          <Row>
+            <Field>
+              {t.profile}
+              <Select value={profileId} onChange={(e) => choose(e.target.value)}>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
-              </tbody>
-            </Table>
-          </TableScroll>
+              </Select>
+            </Field>
+          </Row>
+          {status && <Muted>{t.tableFollows(nameOf(status.tableProfileId))}</Muted>}
+          {!spec || !status ? (
+            !error && <Muted role="status">{t.converting}</Muted>
+          ) : (
+            <>
+              <p>
+                {status.synced
+                  ? t.synced(
+                      formatDateTime(status.synced.syncedAt),
+                      status.synced.syncedByName ?? status.synced.syncedBy,
+                    )
+                  : t.neverSynced}
+                {status.synced && ` ${sameSpec(status.synced.spec, spec) ? t.upToDate : t.outOfDate}`}
+              </p>
+              <Row>
+                <Button
+                  type="button"
+                  $variant="primary"
+                  disabled={syncing}
+                  onClick={() => void sync()}
+                >
+                  {syncing ? t.syncing : t.sync}
+                </Button>
+              </Row>
+            </>
+          )}
+          {notice && <Notice role="status">{notice}</Notice>}
+          {error && <ErrorText role="alert">{error}</ErrorText>}
         </Panel>
-      )}
 
-      {spec && spec.unresolved.length > 0 && (
-        <Panel aria-labelledby="unresolved">
-          <PanelTitle id="unresolved">{t.unresolvedTitle}</PanelTitle>
-          <Muted>{t.unresolvedIntro}</Muted>
-          {unresolvedByReason(spec).map(({ reason, rows }) => (
-            <details key={reason}>
-              <summary>
-                {t.reason[reason]}（{t.rows(rows.length)}）
-              </summary>
-              <TableScroll>
-                <Table>
-                  <thead>
-                    <tr>
-                      <th>{t.colConvention}</th>
-                      <th>{t.colAuction}</th>
-                      <th>{t.colCall}</th>
-                      <th>{t.colBook}</th>
-                      <th>{t.colDetail}</th>
-                      {FILLABLE.has(reason) && <th />}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((u, i) => {
-                      const target = unresolvedTarget(u)
-                      return (
-                        <Fragment key={i}>
-                          <tr>
-                            <td>
-                              <Link to={`/c/${u.ref.slug}/${u.ref.sectionId}`}>
-                                {conventionName(u.ref.slug)}
-                              </Link>
-                            </td>
-                            <NoWrap>{u.after ? u.after.map(auctionText).join(' / ') : ''}</NoWrap>
-                            <NoWrap>{formatCall(u.call)}</NoWrap>
-                            <td>{u.text}</td>
-                            <td>
-                              {[u.detail, u.shows && showsText(u.shows)].filter(Boolean).join(' · ')}
-                            </td>
-                            {FILLABLE.has(reason) && (
+        {spec && (
+          <Panel aria-labelledby="summary">
+            <PanelTitle id="summary">{t.summary}</PanelTitle>
+            <p>{t.counts(spec.rules.length, spec.unresolved.length)}</p>
+            <p role="status">
+              {(compare ? compare.done < compare.all && !compare.error : afters > 0)
+                ? t.comparing(compare?.done ?? 0, compare?.all ?? afters)
+                : t.compared(differ.length, missing.length)}
+            </p>
+            {compare?.error && (
+              <ErrorText role="alert">
+                {t.compareFailed}
+                {compare.error}{' '}
+                <Button type="button" $small onClick={retry}>
+                  {t.retry}
+                </Button>
+              </ErrorText>
+            )}
+          </Panel>
+        )}
+
+        {spec && compare && (
+          <Panel aria-labelledby="differ">
+            <PanelTitle id="differ">{t.differTitle}</PanelTitle>
+            <Muted>{t.differIntro}</Muted>
+            {differ.length ? (
+              <MismatchTable rows={differ} conventionName={conventionName} />
+            ) : (
+              <Muted>{t.noDiffer}</Muted>
+            )}
+            {missing.length > 0 && (
+              <details>
+                <summary>
+                  {t.missingTitle}（{t.rows(missing.length)}）
+                </summary>
+                <Muted>{t.missingIntro}</Muted>
+                <MismatchTable rows={missing} conventionName={conventionName} />
+              </details>
+            )}
+          </Panel>
+        )}
+
+        {filledNotice && (
+          <Notice role="status">{filledNotice}</Notice>
+        )}
+
+        {spec && filled.length > 0 && (
+          <Panel aria-labelledby="filled">
+            <PanelTitle id="filled">{t.filledTitle}</PanelTitle>
+            <Muted>{t.filledIntro}</Muted>
+            <TableScroll>
+              <Table>
+                <thead>
+                  <tr>
+                    <th>{t.colConvention}</th>
+                    <th>{t.colAuction}</th>
+                    <th>{t.colCall}</th>
+                    <th>{t.colBook}</th>
+                    <th>{t.colConditions}</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {filled.map((f, i) => (
+                    <Fragment key={i}>
+                      <tr>
+                        <td>
+                          <Link to={`/c/${f.ref.slug}/${f.ref.sectionId}`}>{conventionName(f.ref.slug)}</Link>
+                        </td>
+                        <NoWrap>{f.after.map(auctionText).join(' / ')}</NoWrap>
+                        <NoWrap>{f.rules.map((r) => callText(r.call)).join('/')}</NoWrap>
+                        <td>{f.text}</td>
+                        <td>{f.shows && showsText(f.shows)}</td>
+                        <td>
+                          <Button
+                            type="button"
+                            $small
+                            aria-label={`${t.edit}：${conventionName(f.ref.slug)} ${f.rules.map((r) => callText(r.call)).join('/')}`}
+                            onClick={() => setOpen(`f${i}`)}
+                          >
+                            {t.edit}
+                          </Button>
+                        </td>
+                      </tr>
+                      {conditionsForm(`f${i}`, f, true, 6)}
+                    </Fragment>
+                  ))}
+                </tbody>
+              </Table>
+            </TableScroll>
+          </Panel>
+        )}
+
+        {spec && spec.unresolved.length > 0 && (
+          <Panel aria-labelledby="unresolved">
+            <PanelTitle id="unresolved">{t.unresolvedTitle}</PanelTitle>
+            <Muted>{t.unresolvedIntro}</Muted>
+            {unresolvedByReason(spec).map(({ reason, rows }) => (
+              <details key={reason}>
+                <summary>
+                  {t.reason[reason]}（{t.rows(rows.length)}）
+                </summary>
+                <TableScroll>
+                  <Table>
+                    <thead>
+                      <tr>
+                        <th>{t.colConvention}</th>
+                        <th>{t.colAuction}</th>
+                        <th>{t.colCall}</th>
+                        <th>{t.colBook}</th>
+                        <th>{t.colDetail}</th>
+                        {FILLABLE.has(reason) && <th />}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((u, i) => {
+                        const target = unresolvedTarget(u)
+                        return (
+                          <Fragment key={i}>
+                            <tr>
                               <td>
-                                {target && (
-                                  <Button
-                                    type="button"
-                                    $small
-                                    aria-label={`${t.fill}：${conventionName(u.ref.slug)} ${formatCall(u.call)}`}
-                                    onClick={() => setOpen(`u${reason}${i}`)}
-                                  >
-                                    {t.fill}
-                                  </Button>
-                                )}
+                                <Link to={`/c/${u.ref.slug}/${u.ref.sectionId}`}>
+                                  {conventionName(u.ref.slug)}
+                                </Link>
                               </td>
-                            )}
-                          </tr>
-                          {target && conditionsForm(`u${reason}${i}`, target, false, 6)}
-                        </Fragment>
-                      )
-                    })}
-                  </tbody>
-                </Table>
-              </TableScroll>
-            </details>
-          ))}
-        </Panel>
-      )}
+                              <NoWrap>{u.after ? u.after.map(auctionText).join(' / ') : ''}</NoWrap>
+                              <NoWrap>{formatCall(u.call)}</NoWrap>
+                              <td>{u.text}</td>
+                              <td>
+                                {[u.detail, u.shows && showsText(u.shows)].filter(Boolean).join(' · ')}
+                              </td>
+                              {FILLABLE.has(reason) && (
+                                <td>
+                                  {target && (
+                                    <Button
+                                      type="button"
+                                      $small
+                                      aria-label={`${t.fill}：${conventionName(u.ref.slug)} ${formatCall(u.call)}`}
+                                      onClick={() => setOpen(`u${reason}${i}`)}
+                                    >
+                                      {t.fill}
+                                    </Button>
+                                  )}
+                                </td>
+                              )}
+                            </tr>
+                            {target && conditionsForm(`u${reason}${i}`, target, false, 6)}
+                          </Fragment>
+                        )
+                      })}
+                    </tbody>
+                  </Table>
+                </TableScroll>
+              </details>
+            ))}
+          </Panel>
+        )}
+      </WithSectionNav>
     </>
   )
 }

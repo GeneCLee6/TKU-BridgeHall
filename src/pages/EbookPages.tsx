@@ -74,7 +74,7 @@ function Ebooks() {
 
   return (
     <>
-      <Link to="/library">{t.library}</Link>
+      <BackLink to="/library">{t.library}</BackLink>
       <PageTitle>{t.listTitle}</PageTitle>
       <Muted>{t.listIntro}</Muted>
       {notice && <Notice role="status">{notice}</Notice>}

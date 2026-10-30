@@ -41,6 +41,7 @@ export const learnStrings = {
   checklistMissing: '幹部還沒寫這一課的檢核清單。',
   previous: '上一課',
   next: '下一課',
+  backToPathLabel: '回到路徑',
   neighbours: '上一課與下一課',
   /** The editor (e4-t12) */
   editor: {

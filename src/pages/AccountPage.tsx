@@ -127,21 +127,24 @@ function AccountBody() {
 
 /**
  * 通知 (F4 靜音): whether 淡江牌桌's bell says a convention the member's team or partnership plays
- * was published. Saved at once; on unless turned off
+ * was published. Changed in the form, kept on 儲存 (2026-10-30); on unless turned off
  */
 function NoticesPanel({ user }: { user: Me }) {
   const { refresh } = useAuth()
+  const stored = user.bookAdoptedNotice === false
+  const [muted, setMuted] = useState(stored)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const muted = user.bookAdoptedNotice === false
+  const dirty = muted !== stored
 
-  const change = async (mute: boolean) => {
+  const save = async (event: FormEvent) => {
+    event.preventDefault()
     setBusy(true)
     setError('')
     setNotice('')
     try {
-      await api.setPreferences({ bookAdoptedNotice: !mute })
+      await api.setPreferences({ bookAdoptedNotice: !muted })
       await refresh()
       setNotice(accountStrings.noticesSaved)
     } catch (e) {
@@ -154,19 +157,32 @@ function NoticesPanel({ user }: { user: Me }) {
     <Panel aria-labelledby="account-notices">
       <PanelTitle id="account-notices">{accountStrings.notices}</PanelTitle>
       <Muted>{accountStrings.noticesHint}</Muted>
-      <Check>
-        <input
-          type="checkbox"
-          checked={muted}
-          disabled={busy}
-          onChange={(e) => void change(e.target.checked)}
-          aria-describedby="account-mute-adopted-hint"
-        />
-        {accountStrings.muteAdopted}
-      </Check>
-      <Muted id="account-mute-adopted-hint">{accountStrings.muteAdoptedHint}</Muted>
-      {error && <ErrorText role="alert">{error}</ErrorText>}
-      {notice && <Notice role="status">{notice}</Notice>}
+      <Form onSubmit={save} aria-labelledby="account-notices">
+        <Check>
+          <input
+            type="checkbox"
+            checked={muted}
+            disabled={busy}
+            onChange={(e) => {
+              setMuted(e.target.checked)
+              setNotice('')
+            }}
+            aria-describedby="account-mute-adopted-hint"
+          />
+          {accountStrings.muteAdopted}
+        </Check>
+        <Muted id="account-mute-adopted-hint">{accountStrings.muteAdoptedHint}</Muted>
+        {error && <ErrorText role="alert">{error}</ErrorText>}
+        {notice && <Notice role="status">{notice}</Notice>}
+        <div>
+          <Button type="submit" $variant="primary" disabled={busy || !dirty}>
+            {strings.save}
+          </Button>{' '}
+          <Button type="button" disabled={busy || !dirty} onClick={() => setMuted(stored)}>
+            {strings.cancel}
+          </Button>
+        </div>
+      </Form>
     </Panel>
   )
 }
@@ -284,6 +300,7 @@ function AvatarPanel({ user }: { user: Me }) {
   }
 
   const remove = async () => {
+    if (!window.confirm(accountStrings.avatarRemoveConfirm)) return
     setBusy(true)
     setError('')
     setNotice('')

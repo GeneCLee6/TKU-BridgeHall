@@ -1,4 +1,4 @@
-import { ArrowLeft, Eye, History, Plus } from 'lucide-react'
+import { ArrowLeft, ClipboardCheck, Eye, History, Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
@@ -38,7 +38,8 @@ import { mobile, mobileQuery } from '../styles/tokens.ts'
 import type { Convention, Section } from '../types/convention.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { Frame, Gate } from './Frame.tsx'
-import { diffText as d, review as r } from './reviewStrings.ts'
+import { diffText as d, review as r } from './reviewStrings.ts'
+
 import { editorStrings } from '../components/editor/editorStrings.ts'
 
 const t = editorStrings
@@ -579,10 +580,12 @@ function EditorBody({
               </>
             )}
             {slug && (
-              <>
-                <br />
-                <Link to={`/review/${slug}`}>{d.openReview}</Link>
-              </>
+              <Row>
+                <Button as={Link} to={`/review/${slug}`} $small>
+                  <ClipboardCheck size={16} aria-hidden />
+                  {d.openReview}
+                </Button>
+              </Row>
             )}
             {reviewer && wip.status === 'in-review' && !dirty && (
               <Row>
@@ -629,7 +632,13 @@ function EditorBody({
         {content.status === 'offline' && <ErrorText>{strings.online.offline}</ErrorText>}
         {notice && (
           <Notice role="status">
-            {notice} {slug && !dirty && !wip && <Link to={conventionPath(slug)}>{t.view}</Link>}
+            {notice}{' '}
+            {slug && !dirty && !wip && (
+              <Button as={Link} to={conventionPath(slug)} $small>
+                <Eye size={16} aria-hidden />
+                {t.view}
+              </Button>
+            )}
           </Notice>
         )}
         {error && <ErrorText role="alert">{error}</ErrorText>}

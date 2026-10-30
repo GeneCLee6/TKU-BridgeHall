@@ -8,7 +8,7 @@ type Item = { id: string; label: string }
 /**
  * A long page of panels (我的帳號, 社團管理) with a list of them on the left that stays in view: a
  * wide screen's spare width becomes a way around the page. The list is read from the panels
- * themselves (each `section`'s first `h2`), so a panel that shows only for some members, or loads
+ * themselves (each `section`'s first `h2`, also inside a `fieldset` that disables a form's panels), so a panel that shows only for some members, or loads
  * later, is listed when it is there. The panel being read is marked. Phones get the panels alone.
  */
 export function WithSectionNav({ children }: { children: ReactNode }) {
@@ -21,7 +21,7 @@ export function WithSectionNav({ children }: { children: ReactNode }) {
     if (!element) return
     const collect = () => {
       const next: Item[] = []
-      element.querySelectorAll<HTMLElement>(':scope > section').forEach((section, i) => {
+      element.querySelectorAll<HTMLElement>(':scope > section, :scope > fieldset > section').forEach((section, i) => {
         const heading = section.querySelector('h2')
         const label = heading?.textContent?.trim()
         if (!label) return
@@ -140,7 +140,8 @@ const Body = styled.div`
   gap: ${({ theme }) => theme.space(5)};
   min-width: 0;
 
-  & > section {
+  & > section,
+  & > fieldset > section {
     scroll-margin-top: calc(${({ theme }) => theme.layout.headerHeight} + ${({ theme }) => theme.space(4)});
   }
 `

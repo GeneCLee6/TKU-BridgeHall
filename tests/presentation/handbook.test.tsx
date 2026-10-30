@@ -76,7 +76,7 @@ describe('home page', () => {
 })
 
 describe('header v2 and 閱讀設定', () => {
-  it('keeps the header to the logo, the profile, search and the account', async () => {
+  it('keeps the header to the logo, the profile, search, 閱讀設定 and the account', async () => {
     renderAt('/')
     const header = within(screen.getByRole('banner'))
     expect(header.getByRole('link', { name: /首頁$/ })).toHaveAttribute('href', '/')
@@ -84,12 +84,15 @@ describe('header v2 and 閱讀設定', () => {
     expect(header.getByRole('searchbox')).toBeInTheDocument()
     // The account menu, with the member's avatar
     expect(await header.findByRole('button', { name: 'reader 的帳號選單' })).toBeInTheDocument()
-    for (const name of ['全部展開', '全部收合', '列印', '安裝 App', '閱讀設定'])
+    // 閱讀設定 is in the header on every page (2026-10-30); what it does is inside its panel
+    expect(header.getByRole('button', { name: '閱讀設定' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: '閱讀設定' })).toHaveLength(1)
+    for (const name of ['全部展開', '全部收合', '列印', '安裝 App'])
       expect(header.queryByRole('button', { name })).toBeNull()
     expect(header.queryByRole('group', { name: '字級' })).toBeNull()
   })
 
-  it('opens from the keyboard, sets the theme and 字級 on this device, and closes with Esc', async () => {
+  it('opens from the keyboard, previews the theme and 字級, keeps them on 儲存, and closes with Esc', async () => {
     renderAt('/')
     const button = screen.getByRole('button', { name: '閱讀設定' })
     button.focus()
@@ -106,10 +109,24 @@ describe('header v2 and 閱讀設定', () => {
     expect(panel.getByRole('button', { name: '跟隨系統' })).toHaveAttribute('aria-pressed', 'false')
     await userEvent.click(panel.getByRole('button', { name: '字級：大' }))
     expect(panel.getByRole('button', { name: '字級：大' })).toHaveAttribute('aria-pressed', 'true')
+    // A preview until 儲存
+    expect(JSON.parse(window.localStorage.getItem('tku-bridgebook:prefs') ?? '{}')).toMatchObject({ theme: 'system' })
+    expect(panel.getByRole('status')).toHaveTextContent('預覽中')
+    await userEvent.click(panel.getByRole('button', { name: '儲存' }))
     expect(JSON.parse(window.localStorage.getItem('tku-bridgebook:prefs') ?? '{}')).toMatchObject({
       theme: 'dark',
       textSize: 'large',
     })
+    expect(screen.queryByRole('dialog', { name: '閱讀設定' })).toBeNull()
+    expect(button).toHaveFocus()
+
+    // Closing without 儲存 puts back what was stored
+    let open = await openSettings()
+    await userEvent.click(open.getByRole('button', { name: '淺色' }))
+    await userEvent.keyboard('{Escape}')
+    open = await openSettings()
+    expect(open.getByRole('button', { name: '深色' })).toHaveAttribute('aria-pressed', 'true')
+    expect(JSON.parse(window.localStorage.getItem('tku-bridgebook:prefs') ?? '{}')).toMatchObject({ theme: 'dark' })
 
     await userEvent.keyboard('{Escape}')
     expect(screen.queryByRole('dialog', { name: '閱讀設定' })).toBeNull()
@@ -120,7 +137,7 @@ describe('header v2 and 閱讀設定', () => {
     const again = await openSettings()
     await userEvent.click(again.getByRole('button', { name: '跟隨系統' }))
     await userEvent.click(again.getByRole('button', { name: '字級：中' }))
-    await userEvent.click(again.getByRole('button', { name: '關閉閱讀設定' }))
+    await userEvent.click(again.getByRole('button', { name: '儲存' }))
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
@@ -130,6 +147,7 @@ describe('header v2 and 閱讀設定', () => {
     const panel = await openSettings()
     expect(panel.getByRole('button', { name: '深色' })).toHaveAttribute('aria-pressed', 'true')
     await userEvent.click(panel.getByRole('button', { name: '跟隨系統' }))
+    await userEvent.click(panel.getByRole('button', { name: '儲存' }))
     expect(JSON.parse(window.localStorage.getItem('tku-bridgebook:prefs') ?? '{}')).toMatchObject({ theme: 'system' })
   })
 

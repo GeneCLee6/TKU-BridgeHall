@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import styled from 'styled-components'
-import { Button, ErrorText, Muted, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
+import { BackLink, Button, ErrorText, Muted, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import { today } from '../lib/format.ts'
 import {
   LEARN_PATH,
@@ -95,7 +95,7 @@ function Missing({ loaded, text }: { loaded: boolean; text: string }) {
     <Frame title={t.title}>
       <PageTitle>{t.title}</PageTitle>
       {loaded ? <ErrorText role="alert">{text}</ErrorText> : <Muted role="status">{strings.loading}</Muted>}
-      <Link to={LEARN_PATH}>{t.title}</Link>
+      <BackLink to={LEARN_PATH}>{t.title}</BackLink>
     </Frame>
   )
 }
@@ -262,19 +262,34 @@ export function LessonPage() {
       {failed && <ErrorText role="alert">{t.progressFailed}</ErrorText>}
 
       <Neighbours aria-label={t.neighbours}>
+        {/* As the convention page's: the visible words name the link (WCAG 2.5.3), the arrows are decoration */}
         {previous ? (
           <Link to={lessonPage(path.id, previous.id)}>
-            ← {t.previous}：{previous.title}
+            <small>
+              <span aria-hidden>← </span>
+              {t.previous}
+            </small>
+            {previous.title}
           </Link>
         ) : (
           <span />
         )}
         {next ? (
-          <Link to={lessonPage(path.id, next.id)}>
-            {t.next}：{next.title} →
+          <Link to={lessonPage(path.id, next.id)} data-next>
+            <small>
+              {t.next}
+              <span aria-hidden> →</span>
+            </small>
+            {next.title}
           </Link>
         ) : (
-          <Link to={pathPage(path.id)}>{t.backToPath(path.name)}</Link>
+          <Link to={pathPage(path.id)} data-next>
+            <small>
+              {t.backToPathLabel}
+              <span aria-hidden> →</span>
+            </small>
+            {path.name}
+          </Link>
         )}
       </Neighbours>
     </Frame>
@@ -378,10 +393,36 @@ const Done = styled.b`
   font-weight: 600;
 `
 
+/** The same look as the convention page's 上一個／下一個 */
 const Neighbours = styled.nav`
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
-  gap: ${({ theme }) => theme.space(3)};
+  gap: ${({ theme }) => theme.space(4)};
   margin-top: ${({ theme }) => theme.space(6)};
+
+  a {
+    display: flex;
+    flex-direction: column;
+    gap: ${({ theme }) => theme.space(0.5)};
+    max-width: 48%;
+    min-height: 44px;
+    padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.shape.control};
+    color: ${({ theme }) => theme.colors.primary};
+    font-weight: 600;
+    text-decoration: none;
+  }
+  a[data-next] {
+    margin-left: auto;
+    text-align: right;
+  }
+  a:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+  small {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
 `

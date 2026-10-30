@@ -150,7 +150,10 @@ function Pair() {
                 <Button type="button" $variant="primary" onClick={() => void run(() => api.club.accept(pair.id))}>
                   {t.accept}
                 </Button>
-                <Button type="button" onClick={() => void leave(() => api.club.decline(pair.id))}>
+                <Button type="button" onClick={() => {
+                    if (window.confirm(t.declineConfirm)) void leave(() => api.club.decline(pair.id))
+                  }}
+                >
                   {t.decline}
                 </Button>
               </Row>
@@ -160,7 +163,10 @@ function Pair() {
             <>
               <Muted>{t.waiting(pairName(members, [inviteeId]))}</Muted>
               <Row>
-                <Button type="button" onClick={() => void leave(() => api.club.end(pair.id))}>
+                <Button type="button" onClick={() => {
+                    if (window.confirm(t.withdrawConfirm)) void leave(() => api.club.end(pair.id))
+                  }}
+                >
                   {t.withdraw}
                 </Button>
               </Row>

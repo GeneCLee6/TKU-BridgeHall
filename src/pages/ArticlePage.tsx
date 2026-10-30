@@ -4,7 +4,8 @@ import styled from 'styled-components'
 import { BlockView } from '../components/BlockView.tsx'
 import { CopyLinkButton } from '../components/CopyLinkButton.tsx'
 import { KindLevel } from '../components/KindLevel.tsx'
-import { Button } from '../components/ui.tsx'
+import { Pencil } from 'lucide-react'
+import { BackLink, Button, Row } from '../components/ui.tsx'
 import { libraryStrings } from '../libraryStrings.ts'
 import { api, ApiError, errorText, type ArticleFiles } from '../lib/api.ts'
 import { onlineArticle } from '../lib/articles.ts'
@@ -95,15 +96,17 @@ export function ArticlePage() {
         )}
         {state.status === 'missing' && (
           <Notice role="alert">
-            {s.notFound}{' '}
-            <Link to="/library">{s.backToLibrary}</Link>
-            {/* A hidden article is only gone for readers: editors may bring it back (e5-t07) */}
-            {can('bookEdit') && (
-              <>
-                {' '}
-                <Link to={`${articlePath(slug)}/edit`}>{s.editArticle}</Link>
-              </>
-            )}
+            {s.notFound}
+            <Row>
+              <BackLink to="/library">{s.backToLibrary}</BackLink>
+              {/* A hidden article is only gone for readers: editors may bring it back (e5-t07) */}
+              {can('bookEdit') && (
+                <Button as={Link} to={`${articlePath(slug)}/edit`} $small>
+                  <Pencil size={16} aria-hidden />
+                  {s.editArticle}
+                </Button>
+              )}
+            </Row>
           </Notice>
         )}
         {state.status === 'broken' && <Notice role="alert">{s.broken(state.problem)}</Notice>}

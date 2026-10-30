@@ -60,6 +60,8 @@ export const teamStrings = {
   accept: '接受',
   decline: '婉拒',
   withdraw: '收回邀請',
+  declineConfirm: '確定婉拒這個搭檔邀請？',
+  withdrawConfirm: '確定收回這個搭檔邀請？',
   end: '結束搭檔',
   endConfirm: '確定要結束這對搭檔？制度集會保留，但之後兩人都不能再修改。',
 

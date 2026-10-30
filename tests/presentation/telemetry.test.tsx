@@ -160,7 +160,11 @@ describe('使用統計 on the admin page (e10-t07)', () => {
     const box = await panel.findByRole('checkbox', { name: '社團開啟匿名分析' })
     expect(box).toBeChecked()
     await userEvent.click(box)
-    await waitFor(() => expect(box).not.toBeChecked())
+    // Kept on 儲存 (2026-10-30)
+    expect(sent.some((s) => s.method === 'PUT')).toBe(false)
+    await userEvent.click(panel.getByRole('button', { name: '儲存' }))
+    await waitFor(() => expect(sent.some((s) => s.method === 'PUT')).toBe(true))
+    expect(box).not.toBeChecked()
     expect(sent.find((s) => s.method === 'PUT')).toEqual({ method: 'PUT', path: '/api/book/analytics/settings', body: { enabled: false } })
     expect(panel.getByText(/社團已關閉匿名分析/)).toBeInTheDocument()
   })
@@ -176,6 +180,9 @@ describe('傳送匿名使用統計 in 個人設定 (e10-t07)', () => {
     expect(prefs()).not.toHaveProperty('analytics')
     await userEvent.click(box)
     expect(box).not.toBeChecked()
+    expect(prefs()).not.toHaveProperty('analytics')
+    // 隱私's own 儲存, after 顯示's
+    await userEvent.click(screen.getAllByRole('button', { name: '儲存' }).at(-1)!)
     expect(prefs().analytics).toBe(false)
     // 全部恢復預設 is about the display: it keeps this choice
     await userEvent.click(screen.getByRole('button', { name: '全部恢復預設' }))
