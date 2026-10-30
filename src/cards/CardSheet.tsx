@@ -138,8 +138,8 @@ function BlockView({ block }: { block: CardBlock }) {
       return <CellsView block={block} />
     case 'text':
       return (
-        <Boxed>
-          <Slot slot={id} lines={block.lines} label={block.label} alert={block.alert} suffix={block.suffix} />
+        <Boxed style={rows(block.lines)}>
+          <Slot slot={id} lines={block.lines} label={block.label} alert={block.alert} suffix={block.suffix} boxed />
         </Boxed>
       )
     case 'check':
@@ -166,9 +166,9 @@ function BlockView({ block }: { block: CardBlock }) {
 function CellsView({ block }: { block: CardCellsBlock }) {
   const { template } = useSheet()
   return (
-    <Boxed>
+    <Boxed style={rows(1 + block.lines)}>
       <CellsTitle style={rows(1)}>{block.title}</CellsTitle>
-      <Slot slot={`${template.id}.${block.id}`} lines={block.lines} />
+      <Slot slot={`${template.id}.${block.id}`} lines={block.lines} boxed />
     </Boxed>
   )
 }
@@ -310,6 +310,7 @@ function Slot({
   suffix,
   tick,
   bare,
+  boxed,
 }: {
   slot: string
   lines: number
@@ -322,6 +323,8 @@ function Slot({
   tick?: boolean
   /** Inside a table cell, which has its own rules */
   bare?: boolean
+  /** Inside a box of fixed height (`Boxed`): takes the room its rule leaves */
+  boxed?: boolean
 }) {
   const { card, slots, selected, onSelect, sourceLink, labels, extra } = useSheet()
   const info = slots.get(slot)
@@ -408,7 +411,14 @@ function Slot({
   return (
     <SlotBox
       {...marks}
-      style={{ minHeight: `calc(var(--lh) * ${lines})` }}
+      style={
+        bare
+          ? // the row's rules come on top of the cell's height (border-collapse): leave them room
+            { height: `calc(var(--lh) * ${lines} - ${RULE_ROOM})` }
+          : boxed
+            ? { flex: '1 1 0', minHeight: 0 }
+            : { minHeight: `calc(var(--lh) * ${lines})` }
+      }
       data-card-slot
       {...(cell?.origin && cell.origin !== 'club' && { 'data-origin': cell.origin })}
     >
@@ -438,6 +448,8 @@ function Slot({
 // ── Styles: cardColors only (styles/tokens.ts), sizes in points like the form ───────────────────
 
 const rule = `0.5pt solid ${c.rule}`
+/** What a 0.5pt rule takes in the layout: browsers draw it at least one pixel wide */
+const RULE_ROOM = '1px'
 
 const Paper = styled.div`
   position: relative;
@@ -509,13 +521,22 @@ const NoteText = styled.div`
   font-size: 0.85em;
 `
 
+/**
+ * A text or cells block: exactly its lines high, its rule included, whatever the fonts, so a sheet
+ * is always one printed page (2026-10-30: Browser Run's taller pages broke the WBF card over four).
+ * What does not fit is clipped; fillCard has already moved it to the notes or flagged the cell.
+ */
 const Boxed = styled.div`
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   border-bottom: ${rule};
 `
 
 const CellsTitle = styled.div`
   box-sizing: border-box;
+  flex: none;
   padding: 0 1.5pt;
   font-weight: 700;
   white-space: nowrap;
@@ -591,8 +612,13 @@ const Table = styled.table`
   tr > :last-child {
     border-right: none;
   }
+  th {
+    line-height: calc(var(--lh) - ${RULE_ROOM});
+  }
   thead th {
     padding: 0 1.5pt;
+    white-space: nowrap;
+    text-overflow: clip;
     font-weight: 700;
     text-align: center;
     vertical-align: middle;
@@ -664,7 +690,7 @@ const SlotBox = styled.div<{
 }>`
   position: relative;
   box-sizing: border-box;
-  ${({ $bare }) => $bare && 'height: 100%;'}
+  ${({ $bare }) => $bare && 'overflow: hidden;'}
   background: ${({ $origin }) => originGround($origin)};
   background-image: ${({ $bare }) =>
     $bare ? 'none' : `repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--lh) - 0.5pt), ${c.muted}55 calc(var(--lh) - 0.5pt), ${c.muted}55 var(--lh))`};
