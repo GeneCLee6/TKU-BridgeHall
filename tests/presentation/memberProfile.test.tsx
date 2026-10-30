@@ -137,3 +137,23 @@ describe('我的帳號 › 個人檔案 (e11-t04)', () => {
     expect(screen.getByRole('link', { name: '看我的檔案頁' })).toHaveAttribute('href', '/u/u1')
   })
 })
+
+describe('我的帳號 › 通知 (F4 mute)', () => {
+  it('turns off the notice about conventions one’s team or partnership plays, and back on', async () => {
+    routes['POST /api/account/preferences'] = { user: { ...ME, bookAdoptedNotice: false } }
+    open('/account')
+    const box = await screen.findByRole('checkbox', { name: '不接收採用特約的發布通知' })
+    expect(box).not.toBeChecked()
+    routes['GET /api/me'] = { user: { ...ME, bookAdoptedNotice: false } }
+    fireEvent.click(box)
+    expect(await screen.findByText('通知設定已儲存')).toBeInTheDocument()
+    expect(calls.find((c) => c.method === 'POST')?.body).toEqual({ bookAdoptedNotice: false })
+    expect(screen.getByRole('checkbox', { name: '不接收採用特約的發布通知' })).toBeChecked()
+
+    routes['GET /api/me'] = { user: { ...ME, bookAdoptedNotice: true } }
+    routes['POST /api/account/preferences'] = { user: { ...ME, bookAdoptedNotice: true } }
+    fireEvent.click(screen.getByRole('checkbox', { name: '不接收採用特約的發布通知' }))
+    await vi.waitFor(() => expect(calls.filter((c) => c.method === 'POST').at(-1)?.body).toEqual({ bookAdoptedNotice: true }))
+    await vi.waitFor(() => expect(screen.getByRole('checkbox', { name: '不接收採用特約的發布通知' })).not.toBeChecked())
+  })
+})

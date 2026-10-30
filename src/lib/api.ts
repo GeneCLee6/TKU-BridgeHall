@@ -37,6 +37,12 @@ export interface Me {
   applications?: number
   /** The system profile the member reads with, kept with the account (e1-t16); absent for the club's */
   bookProfile?: string
+  /**
+   * Whether 淡江牌桌's bell says a convention the member's team or partnership plays was published
+   * (F4); the Worker always sets it, on unless turned off on 我的帳號. Following, overrides, review
+   * and suggestions are told regardless
+   */
+  bookAdoptedNotice?: boolean
   /** Their uploaded picture's version (`avatarUrl` in lib/account.ts); none means the default avatar (e11-t03) */
   avatar?: number
   /** Their own profile (e11-t01), the same on both sites; empty until they fill it in */
@@ -763,7 +769,8 @@ export const api = {
   changePassword: (current: string, next: string) =>
     post<{ ok: true }>('/api/account/password', { current, next }),
   /** Keeps the member's system profile with the account; '' for the club's (e1-t16) */
-  setPreferences: (preferences: { bookProfile: string }) => post<{ user: Me }>('/api/account/preferences', preferences),
+  setPreferences: (preferences: { bookProfile?: string; bookAdoptedNotice?: boolean }) =>
+    post<{ user: Me }>('/api/account/preferences', preferences),
 
   admin: {
     users: () => request<{ users: AdminUser[] }>('/api/admin/users'),

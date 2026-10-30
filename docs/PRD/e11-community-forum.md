@@ -98,7 +98,7 @@ depends_on: [E1, E9, E10]
 
 - [x] `e11-t06` `worker/forum.ts`：SQLite 五張表、板面 CRUD（管理員）、內建四板、貼文 CRUD、分頁、置頂與鎖定、速率限制；測試 · AC-11.2、AC-11.3、AC-11.6 · M · ← e11-t05
 - [x] `e11-t07` 留言 CRUD（巢狀一層）、反應（五種、每人每則一種）、`@` 提到解析 · AC-11.4 · M · ← e11-t06
-  - G3 實作備註（2026-10-28）：表名加 `forum_` 前綴；API 在 `/api/forum/*`（牌桌 ARCHITECTURE.md 的 API 表），橋館呼叫在 lazy 的 `lib/forumApi.ts`。**幹部暫時＝管理員**（`forumModerate` 是 e11-t09）；鎖定的貼文只有幹部能留言；內建板與有貼文的板不能刪；`@` 認帳號名稱與顯示名稱，結果存在新欄位 `Post.mentions`／`Comment.mentions`（通知是 e11-t08）；多了 `GET /api/forum/latest` 給首頁兩個區塊（e11-t16）。審計與檢舉 API 留給 G7；SQL 表不在每日備份裡（同私訊），帳號刪除時貼文保留。
+  - G3 實作備註（2026-10-28）：表名加 `forum_` 前綴；API 在 `/api/forum/*`（牌桌 ARCHITECTURE.md 的 API 表），橋館呼叫在 lazy 的 `lib/forumApi.ts`。**幹部暫時＝管理員**（`forumModerate` 是 e11-t09）；鎖定的貼文只有幹部能留言；內建板與有貼文的板不能刪；`@` 認帳號名稱與顯示名稱，結果存在新欄位 `Post.mentions`／`Comment.mentions`（通知是 e11-t08）；多了 `GET /api/forum/latest` 給首頁兩個區塊（e11-t16）。審計與檢舉 API 留給 G7；SQL 表不在每日備份裡（同私訊），帳號刪除時貼文保留。**2026-10-30 起五張表進每日備份**（牌桌備份格式第 3 版，還原會一起還原討論區；圖片仍只在 R2，牌桌 DEPLOY.md §4.4）。
 - [x] `e11-t08` 通知：`forum:reply`、`forum:mention`、`forum:announcement`、`forum:pinned` 接牌桌 `notifications.notify` · AC-11.5 · S · ← e11-t07
   - G7 實作備註（2026-10-30，牌桌 #198）：種類沿用牌桌 camelCase：`forumReply`、`forumMention`、`forumAnnouncement`、`forumPinned`（`worker/forum-notices.ts`）。公告＝只有幹部能發的板（`postPolicy: 'officers'`）的新貼文，通知全部社員；編輯後只通知新提到的人；同一則每人只收一種（提到＞回覆＞公告）。連結 `/forum/p/<id>`，留言帶 `#comment-<id>`。
 - [x] `e11-t09` `forumModerate` 權限、檢舉表與處理 API、審計寫入 · AC-11.6 · S · ← e11-t06
