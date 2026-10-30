@@ -77,7 +77,7 @@ depends_on: [E1, E9, E10]
 - [x] `e5-t04` Worker：`article:` 儲存、版本、API（與 `BookEntry` 同法）；R2 bucket 與簽名 URL 沿用 E11 `e11-t02` · AC-5.2、AC-5.6 · M · ← e11-t02
 - [x] `e5-t05` 文章頁 `/library/:slug` 與叢書頁 `/library`（書架版面、系列、篩選）· AC-5.7 · M · ← e5-t01, e9-t09
 - [x] `e5-t06` 系列資料模型與線上管理 · AC-5.7 · S · ← e5-t04
-- [x] `e5-t07` 文章編輯器：沿用 `components/editor/`，新區塊表單；四家牌輸入元件 · AC-5.2 · M · ← e5-t01, e5-t02
+- [x] `e5-t07` 文章編輯器：沿用 `components/editor/`，新區塊表單；四家牌輸入元件 · AC-5.2 · M · ← e5-t01, e5-t02（2026-10-30 補通知：送審通知審核者、退回與發布通知送審的人，牌桌 `articleReviewRequested`／`articleReturned`／`articlePublished`）
 - [x] `e5-t08` AI 匯入支援文章（擴充 `worker/importer.ts` schema、`importResult.ts`）· AC-5.2 · M · ← e5-t07
 - [x] `e5-t09` 電子書上傳（憑證直傳、授權必填、封面、大小限制）與書頁 · AC-5.4 · M · ← e5-t04
 - [x] `e5-t10` PDF 閱讀器（`pdf.js` lazy chunk、頁碼、全螢幕、手機）· AC-5.5 · M · ← e5-t09
