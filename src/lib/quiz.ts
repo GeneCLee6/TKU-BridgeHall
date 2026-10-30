@@ -15,8 +15,8 @@ import type { Auction, Call, Convention, Hand, Level, ResponseRow, Section } fro
  *
  * A 叫品題 (`call`, e6-t07) shows a hand and asks for the call. It is made only from the handbook's
  * worked examples, where the text itself says what to call with that hand: a hand block whose label
- * is a call (叫4H, 應叫1H, PASS!, 應叫2C，絕不可叫1NT), under a paragraph that sets the example out
- * (EX) 左敵 1♦，同伴 X，右敵 PASS，你？). The paragraph is shown word for word as the question, the
+ * is a call (叫4H, 應叫1H, PASS!, 應叫2C，不叫1NT), under a paragraph that sets the example out
+ * (EX) 左敵 1♣，同伴 X，右敵 PASS，你？). The paragraph is shown word for word as the question, the
  * label's call is the answer, and the reader answers on a bidding box: no wrong calls are made up
  * as choices. Labels that are not a call (何手牌較佳？, 可開3NT) ask nothing. Editors can also write
  * call questions by hand (e6-t06, lib/quizRecords.ts), as they can take a question out or change
@@ -186,7 +186,7 @@ const CALL = String.raw`(PASS|P|XX|X|[1-7](?:NT|N|[CDHS♣♦♥♠]))`
  * The call a hand's label says to make, in compact notation, or undefined when the label says
  * something else. Only a label that is nothing but the call counts — after an optional (i)/(ii)
  * numbering, 叫 or 應叫, and emphasis (!) — or the call then a comma and the reason
- * (叫2D，Cue-Bid; 應叫2C，絕不可叫1NT). 可開3NT, 改2S 通常比PASS好 and the like say no.
+ * (叫2D，Cue-Bid; 應叫2C，不叫1NT). 可開3NT, 改叫2S 較好 and the like say no.
  */
 export function labelCall(label: string | undefined): Call | undefined {
   if (!label) return undefined

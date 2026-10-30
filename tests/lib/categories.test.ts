@@ -1,14 +1,16 @@
-import { categories, conventions } from '../../src/content/index.ts'
+import { categories, conventions } from '../fixtures/content.ts'
 import { categoryUsage, knownCategoryIds, newCategoryId, resolveCategories } from '../../src/lib/categories.ts'
 import type { Category } from '../../src/types/convention.ts'
 
 const cat = (id: string, order: number, label = id): Category => ({ id, label, description: '', order })
 
 describe('categories as data', () => {
-  it('ships the bundled ones in order, each with conventions', () => {
+  // That every bundled category has some of the club's conventions is checked in the private
+  // repository's copy of this file; the made-up ones (tests/fixtures) use only a few categories
+  it('ships the bundled ones in order, and the conventions use only those', () => {
     expect(categories.map((c) => c.order)).toEqual(categories.map((_, i) => i))
-    const usage = categoryUsage(conventions)
-    for (const c of categories) expect(usage.get(c.id)).toBeGreaterThan(0)
+    const ids = categories.map((c) => c.id)
+    for (const id of categoryUsage(conventions).keys()) expect(ids).toContain(id)
   })
 
   it('uses the bundled list until the categories are edited online', () => {

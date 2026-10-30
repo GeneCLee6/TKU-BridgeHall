@@ -1,4 +1,4 @@
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import {
   drawQuizzes,
   filterQuizzes,
@@ -44,9 +44,9 @@ describe('generateQuizzes (e6-t01, AC-6.2)', () => {
       const rows = rowsById(c)
       const quizzes = all.quizzes.filter((q) => q.slug === slug && q.kind === 'meaning')
       const skipped = all.skipped.filter((s) => s.id.startsWith(`${slug}/`) && !s.id.endsWith('/hand'))
-      // A convention with any usable table gets questions
+      // A convention with enough different usable meanings for the choices gets questions
       const usable = [...rows.values()].filter((r) => !r.pending && strip(r.row.meaning) !== '同上')
-      if (usable.length) expect(quizzes.length).toBeGreaterThan(0)
+      if (new Set(usable.map((r) => strip(r.row.meaning))).size >= CHOICES) expect(quizzes.length).toBeGreaterThan(0)
       expect(quizzes.length + skipped.length).toBe(rows.size)
 
       const meanings = new Set([...rows.values()].filter((r) => !r.pending).map((r) => r.row.meaning))
@@ -73,11 +73,14 @@ describe('generateQuizzes (e6-t01, AC-6.2)', () => {
     },
   )
 
-  it('asks something of every bundled convention that has a response table', () => {
+  it('asks something of every bundled convention with enough meanings for the choices', () => {
     const asked = new Set(all.quizzes.filter((q) => q.kind === 'meaning').map((q) => q.slug))
-    const withTables = conventions.filter((c) => [...rowsById(c).values()].some((r) => !r.pending))
+    const enough = (c: Convention) => new Set([...rowsById(c).values()].filter((r) => !r.pending).map((r) => strip(r.row.meaning))).size >= CHOICES
+    const withTables = conventions.filter(enough)
     expect(withTables.map((c) => c.slug).filter((slug) => !asked.has(slug))).toEqual([])
-    expect(withTables.length).toBe(19)
+    // The made-up fixtures: only fixture-alpha's tables have four different meanings
+    expect(withTables.map((c) => c.slug)).toEqual(['fixture-alpha'])
+    expect(all.skipped.filter((x) => x.id.startsWith('fixture-beta/')).every((x) => x.reason === 'fewChoices' || x.reason === 'pending')).toBe(true)
   })
 
   it('gives every question a unique id from its place in the content', () => {
@@ -184,31 +187,14 @@ describe('call questions from the worked examples (e6-t07, AC-6.2)', () => {
   const calls = all.quizzes.filter((q) => q.kind === 'call')
 
   it('reads the call a hand label says to make, and nothing else', () => {
-    const said = ['叫4H', 'PASS', '叫4NT', 'PASS!', '叫3NT!!', 'PASS!!!', '(i) 應叫1H', '(iii) 應叫2C，絕不可叫1NT', '叫2D，Cue-Bid', '叫1NT', '2♠', 'X', 'XX', '3N']
-    expect(said.map(labelCall)).toEqual(['4H', 'P', '4NT', 'P', '3NT', 'P', '1H', '2C', '2D', '1NT', '2S', 'X', 'XX', '3NT'])
-    const other = [undefined, '', '可開3NT', 'EX) 可開3NT', '皆可開叫1NT', '改2S 通常比PASS好', '(EX) 何手牌較佳？', 'a.', '上', '牌型可能如右', 'EX) 1H ─ ─ ？ 叫 X；之後 1S、2C', '8H']
+    const said = ['叫5D', 'PASS', '叫7NT', 'PASS!', '叫5NT!!', 'PASS!!!', '(i) 應叫1S', '(iii) 應叫3C，測試理由', '叫3H，測試理由', '叫6D', '3♠', 'X', 'XX', '6N']
+    expect(said.map(labelCall)).toEqual(['5D', 'P', '7NT', 'P', '5NT', 'P', '1S', '3C', '3H', '6D', '3S', 'X', 'XX', '6NT'])
+    const other = [undefined, '', '可開6NT', 'EX) 可開6NT', '皆可開叫2NT', '改3S 測試比PASS好', '(EX) 哪一手比較好？', 'a.', '上', '測試牌型如右', 'EX) 1D ─ ─ ？ 叫 X；之後 1H、2C', '8H']
     for (const label of other) expect(labelCall(label), String(label)).toBeUndefined()
   })
 
   it('asks exactly the bundled examples that say what to call, word for word', () => {
-    expect(calls.map((q) => q.id).sort()).toEqual(
-      [
-        'system-doubles/examples/1/hand',
-        'system-doubles/examples/2/hand',
-        'system-doubles/examples/4/hand',
-        'system-doubles/examples/6/hand',
-        'system-doubles/examples/7/hand',
-        'system-doubles/examples/8/hand',
-        'system-doubles/examples/9/hand',
-        'system-competition/preempts/5/hand',
-        'system-competition/preempts/6/hand',
-        'system-competition/preempts/7/hand',
-        'system-competition/preempts/8/hand',
-        'system-competition/preempts/9/hand',
-        'system-competition/preempts/10/hand',
-        'system-concepts/fit/18/hand',
-      ].sort(),
-    )
+    expect(calls.map((q) => q.id)).toEqual(['fixture-alpha/rules/3/hand'])
     for (const q of calls) {
       const c = conventions.find((x) => x.slug === q.slug)!
       let blocks: Section['blocks']
@@ -231,17 +217,12 @@ describe('call questions from the worked examples (e6-t07, AC-6.2)', () => {
       expect(q.choices).toBeUndefined()
       expect(q.source).toBe('auto')
     }
-    expect(calls.find((q) => q.id === 'system-doubles/examples/4/hand')).toMatchObject({
-      prompt: 'EX2) 左敵 1♠，同伴 X，右敵 PASS，你？',
-      answer: '2C',
-    })
+    expect(calls[0]).toMatchObject({ prompt: 'EX) 測試牌例：同伴開叫 1NT，你？', answer: '2H' })
   })
 
   it('reports the hands it asks nothing about', () => {
     const hands = all.skipped.filter((s) => s.id.endsWith('/hand'))
-    expect(hands.find((s) => s.id === 'system-concepts/hand-evaluation/2/hand')?.reason).toBe('noCall')
-    expect(hands.find((s) => s.id === 'system-concepts/fit/16/hand')?.reason).toBe('noCall')
-    expect(hands.find((s) => s.id === 'system-strong-and-preempts/gambling/3/hand')?.reason).toBe('noCall')
+    expect(hands).toEqual([{ id: 'fixture-system/example/1/hand', reason: 'noCall' }])
   })
 
   const example = (blocks: NonNullable<Section['blocks']>, extra: Partial<Section> = {}): Convention => ({
@@ -295,7 +276,7 @@ describe('call questions from the worked examples (e6-t07, AC-6.2)', () => {
   })
 
   it('filters by kind', () => {
-    expect(filterQuizzes(all.quizzes, { kind: 'call' })).toHaveLength(14)
+    expect(filterQuizzes(all.quizzes, { kind: 'call' })).toHaveLength(1)
     expect(filterQuizzes(all.quizzes, { kind: 'meaning' }).every((q) => q.kind === 'meaning')).toBe(true)
   })
 })
@@ -304,9 +285,10 @@ describe('filterQuizzes and drawQuizzes (e6-t02)', () => {
   const { quizzes } = generateQuizzes(conventions, 'club')
 
   it('filters by convention and level, and leaves out disabled questions', () => {
-    const lebensohl = filterQuizzes(quizzes, { slugs: ['lebensohl'] })
-    expect(lebensohl.length).toBeGreaterThan(0)
-    expect(lebensohl.every((q) => q.slug === 'lebensohl')).toBe(true)
+    const alpha = filterQuizzes(quizzes, { slugs: ['fixture-alpha'] })
+    expect(alpha.length).toBeGreaterThan(0)
+    expect(alpha.every((q) => q.slug === 'fixture-alpha')).toBe(true)
+    expect(filterQuizzes(quizzes, { slugs: ['fixture-system'] })).toEqual([])
     const basic = filterQuizzes(quizzes, { level: 'basic' })
     expect(basic.every((q) => q.level === 'basic')).toBe(true)
     expect(filterQuizzes([{ ...quizzes[0], disabled: true }], {})).toEqual([])
@@ -315,14 +297,15 @@ describe('filterQuizzes and drawQuizzes (e6-t02)', () => {
   it('draws the asked number of different questions with the choices reordered', () => {
     let seed = 1
     const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
-    const drawn = drawQuizzes(quizzes, 10, random)
-    expect(drawn).toHaveLength(10)
-    expect(new Set(drawn.map((q) => q.id)).size).toBe(10)
+    const meanings = quizzes.filter((q) => q.kind === 'meaning')
+    const drawn = drawQuizzes(meanings, 5, random)
+    expect(drawn).toHaveLength(5)
+    expect(new Set(drawn.map((q) => q.id)).size).toBe(5)
     for (const q of drawn) {
-      const original = quizzes.find((o) => o.id === q.id)!
+      const original = meanings.find((o) => o.id === q.id)!
       expect([...q.choices!].sort()).toEqual([...original.choices!].sort())
     }
-    expect(drawQuizzes(quizzes.slice(0, 3), 10)).toHaveLength(3)
+    expect(drawQuizzes(meanings.slice(0, 3), 10)).toHaveLength(3)
     expect(shuffle([1, 2, 3], () => 0)).toEqual([2, 3, 1])
   })
 })

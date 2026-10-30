@@ -2,14 +2,15 @@ name: Content backup
 
 # L1 (e8-t12, e8-t13; CONTENT_GUIDE.md §6.5): every day, export every convention members read from
 # TKU BridgeTable's Worker (GET /api/book/export: the built-in layer with the online versions laid
-# over it), run the content tests on it, and open a PR with it on the `content-backup` branch of a
-# PRIVATE repository, merged straight away when the tests pass.
+# over it), run the content tests on it, and open a PR with it on the `content-backup` branch of the
+# PRIVATE content repository GeneCLee6/TKU-BridgeHall-content (whose `main` holds the built-in
+# conventions; the export has the same layout), merged straight away when the tests pass.
 #
 # This repository is public, and so are this workflow's logs: nothing here may print convention
 # text or upload it as an artifact. The scripts print counts only, and the tests report test names.
 #
 # Needs (Settings -> Secrets and variables -> Actions); without them the job is skipped, with a notice:
-#   variable CONTENT_BACKUP_REPO   owner/name of the private backup repository (it needs one commit)
+#   variable CONTENT_BACKUP_REPO   owner/name of the private content repository: GeneCLee6/TKU-BridgeHall-content
 #   secret   BOOK_EXPORT_TOKEN     the Worker's read-only export token (TKU-BridgeTable DEPLOY.md §4.10)
 #   secret   CONTENT_BACKUP_TOKEN  a fine-grained token for that repository only: Contents, Pull
 #                                  requests and Issues read and write
@@ -69,16 +70,25 @@ jobs:
           BOOK_EXPORT_TOKEN: ${{ secrets.BOOK_EXPORT_TOKEN }}
         run: npm run --silent export-content -- --out "$RUNNER_TEMP/export"
 
-      # The export replaces this checkout's src/content (conventions and registry; the categories only
-      # when they were edited online). The 待確認 counts are left out: resolving one online is normal.
+      # The content repository's main, with its tests, in src/content-private/ (CONTENT_GUIDE.md §0)
+      - uses: actions/checkout@v7
+        if: steps.config.outputs.ready == 'true'
+        with:
+          repository: ${{ vars.CONTENT_BACKUP_REPO }}
+          token: ${{ secrets.CONTENT_BACKUP_TOKEN }}
+          path: src/content-private
+          persist-credentials: false
+
+      # The export replaces its conventions and registry (and the categories, only when they were
+      # edited online). The 待確認 counts are left out: resolving one online is normal.
       - name: Run the content tests on the export
         id: tests
         if: steps.config.outputs.ready == 'true'
         run: |
-          rm -rf src/content/conventions
-          cp -r "$RUNNER_TEMP/export/src/content/." src/content/
+          rm -rf src/content-private/conventions
+          cp -r "$RUNNER_TEMP/export/." src/content-private/
           set +e
-          npx vitest run tests/content/conventions.test.ts -t '^(?!.*records the known)' \
+          npx vitest run --project content src/content-private/tests/content/conventions.test.ts -t '^(?!.*records the known)' \
             --silent --reporter=json --outputFile="$RUNNER_TEMP/content-tests.json" > /dev/null 2>&1
           code=$?
           set -e
@@ -114,7 +124,7 @@ jobs:
             git checkout -q -B "$BACKUP_BRANCH"
             git push -q origin "$BACKUP_BRANCH"
           fi
-          rm -rf src/content/conventions
+          rm -rf conventions
           cp -r "$RUNNER_TEMP/export/." .
           git add -A
           if git diff --cached --quiet; then

@@ -47,3 +47,4 @@ source-docs/
 # Playwright output (tests/browser)
 test-results/
 playwright-report/
+src/content-private/

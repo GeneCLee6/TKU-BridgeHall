@@ -7,7 +7,7 @@ import { cardPlaces } from '../../src/cards/places.ts'
 import { bscOpening } from '../../src/cards/templates/bsc-opening.ts'
 import { bscOvercall } from '../../src/cards/templates/bsc-overcall.ts'
 import { profileTemplates } from '../../src/cards/templates/index.ts'
-import { conventionBySlug, conventions } from '../../src/content/index.ts'
+import { conventionBySlug, conventions } from '../fixtures/content.ts'
 import type { SystemProfile } from '../../src/lib/api.ts'
 import { conventionProblems } from '../../src/lib/content.ts'
 import { resolveProfile } from '../../src/lib/profiles.ts'
@@ -27,7 +27,7 @@ const club: SystemProfile = {
   updatedBy: 'u',
 }
 
-const twoDiamonds = conventionBySlug('two-diamond-opening')!
+const alpha = conventionBySlug('fixture-alpha')!
 const marked = (c: Convention, brownSticker: Convention['brownSticker'], cardSlots = c.cardSlots): Convention => ({
   ...c,
   brownSticker,
@@ -44,79 +44,78 @@ describe('Brown Sticker forms', () => {
   })
 
   it('gives each marked convention the profile plays a form of its kind', () => {
-    const list = content(marked(twoDiamonds, 'opening'))
+    const list = content(marked(alpha, 'opening'))
     const forms = brownStickerForms(resolve(list))
-    expect(forms.map((f) => [f.template.id, f.convention.slug])).toEqual([['bsc-opening', 'two-diamond-opening']])
+    expect(forms.map((f) => [f.template.id, f.convention.slug])).toEqual([['bsc-opening', 'fixture-alpha']])
     // Not played: no form
-    const off = { ...club, adopted: { 'two-diamond-opening': 'off' as const } }
+    const off = { ...club, adopted: { 'fixture-alpha': 'off' as const } }
     expect(brownStickerForms(resolve(list, off))).toEqual([])
-    expect(formResolution(resolve(list, off), bscOpening, 'two-diamond-opening')).toBeUndefined()
+    expect(formResolution(resolve(list, off), bscOpening, 'fixture-alpha')).toBeUndefined()
     // Marked for the other form
-    expect(formResolution(resolve(list), bscOvercall, 'two-diamond-opening')).toBeUndefined()
+    expect(formResolution(resolve(list), bscOvercall, 'fixture-alpha')).toBeUndefined()
   })
 
   it('fills a form from its convention alone: the whole convention as Detailed Description by default', () => {
-    const list = content(marked(twoDiamonds, 'opening'))
-    const card = fillProfileCard(bscOpening, resolve(list), undefined, 'two-diamond-opening')!
+    const list = content(marked(alpha, 'opening'))
+    const card = fillProfileCard(bscOpening, resolve(list), undefined, 'fixture-alpha')!
     expect(card.problems).toEqual([])
     expect(Object.keys(card.cells)).toEqual(['bsc-opening.description'])
-    expect(card.cells['bsc-opening.description']!.text).toMatch(/\[Note 1\]/)
-    expect(card.notes).toHaveLength(1)
-    expect(card.notes[0]!.slug).toBe('two-diamond-opening')
+    // The made-up convention is short enough to fit the cell (a long one goes to a supplementary note)
+    expect(card.cells['bsc-opening.description']!.text).toContain('前言（測試）')
     // The other conventions' WBF slots do not reach the form
-    expect(card.cells['bsc-opening.description']!.sources.every((s) => s.slug === 'two-diamond-opening')).toBe(true)
+    expect(card.cells['bsc-opening.description']!.sources.every((s) => s.slug === 'fixture-alpha')).toBe(true)
     // The convention's WBF cells are still filled on the WBF card
     const wbf = fillProfileCard(profileTemplates[0]!, resolve(list))
-    expect(wbf.cells['wbf.openings.2D.description']).toBeDefined()
+    expect(wbf.cells['wbf.openings.1NT.responses']).toBeDefined()
   })
 
   it("fills the cells the convention's own entries name, and nothing else", () => {
     const list = content(
-      marked(twoDiamonds, 'opening', [
-        ...twoDiamonds.cardSlots!,
+      marked(alpha, 'opening', [
+        ...alpha.cardSlots!,
         'bsc-opening.bid = 2♦',
-        'bsc-opening.shows <- hands',
+        'bsc-opening.shows <- intro',
         'bsc-opening.rebids <- responses#0',
       ]),
     )
-    const card = fillProfileCard(bscOpening, resolve(list), undefined, 'two-diamond-opening')!
+    const card = fillProfileCard(bscOpening, resolve(list), undefined, 'fixture-alpha')!
     expect(card.problems).toEqual([])
     expect(card.cells['bsc-opening.bid']!.text).toBe('2♦')
-    expect(card.cells['bsc-opening.shows']!.sources[0]).toMatchObject({ slug: 'two-diamond-opening', sectionId: 'hands' })
+    expect(card.cells['bsc-opening.shows']!.sources[0]).toMatchObject({ slug: 'fixture-alpha', sectionId: 'intro' })
     expect(card.cells['bsc-opening.rebids']).toBeDefined()
     expect(card.cells['bsc-opening.description']).toBeUndefined()
   })
 
   it('keeps hand edits per convention, so two forms of one kind do not share them', () => {
-    expect(storedSlot(bscOpening, 'bsc-opening.names', 'two-diamond-opening')).toBe('bsc-opening.two-diamond-opening.names')
+    expect(storedSlot(bscOpening, 'bsc-opening.names', 'fixture-alpha')).toBe('bsc-opening.fixture-alpha.names')
     const stored = {
-      'bsc-opening.two-diamond-opening.names': { text: 'Amy - Bob' },
+      'bsc-opening.fixture-alpha.names': { text: 'Amy - Bob' },
       'bsc-opening.other.names': { text: 'Cat - Dan' },
       'wbf.header.players': { text: 'x' },
     }
-    expect(editsFor(bscOpening, stored, 'two-diamond-opening')).toEqual({ 'bsc-opening.names': { text: 'Amy - Bob' } })
-    const list = content(marked(twoDiamonds, 'opening'))
-    const card = fillProfileCard(bscOpening, resolve(list), stored, 'two-diamond-opening')!
+    expect(editsFor(bscOpening, stored, 'fixture-alpha')).toEqual({ 'bsc-opening.names': { text: 'Amy - Bob' } })
+    const list = content(marked(alpha, 'opening'))
+    const card = fillProfileCard(bscOpening, resolve(list), stored, 'fixture-alpha')!
     expect(card.cells['bsc-opening.names']).toMatchObject({ text: 'Amy - Bob', edited: true, origin: 'club' })
     expect(card.problems).toEqual([])
   })
 
   it('lists a form cell beside its section only when the convention is marked for it', () => {
-    const slots = ['bsc-opening.shows <- hands', 'wbf.openings.2D.description <- hands']
-    expect(cardPlaces(slots, 'hands', { slug: 'two-diamond-opening', brownSticker: 'opening' })).toEqual([
-      expect.objectContaining({ templateId: 'bsc-opening', path: 'bsc-opening/two-diamond-opening', slot: 'bsc-opening.shows' }),
+    const slots = ['bsc-opening.shows <- intro', 'wbf.openings.1NT.responses <- intro']
+    expect(cardPlaces(slots, 'intro', { slug: 'fixture-alpha', brownSticker: 'opening' })).toEqual([
+      expect.objectContaining({ templateId: 'bsc-opening', path: 'bsc-opening/fixture-alpha', slot: 'bsc-opening.shows' }),
       expect.objectContaining({ templateId: 'wbf', path: 'wbf' }),
     ])
-    expect(cardPlaces(slots, 'hands', { slug: 'two-diamond-opening' }).map((p) => p.templateId)).toEqual(['wbf'])
+    expect(cardPlaces(slots, 'intro', { slug: 'fixture-alpha' }).map((p) => p.templateId)).toEqual(['wbf'])
   })
 
   it('writes the overcall form, with its choice and the word after the blank, as a portrait Word file', async () => {
-    const list = content(marked(twoDiamonds, 'overcall'))
+    const list = content(marked(alpha, 'overcall'))
     const stored = {
-      'bsc-overcall.two-diamond-opening.applies': { option: 'always' },
-      'bsc-overcall.two-diamond-opening.vulnerability': { text: 'any' },
+      'bsc-overcall.fixture-alpha.applies': { option: 'always' },
+      'bsc-overcall.fixture-alpha.vulnerability': { text: 'any' },
     }
-    const card = fillProfileCard(bscOvercall, resolve(list), stored, 'two-diamond-opening')!
+    const card = fillProfileCard(bscOvercall, resolve(list), stored, 'fixture-alpha')!
     expect(card.cells['bsc-overcall.applies']!.option).toBe('always')
     const blob = await cardDocx(bscOvercall, card, { title: 'BSC', notesTitle: 'SUPPLEMENTARY NOTES' })
     const xml = await (await JSZip.loadAsync(await blob.arrayBuffer())).file('word/document.xml')!.async('string')
@@ -128,8 +127,8 @@ describe('Brown Sticker forms', () => {
   })
 
   it('accepts only an opening or an overcall as the mark', () => {
-    const categories = [twoDiamonds.category]
-    expect(conventionProblems(marked(twoDiamonds, 'opening'), categories)).toEqual([])
-    expect(conventionProblems({ ...twoDiamonds, brownSticker: 'response' }, categories)).toContain('棕標只能是開叫或蓋叫')
+    const categories = [alpha.category]
+    expect(conventionProblems(marked(alpha, 'opening'), categories)).toEqual([])
+    expect(conventionProblems({ ...alpha, brownSticker: 'response' }, categories)).toContain('棕標只能是開叫或蓋叫')
   })
 })

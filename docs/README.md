@@ -1,6 +1,6 @@
 # 特約原始文件對照表
 
-網站內容（`src/content/conventions/*.ts`）是從下列 Word 檔逐字轉錄的。修改內容時請以原始文件為準，並在網站上對照檢查。
+內建特約（private repo `GeneCLee6/TKU-BridgeHall-content` 的 `conventions/*.ts`，CONTENT_GUIDE.md §0）是從下列 Word 檔逐字轉錄的。修改內容時請以原始文件為準，並在網站上對照檢查。
 
 **原始 Word 檔不放在 repo。** 2026-10-26 起只存在維護者本機的 `C:淡江橋藝社制度原檔`（repo 歷史中的 .doc 已全部移除）；需要原文時向維護者索取，或在網站上把段落匯出。
 

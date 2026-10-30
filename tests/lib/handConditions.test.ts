@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import { tidyConvention } from '../../src/lib/content.ts'
 import {
   conditionsFrom,

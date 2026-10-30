@@ -89,9 +89,9 @@ describe('service worker', () => {
         if (responded) answered.push(path)
         else done()
       })
-    for (const path of ['/api/book/manifest', '/api/book/builtin/lebensohl', '/api/book/content/lebensohl', '/api/book/search-index', '/api/me', '/api/book/profiles'])
+    for (const path of ['/api/book/manifest', '/api/book/builtin/fixture-alpha', '/api/book/content/fixture-alpha', '/api/book/search-index', '/api/me', '/api/book/profiles'])
       await fetchEvent(path)
-    expect(answered).toEqual(['/api/book/manifest', '/api/book/builtin/lebensohl', '/api/book/content/lebensohl', '/api/book/search-index'])
+    expect(answered).toEqual(['/api/book/manifest', '/api/book/builtin/fixture-alpha', '/api/book/content/fixture-alpha', '/api/book/search-index'])
     await vi.waitFor(() => expect(cache.put).toHaveBeenCalledTimes(4))
   })
 

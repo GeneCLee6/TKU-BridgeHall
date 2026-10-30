@@ -3,12 +3,14 @@ import { cleanup } from '@testing-library/react'
 import { afterEach, beforeEach, vi } from 'vitest'
 
 /**
- * The built-in conventions come from the Worker (L0, e10-t20); here they come from src/content as
- * the Worker serves them once seeded, whatever a test does with `fetch`: the catalogue is the
- * manifest's `builtin` when a test's manifest has one, and these otherwise.
+ * The built-in conventions come from the Worker (L0, e10-t20); here they are served as the Worker
+ * would, whatever a test does with `fetch`: the made-up ones in tests/fixtures, or the club's in
+ * the Vitest project `content` (tests/fixtures/builtin.ts). The catalogue is the manifest's
+ * `builtin` when a test's manifest has one, and these otherwise.
  */
 vi.mock('../src/state/builtinSource.ts', async () => {
-  const { conventions } = await import('../src/content/index.ts')
+  const { builtinConventions } = await import('./fixtures/builtin.ts')
+  const conventions = await builtinConventions()
   const { conventionMeta } = await import('../src/lib/sections.ts')
   return {
     builtinSource: {

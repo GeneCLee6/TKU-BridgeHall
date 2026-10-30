@@ -1,18 +1,20 @@
 // Seeds the built-in conventions into TKU BridgeTable's Worker (L0, e10-t20; CONTENT_GUIDE.md §1).
-// The site no longer ships them: the Worker serves them to members only, and this repository
-// (private) is where their text lives. Run after adding or changing a convention in src/content:
+// The site no longer ships them: the Worker serves them to members only. Their text is in the
+// private repository GeneCLee6/TKU-BridgeHall-content, checked out into src/content-private/
+// (CONTENT_GUIDE.md §0; this repository is public). Run after adding or changing a convention there:
 //
 //   npm run seed-builtin                 # dry run: what would change, nothing is written
 //   npm run seed-builtin -- --apply      # back up what is there, write, then --verify
-//   npm run seed-builtin -- --verify     # compare what the Worker serves with src/content, byte for byte
+//   npm run seed-builtin -- --verify     # compare what the Worker serves with src/content-private, byte for byte
 //
 // Options: --base <url> (default: production's Worker; e.g. http://localhost:5173 for a local
 // BridgeTable, or a PR preview's Worker), --allow-remove (a built-in convention left out of
-// src/content/index.ts is removed; without it the Worker refuses). The seed token is
+// src/content-private/index.ts is removed; without it the Worker refuses). The seed token is
 // BOOK_SEED_TOKEN, from the environment or from .env.seed (never committed). Online versions are
 // never touched: a convention edited on the site keeps showing its online version.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { builtinPayload, compareBuiltin } from './builtin-payload.ts'
+import { privateConventionsOrExit } from './content-source.ts'
 
 const PRODUCTION = 'https://tku-bridge-table.genelee-pro.workers.dev'
 const args = process.argv.slice(2)
@@ -75,19 +77,19 @@ function print(report: Report) {
   console.log(`  order: ${report.order}, search index: ${report.searchIndex}`)
 }
 
-const payload = builtinPayload()
+const payload = builtinPayload(await privateConventionsOrExit())
 const seed = (dryRun: boolean) => call('PUT', '/api/book/builtin', { ...payload, dryRun, allowRemove: flag('allow-remove') })
 
 async function verify() {
   const served = await call('GET', '/api/book/builtin')
   const index = await call('GET', '/api/book/search-index')
-  const problems = compareBuiltin(served || '[]', index)
+  const problems = compareBuiltin(served || '[]', index, payload.conventions)
   if (problems.length) {
     console.error(`\nVerify FAILED at ${base}:`)
     for (const p of problems) console.error(`  ${p}`)
     process.exit(1)
   }
-  console.log(`\nVerified at ${base}: ${payload.conventions.length} built-in conventions and the search index are byte-identical to src/content.`)
+  console.log(`\nVerified at ${base}: ${payload.conventions.length} built-in conventions and the search index are byte-identical to src/content-private.`)
 }
 
 if (flag('verify') && !flag('apply')) {

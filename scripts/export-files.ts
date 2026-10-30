@@ -1,15 +1,15 @@
 // Turns GET /api/book/export into the backup's files (L1, e8-t12; CONTENT_GUIDE.md §6.5). Kept apart
 // from scripts/export-content.ts so tests/content/export.test.ts can check it without the Worker.
 //
-// The files mirror this repository's layout, so a backup drops straight into src/content (to run the
-// content tests on it, or to take an online version back into the built-in layer):
+// The files mirror the private content repository's layout (GeneCLee6/TKU-BridgeHall-content, which
+// is checked out into src/content-private/; CONTENT_GUIDE.md §0), so a backup drops straight onto it
+// (to run the content tests on it, or to take an online version back into the built-in layer):
 //
-//   src/content/conventions/<slug>.ts   one per convention members read (hidden ones left out)
-//   src/content/index.ts                the registry, in catalogue order
-//   src/content/categories.ts           only when the categories were edited online
-//   export.json                         the export itself, without its time (so an unchanged
-//                                       export changes no file)
-//   README.md                           what is in the backup: each convention's layer and version
+//   conventions/<slug>.ts   one per convention members read (hidden ones left out)
+//   index.ts                the registry, in catalogue order
+//   categories.ts           only when the categories were edited online
+//   export.json             the export itself, without its time (so an unchanged export changes no file)
+//   README.md               what is in the backup: each convention's layer and version
 import type { BookExport, ExportedOnline } from '../src/lib/bookExport.ts'
 
 /** The registry's name for a convention: its slug in camelCase (jacoby-2nt -> jacoby2nt) */
@@ -38,7 +38,7 @@ export function exportFiles(data: BookExport): Map<string, string> {
       ? `${item.builtin ? 'An online version over the built-in convention' : 'Online only'}: ${onlineNote(item.online)}.`
       : 'The built-in layer.'
     files.set(
-      `src/content/conventions/${item.slug}.ts`,
+      `conventions/${item.slug}.ts`,
       [
         `// ${GENERATED}`,
         `// ${layer}`,
@@ -51,7 +51,7 @@ export function exportFiles(data: BookExport): Map<string, string> {
   }
 
   files.set(
-    'src/content/index.ts',
+    'index.ts',
     [
       `// ${GENERATED}`,
       "import type { Convention } from '../types/convention.ts'",
@@ -65,8 +65,9 @@ export function exportFiles(data: BookExport): Map<string, string> {
       'export const conventionBySlug = (slug: string): Convention | undefined =>',
       '  conventions.find((c) => c.slug === slug)',
       '',
-      "export { categories } from './categories.ts'",
-      "export { references } from './references.ts'",
+      // At src/content-private/: BridgeHall's own categories unless they were edited online
+      data.categories.length ? "export { categories } from './categories.ts'" : "export { categories } from '../content/categories.ts'",
+      "export { references } from '../content/references.ts'",
       '',
     ].join('\n'),
   )
@@ -74,7 +75,7 @@ export function exportFiles(data: BookExport): Map<string, string> {
   if (data.categories.length) {
     const categories = [...data.categories].sort((a, b) => a.order - b.order)
     files.set(
-      'src/content/categories.ts',
+      'categories.ts',
       [
         `// ${GENERATED} The categories as edited online.`,
         "import type { Category } from '../types/convention.ts'",
@@ -112,11 +113,11 @@ function readme(data: BookExport): string {
     '',
   ]
   if (data.hidden.length) {
-    lines.push('Hidden online (not in src/content):', '')
+    lines.push('Hidden online (not in conventions/):', '')
     for (const h of data.hidden) lines.push(`- \`${h.slug}\`${h.builtin ? ' (built-in)' : ''}: ${onlineNote(h.online)}`)
     lines.push('')
   }
-  lines.push(data.categories.length ? 'The categories were edited online: src/content/categories.ts.' : 'The categories were never edited online: BridgeHall\'s own src/content/categories.ts applies.', '')
+  lines.push(data.categories.length ? 'The categories were edited online: categories.ts.' : 'The categories were never edited online: BridgeHall\'s own src/content/categories.ts applies.', '')
   return lines.join('\n')
 }
 

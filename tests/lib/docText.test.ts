@@ -16,13 +16,13 @@ function chars(text: string) {
 
 describe('text out of .doc characters', () => {
   it('turns paragraph marks into lines and keeps bold as **…**', () => {
-    expect(charsToText(chars('*標題*\r1NT 2D ??\rPASS – 什麼都沒有\r'))).toBe('**標題**\n1NT 2D ??\nPASS – 什麼都沒有')
+    expect(charsToText(chars('*標題*\r1NT 2D ??\rPASS – 測試說明\r'))).toBe('**標題**\n1NT 2D ??\nPASS – 測試說明')
     // Bold over several paragraphs is marked line by line
     expect(charsToText(chars('*一\r二*\r'))).toBe('**一**\n**二**')
   })
 
   it('writes table rows as | … |', () => {
-    expect(charsToText(chars('開叫 1C\x07：\x0713-21點\x07\x07開叫 1D\x07：\x07\x07'))).toBe('| 開叫 1C | ： | 13-21點 |\n| 開叫 1D | ： |')
+    expect(charsToText(chars('測試 1C\x07：\x07測試點力\x07\x07測試 1D\x07：\x07\x07'))).toBe('| 測試 1C | ： | 測試點力 |\n| 測試 1D | ： |')
   })
 
   it('drops field codes but keeps their results, and drops pictures and anchors', () => {
@@ -58,15 +58,15 @@ describe('text out of .docx', () => {
 
   it('marks headings, list items, bold and tables', () => {
     const body = [
-      p(r('1NT的答叫'), '<w:pStyle w:val="1"/>'),
-      p(r('答叫原則'), '<w:pStyle w:val="2"/>'),
-      p(r('二線新花為5張+不迫叫') + r('，敵叫花色無擋', true)),
+      p(r('測試標題'), '<w:pStyle w:val="1"/>'),
+      p(r('測試小標'), '<w:pStyle w:val="2"/>'),
+      p(r('測試段落+不迫叫') + r('，測試粗體', true)),
       p(r('pass束叫'), '<w:numPr><w:ilvl w:val="1"/><w:numId w:val="3"/></w:numPr>'),
       p(`<w:r><w:sym w:font="Symbol" w:char="F0AA"/></w:r>${r('K')}`),
       `<w:tbl><w:tr><w:tc>${p(r('2H'))}</w:tc><w:tc>${p(r('P/C'))}</w:tc></w:tr></w:tbl>`,
     ].join('')
     expect(docxToText(docx(body))).toBe(
-      '# 1NT的答叫\n## 答叫原則\n二線新花為5張+不迫叫**，敵叫花色無擋**\n  - pass束叫\n♠K\n| 2H | P/C |',
+      '# 測試標題\n## 測試小標\n測試段落+不迫叫**，測試粗體**\n  - pass束叫\n♠K\n| 2H | P/C |',
     )
   })
 })

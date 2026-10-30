@@ -35,13 +35,62 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      # The tests in tests/ use made-up conventions (tests/fixtures): the club's are not in this repository
       - name: Unit and component tests (Vitest)
         run: npm run test
 
       - name: Production build
         run: npm run build
 
-      - name: Performance budget (bundle size, gzip)
+      # The club's built-in conventions are in the private GeneCLee6/TKU-BridgeHall-content
+      # (CONTENT_GUIDE.md §0). With the secret CONTENT_REPO_KEY (the private key of a read-only deploy
+      # key of that repository) it is checked out into src/content-private/, and its tests on the real
+      # text run as the Vitest project `content`, with the budget's no-convention-text-in-dist check.
+      # This repository and its logs are public: those steps print file names, test names and counts,
+      # never the text. Without the secret (not set yet, forks, Dependabot) they are skipped with a notice.
+      - name: Is there a key for the private content?
+        id: content
+        env:
+          HAS_KEY: ${{ secrets.CONTENT_REPO_KEY != '' }}
+        run: |
+          if [ "$HAS_KEY" = "true" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice title=Real-content tests skipped::The secret CONTENT_REPO_KEY is not set, so the private GeneCLee6/TKU-BridgeHall-content cannot be checked out: the tests on the club's conventions and the budget's no-convention-text-in-dist check are skipped (CONTENT_GUIDE.md §0)."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out the private content into src/content-private/
+        if: steps.content.outputs.present == 'true'
+        uses: actions/checkout@v7
+        with:
+          repository: GeneCLee6/TKU-BridgeHall-content
+          ssh-key: ${{ secrets.CONTENT_REPO_KEY }}
+          path: src/content-private
+          persist-credentials: false
+
+      - name: Real-content checks (type check, lint, Vitest project `content`; quiet)
+        if: steps.content.outputs.present == 'true'
+        run: |
+          set +e
+          npx tsc -b > "$RUNNER_TEMP/tsc.log" 2>&1
+          tsc=$?
+          # Where, not what: a type error can quote the text
+          grep -oE '^[^ ]+\([0-9]+,[0-9]+\): error TS[0-9]+' "$RUNNER_TEMP/tsc.log"
+          npx oxlint src/content-private > "$RUNNER_TEMP/oxlint.log" 2>&1
+          lint=$?
+          [ "$lint" = "0" ] || echo "oxlint failed on src/content-private: $(tail -n 1 "$RUNNER_TEMP/oxlint.log" | grep -oE 'Found [0-9]+ warnings? and [0-9]+ errors?')"
+          npx vitest run --project content --silent --reporter=json --outputFile="$RUNNER_TEMP/content-tests.json" > /dev/null 2>&1
+          tests=$?
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))
+            console.log(`Real-content tests: ${r.numPassedTests} passed, ${r.numFailedTests} failed, ${r.numPendingTests} skipped`)
+            for (const f of r.testResults) for (const t of f.assertionResults) if (t.status === "failed") console.log(`  failed: ${t.fullName}`)
+            if (!r.numTotalTests) process.exit(1)
+          ' "$RUNNER_TEMP/content-tests.json" || { echo "The real-content tests did not report (exit $tests)"; tests=1; }
+          [ "$tsc" = "0" ] && [ "$lint" = "0" ] && [ "$tests" = "0" ]
+
+      - name: Performance budget (bundle size, gzip; no convention text in dist with the private content)
         run: npm run budget
 
   # e9-t12, e9-t13: the browser tests (playwright.config.ts). Screenshots of the reading pages in the
@@ -96,7 +145,7 @@ jobs:
         run: npm run build
 
       # Config in lighthouserc.json: serves dist with `vite preview` (no Worker, so signed out) and audits /login
-      # and /c/jacoby-2nt, which goes to the login page too (the whole site needs an account, 2026-10-29).
+      # and /c/fixture-alpha, which goes to the login page too (the whole site needs an account, 2026-10-29).
       # Accessibility < 0.95 fails the job; performance and best practices only warn (runner noise).
       - name: Lighthouse CI
         run: npx --yes @lhci/cli@0.15.1 autorun

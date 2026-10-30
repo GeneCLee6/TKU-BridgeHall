@@ -1,4 +1,4 @@
-import { conventionBySlug } from '../../src/content/index.ts'
+import { conventionBySlug } from '../fixtures/content.ts'
 import { generateQuizzes, type Quiz } from '../../src/lib/quiz.ts'
 import {
   addLocalRound,
@@ -15,8 +15,8 @@ import {
   type QuizRound,
 } from '../../src/lib/quizRecords.ts'
 
-const lebensohl = conventionBySlug('lebensohl')!
-const made = generateQuizzes([lebensohl], 'club').quizzes
+const alpha = conventionBySlug('fixture-alpha')!
+const made = generateQuizzes([alpha], 'club').quizzes
 const first = made[0]
 
 const round = (at: number, answers: [string, boolean][], profileId = 'club'): QuizRound => ({
@@ -82,8 +82,8 @@ describe('rounds kept in this browser (signed out)', () => {
     expect(roundOf('club', [{ quiz: first, picked: first.answer }, { quiz: made[1], picked: 'x' }])).toEqual({
       profileId: 'club',
       answers: [
-        { id: first.id, slug: 'lebensohl', right: true },
-        { id: made[1].id, slug: 'lebensohl', right: false },
+        { id: first.id, slug: 'fixture-alpha', right: true },
+        { id: made[1].id, slug: 'fixture-alpha', right: false },
       ],
     })
   })
@@ -94,7 +94,7 @@ describe('applyFixes (幹部修題, e6-t06)', () => {
   const find = (quizzes: Quiz[], id: string) => quizzes.find((q) => q.id === id)!
 
   it('leaves the questions as made without fixes', () => {
-    expect(applyFixes(made, [], [lebensohl], 'club')).toEqual({ quizzes: made, stale: [] })
+    expect(applyFixes(made, [], [alpha], 'club')).toEqual({ quizzes: made, stale: [] })
   })
 
   it('takes a question out, or changes its answer while the text is as it was', () => {
@@ -102,7 +102,7 @@ describe('applyFixes (幹部修題, e6-t06)', () => {
       { source: 'auto', id: first.id, basis: basisOf(first), disabled: true, ...by },
       { source: 'auto', id: made[1].id, basis: basisOf(made[1]), answer: '幹部改的正解', ...by },
     ]
-    const { quizzes, stale } = applyFixes(made, fixes, [lebensohl], 'club')
+    const { quizzes, stale } = applyFixes(made, fixes, [alpha], 'club')
     expect(stale).toEqual([])
     expect(find(quizzes, first.id).disabled).toBe(true)
     const changed = find(quizzes, made[1].id)
@@ -117,8 +117,8 @@ describe('applyFixes (幹部修題, e6-t06)', () => {
 
   it('does not apply a fix written against other text, or to a question no longer made', () => {
     const old: QuizFix = { source: 'auto', id: first.id, basis: { call: first.call!, answer: '舊的原文' }, disabled: true, ...by }
-    const gone: QuizFix = { source: 'auto', id: 'lebensohl/nope/0/0', basis: { call: '2C', answer: 'x' }, disabled: true, ...by }
-    const { quizzes, stale } = applyFixes(made, [old, gone], [lebensohl], 'club')
+    const gone: QuizFix = { source: 'auto', id: 'fixture-alpha/nope/0/0', basis: { call: '2C', answer: 'x' }, disabled: true, ...by }
+    const { quizzes, stale } = applyFixes(made, [old, gone], [alpha], 'club')
     expect(find(quizzes, first.id)).toEqual(first)
     expect(stale.map((f) => f.id)).toEqual([first.id, gone.id])
   })
@@ -127,11 +127,11 @@ describe('applyFixes (幹部修題, e6-t06)', () => {
     const sectionId = first.sectionId
     const manual: QuizFix = {
       source: 'manual',
-      id: `lebensohl/${sectionId}/m-ab12cd34`,
+      id: `fixture-alpha/${sectionId}/m-ab12cd34`,
       quiz: {
         kind: 'call',
         profileId: 'club',
-        slug: 'lebensohl',
+        slug: 'fixture-alpha',
         sectionId,
         hand: { spades: 'KQ43', hearts: 'J54', diamonds: 'A32', clubs: '432' },
         answer: '2NT',
@@ -139,18 +139,18 @@ describe('applyFixes (幹部修題, e6-t06)', () => {
       },
       ...by,
     }
-    const here = applyFixes(made, [manual], [lebensohl], 'club')
+    const here = applyFixes(made, [manual], [alpha], 'club')
     const added = here.quizzes.at(-1)!
     expect(added).toMatchObject({ id: manual.id, kind: 'call', source: 'manual', answer: '2NT', hand: { spades: 'KQ43' } })
     expect(added.trail).toEqual(first.trail)
-    expect(applyFixes(made, [manual], [lebensohl], 'team-1').quizzes).toEqual(made)
+    expect(applyFixes(made, [manual], [alpha], 'team-1').quizzes).toEqual(made)
     const moved = { ...manual, quiz: { ...manual.quiz, sectionId: 'no-such-section' } } as QuizFix
-    expect(applyFixes(made, [moved], [lebensohl], 'club').stale).toEqual([moved])
+    expect(applyFixes(made, [moved], [alpha], 'club').stale).toEqual([moved])
   })
 
   it('names a hand-made question by its place', () => {
-    const id = manualId('lebensohl', 'basic', () => 0.5)
-    expect(id).toMatch(/^lebensohl\/basic\/m-[a-z0-9]{8}$/)
+    const id = manualId('fixture-alpha', 'basic', () => 0.5)
+    expect(id).toMatch(/^fixture-alpha\/basic\/m-[a-z0-9]{8}$/)
     expect(isManualId(id)).toBe(true)
     expect(isManualId(first.id)).toBe(false)
   })
@@ -159,16 +159,16 @@ describe('applyFixes (幹部修題, e6-t06)', () => {
 describe('fixes to call questions (e6-t07)', () => {
   it('writes a fix against the example’s hand and answer, and stops applying it when either changes', async () => {
     const { generateQuizzes } = await import('../../src/lib/quiz.ts')
-    const { conventions } = await import('../../src/content/index.ts')
+    const { conventions } = await import('../fixtures/content.ts')
     const { applyFixes, basisOf } = await import('../../src/lib/quizRecords.ts')
     const made = generateQuizzes(conventions, 'club').quizzes.filter((q) => q.kind === 'call')
     const quiz = made[0]
-    expect(basisOf(quiz)).toEqual({ call: 'T4.9863.9762.753', answer: '1H' })
+    expect(basisOf(quiz)).toEqual({ call: 'KQJ32.32.A32.432', answer: '2H' })
     const fix = { source: 'auto' as const, id: quiz.id, basis: basisOf(quiz), answer: '1S', by: 'ed', at: 1 }
     expect(applyFixes([quiz], [fix], conventions, 'club').quizzes[0].answer).toBe('1S')
     const otherHand = { ...quiz, hand: { ...quiz.hand!, clubs: '752' } }
     const out = applyFixes([otherHand], [fix], conventions, 'club')
-    expect(out.quizzes[0].answer).toBe('1H')
+    expect(out.quizzes[0].answer).toBe('2H')
     expect(out.stale).toEqual([fix])
   })
 })

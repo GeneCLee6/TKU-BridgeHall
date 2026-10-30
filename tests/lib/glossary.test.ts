@@ -7,7 +7,7 @@ import type { Term } from '../../src/types/glossary.ts'
 const terms: Term[] = [
   { term: 'GF', aliases: ['成局迫叫'], definition: '測試定義甲' },
   { term: '2NT', aliases: [], definition: '測試定義乙' },
-  { term: 'Jacoby 2NT', aliases: [], definition: '測試定義丙', see: 'jacoby-2nt' },
+  { term: 'Jacoby 2NT', aliases: [], definition: '測試定義丙', see: 'fixture-alpha' },
   { term: '束叫', aliases: [], definition: '測試定義丁' },
 ]
 const compiled = compileGlossary(terms)
@@ -16,7 +16,7 @@ const marked = (text: string) => split(text).filter((p) => p.term).map((p) => p.
 
 describe('glossary matching (e4-t06)', () => {
   it('never changes the text', () => {
-    const text = '三線新花為5張+GF，10+ HCP。2NT為人為性叫品，pass束叫。'
+    const text = '測試句子：GF，10+ HCP。2NT 是測試叫品，pass束叫。'
     expect(split(text).map((p) => p.text).join('')).toBe(text)
     expect(marked(text)).toEqual(['GF', '2NT', '束叫'])
   })
@@ -74,8 +74,8 @@ describe('the glossary list (e4-t05)', () => {
 describe('glossary editor drafts (e4-t07)', () => {
   const row = (term: string, aliases = '', definition = '測試', see = '') => ({ term, aliases, definition, see })
   it('turns rows into terms', () => {
-    expect(draftsToTerms([row(' GF ', '成局迫叫，GF force, ', ' 測試 ', 'jacoby-2nt')])).toEqual([
-      { term: 'GF', aliases: ['成局迫叫', 'GF force'], definition: '測試', see: 'jacoby-2nt' },
+    expect(draftsToTerms([row(' GF ', '成局迫叫，GF force, ', ' 測試 ', 'fixture-alpha')])).toEqual([
+      { term: 'GF', aliases: ['成局迫叫', 'GF force'], definition: '測試', see: 'fixture-alpha' },
     ])
   })
   it('refuses incomplete rows and names used twice', () => {

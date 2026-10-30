@@ -1,4 +1,4 @@
-import { categories, conventions } from '../../src/content/index.ts'
+import { categories, conventions } from '../fixtures/content.ts'
 import type { BookEntry, BookEntrySummary } from '../../src/lib/api.ts'
 import {
   conventionProblems,
@@ -11,7 +11,7 @@ import { conventionMeta } from '../../src/lib/sections.ts'
 import type { Convention, ConventionMeta } from '../../src/types/convention.ts'
 
 const ids = categories.map((c) => c.id as string)
-const lebensohl = conventions.find((c) => c.slug === 'lebensohl')!
+const alpha = conventions.find((c) => c.slug === 'fixture-alpha')!
 const metas = conventions.map(conventionMeta)
 
 const summary = (slug: string, meta: unknown, extra: Partial<BookEntrySummary> = {}): BookEntrySummary => ({
@@ -35,43 +35,43 @@ const entry = (slug: string, convention: unknown): BookEntry => ({
 
 describe('online content over the bundle', () => {
   it('replaces, adds and hides conventions, keeping the bundled order', () => {
-    const edited = conventionMeta({ ...lebensohl, summary: '線上改過的摘要' })
-    const added = conventionMeta({ ...lebensohl, slug: 'new-one', nameZh: '新特約' })
+    const edited = conventionMeta({ ...alpha, summary: '線上改過的摘要' })
+    const added = conventionMeta({ ...alpha, slug: 'new-one', nameZh: '新特約' })
     const merged = mergeManifest(
       metas,
       [
-        summary('lebensohl', edited, { version: 3, bundledUpdated: lebensohl.updated }),
+        summary('fixture-alpha', edited, { version: 3, bundledUpdated: alpha.updated }),
         summary('new-one', added, { createdAt: 5 }),
-        summary('jacoby-2nt', null),
+        summary('fixture-beta', null),
       ],
       ids,
     )
     const slugs = merged.conventions.map((c) => c.slug)
-    expect(slugs.indexOf('lebensohl')).toBe(conventions.findIndex((c) => c.slug === 'lebensohl'))
-    expect(merged.conventions.find((c) => c.slug === 'lebensohl')!.summary).toBe('線上改過的摘要')
+    expect(slugs.indexOf('fixture-alpha')).toBe(conventions.findIndex((c) => c.slug === 'fixture-alpha'))
+    expect(merged.conventions.find((c) => c.slug === 'fixture-alpha')!.summary).toBe('線上改過的摘要')
     expect(slugs.at(-1)).toBe('new-one')
-    expect(slugs).not.toContain('jacoby-2nt')
+    expect(slugs).not.toContain('fixture-beta')
     expect(merged.conventions).toHaveLength(conventions.length)
-    expect(merged.online.get('lebensohl')).toMatchObject({ version: 3, added: false, hidden: false, updatedBy: 'amy' })
+    expect(merged.online.get('fixture-alpha')).toMatchObject({ version: 3, added: false, hidden: false, updatedBy: 'amy' })
     expect(merged.online.get('new-one')).toMatchObject({ added: true })
-    expect(merged.online.get('jacoby-2nt')).toMatchObject({ hidden: true })
+    expect(merged.online.get('fixture-beta')).toMatchObject({ hidden: true })
   })
 
   it('leaves out broken entries instead of breaking the page', () => {
-    const lebensohlMeta = metas.find((c) => c.slug === 'lebensohl')!
+    const alphaMeta = metas.find((c) => c.slug === 'fixture-alpha')!
     const merged = mergeManifest(
       metas,
-      [summary('lebensohl', { slug: 'lebensohl' }), summary('other', { ...lebensohlMeta, slug: 'mismatch' })],
+      [summary('fixture-alpha', { slug: 'fixture-alpha' }), summary('other', { ...alphaMeta, slug: 'mismatch' })],
       ids,
     )
-    expect(merged.conventions.find((c) => c.slug === 'lebensohl')).toBe(lebensohlMeta)
-    expect(merged.skipped.map((s) => s.slug)).toEqual(['lebensohl', 'other'])
+    expect(merged.conventions.find((c) => c.slug === 'fixture-alpha')).toBe(alphaMeta)
+    expect(merged.skipped.map((s) => s.slug)).toEqual(['fixture-alpha', 'other'])
   })
 
   it('checks an online convention when it is loaded', () => {
-    const edited: Convention = { ...lebensohl, summary: '線上改過的摘要' }
-    expect(onlineConvention(entry('lebensohl', edited), ids)).toEqual({ convention: edited })
-    expect(onlineConvention(entry('lebensohl', { slug: 'lebensohl' }), ids)).toHaveProperty('problem')
+    const edited: Convention = { ...alpha, summary: '線上改過的摘要' }
+    expect(onlineConvention(entry('fixture-alpha', edited), ids)).toEqual({ convention: edited })
+    expect(onlineConvention(entry('fixture-alpha', { slug: 'fixture-alpha' }), ids)).toHaveProperty('problem')
     expect(onlineConvention(entry('other', edited), ids)).toEqual({ problem: '網址代稱不符' })
   })
 })
@@ -87,7 +87,7 @@ describe('checking a convention', () => {
 
   it('reports what an editor has to fix, in words', () => {
     const broken = {
-      ...lebensohl,
+      ...alpha,
       slug: 'Bad Slug',
       nameZh: '',
       category: 'nowhere',
@@ -107,13 +107,13 @@ describe('checking a convention', () => {
   })
 
   it('checks kind, level and prerequisites, which are all optional', () => {
-    const { kind: _kind, level: _level, ...unclassified } = lebensohl
+    const { kind: _kind, level: _level, ...unclassified } = alpha
     expect(conventionProblems(unclassified, ids)).toEqual([])
     const broken = {
-      ...lebensohl,
+      ...alpha,
       kind: 'gadget',
       level: 'expert',
-      prerequisites: ['lebensohl'],
+      prerequisites: ['fixture-alpha'],
       cardSlots: 'top',
       sections: [{ id: 'a', title: 'A', level: 'hard', blocks: [] }],
     }
@@ -124,15 +124,15 @@ describe('checking a convention', () => {
       '制度卡位置要是文字清單',
       'A：程度不存在',
     ])
-    expect(conventionProblems({ ...lebensohl, prerequisites: [1] }, ids)).toEqual(['前置特約要是網址代稱清單'])
-    expect(tidyConvention({ ...lebensohl, prerequisites: [' '], cardSlots: [...lebensohl.cardSlots!, ' '] })).toEqual(
-      lebensohl,
+    expect(conventionProblems({ ...alpha, prerequisites: [1] }, ids)).toEqual(['前置特約要是網址代稱清單'])
+    expect(tidyConvention({ ...alpha, prerequisites: [' '], cardSlots: [...alpha.cardSlots!, ' '] })).toEqual(
+      alpha,
     )
   })
 
   it('warns about calls it cannot draw and suit letters left in meanings', () => {
     const draft: Convention = {
-      ...lebensohl,
+      ...alpha,
       sections: [
         {
           id: 'a',
@@ -151,7 +151,7 @@ describe('checking a convention', () => {
   })
 
   it('checks and tidies the 導讀 block (e4-t04)', () => {
-    const withIntro = (block: unknown) => ({ ...lebensohl, sections: [{ id: 'a', title: 'A', blocks: [block] }] })
+    const withIntro = (block: unknown) => ({ ...alpha, sections: [{ id: 'a', title: 'A', blocks: [block] }] })
     expect(conventionProblems(withIntro({ kind: 'intro', why: 'w', pitfalls: ['p'] }), ids)).toEqual([])
     expect(conventionProblems(withIntro({ kind: 'intro' }), ids)).toEqual([])
     expect(conventionProblems(withIntro({ kind: 'intro', why: 1 }), ids)).toEqual(['A：導讀格式不正確'])
@@ -169,7 +169,7 @@ describe('checking a convention', () => {
 
   it('drops empty optional fields when tidying', () => {
     const messy: Convention = {
-      ...lebensohl,
+      ...alpha,
       aliases: [' '],
       source: { title: 'x', note: '' },
       sections: [
@@ -200,7 +200,7 @@ describe('checking a convention', () => {
       ],
     }
     expect(tidyConvention(messy)).toEqual({
-      ...lebensohl,
+      ...alpha,
       aliases: undefined,
       source: { title: 'x' },
       sections: [

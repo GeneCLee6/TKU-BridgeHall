@@ -1,4 +1,4 @@
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import { changedSectionIds, countDiff, diffConventions, inlineDiff, isEmptyDiff } from '../../src/lib/diff.ts'
 import type { Convention } from '../../src/types/convention.ts'
 
@@ -14,7 +14,7 @@ const base: Convention = {
   sections: [
     {
       id: 'one',
-      title: '開叫1NT時',
+      title: '測試段落甲',
       blocks: [
         { kind: 'paragraph', text: '15-17點。' },
         {
@@ -77,7 +77,7 @@ describe('diffConventions', () => {
   it('reports added, removed, moved and retitled sections, each in its place', () => {
     const after = clone()
     const [one, two] = after.sections
-    one.title = '開叫 1NT'
+    one.title = '測試 段落甲'
     // one-a moves to the top level after two; a new section comes first
     const child = one.children!.pop()!
     after.sections = [{ id: 'zero', title: '前言', summary: '新的' }, one, two, child]
@@ -88,8 +88,8 @@ describe('diffConventions', () => {
       ['one-a', 'changed'],
     ])
     expect(d.sections[0].lines).toEqual([{ op: 'added', place: { at: 'section', field: 'summary' }, after: '新的' }])
-    expect(d.sections[1].lines).toEqual([{ op: 'changed', place: { at: 'section', field: 'title' }, before: '開叫1NT時', after: '開叫 1NT' }])
-    expect(d.sections[2].lines[0]).toEqual({ op: 'removed', place: { at: 'section', field: 'place' }, before: '開叫1NT時' })
+    expect(d.sections[1].lines).toEqual([{ op: 'changed', place: { at: 'section', field: 'title' }, before: '測試段落甲', after: '測試 段落甲' }])
+    expect(d.sections[2].lines[0]).toEqual({ op: 'removed', place: { at: 'section', field: 'place' }, before: '測試段落甲' })
 
     const gone = clone()
     gone.sections = [gone.sections[1]]
@@ -130,11 +130,11 @@ describe('diffConventions', () => {
 
 describe('inlineDiff', () => {
   it('marks the characters that differ', () => {
-    expect(inlineDiff('12-14點', '11-14點')).toEqual([
+    expect(inlineDiff('12-19點', '11-19點')).toEqual([
       { op: 'same', text: '1' },
       { op: 'removed', text: '2' },
       { op: 'added', text: '1' },
-      { op: 'same', text: '-14點' },
+      { op: 'same', text: '-19點' },
     ])
     expect(inlineDiff('', '新')).toEqual([{ op: 'added', text: '新' }])
     expect(inlineDiff('同', '同')).toEqual([{ op: 'same', text: '同' }])

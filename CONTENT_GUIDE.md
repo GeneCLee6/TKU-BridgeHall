@@ -5,7 +5,8 @@
 **內容在哪裡**（2026-10-29 起，L0）：特約內容只給登入的社員，存在淡江牌桌的 Worker，**不在網站的靜態檔裡**（`npm run budget` 會擋）。所以：
 
 - **新增特約，平常用網站**：「新增特約」（線上編輯，6.1）或「匯入檔案」（AI 整理，6.2），送審、發布就上線，不用動 repo。
-- **內建特約**是 `src/content/conventions/*.ts`（這個 repo 是公開的，2026-10-30 起；原文在 repo 裡看得到）：它們是寫入牌桌的種子，也是測試資料。新增或修改它們之後，要跑 `npm run seed-builtin` 寫到牌桌才會上線（第 4 節）。
+- **內建特約**的原文在 **private repo `GeneCLee6/TKU-BridgeHall-content`**（2026-10-30 起；這個 repo 是公開的，原文不放這裡）：`conventions/*.ts` 是寫入牌桌的種子，也是真內容測試的資料。取得方式見第 0 節。新增或修改它們之後，要在這裡跑 `npm run seed-builtin` 寫到牌桌才會上線（第 4 節）。
+- 這個公開 repo 的測試用 `tests/fixtures/conventions/` 的**虛構特約**（明寫「測試」「虛構」，不是社團制度）；不要在測試、文件或截圖裡引用真的特約原文。
 - 淡江牌桌的 repo 是公開的，**特約內容絕對不要放進牌桌 repo**。
 
 ## 0. 準備
@@ -13,6 +14,40 @@
 1. 安裝 Node.js 22 與 Git。
 2. 取得專案：`git clone https://github.com/GeneCLee6/TKU-BridgeHall.git`，進入資料夾後 `npm install`。
 3. `npm run dev`，瀏覽器打開 http://localhost:5174 ，邊改邊看。
+4. **內建特約原文**（要有 private repo 的權限）：在專案根目錄
+
+   ```bash
+   git clone https://github.com/GeneCLee6/TKU-BridgeHall-content.git src/content-private
+   ```
+
+   `src/content-private/` 已在 `.gitignore`，不會 commit 進這個公開 repo；那個 repo 的檔案用相對路徑引用這裡的 `src/types`、`src/lib`，所以位置要一樣（想放別處就建 junction：`mklink /J src\content-private <別處>`）。有了它：`npm test` 多跑真內容的測試（Vitest 專案 `content`，private repo 的 `tests/`）、`npm run budget` 檢查 `dist/` 沒有特約文字、`npm run seed-builtin`／`npm run quiz-bank` 才能用。沒有它，這些測試與檢查跳過（`seed-builtin`、`quiz-bank` 會說要先 clone）。改內容在 `src/content-private/` 裡開分支、commit、對那個 repo 發 PR。
+
+### 0.1 CI 讀 private repo（設定一次，要 repo 管理員）
+
+CI 的 `verify` job 用 secret **`CONTENT_REPO_KEY`** 把 private repo checkout 到 `src/content-private/`，跑真內容測試與 `dist/` 特約文字檢查；log 只印檔名、測試名稱與數量。沒設 secret 時這些步驟跳過，log 有 notice。設定：
+
+1. 產生一把專用的 SSH key（不要設密碼，也不要拿去別處用）：
+
+   ```bash
+   ssh-keygen -t ed25519 -C "TKU-BridgeHall CI (read-only content)" -N "" -f content-repo-key
+   ```
+
+2. 公鑰加到 private repo 當**唯讀** deploy key：
+
+   ```bash
+   gh repo deploy-key add content-repo-key.pub --repo GeneCLee6/TKU-BridgeHall-content --title "TKU-BridgeHall CI (read-only)"
+   ```
+
+   （不加 `--allow-write`；網頁上是 private repo 的 Settings → Deploy keys → Add deploy key，不勾 Allow write access。）
+3. 私鑰設成橋館 repo 的 Actions secret：
+
+   ```bash
+   gh secret set CONTENT_REPO_KEY --repo GeneCLee6/TKU-BridgeHall < content-repo-key
+   ```
+
+4. 刪掉本機的 `content-repo-key`、`content-repo-key.pub`。到 Actions 重跑一次 CI，`verify` 的「Real-content checks」應該有跑（不再是 notice）。
+
+Fork 與 Dependabot 的 PR 拿不到 secret，照樣跳過。
 
 ## 1. 轉錄原則（最重要）
 
@@ -26,7 +61,7 @@
 
 ## 2. 建立檔案
 
-在 `src/content/conventions/` 新增 `<slug>.ts`。slug 用小寫英文與連字號，例如 `jacoby-transfer`。範本：
+在 private repo（`src/content-private/`）的 `conventions/` 新增 `<slug>.ts`。slug 用小寫英文與連字號，例如 `jacoby-transfer`。範本：
 
 ```ts
 import type { Auction, Convention } from '../../types/convention.ts'
@@ -129,76 +164,9 @@ export const jacobyTransfer: Convention = {
 - 填卡時：叫品表濃縮成 `叫品=意義`，條列與段落照原文（去掉粗體記號），一行的格子用「; 」相連，多行的格子一條一行。放不下的就寫「特約英文名 [Note n]」（WBF 卡；簡易卡用中文名），全文放到附頁；制度集不採用的特約不填，覆寫過的列填覆寫後的意義。
 - **不得自創填入文字**：內建特約只寫格子與出處（加上打勾、選項），不寫自己濃縮或翻譯的文字；對應有疑義的不填，列在下面「留空」。`tests/cards/fill.test.ts` 會檢查每一條都讀得懂、格子存在、出處找得到。
 
-#### 目前的對應（2026-10-25，使用者暫定核可，有問題再改）
+#### 目前的對應與留空的格子
 
-WBF 卡（2.19）：
-
-| 格子 | 出處 |
-| --- | --- |
-| GENERAL APPROACH AND STYLE | 淡江自然制總覽 · 現行制度與本講義的差異（第 1 則說明） |
-| 1NT Openings: | 1NT的答叫 · 開叫1NT |
-| SPECIAL BIDS THAT MAY REQUIRE DEFENCE | 雷本索特約（全文）；對抗不尋常2NT · 如何對抗敵方Unusual 2NT；好壞2NT（全文） |
-| SPECIAL FORCING PASS SEQUENCES | 開叫2♣、弱二與阻塞叫 · 開叫2♣被敵方插叫之後（注意事項第 1 項：任一方 PASS 皆為迫叫） |
-| OVERCALLS | 競叫篇與技光 · 蓋叫、同伴蓋叫後的答叫 |
-| JUMP OVERCALLS（Unusual NT） | 對抗不尋常2NT · 我方使用：Unusual 2NT |
-| VS. NT | 開叫1NT/2NT · 敵方開叫1NT後的防禦叫（CAPP） |
-| VS. PREEMPTS | 雷本索特約 · 其他運用（敵方弱二開叫，同伴迫伴賭倍後） |
-| OVER OPPONENTS' TAKE OUT DOUBLE | 賭倍性叫品 · 當敵方迫伴，我方之後續叫牌；再賭倍示強後之發展 |
-| SIGNALS：Suit 1st／Discarding | 橋牌防守信號 · 四、王牌合約墊牌 |
-| SIGNALS：NT 1st／Discarding | 橋牌防守信號 · 五、無王合約墊牌 |
-| Signals (including Trumps): | 橋牌防守信號 · 一、拔牌信號；六、Smith Echo |
-| TAKEOUT DOUBLES | 回答性賭倍 · 重點原則；賭倍性叫品 · 迫伴賭倍、賭倍之後 |
-| SPECIAL, ARTIFICIAL AND COMPETITIVE DOUBLES/REDOUBLES | 回答性賭倍 · 開叫者的回答性賭倍；賭倍性叫品 · 示弱賭倍、處罰賭倍、合作性賭倍、高限賭倍、求救再賭倍 |
-| 開叫表 1♣、1♦：Subsequent Auction | 新低花迫叫 · 使用原則 |
-| 開叫表 1♣：Passed Hand Bidding | 新低花迫叫 · pass-hand 的 NMF |
-| 開叫表 1♦：Passed Hand Bidding | 新低花迫叫 · pass-hand 的第四門新花 |
-| 開叫表 1♥、1♠：Responses | 開叫高花之滿貫詢問叫 · 開叫1♥／1♠的答叫；Bergen加叫 · 開叫1♥／1♠之跳叫答叫 |
-| 開叫表 1NT：Description／Responses／Subsequent | 1NT的答叫 · 開叫1NT／開叫1NT之答叫／後續答叫說明 |
-| 開叫表 2♣：Description | 淡江自然制總覽 · 自然制開叫總表（開叫 2♣ 一項） |
-| 開叫表 2♣：Responses／Subsequent | 開叫2♣、弱二與阻塞叫 · 開叫2♣（2♣ ? 表；2♣ 2♦ ?、2♣ 2♦ 2♠ ? 表） |
-| 開叫表 2♦：Description／Responses／Subsequent | 2D 開叫 · 2♦ 開叫的四種牌／答叫：2♦ ?／2♦ 2♥ 之後、2♦ 2♠ 之後、2NT 詢問 |
-| 開叫表 2NT：Description／Responses／Subsequent | 開叫2NT及答叫 · 開叫2NT／答叫：2NT ?／Puppet |
-| 開叫表 3♣～3♠：Description | 開叫2♣、弱二與阻塞叫 · 開叫3♣/♦/♥/♠（開叫說明） |
-| HIGH LEVEL BIDDING | 開叫1♥/1♠ · 關於R.K.C.B.問A（回答表） |
-
-簡易卡：
-
-| 格子 | 出處 |
-| --- | --- |
-| 二蓋一：迫叫成局 | 淡江自然制總覽 · 現行制度與本講義的差異 |
-| 強無王(15-17) | 1NT的答叫 · 開叫1NT |
-| Stayman、２線轉換、4 線轉換、低花詢問 | 1NT的答叫 · 答叫表的 2♣；2♦、2♥；4♦、4♥；2♠ |
-| 保證 5 張高花 | 淡江自然制總覽 · 自然制開叫總表（1♥、1♠ 兩項） |
-| Jacoby 2N | 開叫高花之滿貫詢問叫 · 前言 |
-| 迫叫 1NT | 淡江自然制總覽 · 現行制度與本講義的差異 |
-| 反序低花 | 開叫1♣ · 低花反序 |
-| 新低花迫叫 | 新低花迫叫 · 使用原則 |
-| 賭博性 3NT | 開叫2♣、弱二與阻塞叫 · 開叫3NT（賭博性）（原文待確認，格子會帶「待確認」） |
-| 其他約定 · 其他特約 | 2D 開叫 · 2♦ 開叫的四種牌 |
-| Splinter | 開叫1♣ · Splinter |
-| RKCB | 開叫1♥/1♠ · 關於R.K.C.B.問A |
-| 迫伴賭倍、負性賭倍 | 賭倍性叫品 · 迫伴賭倍、示弱賭倍 |
-| 回答性賭倍 | 回答性賭倍 · 重點原則 |
-| 不尋常 2NT | 對抗不尋常2NT · 我方使用：Unusual 2NT |
-| 競叫約定 · 其他特約 | 雷本索特約、好壞2NT（全文）；對抗不尋常2NT · 如何對抗 |
-| 對抗無王開叫：強無王的賭倍、2♣、2♦、2♥、2♠ | 開叫1NT/2NT · CAPP 表的 X、2♣、2♦、2♥、2♠ |
-| 首攻 01 & 4th | 淡江自然制總覽 · 訊號（首攻─０１第４） |
-| 防禦訊號：王牌／無王合約 張數正序、態度反序 | 橋牌防守信號 · 王牌合約、無王合約的【張數：正】【態度：反】 |
-| 王牌合約墊牌 OE | 橋牌防守信號 · 四、王牌合約墊牌（【O/E：奇正偶轉】） |
-
-#### 留空：有疑義而沒有填的格子（制度還沒編寫好，寫好再補）
-
-- **一線開叫的點力**（WBF 開叫表 1♣～1♠ 的 Description、Min.）：總覽的開叫總表寫 13-21，現行制度是 12 點起，不填。
-- **2♥、2♠ 開叫**（WBF 開叫表、簡易卡「弱二開叫」）：舊講義寫弱二，但 2♦ 開叫已包含弱二♥／♠，直接開 2♥／2♠ 現在是什麼牌待確認。
-- **3NT 開叫**：總覽寫 12-15、講義寫 7-11，兩處都標待確認，WBF 開叫表不填（簡易卡只勾「賭博性 3NT」並帶待確認）。
-- **2♦ 是否勾 Artificial**、**各開叫的 Neg Dbl 線位**（講義寫負性賭倍用到 3♦）：要判斷，不填。
-- **首攻表與信號優先順序**（WBF OPENING LEADS STYLE、LEADS、SIGNALS 的同伴首攻欄）：防守信號只寫張數正、態度反，沒寫哪個優先，也沒分王牌／無王首攻，不填；Smith Echo 放在 Signals 文字格，不放「莊家出牌」第一優先。
-- **無王合約墊牌（全轉換）是否等於簡易卡的「花選」**：不填。
-- **簡易卡 Puppet Stayman、低花轉換**：我們只在 2NT 開叫後用，簡易卡這兩格放在 1NT 底下，不勾。
-- **簡易卡 CAPP 對弱無王**：原文沒分強弱無王，只填強無王一欄。
-- **簡易卡「黑木問 A」、RKCB 的回答**：講義兩種都有，只勾 RKCB，不填回答。
-- **1♥／1♠ 的答叫兩處不一致**：Jacoby 2NT 的答叫表寫 1♠ 3♠ 為 3-5 點，Bergen 加叫寫 4-5 點，兩份都填進附頁，請幹部確認。
-- **WBF 卡英文**：先填中文原文（使用者 2026-10-25 決定）；英文的固定文字（`= 文字`）之後再定（PRD E3 未決問題）。
+內建特約每一格填自哪個段落、哪些格子因為有疑義而留空，列在 private repo `GeneCLee6/TKU-BridgeHall-content` 的 `CARD-SLOTS.md`（表裡引用特約的段落標題與內容，不放在這個公開 repo；取得方式見第 0 節）。改了內建特約的 `cardSlots` 就一起更新那份。
 
 #### 棕標申報表（`brownSticker`，e3-t12）
 
@@ -245,26 +213,26 @@ WBF 卡（2.19）：
 
 ## 4. 登記與檢查
 
-1. 在 `src/content/index.ts` import 新檔，加進 `conventions` 陣列（順序即顯示順序）。檔名必須等於 slug（`<slug>.ts`）。
+1. 在 `src/content-private/index.ts` import 新檔，加進 `conventions` 陣列（順序即顯示順序）。檔名必須等於 slug（`<slug>.ts`）。
 2. 分類可以在網站的「社團管理 → 分類」線上新增、改名、排序（有 bookEdit 權限即可；ARCHITECTURE.md §4.5）。要在 repo 裡加內建分類，在 `src/content/categories.ts` 加上 `id`（小寫英數與連字號）、名稱、說明與 `order`。分類線上改過之後，網站以線上那份為準：新加的內建分類只要有特約在裡面，會自動接在最後，再到管理頁排到想要的位置並儲存。
 3. 執行：
 
    ```bash
-   npm test          # 內容 schema 測試：slug／id 唯一、必填欄位、叫品格式、花色符號
+   npm test          # 有 src/content-private/ 時含真內容測試：slug／id 唯一、必填欄位、叫品格式、花色符號、待確認數量
    npm run lint
    npm run build
    ```
 
-   「records the known 待確認 items」這個測試記錄了每個特約的待確認數量；新增或解決待確認項目時，一併更新測試中的數字。
+   private repo 的 `tests/content/conventions.test.ts` 裡「records the known 待確認 items」記錄了每個特約的待確認數量；新增或解決待確認項目時，一併更新那裡的數字與 `PENDING.md`。
 4. 在瀏覽器逐段對照原文再檢查一次，特別是點力範圍與花色（本機 `npm run dev` 讀本機的淡江牌桌，先對它寫入：`npm run seed-builtin -- --apply --base http://localhost:5173`）。
-5. 開分支、commit（格式見 `RULES.md`）、發 PR，請另一位幹部審核內容。
+5. 在 private repo 開分支、commit（格式見 `RULES.md`）、發 PR，請另一位幹部審核內容。
 6. **PR 合併後寫入牌桌**（不寫就不會上線）：
    1. 權杖：淡江牌桌的 `BOOK_SEED_TOKEN`（管理員設定，牌桌 `DEPLOY.md` §4.9），放在專案根目錄的 `.env.seed`（一行 `BOOK_SEED_TOKEN=…`，不會 commit），或設成環境變數。
    2. `npm run seed-builtin`：**預演**，只列出每個特約會 `new`／`changed`／`same`、有沒有線上版本，什麼都不寫。報告存在 `tmp/seed-builtin/`。
    3. 看過沒問題：`npm run seed-builtin -- --apply`。先把牌桌上現有的內建特約存到 `tmp/seed-builtin/…-before.json`，寫入，再自動逐字比對（`--verify`）。
    4. 有線上版本的特約（報告標「has an online version」）讀者看到的仍是線上版本，寫入不會動它（6.3）。
-   5. 從 `src/content/index.ts` 拿掉一個特約時，牌桌會拒絕，要加 `--allow-remove`。
-   6. 隨時可以 `npm run seed-builtin -- --verify` 確認牌桌上的內容和 repo 逐字相同。
+   5. 從 `src/content-private/index.ts` 拿掉一個特約時，牌桌會拒絕，要加 `--allow-remove`。
+   6. 隨時可以 `npm run seed-builtin -- --verify` 確認牌桌上的內容和 private repo 逐字相同。
 
 ## 5. 解決「待確認」
 
@@ -298,7 +266,7 @@ WBF 卡（2.19）：
 
 ### 6.3 線上版本與檔案的關係
 
-網站上改過的特約，以線上版本為準：之後再修改 `src/content/conventions/*.ts` 檔並 `seed-builtin`，讀者也看不到（內建那一層換了，線上版本還蓋在上面）。要改回內建版本，在編輯器的「版本紀錄」按「還原為網站內建的版本」（「內建」現在指牌桌上 seed 的那份）。線上的修改每天自動匯出備份到一個 private repo（6.5）；要把某個線上版本收成內建，照 6.5 的「收回內建層」做。
+網站上改過的特約，以線上版本為準：之後再修改 private repo 的 `conventions/*.ts` 檔並 `seed-builtin`，讀者也看不到（內建那一層換了，線上版本還蓋在上面）。要改回內建版本，在編輯器的「版本紀錄」按「還原為網站內建的版本」（「內建」現在指牌桌上 seed 的那份）。線上的修改每天自動匯出備份到 private 內容 repo 的 `content-backup` 分支（6.5）；要把某個線上版本收成內建，照 6.5 的「收回內建層」做。
 
 ### 6.4 學習路徑（`/learn`）
 
@@ -307,139 +275,25 @@ WBF 卡（2.19）：
 
 ### 6.5 匯出備份（L1，`e8-t12`～`e8-t14`）
 
-牌桌是唯一的真相（內建層＋線上版本），`src/content` 只是種子與測試資料：網站上改過、新增或隱藏的特約不會回到這個 repo。**匯出備份**把讀者實際讀到的全部特約定期存成 Git 檔，當作備份與變更紀錄。
+牌桌是唯一的真相（內建層＋線上版本），private 內容 repo 的 `main` 只是種子與測試資料：網站上改過、新增或隱藏的特約不會回到那裡。**匯出備份**把讀者實際讀到的全部特約定期存成 Git 檔，當作備份與變更紀錄。
 
 - **API**：牌桌 `GET /api/book/export`（只給管理員或唯讀的匯出權杖 `BOOK_EXPORT_TOKEN`，牌桌 `DEPLOY.md` §4.10）。內建特約依目錄順序，有線上版本的換成線上版本，再接只有線上版本的新特約；隱藏的另外列；不含草稿。
 - **手動匯出**：`npm run export-content`（權杖放 `.env.seed` 的 `BOOK_EXPORT_TOKEN=…` 或環境變數；`--base <網址>` 換環境），寫到 `tmp/content-export/`（不會 commit）：
-  - `src/content/conventions/<slug>.ts`、`src/content/index.ts`：和這個 repo 同樣的格式，可以直接蓋進 `src/content` 跑測試；每個檔案開頭註明是內建層還是線上第幾版、誰在哪天發布。
-  - `src/content/categories.ts`：只在分類線上改過時才有。
+  - `conventions/<slug>.ts`、`index.ts`：和 private 內容 repo 同樣的格式，可以直接蓋進 `src/content-private/` 跑測試；每個檔案開頭註明是內建層還是線上第幾版、誰在哪天發布。
+  - `categories.ts`：只在分類線上改過時才有（沒有時 `index.ts` 用這裡的 `src/content/categories.ts`）。
   - `export.json`（API 原樣，去掉匯出時間）、`README.md`（每個特約是哪一層、第幾版，隱藏了哪些）。
-- **排程備份**：GitHub Action「Content backup」（`.github/workflows/content-backup.yml`）每天台灣 03:30（也可以在 Actions 手動 Run workflow）：匯出 → 把匯出蓋進 `src/content` 跑內容測試（`tests/content/conventions.test.ts`；「待確認」數量那一項不跑，線上解決待確認是正常的）→ 對 private 備份 repo 的 `content-backup` 分支開 PR：測試通過就自動合併，失敗就留著 PR、workflow 失敗，並在備份 repo 開 issue（GitHub 也會寄信給 workflow 的擁有者）。沒有變動就不開 PR。
-- **這個 repo 是公開的，Action 的 log 也是公開的**：腳本只印數量、測試只印測試名稱，不上傳 artifact。特約內容只進 private 備份 repo。
-- **要先設定**（沒設定時 workflow 以 notice 略過）：建一個 private repo（至少一個 commit，例如 README）；橋館 repo 的 Actions 變數 `CONTENT_BACKUP_REPO`（`owner/name`）、secret `BOOK_EXPORT_TOKEN`（和牌桌 secret 同值）、secret `CONTENT_BACKUP_TOKEN`（只給那個 repo 的 fine-grained token：Contents、Pull requests、Issues 讀寫）。
+- **排程備份**：GitHub Action「Content backup」（`.github/workflows/content-backup.yml`）每天台灣 03:30（也可以在 Actions 手動 Run workflow）：匯出 → checkout private 內容 repo 的 `main` 到 `src/content-private/`、把匯出蓋上去跑內容測試（它的 `tests/content/conventions.test.ts`；「待確認」數量那一項不跑，線上解決待確認是正常的）→ 對同一個 private repo 的 `content-backup` 分支開 PR：測試通過就自動合併，失敗就留著 PR、workflow 失敗，並在那個 repo 開 issue（GitHub 也會寄信給 workflow 的擁有者）。沒有變動就不開 PR。
+- **這個 repo 是公開的，Action 的 log 也是公開的**：腳本只印數量、測試只印測試名稱，不上傳 artifact。特約內容只進 private 內容 repo。
+- **要先設定**（沒設定時 workflow 以 notice 略過）：private 內容 repo 已經有了（`GeneCLee6/TKU-BridgeHall-content`）；橋館 repo 的 Actions 變數 `CONTENT_BACKUP_REPO`＝`GeneCLee6/TKU-BridgeHall-content`、secret `BOOK_EXPORT_TOKEN`（和牌桌 secret 同值）、secret `CONTENT_BACKUP_TOKEN`（只給那個 repo 的 fine-grained token：Contents、Pull requests、Issues 讀寫）。
 - 這份 Git 備份不取代牌桌每天到 R2 的完整備份（含帳號、版本紀錄，牌桌 `DEPLOY.md` §4.4）；還原線上內容用那一份。
 
 **收回內建層**（把發布過的線上版本變成內建，評估見 ARCHITECTURE.md §4.1.1；目前手動、一次一個）：
 
-1. 從備份 repo（或 `npm run export-content`）拿那個特約的 `.ts`，換掉 `src/content/conventions/<slug>.ts` 的內容（保留檔案開頭的出處註解，把「Generated」那兩行換成原本的說明；新特約另外在 `src/content/index.ts` 登記）。
-2. 照第 4 節檢查（待確認數量要一起更新）、開 PR、合併。
+1. 從 `content-backup` 分支（或 `npm run export-content`）拿那個特約的 `.ts`，換掉 private repo `main` 的 `conventions/<slug>.ts` 的內容（保留檔案開頭的出處註解，把「Generated」那兩行換成原本的說明；新特約另外在 `index.ts` 登記）。
+2. 照第 4 節檢查（待確認數量要一起更新）、在 private repo 開 PR、合併。
 3. `npm run seed-builtin -- --apply`：報告會標這個特約「has an online version」。
 4. 在編輯器的版本紀錄按「還原為網站內建的版本」：線上版本拿掉，讀者看到的換成剛寫入的內建版本（內容相同，版本紀錄保留在牌桌）。
 
-### 雷本索特約（`lebensohl`）
+## 7. 待確認清單
 
-目前沒有待確認項目。「其他運用」只列出適用情境，叫品意義日後有資料再補。
-
-### 對抗不尋常2NT（`defense-vs-unusual-2nt`）
-
-| 位置 | 原文 | 問題 |
-| --- | --- | --- |
-| 開叫1♥時 › 答叫者首輪 › 3♥ | 「3張H，8-10點或4張H，6-8點（也就是6-9裡的好牌）。」 | 點力範圍與括號說明不一致。 |
-| 開叫1♠時 › 答叫者首輪 › 3♠ | 「3張S，8-10點或4張S，6-8點（也就是6-9裡的好牌）。」 | 同 1♥ 的 3♥，點力範圍與括號說明不一致。 |
-| 開叫1♠時 › 1♠ (2NT) 3♣ (—) 3♦ ? › 3NT | 「3NT – 12-15，雙低花都有1.5-2檔（通常是身價不利，否則趨向於X 2NT，並沿路追殺敵方合約）」 | 與答叫者首輪直接叫 3NT 的說明完全相同；此時答叫者已先叫 3♣，意義是否相同待確認。 |
-
-### 1NT的答叫（`notrump-responses`）
-
-| 位置 | 原文 | 問題 |
-| --- | --- | --- |
-| 合約選擇方式 › 嘗試滿貫 › 二門高花 | 「55以上，2H轉換2S後再叫3H（迫叫成局以上）」 | 與「成局束叫」的 5-5 高花叫法（2H轉換2S後再叫3H）相同，如何區分只想成局與嘗試滿貫待確認。 |
-
-### 1H 2H（淡江用）（`single-raise-major`）
-
-目前沒有待確認項目。
-
-### 開叫高花之滿貫詢問叫（`jacoby-2nt`）
-
-| 位置 | 原文 | 問題 |
-| --- | --- | --- |
-| 通則 › EX. 1H 2S 2NT ? › 3H | 「3H --- C短」 | 與 4C 同樣寫「C短」；3♥（王牌）應為空叫品，代表的花色待確認。 |
-| 開叫1♠ › 其他注意事項 1 › +4 | 「+4 - 6332，高限」 | 6332 共 14 張，疑為 6322。 |
-| 開叫1♠ › 其他注意事項 1 › 例 4S | 「4S ---- 6332，12+~13」 | 同上。 |
-| 開叫1♠ › 其他注意事項 4 | 「回叫方式同」 | 句子未完，推測為同 RKCB。 |
-| 開叫1♠ › 開叫者3♠ › 1S 2NT 3S 4H 4NT ? › 5H | 「5H --- H VOID邀請4H」 | 開叫1♥同位置寫「邀請6H」，疑應為「邀請6S」。 |
-| 開叫1♥ › 3♦後加一詢問 › 例 | 「3NT -- 5張H，12~15，單張D」之後直接「4D ---- 6張H↑，11~14」 | 依 +1～+7 規則似乎漏了 4♣，之後各叫品都往上移一級。 |
-| 開叫1♥ › 2NT後回答3♦之有長有短 › 3S | 「短門花色及下一階級長門花色，4C為詢問」 | 下一例用 3NT 詢問，疑應為「3NT為詢問」。 |
-| 開叫1♥ › 其他注意事項 1 › +4 | 「+4 - 6332，高限」 | 6332 共 14 張，疑為 6322。 |
-| 開叫1♥ › 其他注意事項 1 › 例 4C | 「4C ---- 6332，11~12-」 | 依規則 +2 應為 6322。 |
-| 開叫1♥ › 其他注意事項 4 | 「回叫方式同」 | 句子未完，推測為同 RKCB。 |
-| 開叫1♥ › 開叫者3NT、4C、4D之後續答叫 | 「4H為爛牌，4NT為RKCB」 | ♥ 為王牌時 RKCB 為 4♠，例子也用 4♠。 |
-
-### Bergen加叫（松濤版）（`bergen-raises`）
-
-| 位置 | 原文 | 問題 |
-| --- | --- | --- |
-| 1H - 2NT › 1H 2NT ? › 4D | 「4D ---- 」 | 原文沒有寫意義，待補充。 |
-| 1H - 2NT › 1H 2NT 3C 3H 3S 3NT ? › 4H | 「4H ---- H void」 | ♥ 是王牌，疑應為 S void。 |
-| 1H - 3C › 1H 3C 3D 3H | 「3H （8-9 hcp，4+S，無短門）」 | 王牌是 ♥，疑應為 4+H。 |
-| 1H - 3C › 1H 3C 3H ? › 3S | 「8-9 hcp，4+S，一門void」 | 同上，疑應為 4+H。 |
-| 1H - 3S › 1H 3S 3NT ? | 「11-12 hcp」 | 跳叫答叫表中 3♠ 為 12-13 hcp。 |
-
-### 回答性賭倍（`responsive-double`）
-
-| 位置 | 原文 | 問題 |
-| --- | --- | --- |
-| 重點原則 › 點力需求 | 「敵方反序 我們本身更難有game 。」 | 「敵方反序」的意思待確認。 |
-| 牌例延伸：1♥ (X) 2♥ ? | 「S已被叫走 你只剩另一門H可叫。若有H牌組 就在覺得適合的任何線位叫出。」 | 敵方叫的是 1♥－2♥，疑應為「♥已被叫走 你只剩另一門♠可叫」。 |
-
-### 2D 開叫（`two-diamond-opening`）
-
-| 位置 | 原文 | 問題 |
-| --- | --- | --- |
-| 2♦ 2♥ 之後 › 22↑ 帶 5 張♦ › 2D 2H 3D 3S 3NT 4C | 「4D --- C fit，RKCB(2D的人是captain)」之後「4NT - 1453」 | 4NT（1453）是開叫者的另一個叫品，還是對 4♦ RKCB 的回答，待確認。 |
-
-### 開叫2NT及答叫（`two-notrump-opening`）
-
-| 位置 | 原文 | 問題 |
-| --- | --- | --- |
-| 轉換♥ › 2NT 3D 3H 3S › 3NT | 「3NT --- 高花都不ift」 | 疑為「不fit」。 |
-| 轉換♠ › 2NT 3H 3NT 4C 之後 › 第二個 5C | 「5C -- S為王的EKB」「5C --- S為王的EKB」 | 兩列都是 5♣，第二列疑為 5♦。 |
-
-### 好壞2NT（松濤版）（`good-bad-2nt`）
-
-| 位置 | 原文 | 問題 |
-| --- | --- | --- |
-| 開叫1♥ › 1H 1S X 2S › 3D | 「3D --- 5張H↑，4張C↑，15-17」 | 與 3♣ 相同，疑應為 4張♦↑。 |
-| 開叫1♣ › 1C 1S X 2S › 3H | 「3H --- 4張D↑，4張H，15-17」 | 開叫 1♣ 卻寫 4張♦↑，與 1♦ 開叫時相同。 |
-| 開叫1♣ › 1C 1S X 2S › 4D | 「4D --- invite 5D」 | 開叫 1♣ 卻寫 invite 5♦，與 1♦ 開叫時相同。 |
-
-### 開叫高花之滿貫詢問叫（舊版）（`major-slam-ask-2011`）
-
-| 位置 | 原文 | 問題 |
-| --- | --- | --- |
-| 開叫1♠ › 其他注意事項 4 | 「回叫方式同」 | 句子未完，推測為同 RKCB。 |
-| 開叫1♥ › 其他注意事項 4 | 「回叫方式同」 | 同上。 |
-| 開叫1♥ › 2NT 加一詢問 › +3～+8 | 「+3  5張S，13~15，5431」等 | 開叫 1♥，疑應為 5／6 張♥；下方例子同。 |
-| 開叫1♥ › 開叫者3♥之後續答叫 › 1H 2S 3H 4D 4S 4NT | 「5C --- 要求C第二控去6S」 | ♥ 為王牌，疑應為 6♥；5♦ 同。 |
-
-### 制度總覽（舊講義）
-
-2010 年講義《我們的制度》改成現行制度時需要社團決定的地方。
-
-| 卡片 › 位置 | 問題 |
-| --- | --- |
-| 淡江自然制總覽 › 現行制度與本講義的差異 | 改為 12 點開叫後，開叫者再叫的各段點力（本講義的 13-15、16-18、19-21）與答叫者的各段點力是否一併調整，待社團確認。 |
-| 淡江自然制總覽 › 現行制度與本講義的差異 | 2 蓋 1 迫叫成局之後「雙方報牌型」的具體叫法（開叫者第二輪、答叫者第二輪各叫品的意義）本講義沒有，需社團補充。 |
-| 淡江自然制總覽 › 自然制開叫總表 | 第九章寫賭博性 3NT 為 7-11 點，與此處 12-15 點不一致。 |
-| 淡江自然制總覽 › 牌力範圍 | 現行 12 點開叫，開叫者低限範圍是否改為 12 點起，待確認。 |
-| 開叫1♣ › 答叫：1♣ ? | 本表 2♣ 為 6-9 點；本章後段「低花反序」的 1♣ 2♣ 為 10 點以上迫叫至 2NT，現行採用哪一種待確認。 |
-| 開叫1♦ › 答叫：1♦ ? | 現行 2 蓋 1 迫叫成局，2♣ 的點力下限（本表 10 點↑）與張數待確認。 |
-| 開叫1♦ › 開叫1♦之後續發展 › (4) 1♦ 2♣ ? | 現行 1♦ 2♣ 為 2 蓋 1 迫叫成局、之後雙方報牌型；此表的再叫（如 2♥/♠ 倒叫 16-21 點）是否沿用待確認。 |
-| 開叫1♦ › 遭受敵方插叫之後 | 現行遭插叫後二階新花答叫（本講義 10 點↑迫叫）是否仍只迫叫一圈，待確認。 |
-| 開叫1♦ › 低花反序 › (1) 1♦ 2♦ ? | 1♣ 2♣ 低花反序時 3NT 為 18-19 點，此處 1♦ 2♦ 為 19-21 點，是否一致待確認。 |
-| 開叫1♥/1♠ › 答叫：1♥ ? | 本表 1NT 為 6-9 點；本章後段「1NT迫叫」為 6-12 點迫叫一圈（現行 1NT forcing），範圍待確認。 |
-| 開叫1♥/1♠ › 1NT迫叫之後開叫者再叫 › 對1♥答叫1NT者之再叫 | 1NT 迫叫為 6-12 點，此處答叫者再叫只列 6-9 點的牌，10-12 點的再叫待確認。 |
-| 開叫1♥/1♠ › 開叫者之再叫 | 現行 1♥/♠ 2♣/♦ 為 2 蓋 1 迫叫成局、之後雙方報牌型；此表開叫者再叫的點力分段是否沿用待確認。 |
-| 開叫2♣、弱二與阻塞叫 › 開叫2♥/♠（弱二） | 社團現在 12 點開叫，弱二的點力上限（本講義全手未達 11 點）是否調整待確認。 |
-| 開叫2♣、弱二與阻塞叫 › 開叫3NT（賭博性） | 本講義開叫總表寫 3NT 為 12-15 點，此處寫 7-11 點，現行範圍待確認。 |
-| 賭倍性叫品 › 賭倍之後 | 第四章同一個叫牌過程寫 4♥ 為「4張↑紅心支持」、3♦ 為「7張↑♦弱牌」，此處寫 5 張↑與 3-5 點，以何者為準待確認。 |
-| 競叫篇與技光 › 蓋叫 | 開叫 1NT 現為 15-17 點，蓋叫 1NT 是否仍為 16-18 點待確認。 |
-| 競叫篇與技光 › 輕開叫 | 社團現在 12 點開叫，第三家輕開叫的點力（本講義 9-12 點）待確認。 |
-| 競叫篇與技光 › 何謂技光 | 「技光」的 2♥（♠6 張或♥＋低花 5-5）、2♠（兩高或兩低 5-5）現在是否還在使用，待確認。 |
-
-### 已確認（2026-10-21，由社團確認）
-
-- 譯名統一為「雷本索」。
-- 「Unusually 2NT」統一寫作「Unusual 2NT」。
-- 「差叫」更正為「插叫」。
-- 開叫 1♠ 時答叫者首輪 X：「H不fit」更正為「♠不fit」。
-- 1♠ (2NT) 3♣ (—) 3♦ 之後的 4♦：「C短」更正為「♦短」。
+每個內建特約的待確認項目與已確認的更正，列在 private repo `GeneCLee6/TKU-BridgeHall-content` 的 `PENDING.md`（清單引用特約原文，不放在這個公開 repo；取得方式見第 0 節）。

@@ -2,12 +2,12 @@
 
 ## 1. 總覽
 
-靜態網站（Vercel），**不含任何特約內容**（L0，2026-10-29，使用者決定）：內建特約與社員在網站上的修改都存在姊妹站**淡江牌桌**的 Worker，只給登入的社員；開頁面時抓 manifest，線上修改疊在內建特約上（§4、§4.1）。內建特約的原始檔仍是這個 repo（private）的 TypeScript 資料檔，由 `npm run seed-builtin` 寫入牌桌（§4「內建特約」）。帳號也是淡江牌桌的：`vercel.json` 把 `/api/*` 轉給它，所以 cookie 屬於本站（§4.2）。
+靜態網站（Vercel），**不含任何特約內容**（L0，2026-10-29，使用者決定）：內建特約與社員在網站上的修改都存在姊妹站**淡江牌桌**的 Worker，只給登入的社員；開頁面時抓 manifest，線上修改疊在內建特約上（§4、§4.1）。內建特約的原始檔是 private repo `GeneCLee6/TKU-BridgeHall-content` 的 TypeScript 資料檔（2026-10-30 起；這個 repo 是公開的），clone 到 gitignore 的 `src/content-private/`，由 `npm run seed-builtin` 寫入牌桌（§4「內建特約」、§4.0）。帳號也是淡江牌桌的：`vercel.json` 把 `/api/*` 轉給它，所以 cookie 屬於本站（§4.2）。
 
 ```
 瀏覽器 ──/api/*──► Vercel rewrite ──► 淡江牌桌 Worker（帳號、內建特約、線上內容、版本、匯入）
    └──── 匯入上傳（一次性憑證，直接連 Worker）────┘                ▲
-content/conventions/*.ts ──npm run seed-builtin（權杖，預演／--apply／--verify）──┘
+src/content-private/conventions/*.ts（private repo）──npm run seed-builtin（權杖，預演／--apply／--verify）──┘
 ```
 
 ```
@@ -26,10 +26,9 @@ TKU-BridgeHall/
 ├─ public/                  logo.svg、logo-mark.svg、favicon.svg
 ├─ src/
 │  ├─ components/editor/    線上編輯器的段落樹、表單、各種區塊、預覽、版本紀錄
-│  ├─ content/
-│  │  ├─ conventions/       每個內建特約一個檔案（lebensohl.ts…）：寫入牌桌的種子與測試資料，網站不打包（L0）
-│  │  ├─ categories.ts      內建分類與顯示順序（線上改過時以線上為準，§4.5）
-│  │  └─ index.ts           特約登記表（順序＝目錄順序；只給測試與 scripts/seed-builtin.ts）
+│  ├─ content/             categories.ts（內建分類與顯示順序，線上改過時以線上為準，§4.5）、references、paths、glossary（都不是特約原文）
+│  ├─ content-private/     （gitignore）private repo GeneCLee6/TKU-BridgeHall-content 的 checkout：conventions/<slug>.ts（每個內建特約一個檔）、
+│  │                        index.ts（登記表，順序＝目錄順序）、PENDING.md、CARD-SLOTS.md、tests/（真內容測試）；網站不 import（§4.0）
 │  ├─ types/convention.ts   內容模型（特約的 schema）；types/article.ts 叢書文章（E5，§3.2）
 │  ├─ cards/                制度卡（E3）：types（CardTemplate）、slots（格子 id）、templates/（每個版型一個檔案，檔名＝id）、
 │  │                        cardSlots（特約的格子對應）、fill（fillCard 填卡）、edits（補格）、docx（Word 輸出，`docx` 套件）、
@@ -43,8 +42,9 @@ TKU-BridgeHall/
 │  ├─ styles/               tokens、GlobalStyle、styled-components 型別
 │  ├─ strings.ts            所有介面文字
 │  ├─ App.tsx、main.tsx
-├─ tests/                   content／lib／presentation 三層測試
-├─ .github/workflows/ci.yml lint → build → test
+├─ tests/                   content／lib／presentation 三層測試；fixtures/ 是虛構的特約（不是社團內容），browser/ 是 Playwright
+├─ scripts/content-source.ts 腳本讀 src/content-private/ 的地方（找不到就說要先 clone）
+├─ .github/workflows/ci.yml lint → typecheck → test → build →（有 CONTENT_REPO_KEY 時）真內容檢查 → budget
 └─ *.md                     文件（README、PRD、DESIGN、ARCHITECTURE、CONTENT_GUIDE、RULES、CLAUDE）
 ```
 
@@ -287,9 +287,16 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 **內容載入**（2026-10 起，E10 分片）：
 - **內建特約在牌桌**（L0，e10-t12，2026-10-29）：網站不再打包任何特約。`GET /api/book/manifest` 的 `builtin` 是內建特約的 `ConventionMeta`（除了內容以外的全部欄位，加上段落大綱 `outline` 與待確認清單 `pending`；牌桌的 `conventionMeta` 算的，連 `cardSlots` 也在），依目錄順序；目錄、收合的卡片、深層連結、全部展開都只用它。內容是 `GET /api/book/builtin/:slug`（`state/builtinSource.ts`；`ContentContext` 的名稱沿用 `loadBundled`、`bundledBySlug`，意思是「內建」）。全部都要登入。
 - 第一次開（這台裝置沒有存過 manifest）時目錄是空的，等 manifest 回來；特約頁在這段時間顯示「載入中…」而不是「找不到」。之後先用 localStorage 存的 manifest（`tku-bridge-book-manifest`）馬上畫，再換新的。
-- **寫入**：`scripts/seed-builtin.ts`（`npm run seed-builtin`）把 `content/index.ts` 的全部特約（順序即目錄順序）與它們的搜尋索引送到牌桌 `PUT /api/book/builtin`。預設預演（報告每個特約 `new`／`changed`／`same`／`removed`、有沒有線上版本）；`--apply` 先把牌桌現有的存到 `tmp/seed-builtin/`、寫入，再 `--verify`：抓回 `GET /api/book/builtin` 與搜尋索引，每個特約以 JSON 文字逐字比對 `src/content`（`scripts/builtin-payload.ts` 的 `compareBuiltin`，`tests/content/builtin.test.ts`）。權杖是牌桌的 secret `BOOK_SEED_TOKEN`（`.env.seed` 或環境變數；牌桌 DEPLOY.md §4.9），`--base` 換目標（本機牌桌、PR 預覽）。牌桌不動線上版本（`book:entry:`），移除內建特約要 `--allow-remove`。牌桌 repo 是公開的，內容只在這個 private repo 與牌桌的儲存裡。
-- `content/index.ts` 靜態 import 全部特約，**只給測試與腳本用**（`seed-builtin`、`search-index`、`check-budget`、`export-quiz-bank`）；網站程式不能 import 它或 `content/conventions/*`。`npm run budget` 在 `dist/` 每個檔案裡找每個特約的摘要與段落文字（12 字以上、不是 id 的），找到就失敗（§6.5）。`categories`、`references`、`paths`、`glossary` 不是特約內容，照舊打包。
-- 元件測試：`tests/setup.ts` 用 `vi.mock` 把 `state/builtinSource.ts` 換成 `src/content`（`fallback` 是 manifest 沒有 `builtin` 時的目錄），所以抓不到 API 的測試照樣看得到內建內容。Playwright 的 `tests/browser/fixtures.ts` 回 manifest、內建特約與搜尋索引。
+- **寫入**：`scripts/seed-builtin.ts`（`npm run seed-builtin`）把 `src/content-private/index.ts` 的全部特約（順序即目錄順序）與它們的搜尋索引送到牌桌 `PUT /api/book/builtin`。預設預演（報告每個特約 `new`／`changed`／`same`／`removed`、有沒有線上版本）；`--apply` 先把牌桌現有的存到 `tmp/seed-builtin/`、寫入，再 `--verify`：抓回 `GET /api/book/builtin` 與搜尋索引，每個特約以 JSON 文字逐字比對 `src/content-private`（`scripts/builtin-payload.ts` 的 `compareBuiltin`，`tests/content/builtin.test.ts` 用虛構特約、private repo 的同名測試用真特約）。權杖是牌桌的 secret `BOOK_SEED_TOKEN`（`.env.seed` 或環境變數；牌桌 DEPLOY.md §4.9），`--base` 換目標（本機牌桌、PR 預覽）。牌桌不動線上版本（`book:entry:`），移除內建特約要 `--allow-remove`。牌桌 repo 與這個 repo 都是公開的，內容只在 private 內容 repo 與牌桌的儲存裡。
+- `src/content-private/index.ts` 靜態 import 全部特約，**只給測試與腳本用**：腳本經 `scripts/content-source.ts` 在執行時依路徑載入（`seed-builtin`、`export-quiz-bank`；`check-budget` 自己找），型別檢查與 `vite build` 都不碰它，所以沒有 checkout 也建得起來；網站程式不能 import `src/content-private/*`。`npm run budget` 在 `dist/` 每個檔案裡找每個特約的摘要與段落文字（12 字以上、不是 id 的），找到就失敗，只印檔名與特約 slug、不印文字（§6.5）；沒有 checkout 時這項標 skipped。`categories`、`references`、`paths`、`glossary` 不是特約內容，照舊打包。
+- 元件測試：`tests/setup.ts` 用 `vi.mock` 把 `state/builtinSource.ts` 換成 `tests/fixtures/builtin.ts` 給的特約（`fallback` 是 manifest 沒有 `builtin` 時的目錄），所以抓不到 API 的測試照樣看得到內建內容。Playwright 的 `tests/browser/fixtures.ts` 以虛構特約回 manifest、內建特約與搜尋索引（截圖基準圖也是虛構特約）。
+
+#### 4.0 內建特約原文在 private repo（2026-10-30，使用者決定）
+
+- 22 個內建特約的 `.ts` 從這個公開 repo 搬到 private repo `GeneCLee6/TKU-BridgeHall-content`（檔案逐字不變，搬之前比對過 git blob 相同；`seed-builtin -- --verify` 與牌桌逐字相同）。它 clone 到 `src/content-private/`（gitignore），檔案裡的相對路徑（`../../types/convention.ts`、`../content/categories.ts`、測試的 `../../../lib/…`）以那個位置為準。那裡也有待確認清單 `PENDING.md`、制度卡位置表 `CARD-SLOTS.md`（都引用原文）。
+- **兩組測試**（`vite.config.ts` 的 Vitest `projects`）：`public` 是 `tests/**`，用 `tests/fixtures/conventions/` 的三個虛構特約（`fixture-alpha`、`fixture-beta`、`fixture-system`，文字都標「測試」「虛構」）；`content` 是 `src/content-private/tests/**`，只有 checkout 存在時才有，`BOOK_CONTENT=private` 讓 `tests/setup.ts` 送真特約。真內容的測試（待確認數量、內容 schema、seed payload、制度規格快照、題目產生、制度卡填格……）是 2026-10-30 以前的測試原樣搬過去的；`tests/leaks.test.ts` 檢查這個 repo 追蹤的每個檔案都沒有引用特約原文。沒有 checkout 時 `tests/content/private.test.ts` 顯示一個 skipped 的說明。
+- **CI**：`verify` job 在公開的 lint／typecheck／test／build 之後，有 secret `CONTENT_REPO_KEY`（private repo 唯讀 deploy key 的私鑰）才 checkout 到 `src/content-private/`，安靜地跑型別檢查、oxlint 與 `vitest --project content`（只印錯誤位置、測試名稱與數量），再跑 `npm run budget`（含 `dist/` 特約文字檢查）。沒有 secret 時這些以 notice 跳過。設定步驟見 CONTENT_GUIDE.md §0.1。`browser`、`lighthouse` 只用虛構特約，不需要 private repo。
+- **限制**：舊的 git 歷史還有原文（`src/content/conventions/*`、舊的測試、快照與截圖），要另外改寫歷史才會消失。
 - 卡片第一次打開時用 `useConvention(slug)` 載入內容；載入中顯示「載入中…」，失敗顯示重試。深層連結會先打開路徑，等內容到了再捲動。
 - 搜尋：聚焦搜尋框時下載 Fuse 與內建特約的搜尋索引 `GET /api/book/search-index`（`state/useSearch.ts`；社員才拿得到，L0），不必載入任何特約內容就是全文搜尋。線上改過或新增的特約不用索引裡的紀錄：先用 manifest 的段落標題，再載入那幾個特約的內容補上全文（`lib/search.ts` 的 `mergeIndex`，維持目錄順序，結果與用全部內容建的相同）。索引抓不到（離線又沒快取）時退回舊做法：載入全部內容在瀏覽器建紀錄。列印按鈕先載入全部再列印（直接按 Ctrl+P 只印出已載入的特約）。
 - 線上的修改見 §4.1。
@@ -306,11 +313,11 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 #### 4.1.1 匯出備份（L1，`e8-t12`～`e8-t14`；`scripts/export-content.ts`、`scripts/export-files.ts`）
 
 - L0 之後牌桌是唯一真相，「寫回 Git」改成**匯出**：牌桌 `GET /api/book/export`（`BookExport`，型別在 `lib/api.ts`，對拍在 `parity/table-types.ts`）由牌桌合併好兩層，這裡不再合併。權限只有管理員或唯讀的 `BOOK_EXPORT_TOKEN`（和寫入用的 `BOOK_SEED_TOKEN` 分開，外洩也改不了內容）。
-- `export-files.ts` 是純函式（`tests/content/export.test.ts`）：把匯出轉成和 `src/content` 同格式的 `.ts`（`JSON.stringify` 出來的物件字面值，逐字；測試把產生的檔案 import 回來比對），加 `export.json` 與 `README.md`。檔案裡沒有匯出時間，內容沒變就不會有 diff。
-- `.github/workflows/content-backup.yml` 每天匯出、蓋進 `src/content` 跑內容測試、對 private 備份 repo 的 `content-backup` 分支開 PR（綠燈自動合併）。這個 repo 公開，所以 log 只有數量與測試名稱、不上傳 artifact。設定與失敗通知見 CONTENT_GUIDE.md §6.5。
+- `export-files.ts` 是純函式（`tests/content/export.test.ts`）：把匯出轉成和 private 內容 repo 同格式的 `.ts`（`conventions/<slug>.ts`、`index.ts`、分類線上改過時的 `categories.ts`）（`JSON.stringify` 出來的物件字面值，逐字；測試把產生的檔案 import 回來比對），加 `export.json` 與 `README.md`。檔案裡沒有匯出時間，內容沒變就不會有 diff。
+- `.github/workflows/content-backup.yml` 每天匯出、蓋到 private 內容 repo `main` 的 checkout（`src/content-private/`）上跑內容測試、對同一個 repo 的 `content-backup` 分支開 PR（綠燈自動合併）。這個 repo 公開，所以 log 只有數量與測試名稱、不上傳 artifact。設定與失敗通知見 CONTENT_GUIDE.md §6.5。
 - **評估：把發布過的線上版本自動併回內建層**（ROADMAP L1，只評估、不實作，2026-10-30）。結論：**現在不做自動合併，維持手動「收回內建層」**（CONTENT_GUIDE.md §6.5）。理由：
   1. 兩層都在牌桌，讀者看到的已經是線上版本；併回內建只是換一層存，對讀者沒有差別。
-  2. 內建層的來源是 `src/content` 的 `.ts`（`seed-builtin` 會逐字比對、整份取代）。只在牌桌裡把線上版本搬進 `book:builtin:` 而不改 `.ts`，下次 `seed-builtin` 就會蓋回舊文字；要一致就得同時改這個 repo，等於自動寫 PR 到 `main`——又回到 L0 前「寫回 Git」的複雜度。
+  2. 內建層的來源是 private 內容 repo 的 `.ts`（`seed-builtin` 會逐字比對、整份取代）。只在牌桌裡把線上版本搬進 `book:builtin:` 而不改 `.ts`，下次 `seed-builtin` 就會蓋回舊文字；要一致就得同時改那個 repo，等於自動寫 PR 到它的 `main`——又回到 L0 前「寫回 Git」的複雜度。
   3. 線上版本有版本紀錄、審核者與 `bundledUpdated`；併回內建後「還原為內建版本」的意義會變，版本紀錄和內建層也對不起來。
   4. 手寫的 `.ts` 有出處註解、共用的 `seats` 等常數；產生的檔案是扁平 JSON，自動蓋回會讓檔案失去這些（所以「收回」時要人保留檔頭）。
   - 什麼時候值得做：線上版本多到「內建層」大多是過時的、或要讓沒有網路的流程（例如牌桌的離線機器人）只讀內建層時。做法會是牌桌加一支「把某個線上版本設為內建」的管理 API（`book:builtin:` 換成線上內容、移除線上版本、記稽核），同時由匯出備份產生一個對 `main` 的 PR 改 `.ts`，兩邊一起合併。
@@ -323,7 +330,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - `App.tsx` 的 `SignedIn` 是所有路由（`/login` 除外）的版面路由：未登入就 `<Navigate>` 到 `/login?next=<原網址>`（`/` 不帶 `next`），登入後 `LoginPage` 依 `next` 回去（只收站內路徑）。`ContentProvider`、`ProfileProvider`、`ExpansionProvider` 在 `SignedIn` 裡面，所以未登入時不會向牌桌抓任何內容；登出時它們卸載，狀態一起清掉。
 - `AuthContext` 把最後一次登入的 `Me` 存在 localStorage `tku-bridgebook:me`：開頁面時先用它畫（不必等 `/api/me`），`/api/me` 回 401 才算登出；連不到牌桌（離線、5xx）時沿用它，所以 PWA 離線照樣能讀。登出時清掉。頁面回到前景（`visibilitychange`）會重抓 `/api/me`，內容相同時保留同一個物件，不會重畫。
 - 牌桌那邊（牌桌 PR，2026-10-29）：橋館的讀取 API（manifest、content、分類、名詞、修題、學習路徑、文章、電子書、制度集）都要登入；只剩健康檢查、錯誤回報、登入／註冊／登出／忘記密碼、簽名網址的檔案、分享中的制度卡版本不用登入。
-- **內容保護**（L0，2026-10-29，使用者決定「大改就大改」）：repo 是公開的（2026-10-29 曾改 private，2026-10-30 使用者改回公開，所以 `src/content/conventions/*.ts` 的原文在 repo 與歷史裡看得到——網站與 API 擋得住，repo 擋不住）；內建特約搬到牌桌（§4），靜態檔與 `dist/` 不含任何特約文字（CI 的 `npm run budget` 擋），manifest、內容與搜尋索引都要登入。登出（或 `/api/me` 回 401）時 `lib/memberCache.ts` 清掉 service worker 快取的 `/api/` 回應與 localStorage 的 manifest。**仍擋不住的**：登入的社員當然拿得到全部內容；舊版網站留在別人裝置快取裡的特約 chunk（L0 之前看過的）不會被遠端刪掉；牌桌 repo 是公開的，所以內容永遠不要放進牌桌。
+- **內容保護**（L0，2026-10-29，使用者決定「大改就大改」）：repo 是公開的（2026-10-29 曾改 private，2026-10-30 使用者改回公開；同一天特約原文搬到 private 內容 repo，§4.0，舊的歷史要另外改寫）；內建特約搬到牌桌（§4），靜態檔與 `dist/` 不含任何特約文字（CI 的 `npm run budget` 擋），manifest、內容與搜尋索引都要登入。登出（或 `/api/me` 回 401）時 `lib/memberCache.ts` 清掉 service worker 快取的 `/api/` 回應與 localStorage 的 manifest。**仍擋不住的**：登入的社員當然拿得到全部內容；舊版網站留在別人裝置快取裡的特約 chunk（L0 之前看過的）不會被遠端刪掉；牌桌 repo 是公開的，所以內容永遠不要放進牌桌。
 - 已經沒有作用、但還留著的未登入分支（無害，之後整理）：首頁社團預設制度卡的登入提示、學習路徑「登入後可以記錄」、練習「成績只存在這台裝置」、制度卡頁與版本頁的登入提示、手機工具列「我的」未登入時連到登入頁。「你是新生嗎？」（e4-t03）改成問這台裝置第一次來的社員。
 
 **角色**（使用者決定，2026-10-25；名稱暫時沿用）：**管理員**什麼都能管，包括使用者帳號；**編輯者**（有 `bookEdit`）能管帳號以外的所有東西，**但發布特約要審核者**（有 `bookReview`，E8 e8-t01，2026-10-28 起）。
@@ -490,13 +497,13 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 
 模組與 chunk 的對應來自 Vite 的 build manifest（`vite.config.ts` 的 `build.manifest: true`，輸出 `dist/.vite/manifest.json`），以 `src` 找 `ConventionPage` 與 `Sidebar` 的 chunk。2026-10-29（L0）首頁 JS 從 149.31 kB 降到約 123 kB：拿掉內建 manifest（約 8.5 kB）、目錄 lazy（約 11 kB，含 Radix accordion）、`strings.ts` 拆出只有 lazy 頁面用的文字（`components/editor/editorStrings.ts`、`pages/importStrings.ts`、`components/admin/teamsStrings.ts`、`categoriesStrings.ts`、`components/board/boardStrings.ts`）。新的頁面文字放自己的 `*Strings.ts`。
 
-**Lighthouse**：CI 的 `lighthouse` job 重新 build，用 `vite preview` 起站，以 Lighthouse CI（`npx @lhci/cli`，設定在 `lighthouserc.json`）量 `/login` 與 `/c/jacoby-2nt`（2026-10-29 起全站要登入；`vite preview` 沒有牌桌，所以兩頁都是未登入看到的登入頁，後者含導向。登入後的頁面由上面的 bundle 預算與 Playwright 的 axe 把關），各跑 3 次取中位數。無障礙 < 0.95 會讓 job 失敗；效能 < 0.9、最佳做法 < 0.9 只警告——CI 機器的模擬節流分數浮動大，硬擋會常誤報，效能改由上面的 bundle 預算把關。報告上傳為 artifact `lighthouse-reports`（不上傳到公開的 temporary storage）。本機可跑 `npm run build && npx @lhci/cli@0.15.1 autorun`（需要 Chrome）。
+**Lighthouse**：CI 的 `lighthouse` job 重新 build，用 `vite preview` 起站，以 Lighthouse CI（`npx @lhci/cli`，設定在 `lighthouserc.json`）量 `/login` 與 `/c/fixture-alpha`（2026-10-29 起全站要登入；`vite preview` 沒有牌桌，所以兩頁都是未登入看到的登入頁，後者含導向。登入後的頁面由上面的 bundle 預算與 Playwright 的 axe 把關），各跑 3 次取中位數。無障礙 < 0.95 會讓 job 失敗；效能 < 0.9、最佳做法 < 0.9 只警告——CI 機器的模擬節流分數浮動大，硬擋會常誤報，效能改由上面的 bundle 預算把關。報告上傳為 artifact `lighthouse-reports`（不上傳到公開的 temporary storage）。本機可跑 `npm run build && npx @lhci/cli@0.15.1 autorun`（需要 Chrome）。
 
 ## 7. CI/CD
 
 ```
 push / PR ──► GitHub Actions「CI」：lint → typecheck → test → build → budget
-          │                         └─ lighthouse job（/、/c/jacoby-2nt）
+          │                         └─ lighthouse job（/login、/c/fixture-alpha）
           └─► Vercel Git integration：PR → 預覽網址（PR 留言會附上）；main → 正式站
 合併到 main ──► 正式站（自動）
                  └─ 部署成功回報 commit status「Vercel」
@@ -515,6 +522,6 @@ push / PR ──► GitHub Actions「CI」：lint → typecheck → test → bui
   2. 跑 `tests/lib/tableParity.test.ts`，比對共用的常數（`LIMITS`、`PERMISSIONS`、制度集常數）；平常的 `npm test` 沒有 `TABLE_DIR` 時整組略過。
   - 牌桌 repo 原本是 private（2026-10-29 起是公開的，token 可能已經不需要），要在橋譜 repo 設 secret **`TABLE_REPO_TOKEN`**（fine-grained token，只給 `GeneCLee6/TKU-BridgeTable` 的 Contents: Read）；沒設時 job 以 notice 略過，不會失敗。本機：`npm run parity` 依序找 `$TABLE_DIR`、`.table/`、`../TKU-BridgeTable`，都沒有就略過。
   - 兩邊一起改的 PR：牌桌先合併，橋譜的 parity 才會綠；也可以 Actions → Table type parity → Run workflow，填牌桌的分支。lib/api.ts 新增對應牌桌的型別時，在 `parity/table-types.ts` 加一行。
-- **匯出備份**（L1）：workflow「Content backup」（`.github/workflows/content-backup.yml`，每天台灣 03:30，也可以手動）把牌桌 `GET /api/book/export` 的全部特約存成 `.ts`、跑內容測試、開 PR 到 private 備份 repo 的 `content-backup` 分支（§4.1.1，CONTENT_GUIDE.md §6.5）。沒設定 `CONTENT_BACKUP_REPO`、`BOOK_EXPORT_TOKEN`、`CONTENT_BACKUP_TOKEN` 時以 notice 略過。
+- **匯出備份**（L1）：workflow「Content backup」（`.github/workflows/content-backup.yml`，每天台灣 03:30，也可以手動）把牌桌 `GET /api/book/export` 的全部特約存成 `.ts`、跑內容測試、開 PR 到 private 內容 repo 的 `content-backup` 分支（§4.1.1，CONTENT_GUIDE.md §6.5）。沒設定 `CONTENT_BACKUP_REPO`、`BOOK_EXPORT_TOKEN`、`CONTENT_BACKUP_TOKEN` 時以 notice 略過。
 - **備份**：牌桌 Worker 每天把橋譜的線上內容（`book*`、`profile*`、`article*`）備份到 R2、保留 30 天（e10-t08）；啟用、還原步驟與演練見牌桌的 [`DEPLOY.md` §4.3](https://github.com/GeneCLee6/TKU-BridgeTable/blob/main/DEPLOY.md#43-每日備份與還原淡江橋譜-e10-t08)。
 - 限制：私有 repo 在 GitHub 免費方案無法設定 branch protection，所以 CI 失敗不會擋住合併；請以「開 PR → CI 綠燈 → 看預覽站 → 合併 → 手動部署」的流程更新內容。

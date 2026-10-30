@@ -6,7 +6,7 @@ import { cardTemplates } from '../../src/cards/templates/index.ts'
 import { ctcbaSimple } from '../../src/cards/templates/ctcba-simple.ts'
 import { ctcbaSimple2p } from '../../src/cards/templates/ctcba-simple-2p.ts'
 import { wbf } from '../../src/cards/templates/wbf.ts'
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import type { SystemProfile } from '../../src/lib/api.ts'
 import { resolveProfile } from '../../src/lib/profiles.ts'
 

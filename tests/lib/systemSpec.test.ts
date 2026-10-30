@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import { emptyClubProfile, resolveProfile } from '../../src/lib/profiles.ts'
 import { walkSections } from '../../src/lib/sections.ts'
 import { SPEC_ANY, toSystemSpec, type SpecShows } from '../../src/lib/systemSpec.ts'
@@ -7,7 +7,8 @@ import { SPEC_ANY, toSystemSpec, type SpecShows } from '../../src/lib/systemSpec
 /**
  * The built-in conventions as the robot's rules (e7-t02, AC-7.1). src/lib/systemSpec.ts is a copy
  * of TKU-BridgeTable shared/systemSpec.ts (the parity check compares the two); its own tests are
- * in the table. Here: the club profile over the bundled content, one snapshot line per rule and
+ * in the table. Here: the club profile over the made-up fixtures (tests/fixtures; the club's own
+ * conventions have the same test in the private content repository), one snapshot line per rule and
  * per unresolved row, so a change to the content or the patterns shows up in review
  * (docs/SYSTEM-SPEC.md).
  */

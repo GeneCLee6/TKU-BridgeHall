@@ -1,6 +1,7 @@
 /**
  * The content model. Every convention is plain typed data: adding one means adding a file under
- * src/content/conventions, registering it in src/content/index.ts and running `npm run seed-builtin`.
+ * conventions/ of the private content repository (checked out into src/content-private/), registering
+ * it in its index.ts and running `npm run seed-builtin` (CONTENT_GUIDE.md §0, §4).
  * No component changes.
  *
  * Text fields are rendered by RichText, which understands two things only:

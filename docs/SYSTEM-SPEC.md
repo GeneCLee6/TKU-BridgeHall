@@ -60,7 +60,7 @@
 | --- | --- | --- |
 | 編號列出幾種牌 | `alternatives` | 「1.短門♣，12-21　2.5張♠ + 4張♣…」 |
 | 括號外有「或」／or（選項可能跨子句） | `alternatives` | 「5張♥，10-12或6張♥↑，8-10」 |
-| 括號裡有手牌條件（`n張`、四位數牌型、點、數字範圍、或／or、↑↓+） | `bracketed` | 「3張♠，8-10(4張♠的4333，8-10)」 |
+| 括號裡有手牌條件（`n張`、四位數牌型、點、數字範圍、或／or、↑↓+） | `bracketed` | 「3張♥，6-9(4張♥的4333，6-9)」 |
 | 讀不到任何點力、張數或牌型（只有特約名或迫叫也算） | `noConditions` | 「RKCB」「♣ fit，爛牌」 |
 | 叫品不是叫品 | `call` | `?`、`---` |
 
@@ -134,7 +134,7 @@
 
 規則：
 
-- **不是制度原文。** 原文（`meaning`、`note`）一字不改；網站不顯示條件；內建特約（`src/content/conventions/*.ts`）不填（`tests/lib/handConditions.test.ts` 鎖住）。
+- **不是制度原文。** 原文（`meaning`、`note`）一字不改；網站不顯示條件；內建特約（private 內容 repo 的 `conventions/*.ts`）不填（private repo 的 `tests/lib/handConditions.test.ts` 鎖住）。
 - 至少要有點力或張數（只有迫叫不算手牌條件，和 §5.1 的 `noConditions` 一致）；形狀由 `conditionsProblem` 檢查，牌桌 Worker 存特約與制度集段落時也用它（`worker/book.ts` 的 `checkSections`）。
 - `toSystemSpec`：列不是待確認、叫牌過程與叫品讀得出來，而且有合法的 `conditions` 時，每個叫品一條規則，`shows` 就是條件（欄位順序固定，取代啟發式讀到的，包括特約名），`filled: true`，沒有 `unparsed`；`text`、`note` 照舊逐字。條件不合法時當作沒有。
 - 報告頁只對 `alternatives`、`bracketed`、`noConditions` 三類提供「補條件」（其他原因是叫牌過程、叫品或待確認的問題，補條件也沒用）；已補的列在「幹部補過手牌條件的叫品」可修改或清除。表單預填啟發式讀到的部分（例如迫叫）。

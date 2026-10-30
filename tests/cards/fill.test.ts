@@ -7,7 +7,7 @@ import { ctcbaSimple } from '../../src/cards/templates/ctcba-simple.ts'
 import { ctcbaSimple2p } from '../../src/cards/templates/ctcba-simple-2p.ts'
 import { wbf } from '../../src/cards/templates/wbf.ts'
 import type { CardTemplate } from '../../src/cards/types.ts'
-import { conventions as bundled } from '../../src/content/index.ts'
+import { conventions as bundled } from '../fixtures/content.ts'
 import type { SystemProfile } from '../../src/lib/api.ts'
 import { resolveProfile } from '../../src/lib/profiles.ts'
 import type { Convention } from '../../src/types/convention.ts'
@@ -159,39 +159,28 @@ describe('built-in cardSlots', () => {
       }
   })
 
+  // The made-up conventions (tests/fixtures) fill a few cells; the club's own are checked in the private
+  // repository's copy of this file, which runs on the real content
   it('fill the WBF card from the club default', () => {
     const card = fillCard(wbf, club())
     const filled = Object.keys(card.cells)
-    for (const slot of [
-      'wbf.summary.general',
-      'wbf.summary.1nt',
-      'wbf.summary.special-bids',
-      'wbf.openings.1NT.responses',
-      'wbf.openings.2D.description',
-      'wbf.defence.vs-nt',
-      'wbf.leads.signals-trumps',
-      'wbf.doubles.takeout',
-      'wbf.doubles.special',
-      'wbf.high-level',
-    ])
-      expect(filled, slot).toContain(slot)
+    for (const slot of ['wbf.summary.1nt', 'wbf.openings.1NT.responses']) expect(filled, slot).toContain(slot)
     const responses = card.cells['wbf.openings.1NT.responses']!
     expect(responses.sources).toEqual([
-      { slug: 'notrump-responses', entry: 'wbf.openings.1NT.responses <- responses#0', sectionId: 'responses' },
+      { slug: 'fixture-alpha', entry: 'wbf.openings.1NT.responses <- responses#0', sectionId: 'responses' },
     ])
-    // Sixteen rows do not fit one line: the full table goes to a note
-    expect(responses.text).toMatch(/^Responses to 1NT \[Note \d+\]$/)
+    // Five rows do not fit one line: the full table goes to a note
+    expect(responses.text).toMatch(/^Fixture Alpha \(made up for tests\) \[Note \d+\]$/)
     const note = card.notes.find((n) => n.n === responses.notes![0])!
-    expect(note).toMatchObject({ slot: 'wbf.openings.1NT.responses', slug: 'notrump-responses', sectionId: 'responses' })
-    expect(note.lines[0]).toMatch(/^2♣=stayman/)
+    expect(note).toMatchObject({ slot: 'wbf.openings.1NT.responses', slug: 'fixture-alpha', sectionId: 'responses' })
+    expect(note.lines[0]).toMatch(/^2♣=測試意義甲/)
     expect(card.notes.map((n) => n.n)).toEqual(card.notes.map((_, i) => i + 1))
   })
 
   it('tick the simple card from the club default, the same on both editions', () => {
     const one = fillCard(ctcbaSimple, club())
     expect(one.cells['ctcba-simple.nt.stayman']).toMatchObject({ checked: true })
-    expect(one.cells['ctcba-simple.signals.discard-suit']).toMatchObject({ option: 'odd-even' })
-    expect(one.cells['ctcba-simple.signals.table.attitude.suit-reverse']).toMatchObject({ checked: true })
+    expect(one.cells['ctcba-simple.nt.transfer-2']).toMatchObject({ checked: true })
     const two = fillCard(ctcbaSimple2p, club())
     const strip = (cells: object, id: string) =>
       Object.fromEntries(Object.entries(cells).map(([k, v]) => [k.slice(id.length), { ...v, slot: v.slot.slice(id.length) }]))
@@ -268,10 +257,10 @@ describe('fillCard', () => {
     const content = [sample(['wbf.box <- top#0'])]
     const off = profile({ id: 'club', scope: 'club', adopted: { sample: 'off' } })
     expect(fillCard(mini, resolveProfile([off], 'club', content)).cells).toEqual({})
-    const teamOff = profile({ id: 't', scope: 'team', adopted: { 'notrump-responses': 'off' } })
+    const teamOff = profile({ id: 't', scope: 'team', adopted: { 'fixture-alpha': 'off' } })
     const card = fillCard(ctcbaSimple, resolveProfile([teamOff], 't', bundled))
     expect(card.cells['ctcba-simple.nt.stayman']).toBeUndefined()
-    expect(card.cells['ctcba-simple.minor.nmf']).toBeDefined()
+    expect(fillCard(ctcbaSimple, club()).cells['ctcba-simple.nt.stayman']).toBeDefined()
   })
 
   it('fills the overridden text, marked with the overriding layer', () => {
@@ -346,7 +335,7 @@ describe('fillCard', () => {
 describe('slot space', () => {
   it('counts CJK and suit symbols as two', () => {
     expect(textWidth('1NT')).toBe(3)
-    expect(textWidth('開叫1♠')).toBe(7)
+    expect(textWidth('測試1♠')).toBe(7)
   })
 
   it.each(cardTemplates.map((t) => [t.id, t] as const))('%s has a space for every slot', (_, t) => {
