@@ -30,9 +30,9 @@ describe.skipIf(!tableDir)('constants shared with TKU-BridgeTable', () => {
     })
   })
 
-  it('knows only permissions the table has, and every book one', async () => {
+  it('knows only permissions the table has, and every book and forum one', async () => {
     const { PERMISSIONS } = await protocol()
-    expect(api.PERMISSIONS).toEqual((PERMISSIONS as string[]).filter((p) => p.startsWith('book')))
+    expect(api.PERMISSIONS).toEqual((PERMISSIONS as string[]).filter((p) => p.startsWith('book') || p.startsWith('forum')))
   })
 
   it('has the same system profile constants', async () => {

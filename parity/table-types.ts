@@ -55,9 +55,9 @@ type Check<T extends true> = T
 
 export type Checks = [
   // ── Accounts (shared/protocol.ts) ────────────────────────────────────────────────────────────
-  // The handbook knows only its own two permissions; `boardCurate` is the table's (e4-t28)
+  // The handbook knows only its own permissions and the forum's; `boardCurate` and `tkuSystem` are the table's
   Check<Assignable<Book.Permission, Protocol.Permission>>,
-  Check<Equal<Extract<Protocol.Permission, `book${string}`>, Book.Permission>>,
+  Check<Equal<Extract<Protocol.Permission, `book${string}` | `forum${string}`>, Book.Permission>>,
   // `Me` and `AdminUser` with the permissions set aside (checked above); the handbook leaves out
   // the table's robot and notification fields
   Check<Reads<Omit<Book.Me, 'permissions'>, Omit<Protocol.Me, 'permissions'>>>,
@@ -269,4 +269,8 @@ export type Checks = [
   Check<Same<Forum.BoardPage, TableForum.BoardPage>>,
   Check<Same<Forum.PostThread, TableForum.PostThread>>,
   Check<Same<Forum.ForumLatest, TableForum.ForumLatest>>,
+  // Reports (e11-t09)
+  Check<Same<Forum.ReportInput, TableForum.ReportInput>>,
+  Check<Same<Forum.ReportDecision, TableForum.ReportDecision>>,
+  Check<Same<Forum.ReportItem, TableForum.ReportItem>>,
 ]

@@ -13,6 +13,10 @@ import type {
   PostThread,
   ReactionEmoji,
   Reactions,
+  Report,
+  ReportDecision,
+  ReportInput,
+  ReportItem,
 } from './forum.ts'
 
 /**
@@ -21,7 +25,8 @@ import type {
  * home page's bundle; the home page's two lists (e11-t16) load it with `import()`.
  *
  * Errors come back as `ApiError` with the server's message: 404 `forumBoardGone`, `postGone`,
- * `commentGone`; 403 `forumBoardOfficersOnly`, `notYours`; 409 `postLocked`; 429 `slowDown`
+ * `commentGone`, `forumReportGone`; 403 `forumBoardOfficersOnly`, `notYours`; 409 `postLocked`,
+ * `forumReportHandled`, `forumReportLimit`; 429 `slowDown`
  * (FORUM_LIMITS.perMinute posts and comments a minute); 400 `badContent` with the reason.
  */
 
@@ -71,4 +76,13 @@ export const forumApi = {
     send<{ reactions: Reactions }>('PUT', `${targetPath(target, targetId)}/reaction`, { emoji }).then((r) => r.reactions),
   unreact: (target: Target, targetId: string) =>
     send<{ reactions: Reactions }>('DELETE', `${targetPath(target, targetId)}/reaction`).then((r) => r.reactions),
+
+  /** Any member reports someone else's post or comment (e11-t09); again while it is open changes the reason */
+  report: (input: ReportInput) => send<{ report: Report }>('POST', '/api/forum/reports', input).then((r) => r.report),
+  /** Officers: the open reports, or every one (`all`), newest first */
+  reports: (status: 'open' | 'all' = 'open') =>
+    request<{ reports: ReportItem[] }>(`/api/forum/reports?status=${status}`).then((r) => r.reports),
+  /** Officers: dismiss a report, or remove what it reported; 409 `forumReportHandled` when someone else did */
+  decide: (reportId: string, action: ReportDecision['action']) =>
+    send<{ report: Report }>('POST', `/api/forum/reports/${id(reportId)}`, { action }).then((r) => r.report),
 }

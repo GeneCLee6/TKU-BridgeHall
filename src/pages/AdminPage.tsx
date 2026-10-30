@@ -25,6 +25,7 @@ import { useAuth } from '../state/AuthContext.tsx'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 import { Frame, Gate } from './Frame.tsx'
+import { review } from './reviewStrings.ts'
 import { tableReport } from './tableReportStrings.ts'
 
 /**
@@ -65,6 +66,11 @@ function AdminOrEditor() {
       <Muted>
         <Link to="/glossary/edit">{glossaryStrings.editTitle}</Link>
       </Muted>
+      {(user?.admin || user?.permissions.includes('forumModerate')) && (
+        <Muted>
+          <Link to="/forum/manage">{review.forumManage}</Link>
+        </Muted>
+      )}
       {user?.admin && (
         <Muted>
           {t.more}{' '}
@@ -126,18 +132,20 @@ function AccountPanels() {
     }
   }
 
-  // A reviewer is always an editor (e8-t01): reviewing brings editing, and no editing means no reviewing
+  // A reviewer is always an editor (e8-t01): reviewing brings editing, and no editing means no
+  // reviewing. The table's own permissions (featuring boards, the club's robot) are not shown here
+  // and stay as they are
   const toggle = (u: AdminUser, permission: Permission, on: boolean) =>
     void run(() =>
-      api.admin.setPermissions(
-        u.id,
-        PERMISSIONS.filter((p) => {
+      api.admin.setPermissions(u.id, [
+        ...PERMISSIONS.filter((p) => {
           if (p === permission) return on
           if (p === 'bookEdit' && permission === 'bookReview' && on) return true
           if (p === 'bookReview' && permission === 'bookEdit' && !on) return false
           return u.permissions.includes(p)
         }),
-      ),
+        ...u.permissions.filter((p) => !PERMISSIONS.includes(p)),
+      ]),
     )
 
   const saveSettings = (event: FormEvent) => {
