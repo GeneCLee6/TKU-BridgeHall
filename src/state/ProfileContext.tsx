@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useLocation } from 'react-router-dom'
+import { trackProfileSwitch } from '../lib/analytics.ts'
 import { api, CLUB_PROFILE_ID, type ProfileSummary } from '../lib/api.ts'
 import type { ProfileView } from '../lib/profiles.ts'
 import { useAuth } from './AuthContext.tsx'
@@ -146,6 +147,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     (id: string) => {
       if (!userId) return
       const next = { user: userId, id }
+      // Anonymous usage (e10-t07): which kind of profile, never which one
+      const scope = list.find((p) => p.id === id)?.scope
+      if (scope && id !== activeId) trackProfileSwitch(scope)
       setLinked(null)
       setChoice(next)
       keep(next)
@@ -153,7 +157,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       // A profile made since the list came (a partnership just accepted) is fetched with it
       if (!list.some((p) => p.id === id)) api.book.profiles().then(setList, () => {})
     },
-    [userId, list],
+    [userId, list, activeId],
   )
 
   const value = useMemo(

@@ -1,7 +1,8 @@
 import { Search } from 'lucide-react'
-import { lazy, Suspense, useId, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+import { trackSearch } from '../lib/analytics.ts'
 import type { SearchFn } from '../lib/search.ts'
 import { conventionPath, sectionPath } from '../lib/sections.ts'
 import { strings } from '../strings.ts'
@@ -10,6 +11,9 @@ import { RichText } from './Suit.tsx'
 
 // The forum's posts (e11-t18): lazy, with the forum's API
 const SearchForum = lazy(() => import('./SearchForum.tsx'))
+
+/** A query the reader has not changed for this long is the one they settled on (e10-t07) */
+const SETTLED_MS = 1500
 
 /**
  * Searches convention names, aliases, tags, bids and meanings, and the library's articles; results are deep links.
@@ -23,6 +27,16 @@ export function SearchBar({ search, onFocus }: { search: SearchFn; onFocus?: () 
   const inputId = 'site-search'
   const listId = useId()
   const showResults = query.trim().length > 0
+
+  // Anonymous usage (lib/analytics.ts): the query they stopped at, or picked a result for
+  useEffect(() => {
+    const timer = setTimeout(() => trackSearch(query), SETTLED_MS)
+    return () => clearTimeout(timer)
+  }, [query])
+  const pick = () => {
+    trackSearch(query)
+    setQuery('')
+  }
 
   return (
     <Wrap role="search" data-print="hide" onSubmit={(e) => e.preventDefault()}>
@@ -53,7 +67,7 @@ export function SearchBar({ search, onFocus }: { search: SearchFn; onFocus?: () 
               <li key={`${r.slug}/${r.sectionId ?? ''}`}>
                 <Link
                   to={r.path ?? (r.sectionId ? sectionPath(r.slug, r.sectionId) : conventionPath(r.slug))}
-                  onClick={() => setQuery('')}
+                  onClick={pick}
                 >
                   <RichText text={r.label} />
                 </Link>
@@ -62,7 +76,7 @@ export function SearchBar({ search, onFocus }: { search: SearchFn; onFocus?: () 
             ))}
           </ul>
           <Suspense fallback={null}>
-            <SearchForum query={query} onPick={() => setQuery('')} />
+            <SearchForum query={query} onPick={pick} />
           </Suspense>
         </Results>
       )}

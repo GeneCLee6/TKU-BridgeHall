@@ -57,6 +57,12 @@ export interface DisplayPrefs {
   reading: ReadingMode
   /** 「你是新生嗎？」 has been answered or closed (e4-t03); 個人設定's reset keeps it */
   newcomerAsked: boolean
+  /**
+   * 傳送匿名使用統計 (e10-t07): null until the reader chooses, which means on unless the browser
+   * sends Global Privacy Control or Do Not Track (`analyticsOn`). Not a display setting, so
+   * 個人設定's reset keeps it
+   */
+  analytics: boolean | null
 }
 
 // oxlint-disable-next-line react/only-export-components
@@ -70,6 +76,7 @@ export const defaultPrefs: DisplayPrefs = {
   density: 'comfortable',
   reading: 'full',
   newcomerAsked: false,
+  analytics: null,
 }
 
 interface Preferences extends DisplayPrefs {
@@ -105,6 +112,7 @@ const valid: { [K in keyof DisplayPrefs]: (value: unknown) => boolean } = {
   density: oneOf(densities),
   reading: oneOf(readingModes),
   newcomerAsked: (value) => typeof value === 'boolean',
+  analytics: (value) => value === null || typeof value === 'boolean',
 }
 
 /** The stored settings, each checked; `mode` is how light/dark was stored before 跟隨系統 existed */
@@ -135,6 +143,7 @@ export function readStoredPrefs(): DisplayPrefs {
     'density',
     'reading',
     'newcomerAsked',
+    'analytics',
   ] as const)
     pick(key, stored[key])
   return prefs
@@ -210,7 +219,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setTextSize: (textSize) => update({ textSize }),
       setStyle: (style) => update({ style }),
       update,
-      reset: () => setPrefs((now) => ({ ...defaultPrefs, newcomerAsked: now.newcomerAsked })),
+      reset: () => setPrefs((now) => ({ ...defaultPrefs, newcomerAsked: now.newcomerAsked, analytics: now.analytics })),
     }
   }, [prefs, theme.mode])
 

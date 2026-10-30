@@ -75,6 +75,8 @@ export const strings = {
   updateAvailable: '有新版本可以使用。',
   updateReload: '重新整理',
   updateLater: '稍後',
+  crashTitle: '這一頁出了點問題',
+  crashBody: '錯誤已自動回報給幹部。重新整理通常就會好；如果一直發生，請告訴幹部你在做什麼。',
 
   loading: '載入中…',
   save: '儲存',

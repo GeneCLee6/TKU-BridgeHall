@@ -212,6 +212,14 @@ export type Checks = [
   Check<Same<Book.RobotMeanings, Protocol.RobotMeanings>>,
   Check<Same<typeof Sync.SYSTEM_SPEC_LIMITS, typeof Protocol.SYSTEM_SPEC_LIMITS>>,
 
+  // ── Error reports and anonymous usage (shared/protocol.ts, E10 e10-t06 e10-t07) ──────────────
+  Check<Same<Book.BookClientError, Protocol.BookClientError>>,
+  Check<Same<Book.BookAnalyticsEventType, Protocol.BookAnalyticsEventType>>,
+  Check<Same<Book.BookAnalyticsEvent, Protocol.BookAnalyticsEvent>>,
+  Check<Same<Book.BookAnalyticsBatch, Protocol.BookAnalyticsBatch>>,
+  Check<Same<Book.BookAnalyticsWeek, Protocol.BookAnalyticsWeek>>,
+  Check<Same<Book.BookAnalyticsView, Protocol.BookAnalyticsView>>,
+
   // ── Profiles, avatars and files (shared/profile.ts, avatar.ts, files.ts; E11) ──────────────────
   Check<Same<Account.Profile, TableProfile.Profile>>,
   Check<Same<Account.ProfileLevel, TableProfile.ProfileLevel>>,

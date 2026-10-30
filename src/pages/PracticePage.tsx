@@ -8,6 +8,7 @@ import { Hand } from '../components/Hand.tsx'
 import { CallLabel, RichText } from '../components/Suit.tsx'
 import { Tag } from '../components/Tag.tsx'
 import { Button, ErrorText, Field, Muted, Notice, PageTitle, Panel, PanelTitle, Row, Select } from '../components/ui.tsx'
+import { trackQuizAnswer } from '../lib/analytics.ts'
 import { lessonParam, lessonQuizzes, useLearningPaths } from '../lib/learning.ts'
 import { drawQuizzes, filterQuizzes, isRight, quizBlockIndex, sameCall, type Quiz } from '../lib/quiz.ts'
 import { fixPath, FIXES_PATH, percent, quizStats, roundOf, SCORES_PATH } from '../lib/quizRecords.ts'
@@ -305,8 +306,11 @@ function Question({
   const result = useRef<HTMLHeadingElement>(null)
   useEffect(() => heading.current?.focus(), [])
   useEffect(() => {
-    if (picked !== undefined) result.current?.focus()
-  }, [picked])
+    if (picked === undefined) return
+    result.current?.focus()
+    // Anonymous usage (e10-t07): the convention and whether it was right
+    trackQuizAnswer(quiz.slug, isRight(quiz, picked))
+  }, [picked, quiz])
 
   const correct = picked !== undefined && isRight(quiz, picked)
   const block = picked !== undefined ? sourceBlock(convention, quiz) : undefined

@@ -1,12 +1,14 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
+import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { UpdatePrompt } from './components/UpdatePrompt.tsx'
+import { analyticsOn, setAnalyticsConsent, trackPage } from './lib/analytics.ts'
 import { HandbookShell } from './pages/HandbookShell.tsx'
 import { HomePage } from './pages/HomePage.tsx'
 import { AuthProvider, useAuth } from './state/AuthContext.tsx'
 import { ContentProvider } from './state/ContentContext.tsx'
 import { ExpansionProvider } from './state/ExpansionContext.tsx'
-import { PreferencesProvider } from './state/PreferencesContext.tsx'
+import { PreferencesProvider, usePreferences } from './state/PreferencesContext.tsx'
 import { ProfiledContent, ProfileProvider } from './state/ProfileContext.tsx'
 import { GlobalStyle } from './styles/GlobalStyle.ts'
 import { strings } from './strings.ts'
@@ -113,93 +115,105 @@ function SignedIn() {
   )
 }
 
+/** Anonymous usage (e10-t07, lib/analytics.ts): follows 個人設定's switch and counts the pages opened */
+function Analytics() {
+  const on = analyticsOn(usePreferences().analytics)
+  const { pathname } = useLocation()
+  useEffect(() => setAnalyticsConsent(on), [on])
+  useEffect(() => trackPage(pathname), [pathname])
+  return null
+}
+
 export function App() {
   return (
     <PreferencesProvider>
       <GlobalStyle />
       <UpdatePrompt />
+      <Analytics />
       <AuthProvider>
-        <Suspense fallback={loading}>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route element={<SignedIn />}>
-              <Route element={handbook}>
-                <Route index element={<HomePage />} />
-                <Route path="/book" element={<BookPage />} />
-                <Route path="/c/:slug" element={<ConventionPage />} />
-                <Route path="/c/:slug/:sectionId" element={<ConventionPage />} />
-                <Route path="/library/:slug?" element={<Library />} />
-                <Route path="/glossary" element={<GlossaryPage />} />
-                <Route path="*" element={<HomePage notFound />} />
+        <ErrorBoundary>
+          <Suspense fallback={loading}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route element={<SignedIn />}>
+                <Route element={handbook}>
+                  <Route index element={<HomePage />} />
+                  <Route path="/book" element={<BookPage />} />
+                  <Route path="/c/:slug" element={<ConventionPage />} />
+                  <Route path="/c/:slug/:sectionId" element={<ConventionPage />} />
+                  <Route path="/library/:slug?" element={<Library />} />
+                  <Route path="/glossary" element={<GlossaryPage />} />
+                  <Route path="*" element={<HomePage notFound />} />
+                </Route>
+                <Route
+                  path="/practice"
+                  element={
+                    <ProfiledContent>
+                      <PracticePage />
+                    </ProfiledContent>
+                  }
+                />
+                <Route
+                  path="/practice/scores"
+                  element={
+                    <ProfiledContent>
+                      <PracticeScoresPage />
+                    </ProfiledContent>
+                  }
+                />
+                <Route
+                  path="/practice/fixes"
+                  element={
+                    <ProfiledContent>
+                      <PracticeFixesPage />
+                    </ProfiledContent>
+                  }
+                />
+                <Route path="/learn" element={<LearnIndexPage />} />
+                <Route path="/learn/:pathId" element={<ProfiledContent><PathPage /></ProfiledContent>} />
+                <Route path="/learn/:pathId/:lessonId" element={<ProfiledContent><LessonPage /></ProfiledContent>} />
+                <Route path="/learn/:pathId/edit" element={<LearnEditorPage />} />
+                <Route path="/account" element={<AccountPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/glossary/edit" element={<GlossaryEditorPage />} />
+                <Route path="/new" element={<EditorPage />} />
+                <Route path="/edit/:slug" element={<EditorPage />} />
+                <Route path="/review" element={<ReviewPage />} />
+                <Route path="/review/:slug" element={<ReviewPage />} />
+                <Route path="/pending" element={<PendingPage />} />
+                <Route path="/import" element={<ImportPage />} />
+                <Route path="/integrations/table" element={<TableReportPage />} />
+                <Route path="/profiles/:id/edit" element={<ProfileEditorPage />} />
+                <Route path="/profiles/:id/compare" element={<ProfileComparePage />} />
+                <Route path="/cards/:profileId" element={<CardPage />} />
+                <Route path="/cards/:profileId/:templateId" element={<CardPage />} />
+                <Route path="/cards/:profileId/:templateId/:form" element={<CardPage />} />
+                <Route path="/cards/:profileId/:templateId/v/:n" element={<CardSnapshotPage />} />
+                <Route path="/teams" element={<TeamsPage />} />
+                <Route path="/teams/:id" element={<TeamPage />} />
+                <Route path="/teams/:id/cards" element={<TeamCardsPage />} />
+                <Route path="/teams/:id/cards/:templateId" element={<TeamCardsPage />} />
+                <Route path="/pairs/:id" element={<PairPage />} />
+                <Route path="/u/:id" element={<MemberPage />} />
+                <Route path="/library/book" element={<EbooksPage />} />
+                <Route path="/library/book/:id" element={<EbookPage />} />
+                <Route path="/library/new" element={<ArticleEditorPage />} />
+                <Route path="/library/:slug/edit" element={<ArticleEditorPage />} />
+                <Route path="/forum" element={<ForumShell />}>
+                  <Route index element={<FeedPage />} />
+                  <Route path="new" element={<NewPostPage />} />
+                  <Route path="manage" element={<ForumManagePage />} />
+                  <Route path="search" element={<ForumSearchPage />} />
+                  <Route path="mine" element={<ForumMinePage />} />
+                  <Route path="mentions" element={<ForumMentionsPage />} />
+                  <Route path="p/:postId" element={<PostPage />} />
+                  <Route path=":boardId" element={<ForumBoardPage />} />
+                </Route>
               </Route>
-              <Route
-                path="/practice"
-                element={
-                  <ProfiledContent>
-                    <PracticePage />
-                  </ProfiledContent>
-                }
-              />
-              <Route
-                path="/practice/scores"
-                element={
-                  <ProfiledContent>
-                    <PracticeScoresPage />
-                  </ProfiledContent>
-                }
-              />
-              <Route
-                path="/practice/fixes"
-                element={
-                  <ProfiledContent>
-                    <PracticeFixesPage />
-                  </ProfiledContent>
-                }
-              />
-              <Route path="/learn" element={<LearnIndexPage />} />
-              <Route path="/learn/:pathId" element={<ProfiledContent><PathPage /></ProfiledContent>} />
-              <Route path="/learn/:pathId/:lessonId" element={<ProfiledContent><LessonPage /></ProfiledContent>} />
-              <Route path="/learn/:pathId/edit" element={<LearnEditorPage />} />
-              <Route path="/account" element={<AccountPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/glossary/edit" element={<GlossaryEditorPage />} />
-              <Route path="/new" element={<EditorPage />} />
-              <Route path="/edit/:slug" element={<EditorPage />} />
-              <Route path="/review" element={<ReviewPage />} />
-              <Route path="/review/:slug" element={<ReviewPage />} />
-              <Route path="/pending" element={<PendingPage />} />
-              <Route path="/import" element={<ImportPage />} />
-              <Route path="/integrations/table" element={<TableReportPage />} />
-              <Route path="/profiles/:id/edit" element={<ProfileEditorPage />} />
-              <Route path="/profiles/:id/compare" element={<ProfileComparePage />} />
-              <Route path="/cards/:profileId" element={<CardPage />} />
-              <Route path="/cards/:profileId/:templateId" element={<CardPage />} />
-              <Route path="/cards/:profileId/:templateId/:form" element={<CardPage />} />
-              <Route path="/cards/:profileId/:templateId/v/:n" element={<CardSnapshotPage />} />
-              <Route path="/teams" element={<TeamsPage />} />
-              <Route path="/teams/:id" element={<TeamPage />} />
-              <Route path="/teams/:id/cards" element={<TeamCardsPage />} />
-              <Route path="/teams/:id/cards/:templateId" element={<TeamCardsPage />} />
-              <Route path="/pairs/:id" element={<PairPage />} />
-              <Route path="/u/:id" element={<MemberPage />} />
-              <Route path="/library/book" element={<EbooksPage />} />
-              <Route path="/library/book/:id" element={<EbookPage />} />
-              <Route path="/library/new" element={<ArticleEditorPage />} />
-              <Route path="/library/:slug/edit" element={<ArticleEditorPage />} />
-              <Route path="/forum" element={<ForumShell />}>
-                <Route index element={<FeedPage />} />
-                <Route path="new" element={<NewPostPage />} />
-                <Route path="manage" element={<ForumManagePage />} />
-                <Route path="search" element={<ForumSearchPage />} />
-                <Route path="mine" element={<ForumMinePage />} />
-                <Route path="mentions" element={<ForumMentionsPage />} />
-                <Route path="p/:postId" element={<PostPage />} />
-                <Route path=":boardId" element={<ForumBoardPage />} />
-              </Route>
-            </Route>
-          </Routes>
-        </Suspense>
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </AuthProvider>
     </PreferencesProvider>
   )
