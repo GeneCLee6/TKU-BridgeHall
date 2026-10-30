@@ -13,9 +13,13 @@
 //
 // And that no convention text is in dist at all (L0, e10-t20): the built-in conventions are served
 // by the Worker to members only, so every file the site publishes is searched for their summaries
-// and for every text in their sections long enough to be their own (MIN_TEXT characters).
+// and for every text in their sections long enough to be their own (MIN_TEXT characters). Their
+// text is in the private repository checked out into src/content-private/ (CONTENT_GUIDE.md §0):
+// without the checkout that check is skipped, and says so. It never prints the text it finds (CI
+// logs are public), only the file and the convention's slug.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { gzipSync } from 'node:zlib'
 
 const KB = 1000
@@ -98,17 +102,22 @@ const allCss = existsSync(join(dist, 'assets'))
   : []
 
 // --- No convention text in dist (L0) ----------------------------------------------------
-const { conventions } = await import('../src/content/index.ts')
-const texts = new Set()
+const privateIndex = join(import.meta.dirname, '..', 'src', 'content-private', 'index.ts')
+const hasContent = existsSync(privateIndex)
+const { conventions } = hasContent ? await import(pathToFileURL(privateIndex).href) : { conventions: [] }
+/** Each text, and the slug of a convention it is in */
+const texts = new Map()
+let slug = ''
 // Section ids and other identifiers (`continuations`) are names the code may share, not text
 const IDENTIFIER = /^[a-z0-9-]+$/
 const collect = (value) => {
   if (typeof value === 'string') {
-    if (value.trim().length >= MIN_TEXT && !IDENTIFIER.test(value)) texts.add(value.trim())
+    if (value.trim().length >= MIN_TEXT && !IDENTIFIER.test(value) && !texts.has(value.trim())) texts.set(value.trim(), slug)
   } else if (Array.isArray(value)) value.forEach(collect)
   else if (value && typeof value === 'object') Object.values(value).forEach(collect)
 }
 for (const c of conventions) {
+  slug = c.slug
   collect(c.sections)
   collect(c.summary)
 }
@@ -123,9 +132,10 @@ const leaks = []
 for (const file of filesIn(dist).filter((f) => /\.(js|mjs|json|html|css|txt|webmanifest|map)$/.test(f))) {
   const body = readFileSync(file, 'utf8')
   const plain = unescapeUnicode(body)
-  for (const text of texts) {
+  for (const [text, from] of texts) {
     if (body.includes(text) || plain.includes(text) || plain.includes(JSON.stringify(text).slice(1, -1))) {
-      leaks.push(`${relative(dist, file)}: 「${text.slice(0, 30)}」`)
+      // Where, never what: the text itself would end up in a public log
+      leaks.push(`${relative(dist, file)}: text of ${from}`)
       break
     }
   }
@@ -138,13 +148,15 @@ const check = (name, actual, budget, ok, note = '') => rows.push({ name, actual,
 const homeBytes = sum(homeJs)
 check('Home initial JS', kB(homeBytes), `≤ ${kB(BUDGET.homeJs)}`, homeBytes <= BUDGET.homeJs, `${homeJs.size} file(s)`)
 
-check(
-  'No convention text in dist',
-  leaks.length ? `${leaks.length} file(s)` : 'none',
-  'none',
-  leaks.length === 0,
-  leaks.length ? leaks.slice(0, 5).join('; ') : `${texts.size} texts of ${conventions.length} conventions`,
-)
+if (hasContent)
+  check(
+    'No convention text in dist',
+    leaks.length ? `${leaks.length} file(s)` : 'none',
+    'none',
+    leaks.length === 0,
+    leaks.length ? leaks.slice(0, 5).join('; ') : `${texts.size} texts of ${conventions.length} conventions`,
+  )
+else check('No convention text in dist', 'skipped', 'none', null, 'no src/content-private checkout: the built-in conventions are in a private repository (CONTENT_GUIDE.md §0)')
 
 check('Catalogue JS (loads after the page)', kB(sum(catalogueJs)), 'report', null, CATALOGUE)
 

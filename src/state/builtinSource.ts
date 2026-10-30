@@ -5,7 +5,7 @@ import type { Convention, ConventionMeta } from '../types/convention.ts'
  * Where the built-in conventions come from (L0, e10-t20): the Worker, members only. The site no
  * longer ships them: the catalogue is the manifest's `builtin` and each convention's content is
  * `GET /api/book/builtin/:slug`. The component tests replace this module (tests/setup.ts) with the
- * conventions in src/content, as the Worker would serve them once seeded.
+ * made-up conventions in tests/fixtures (or the club's, in the private repository's tests), as the Worker would serve them once seeded.
  */
 export const builtinSource: {
   /** The catalogue until a manifest with `builtin` arrives (none: the site has nothing of its own) */

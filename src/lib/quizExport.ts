@@ -137,7 +137,7 @@ const SPOKEN: Record<string, number> = { 你: 0, 左敵: 1, 同伴: 2, 右敵: 3
 
 /**
  * The calls of an example written seat by seat, from the first seat named, and how many seats
- * clockwise from you that seat is: 「[原文已移除]」 → 1♦ X P from your
+ * clockwise from you that seat is: 「EX) 左敵 1♣，同伴 X，右敵 PASS，你？」 → 1♣ X P from your
  * left-hand opponent. Undefined for anything written otherwise.
  */
 export function spokenAuction(prompt: string): { calls: string[]; first: number } | undefined {

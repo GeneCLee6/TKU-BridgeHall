@@ -2,7 +2,7 @@ import { configure, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from '../../src/App.tsx'
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import type { ProfileAccess, ProfileInput, ProfileSummary, SystemProfile } from '../../src/lib/api.ts'
 import { walkSections } from '../../src/lib/sections.ts'
 import { profileEdit as t } from '../../src/pages/profileEditStrings.ts'

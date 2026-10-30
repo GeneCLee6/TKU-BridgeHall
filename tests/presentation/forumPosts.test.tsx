@@ -30,7 +30,7 @@ const POST: Post = {
     },
     { kind: 'auction', auction: { dealer: 'N', calls: [{ seat: 'N', call: '1D' }, { seat: 'E', call: 'P' }, { seat: 'S', call: '1S' }] } },
     { kind: 'hand', cards: ['SK', 'ST', 'HA'], label: '我的牌' },
-    { kind: 'ref', slug: 'lebensohl', sectionId: 'natural' },
+    { kind: 'ref', slug: 'fixture-beta', sectionId: 'overview' },
     { kind: 'image', assetId: IMAGE, alt: '社課的牌桌' },
   ],
   createdAt: Date.now() - 2 * 3_600_000,
@@ -132,9 +132,9 @@ describe('the post page (e11-t14)', () => {
     expect(within(post).getByText('雙有身價')).toBeInTheDocument()
     expect(within(post).getByRole('table')).toBeInTheDocument()
     expect(within(post).getByRole('group', { name: '我的牌' })).toBeInTheDocument()
-    expect(await within(post).findByRole('link', { name: /^引用：雷本索特約 › 遭自然牌組插叫/ })).toHaveAttribute(
+    expect(await within(post).findByRole('link', { name: /^引用：測試特約乙（虛構） › 佔位概要（測試）/ })).toHaveAttribute(
       'href',
-      '/c/lebensohl/natural',
+      '/c/fixture-beta/overview',
     )
     expect(await within(post).findByRole('img', { name: '社課的牌桌' })).toHaveAttribute('src', 'https://files.example/p.webp')
     expect(sent('POST', '/api/files/urls')[0].body).toEqual({ keys: [IMAGE] })
@@ -288,9 +288,9 @@ describe('the compose box (e11-t13)', () => {
     fireEvent.click(await screen.findByRole('button', { name: '引用特約' }))
     const search = screen.getByRole('searchbox', { name: /搜尋特約或段落/ })
     fireEvent.focus(search)
-    fireEvent.change(search, { target: { value: '雷本索' } })
-    fireEvent.click(await screen.findByRole('button', { name: '雷本索特約（Lebensohl）' }))
-    expect(await screen.findByRole('link', { name: /^引用：雷本索特約/ })).toHaveAttribute('href', '/c/lebensohl')
+    fireEvent.change(search, { target: { value: '測試特約乙' } })
+    fireEvent.click(await screen.findByRole('button', { name: /^測試特約乙（虛構）（Fixture Beta/ }))
+    expect(await screen.findByRole('link', { name: /^引用：測試特約乙（虛構）/ })).toHaveAttribute('href', '/c/fixture-beta')
   })
 
   it('points at a BridgeTable record by its address, keeping the id and linking to it (e11-t20)', async () => {

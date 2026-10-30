@@ -1,4 +1,4 @@
-import { categories, conventions } from '../../src/content/index.ts'
+import { categories, conventions } from '../fixtures/content.ts'
 import { tidyConvention } from '../../src/lib/content.ts'
 import { fromAiReply, importedItems, draftBody, slugify, type FlatConvention } from '../../src/lib/importResult.ts'
 import type { Block, Convention, RuleItem, Section } from '../../src/types/convention.ts'
@@ -58,9 +58,21 @@ function toFlat(c: Convention, action: 'new' | 'update' = 'new'): FlatConvention
   }
 }
 
+/** The AI's flat shape has no 導讀 block and no section level (both are set in the editor): left out here */
+const withoutIntro = (c: Convention): Convention => {
+  const strip = (list: Section[]): Section[] =>
+    list.map(({ level: _level, ...s }) => ({
+      ...s,
+      ...(s.blocks && { blocks: s.blocks.filter((b) => b.kind !== 'intro') }),
+      ...(s.children && { children: strip(s.children) }),
+    }))
+  return { ...c, sections: strip(c.sections) }
+}
+const bundled = conventions.map(withoutIntro)
+
 describe('turning the AI reply into conventions', () => {
   it('rebuilds every bundled convention exactly from its flat form', () => {
-    for (const c of conventions) {
+    for (const c of bundled) {
       const { items } = fromAiReply({ conventions: [toFlat(c)], reviewNotes: '' }, ids, c.updated)
       // The AI does not classify: kind, level and prerequisites are set in the editor
       const { kind: _k, level: _l, prerequisites: _p, cardSlots: _c, ...unclassified } = tidyConvention(c)
@@ -70,10 +82,10 @@ describe('turning the AI reply into conventions', () => {
   })
 
   it('files updates under the convention they replace, and cleans up what it cannot use', () => {
-    const lebensohl = conventions.find((c) => c.slug === 'lebensohl')!
-    const update = { ...toFlat(lebensohl, 'update'), slug: 'something-else' }
+    const alpha = bundled.find((c) => c.slug === 'fixture-alpha')!
+    const update = { ...toFlat(alpha, 'update'), slug: 'something-else' }
     const odd: FlatConvention = {
-      ...toFlat(lebensohl),
+      ...toFlat(alpha),
       slug: 'Jacoby Transfer!',
       category: 'unknown',
       sections: [
@@ -84,7 +96,7 @@ describe('turning the AI reply into conventions', () => {
     }
     const { items, reviewNotes } = fromAiReply({ conventions: [update, odd], reviewNotes: '對應到雷本索' }, ids, '2026-10-23')
     expect(reviewNotes).toBe('對應到雷本索')
-    expect(items[0]).toMatchObject({ replaces: 'lebensohl', convention: { slug: 'lebensohl' } })
+    expect(items[0]).toMatchObject({ replaces: 'fixture-alpha', convention: { slug: 'fixture-alpha' } })
     const second = items[1].convention
     expect(second.slug).toBe('jacoby-transfer')
     expect(second.category).toBe(ids[0])

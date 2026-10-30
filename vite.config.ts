@@ -1,6 +1,6 @@
 /// <reference types="vitest/config" />
 import { createHash } from 'node:crypto'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
@@ -42,6 +42,13 @@ const stampServiceWorker = (): Plugin => {
 // (`npm run dev` in TKU-BridgeTable) unless TABLE_URL points elsewhere.
 const tableUrl = process.env.TABLE_URL ?? 'http://localhost:5173'
 
+// The club's built-in conventions are in the private repository GeneCLee6/TKU-BridgeHall-content,
+// checked out (gitignored) into src/content-private/ by those who have access (CONTENT_GUIDE.md §0).
+// The tests in tests/ use made-up conventions (tests/fixtures); with the checkout, the project
+// `content` also runs the private repository's own tests on the real ones. The site never imports it.
+const PRIVATE_CONTENT = 'src/content-private'
+const hasPrivateContent = existsSync(join(PRIVATE_CONTENT, 'index.ts'))
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), appVersion(), stampServiceWorker()],
@@ -67,6 +74,20 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     // 'Expand all' renders every convention at once, which is slow in jsdom as the handbook grows
     testTimeout: 15_000,
-    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+    projects: [
+      { extends: true, test: { name: 'public', include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'] } },
+      ...(hasPrivateContent
+        ? [
+            {
+              extends: true,
+              test: {
+                name: 'content',
+                include: [`${PRIVATE_CONTENT}/tests/**/*.test.ts`, `${PRIVATE_CONTENT}/tests/**/*.test.tsx`],
+                env: { BOOK_CONTENT: 'private' },
+              },
+            },
+          ]
+        : []),
+    ],
   },
 })

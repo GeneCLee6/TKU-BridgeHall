@@ -32,7 +32,7 @@ const convention = (slug: string): Convention => ({
   ],
 })
 
-const CONTENT: Convention[] = [convention('stayman'), convention('bergen'), convention('lebensohl')]
+const CONTENT: Convention[] = [convention('alpha'), convention('beta'), convention('gamma')]
 
 const profile = (p: Partial<SystemProfile> & Pick<SystemProfile, 'id' | 'scope'>): SystemProfile => ({
   name: p.id,
@@ -51,7 +51,7 @@ const pair = (p: Partial<SystemProfile> = {}) => profile({ id: 'pair', scope: 'p
 
 const row = (meaning: string, extra: Partial<Extract<ProfileOverride, { kind: 'row' }>> = {}): ProfileOverride => ({
   kind: 'row',
-  slug: 'stayman',
+  slug: 'alpha',
   sectionId: 'top',
   blockIndex: 1,
   rowIndex: 0,
@@ -89,17 +89,17 @@ describe('compareProfile', () => {
 
   it('lists only its own changes, meta first, grouped in the content order', () => {
     const profiles = [
-      club({ overrides: [row('社團的意思', { slug: 'bergen' })] }),
+      club({ overrides: [row('社團的意思', { slug: 'beta' })] }),
       team({
         overrides: [
-          row('新', { slug: 'lebensohl' }),
-          { kind: 'section', slug: 'stayman', sectionId: 'inner', section: { id: 'x', title: '新的下層' } },
-          { kind: 'meta', slug: 'stayman', tags: ['新'] },
+          row('新', { slug: 'gamma' }),
+          { kind: 'section', slug: 'alpha', sectionId: 'inner', section: { id: 'x', title: '新的下層' } },
+          { kind: 'meta', slug: 'alpha', tags: ['新'] },
         ],
       }),
     ]
     const result = compareProfile(profiles, 'team', CONTENT)
-    expect(result.conventions.map((c) => c.slug)).toEqual(['stayman', 'lebensohl'])
+    expect(result.conventions.map((c) => c.slug)).toEqual(['alpha', 'gamma'])
     const [meta, section] = result.conventions[0]!.changes
     expect(meta).toMatchObject({
       kind: 'meta',
@@ -118,7 +118,7 @@ describe('compareProfile', () => {
     const profiles = [
       club(),
       team({
-        overrides: [row('再改', { sectionId: 'inner', blockIndex: 0 }), { kind: 'section', slug: 'stayman', sectionId: 'inner', section: replacement }],
+        overrides: [row('再改', { sectionId: 'inner', blockIndex: 0 }), { kind: 'section', slug: 'alpha', sectionId: 'inner', section: replacement }],
       }),
     ]
     const changes = compareProfile(profiles, 'team', CONTENT).conventions[0]!.changes
@@ -129,17 +129,17 @@ describe('compareProfile', () => {
 
   it('lists adoptions against the parent, and overrides on a convention that is not played', () => {
     const profiles = [
-      club({ adopted: { bergen: 'off' } }),
-      team({ adopted: { bergen: 'on', lebensohl: 'off' }, overrides: [row('新', { slug: 'lebensohl' })] }),
+      club({ adopted: { beta: 'off' } }),
+      team({ adopted: { beta: 'on', gamma: 'off' }, overrides: [row('新', { slug: 'gamma' })] }),
     ]
     const result = compareProfile(profiles, 'team', CONTENT)
     expect(result.adoptions).toEqual([
-      { slug: 'bergen', name: '特約 bergen', value: 'on', parentPlays: false },
-      { slug: 'lebensohl', name: '特約 lebensohl', value: 'off', parentPlays: true },
+      { slug: 'beta', name: '特約 beta', value: 'on', parentPlays: false },
+      { slug: 'gamma', name: '特約 gamma', value: 'off', parentPlays: true },
     ])
-    const lebensohl = result.conventions.find((c) => c.slug === 'lebensohl')!
-    expect(lebensohl.played).toBe(false)
-    expect((lebensohl.changes[0] as RowChange).before?.meaning).toBe('問高花')
+    const gamma = result.conventions.find((c) => c.slug === 'gamma')!
+    expect(gamma.played).toBe(false)
+    expect((gamma.changes[0] as RowChange).before?.meaning).toBe('問高花')
   })
 
   it('reports what points at nothing instead of listing it as a change', () => {
@@ -149,13 +149,13 @@ describe('compareProfile', () => {
     const profiles = [
       club({ overrides: [row('社團的', { rowIndex: 7 })] }),
       team({
-        adopted: { gone: 'off', lebensohl: 'off' },
-        overrides: [missingRow, missingSection, missingConvention, row('好的', { slug: 'lebensohl' })],
-        notes: [{ slug: 'lebensohl', sectionId: 'nowhere', text: '備忘', by: 'u1', at: 0 }],
+        adopted: { gone: 'off', gamma: 'off' },
+        overrides: [missingRow, missingSection, missingConvention, row('好的', { slug: 'gamma' })],
+        notes: [{ slug: 'gamma', sectionId: 'nowhere', text: '備忘', by: 'u1', at: 0 }],
       }),
     ]
     const result = compareProfile(profiles, 'team', CONTENT)
-    expect(result.conventions.map((c) => c.slug)).toEqual(['lebensohl'])
+    expect(result.conventions.map((c) => c.slug)).toEqual(['gamma'])
     expect(result.problems).toEqual(
       expect.arrayContaining([
         { kind: 'unknownAdoption', profileId: 'team', slug: 'gone' },
@@ -178,7 +178,7 @@ describe('compareProfile', () => {
   })
 
   it('never changes its arguments', () => {
-    const profiles = [club({ adopted: { bergen: 'off' } }), team({ overrides: [row('新')] })]
+    const profiles = [club({ adopted: { beta: 'off' } }), team({ overrides: [row('新')] })]
     const copy = structuredClone(profiles)
     const content = structuredClone(CONTENT)
     compareProfile(profiles, 'team', content)

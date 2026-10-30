@@ -6,10 +6,20 @@ import { fillCard } from '../../src/cards/fill.ts'
 import { cardTemplates } from '../../src/cards/templates/index.ts'
 import { wbf } from '../../src/cards/templates/wbf.ts'
 import type { CardTemplate } from '../../src/cards/types.ts'
-import { conventions as bundled } from '../../src/content/index.ts'
+import { conventions as bundled } from '../fixtures/content.ts'
 import { resolveProfile } from '../../src/lib/profiles.ts'
+import type { Convention } from '../../src/types/convention.ts'
 
-const club = resolveProfile([], 'club', bundled)
+/** A made-up convention too long for its cell, so the card has a supplementary note */
+const long: Convention = {
+  ...bundled[0]!,
+  slug: 'fixture-long',
+  nameZh: '測試長特約（虛構）',
+  cardSlots: ['wbf.openings.2D.description <- long'],
+  sections: [{ id: 'long', title: '測試長段落', blocks: [{ kind: 'paragraph', text: '測試用的長佔位文字，'.repeat(80) }] }],
+}
+
+const club = resolveProfile([], 'club', [...bundled, long])
 
 async function documentXml(template: CardTemplate, font?: 'arial' | 'gill-sans') {
   const card = fillCard(template, club)

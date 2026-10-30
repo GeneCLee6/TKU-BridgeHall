@@ -6,7 +6,7 @@ describe('forgetting member data', () => {
   it('drops the cached manifest and every cached /api answer, and keeps the app files', async () => {
     window.localStorage.setItem(MANIFEST_CACHE_KEY, '{}')
     window.localStorage.setItem('tku-bridgebook:prefs', '{}')
-    const keys = ['/', '/assets/index-abc.js', '/api/book/manifest', '/api/book/builtin/lebensohl', '/api/book/search-index'].map(
+    const keys = ['/', '/assets/index-abc.js', '/api/book/manifest', '/api/book/builtin/fixture-alpha', '/api/book/search-index'].map(
       (path) => new Request(`https://book.test${path}`),
     )
     const deleted: string[] = []
@@ -15,7 +15,7 @@ describe('forgetting member data', () => {
     vi.stubGlobal('caches', { open })
     await forgetMemberData()
     expect(open).toHaveBeenCalledWith(SW_CACHE)
-    expect(deleted).toEqual(['/api/book/manifest', '/api/book/builtin/lebensohl', '/api/book/search-index'])
+    expect(deleted).toEqual(['/api/book/manifest', '/api/book/builtin/fixture-alpha', '/api/book/search-index'])
     expect(window.localStorage.getItem(MANIFEST_CACHE_KEY)).toBeNull()
     expect(window.localStorage.getItem('tku-bridgebook:prefs')).toBe('{}')
   })

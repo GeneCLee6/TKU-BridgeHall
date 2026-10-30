@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import type { RobotShows } from '../../src/lib/api.ts'
 import { emptyClubProfile, resolveProfile } from '../../src/lib/profiles.ts'
 import {
@@ -20,7 +20,7 @@ const rule = (shows: SpecRule['shows'], after = ['1N (P)'], call = '2C'): SpecRu
   call,
   shows,
   text: '原文',
-  ref: { slug: 'notrump-responses', sectionId: 'a' },
+  ref: { slug: 'fixture-alpha', sectionId: 'a' },
 })
 const robot = (shows: Omit<RobotShows, 'text'>): RobotShows => ({ text: '機器人', ...shows })
 const spec = (rules: SpecRule[]): SystemSpec => ({

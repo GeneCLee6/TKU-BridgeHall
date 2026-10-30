@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from '../../src/App.tsx'
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import type { BookDraft, BookEntry, Me } from '../../src/lib/api.ts'
 import { conventionMeta } from '../../src/lib/sections.ts'
 import type { Convention } from '../../src/types/convention.ts'
@@ -89,7 +89,7 @@ const renderAt = (path: string) =>
 describe('signing in and registering', () => {
   it('shows and hides the password, and goes back where the member came from', async () => {
     routes['POST /api/login'] = { body: { user: { id: 'u1', username: 'amy', admin: false, permissions: [] } } }
-    renderAt('/login?next=/c/lebensohl')
+    renderAt('/login?next=/c/fixture-alpha')
     const password = await screen.findByLabelText(/^密碼/)
     await userEvent.type(screen.getByLabelText(/^帳號/), 'amy')
     await userEvent.type(password, 'secret1')
@@ -97,7 +97,7 @@ describe('signing in and registering', () => {
     await userEvent.click(screen.getByRole('button', { name: '顯示密碼' }))
     expect(password).toHaveAttribute('type', 'text')
     await userEvent.click(screen.getByRole('button', { name: '登入' }))
-    expect(await screen.findByRole('heading', { level: 1, name: '雷本索特約' }, { timeout: 5000 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: '測試特約甲（虛構）' }, { timeout: 5000 })).toBeInTheDocument()
     expect(sent.find((s) => s.path === '/api/login')!.body).toEqual({ username: 'amy', password: 'secret1' })
   })
 
@@ -176,7 +176,7 @@ describe('what a member sees', () => {
     // Never signed in on this device (tests/setup.ts keeps a member as if they had)
     window.localStorage.removeItem('tku-bridgebook:me')
     routes['POST /api/login'] = { body: { user: { id: 'u1', username: 'amy', admin: false, permissions: [] } } }
-    const { unmount } = renderAt('/c/lebensohl?x=1')
+    const { unmount } = renderAt('/c/fixture-alpha?x=1')
     expect(await screen.findByRole('heading', { level: 1, name: '登入' })).toBeInTheDocument()
     // Nothing of the handbook before signing in: no catalogue, no content requests
     expect(screen.queryByRole('navigation', { name: '特約目錄' })).toBeNull()
@@ -198,23 +198,23 @@ describe('what a member sees', () => {
   })
 
   it('shows the online version of a convention, and who changed it', async () => {
-    const lebensohl = conventions.find((c) => c.slug === 'lebensohl')!
+    const alpha = conventions.find((c) => c.slug === 'fixture-alpha')!
     serveBook({
       version: 2,
       entries: [
-        { slug: 'lebensohl', version: 2, convention: { ...lebensohl, summary: '線上改過的摘要', nameEn: 'Lebensohl online' }, createdAt: 1, updatedAt: Date.UTC(2026, 9, 23, 4), updatedBy: 'amy' },
-        { slug: 'jacoby-2nt', version: 1, convention: null, createdAt: 1, updatedAt: 1, updatedBy: 'gene' },
+        { slug: 'fixture-alpha', version: 2, convention: { ...alpha, summary: '線上改過的摘要', nameEn: 'Alpha online' }, createdAt: 1, updatedAt: Date.UTC(2026, 9, 23, 4), updatedBy: 'amy' },
+        { slug: 'fixture-beta', version: 1, convention: null, createdAt: 1, updatedAt: 1, updatedBy: 'gene' },
       ],
     })
-    renderAt('/c/lebensohl')
+    renderAt('/c/fixture-alpha')
     expect(await screen.findByText('線上改過的摘要')).toBeInTheDocument()
     // The content comes from the online entry, loaded when the linked card opens
     expect(await screen.findByText(/線上修改：amy，2026\/10\/23/)).toBeInTheDocument()
-    expect(sent.map((r) => r.path)).toContain('/api/book/content/lebensohl')
-    // Jacoby 2NT is hidden online; the old version of the same name stays
+    expect(sent.map((r) => r.path)).toContain('/api/book/content/fixture-alpha')
+    // The second one is hidden online: gone from the catalogue
     const catalogue = within(screen.getByRole('navigation', { name: '特約目錄' }))
-    const slamAsks = catalogue.getAllByRole('link', { name: /^開叫高花之滿貫詢問叫/ })
-    expect(slamAsks.map((b) => b.textContent)).toEqual([expect.stringContaining('舊版')])
+    await waitFor(() => expect(catalogue.queryByRole('link', { name: /^測試特約乙/ })).toBeNull())
+    expect(catalogue.getByRole('link', { name: /^測試制度/ })).toBeInTheDocument()
   })
 })
 
@@ -304,23 +304,23 @@ describe('the admin page', () => {
     routes['GET /api/book/reviews'] = {
       body: {
         drafts: [
-          { slug: 'lebensohl', nameZh: '雷本索特約', status: 'in-review', baseVersion: 0, revision: 2, note: '', createdAt: 1, createdBy: 'amy', updatedAt: 1, updatedBy: 'amy', reviewRequestedBy: 'amy', reviewRequestedAt: 1 },
+          { slug: 'fixture-alpha', nameZh: '測試特約甲（虛構）', status: 'in-review', baseVersion: 0, revision: 2, note: '', createdAt: 1, createdBy: 'amy', updatedAt: 1, updatedBy: 'amy', reviewRequestedBy: 'amy', reviewRequestedAt: 1 },
         ],
       },
     }
     routes['GET /api/book/audit'] = {
       body: {
         entries: [
-          { id: '2', at: 2, by: 'rita', action: 'book:publish', target: 'lebensohl', version: 3, revisionId: '00000000000002-abc', note: '校對' },
+          { id: '2', at: 2, by: 'rita', action: 'book:publish', target: 'fixture-alpha', version: 3, revisionId: '00000000000002-abc', note: '校對' },
           { id: '1', at: 1, by: 'amy', action: 'book:categories', target: 'categories', version: 1 },
         ],
       },
     }
     renderAt('/admin')
-    expect(await screen.findByRole('link', { name: '打開：雷本索特約' }, { timeout: 5000 })).toHaveAttribute('href', '/review/lebensohl')
+    expect(await screen.findByRole('link', { name: '打開：測試特約甲（虛構）' }, { timeout: 5000 })).toHaveAttribute('href', '/review/fixture-alpha')
     expect(screen.getByText('送審中（amy）')).toBeInTheDocument()
     const audit = screen.getByRole('region', { name: '審計紀錄' })
-    expect(within(audit).getByRole('link', { name: 'lebensohl' })).toHaveAttribute('href', '/edit/lebensohl?rev=00000000000002-abc')
+    expect(within(audit).getByRole('link', { name: 'fixture-alpha' })).toHaveAttribute('href', '/edit/fixture-alpha?rev=00000000000002-abc')
     expect(within(audit).getByText('第 3 版')).toBeInTheDocument()
     expect(within(audit).getByText('改分類')).toBeInTheDocument()
   })
@@ -420,7 +420,7 @@ describe('categories', () => {
     expect((await screen.findAllByRole('heading', { name: /^競叫（線上）/ })).length).toBeGreaterThan(0)
     const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.id).filter((id) => id.startsWith('cat-'))
     // Online order first; the bundled ones the list left out still have conventions, so they follow
-    expect(headings).toEqual(['cat-competitive', 'cat-notrump', 'cat-suit-openings', 'cat-signals', 'cat-system'])
+    expect(headings).toEqual(['cat-competitive', 'cat-notrump', 'cat-system'])
   })
 
   it('offers the same list in the editor', async () => {
@@ -436,8 +436,6 @@ describe('categories', () => {
     expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual([
       '滿貫',
       '無王開叫後續',
-      '花色開叫後續',
-      '防守信號',
       '競叫與防守',
       '制度總覽（舊講義）',
     ])
@@ -445,14 +443,14 @@ describe('categories', () => {
 })
 
 describe('the editor', () => {
-  const lebensohl = conventions.find((c) => c.slug === 'lebensohl')!
+  const alpha = conventions.find((c) => c.slug === 'fixture-alpha')!
 
   const draftOf = (extra: Partial<BookDraft> = {}): BookDraft => ({
-    slug: 'lebensohl',
+    slug: 'fixture-alpha',
     status: 'draft',
     baseVersion: 0,
     revision: 1,
-    convention: lebensohl,
+    convention: alpha,
     note: '',
     createdAt: 1,
     createdBy: 'amy',
@@ -464,11 +462,11 @@ describe('the editor', () => {
   it('saves an editor’s change as a draft against the version it started from, then sends it for review', async () => {
     signedIn({ permissions: ['bookEdit'] })
     serveBook({ version: 0, entries: [] })
-    routes['PUT /api/book/conventions/lebensohl/draft'] = (init?: RequestInit) => {
+    routes['PUT /api/book/conventions/fixture-alpha/draft'] = (init?: RequestInit) => {
       const body = JSON.parse(String(init?.body)) as { submit: boolean; draftRevision: number }
       return { body: { draft: draftOf({ status: body.submit ? 'in-review' : 'draft', revision: body.draftRevision + 1, reviewRequestedBy: body.submit ? 'amy' : undefined }) } }
     }
-    renderAt('/edit/lebensohl')
+    renderAt('/edit/fixture-alpha')
     const summary = await screen.findByLabelText(/^摘要/)
     // Editors cannot publish: that is the reviewers'
     expect(screen.queryByRole('button', { name: '直接發布' })).toBeNull()
@@ -479,9 +477,9 @@ describe('the editor', () => {
     await userEvent.click(screen.getByRole('button', { name: '儲存草稿' }))
     expect(await screen.findByText(/已儲存草稿。讀者還看不到/)).toBeInTheDocument()
     const save = sent.find((s) => s.method === 'PUT')!.body as { convention: { summary: string }; baseVersion: number; bundledUpdated: string; note: string; draftRevision: number; submit: boolean }
-    expect(save).toMatchObject({ baseVersion: 0, draftRevision: 0, submit: false, bundledUpdated: lebensohl.updated, note: '校對' })
+    expect(save).toMatchObject({ baseVersion: 0, draftRevision: 0, submit: false, bundledUpdated: alpha.updated, note: '校對' })
     expect(save.convention.summary).toBe('新的摘要')
-    expect(sent.some((s) => s.method === 'PUT' && s.path === '/api/book/conventions/lebensohl')).toBe(false)
+    expect(sent.some((s) => s.method === 'PUT' && s.path === '/api/book/conventions/fixture-alpha')).toBe(false)
     // Sending the saved draft for review needs no change
     await userEvent.click(screen.getByRole('button', { name: '送審' }))
     expect(await screen.findByText('已送審，等審核者發布。')).toBeInTheDocument()
@@ -495,13 +493,13 @@ describe('the editor', () => {
   it('opens the draft, and lets a reviewer publish it or send it back', async () => {
     signedIn({ permissions: ['bookEdit', 'bookReview'] })
     serveBook({ version: 0, entries: [] })
-    routes['GET /api/book/conventions/lebensohl/draft'] = {
-      body: { draft: draftOf({ status: 'in-review', revision: 4, reviewRequestedBy: 'ben', reviewRequestedAt: 2, convention: { ...lebensohl, summary: '草稿的摘要' } }) },
+    routes['GET /api/book/conventions/fixture-alpha/draft'] = {
+      body: { draft: draftOf({ status: 'in-review', revision: 4, reviewRequestedBy: 'ben', reviewRequestedAt: 2, convention: { ...alpha, summary: '草稿的摘要' } }) },
     }
-    routes['POST /api/book/conventions/lebensohl/reject'] = {
+    routes['POST /api/book/conventions/fixture-alpha/reject'] = {
       body: { draft: draftOf({ revision: 5, reviewedBy: 'amy', reviewedAt: 3, reviewNote: '點力不符' }) },
     }
-    renderAt('/edit/lebensohl')
+    renderAt('/edit/fixture-alpha')
     expect(await screen.findByLabelText(/^摘要/)).toHaveValue('草稿的摘要')
     expect(screen.getByText(/^送審中：ben/)).toBeInTheDocument()
     await userEvent.type(screen.getByLabelText('退回理由'), '點力不符')
@@ -510,8 +508,8 @@ describe('the editor', () => {
     expect(sent.find((s) => s.path.endsWith('/reject'))!.body).toEqual({ draftRevision: 4, note: '點力不符' })
     expect(screen.getByText(/amy 在 .* 退回：/).parentElement).toHaveTextContent('點力不符')
     // Publishing it uses the draft up
-    routes['PUT /api/book/conventions/lebensohl'] = {
-      body: { entry: { slug: 'lebensohl', version: 1, convention: lebensohl, createdAt: 1, updatedAt: 1, updatedBy: 'amy', status: 'published' } },
+    routes['PUT /api/book/conventions/fixture-alpha'] = {
+      body: { entry: { slug: 'fixture-alpha', version: 1, convention: alpha, createdAt: 1, updatedAt: 1, updatedBy: 'amy', status: 'published' } },
     }
     await userEvent.click(screen.getByRole('button', { name: '直接發布' }))
     expect(await screen.findByText(/已發布（第 1 版）/)).toBeInTheDocument()
@@ -522,11 +520,11 @@ describe('the editor', () => {
   it('says when someone saved the draft in between', async () => {
     signedIn({ permissions: ['bookEdit'] })
     serveBook({ version: 0, entries: [] })
-    routes['PUT /api/book/conventions/lebensohl/draft'] = {
+    routes['PUT /api/book/conventions/fixture-alpha/draft'] = {
       status: 409,
       body: { error: 'ben 剛剛修改了這份草稿，請重新載入後再改', code: 'bookDraftConflict', params: { name: 'ben' } },
     }
-    renderAt('/edit/lebensohl')
+    renderAt('/edit/fixture-alpha')
     await userEvent.type(await screen.findByLabelText(/^英文名稱/), ' x')
     await userEvent.click(screen.getByRole('button', { name: '儲存草稿' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('ben 剛剛修改了這份草稿')
@@ -536,36 +534,36 @@ describe('the editor', () => {
   it('sets the kind, level and prerequisites', async () => {
     signedIn({ permissions: ['bookEdit', 'bookReview'] })
     serveBook({ version: 0, entries: [] })
-    routes['PUT /api/book/conventions/lebensohl'] = {
-      body: { entry: { slug: 'lebensohl', version: 1, convention: lebensohl, createdAt: 1, updatedAt: 1, updatedBy: 'amy' } },
+    routes['PUT /api/book/conventions/fixture-alpha'] = {
+      body: { entry: { slug: 'fixture-alpha', version: 1, convention: alpha, createdAt: 1, updatedAt: 1, updatedBy: 'amy' } },
     }
-    renderAt('/edit/lebensohl')
+    renderAt('/edit/fixture-alpha')
     const kind = await screen.findByLabelText(/^種類/)
     expect(kind).toHaveValue('convention')
-    expect(screen.getByLabelText(/^程度/)).toHaveValue('intermediate')
+    expect(screen.getByLabelText(/^程度/)).toHaveValue('basic')
     await userEvent.selectOptions(kind, 'defense')
     await userEvent.selectOptions(screen.getByLabelText(/^程度/), 'advanced')
     const prerequisites = screen.getByRole('group', { name: '前置特約' })
     // Every other convention can be picked, but not this one
-    expect(within(prerequisites).queryByRole('checkbox', { name: '雷本索特約' })).toBeNull()
-    await userEvent.click(within(prerequisites).getByRole('checkbox', { name: '1NT的答叫' }))
+    expect(within(prerequisites).queryByRole('checkbox', { name: '測試特約甲（虛構）' })).toBeNull()
+    await userEvent.click(within(prerequisites).getByRole('checkbox', { name: '測試特約乙（虛構）' }))
     await userEvent.click(screen.getByRole('button', { name: '直接發布' }))
     expect(await screen.findByText(/已發布（第 1 版）/)).toBeInTheDocument()
     const save = sent.find((s) => s.method === 'PUT')!.body as { convention: Convention }
-    expect(save.convention).toMatchObject({ kind: 'defense', level: 'advanced', prerequisites: ['notrump-responses'] })
+    expect(save.convention).toMatchObject({ kind: 'defense', level: 'advanced', prerequisites: ['fixture-beta'] })
   })
 
   it('offers a way out when someone else published first', async () => {
     signedIn({ permissions: ['bookEdit', 'bookReview'] })
     serveBook({ version: 0, entries: [] })
     let puts = 0
-    routes['PUT /api/book/conventions/lebensohl'] = () =>
+    routes['PUT /api/book/conventions/fixture-alpha'] = () =>
       ++puts === 1
         ? { status: 409, body: { error: 'ben 剛剛修改了這個特約，請重新載入後再改', code: 'bookConflict' } }
-        : { body: { entry: { slug: 'lebensohl', version: 3, convention: lebensohl, createdAt: 1, updatedAt: 1, updatedBy: 'amy' } } }
-    renderAt('/edit/lebensohl')
+        : { body: { entry: { slug: 'fixture-alpha', version: 3, convention: alpha, createdAt: 1, updatedAt: 1, updatedBy: 'amy' } } }
+    renderAt('/edit/fixture-alpha')
     await userEvent.type(await screen.findByLabelText(/^英文名稱/), ' convention')
-    serveBook({ version: 2, entries: [{ slug: 'lebensohl', version: 2, convention: lebensohl, createdAt: 1, updatedAt: 1, updatedBy: 'ben' }] })
+    serveBook({ version: 2, entries: [{ slug: 'fixture-alpha', version: 2, convention: alpha, createdAt: 1, updatedAt: 1, updatedBy: 'ben' }] })
     await userEvent.click(screen.getByRole('button', { name: '直接發布' }))
     expect(await screen.findByText(/有人剛剛發布了這個特約的新版本/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /放棄我的修改/ })).toBeInTheDocument()
@@ -577,24 +575,24 @@ describe('the editor', () => {
   it('lets reviewers hide a convention, and not editors (e8-t01)', async () => {
     signedIn({ permissions: ['bookEdit'] })
     serveBook({ version: 0, entries: [] })
-    routes['GET /api/book/conventions/lebensohl/revisions'] = { body: { revisions: [] } }
-    const { unmount } = renderAt('/edit/lebensohl')
+    routes['GET /api/book/conventions/fixture-alpha/revisions'] = { body: { revisions: [] } }
+    const { unmount } = renderAt('/edit/fixture-alpha')
     await userEvent.click(await screen.findByRole('button', { name: '版本紀錄' }))
     await screen.findByText(/還沒有線上修改的紀錄/)
     expect(screen.queryByRole('button', { name: '從橋譜隱藏這個特約' })).toBeNull()
     unmount()
     signedIn({ permissions: ['bookEdit', 'bookReview'] })
     serveBook({ version: 0, entries: [] })
-    routes['GET /api/book/conventions/lebensohl/revisions'] = { body: { revisions: [] } }
-    routes['POST /api/book/conventions/lebensohl/hide'] = {
-      body: { entry: { slug: 'lebensohl', version: 1, convention: null, createdAt: 1, updatedAt: 1, updatedBy: 'amy' } },
+    routes['GET /api/book/conventions/fixture-alpha/revisions'] = { body: { revisions: [] } }
+    routes['POST /api/book/conventions/fixture-alpha/hide'] = {
+      body: { entry: { slug: 'fixture-alpha', version: 1, convention: null, createdAt: 1, updatedAt: 1, updatedBy: 'amy' } },
     }
-    renderAt('/edit/lebensohl')
+    renderAt('/edit/fixture-alpha')
     await userEvent.click(await screen.findByRole('button', { name: '版本紀錄' }))
     await userEvent.click(await screen.findByRole('button', { name: '從橋譜隱藏這個特約' }))
     await userEvent.click(screen.getByRole('button', { name: '確定' }))
-    await waitFor(() => expect(sent.some((s) => s.method === 'POST' && s.path === '/api/book/conventions/lebensohl/hide')).toBe(true))
-    expect(sent.find((s) => s.path === '/api/book/conventions/lebensohl/hide')!.body).toEqual({ baseVersion: 0 })
+    await waitFor(() => expect(sent.some((s) => s.method === 'POST' && s.path === '/api/book/conventions/fixture-alpha/hide')).toBe(true))
+    expect(sent.find((s) => s.path === '/api/book/conventions/fixture-alpha/hide')!.body).toEqual({ baseVersion: 0 })
   })
 
   it('will not save a new convention without its name and address', async () => {
@@ -607,7 +605,7 @@ describe('the editor', () => {
     expect(alert).toHaveTextContent('網址代稱只能用小寫英文')
     expect(alert).toHaveTextContent('缺少中文名稱')
     expect(sent.some((s) => s.method === 'PUT')).toBe(false)
-    await userEvent.type(screen.getByLabelText(/^網址代稱/), 'lebensohl')
+    await userEvent.type(screen.getByLabelText(/^網址代稱/), 'fixture-alpha')
     expect(screen.getByText('這個網址代稱已經有特約使用了')).toBeInTheDocument()
   })
 
@@ -616,9 +614,9 @@ describe('the editor', () => {
     serveBook({ version: 0, entries: [] })
     renderAt('/new')
     const name = await screen.findByLabelText(/^中文名稱/)
-    await userEvent.type(name, '開叫1')
+    await userEvent.type(name, '測試1')
     await userEvent.click(screen.getByRole('button', { name: '插入花色 ♥' }))
-    expect(name).toHaveValue('開叫1♥')
+    expect(name).toHaveValue('測試1♥')
   })
 })
 
@@ -639,7 +637,7 @@ describe('importing a file', () => {
         sourceTitle: 'Drury',
         sourceNote: '',
         sections: [
-          { id: 'rules', parentId: '', title: '答叫原則', originalTitle: '', summary: '', pending: '', blocks: [{ kind: 'paragraph', text: '原文。', pending: '' }] },
+          { id: 'rules', parentId: '', title: '測試段落', originalTitle: '', summary: '', pending: '', blocks: [{ kind: 'paragraph', text: '原文。', pending: '' }] },
         ],
       },
     ],
@@ -674,7 +672,7 @@ describe('importing a file', () => {
     expect(upload.ticket).toBe('t1')
     expect(upload.text).toContain('2C = 詢問')
     expect(JSON.parse(upload.meta)).toMatchObject({ fileName: 'drury.txt', instructions: '這是新特約' })
-    expect(JSON.parse(upload.meta).catalogue).toContain('lebensohl｜雷本索特約')
+    expect(JSON.parse(upload.meta).catalogue).toContain('fixture-alpha｜測試特約甲（虛構）')
     const draft = sent.find((s) => s.method === 'POST' && s.path === '/api/book/drafts')!.body as { result: { conventions: { convention: { slug: string } }[] } }
     expect(draft.result.conventions[0].convention.slug).toBe('drury')
   })

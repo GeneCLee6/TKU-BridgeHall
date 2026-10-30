@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test'
 import { builtinPayload } from '../../scripts/builtin-payload.ts'
+import { conventions } from '../fixtures/content.ts'
 import { conventionMeta } from '../../src/lib/sections.ts'
 import { BUILTIN_BOARDS, type Post } from '../../src/lib/forum.ts'
 import type { StyleName } from '../../src/styles/tokens.ts'
@@ -13,7 +14,7 @@ import type { DisplayPrefs } from '../../src/state/PreferencesContext.tsx'
  * runs. `signedOut` gets the login page instead.
  */
 
-const builtin = builtinPayload()
+const builtin = builtinPayload(conventions)
 const manifest = { version: 0, entries: [], categories: [], builtin: builtin.conventions.map(conventionMeta) }
 
 export const DESKTOP = { width: 1280, height: 800 }

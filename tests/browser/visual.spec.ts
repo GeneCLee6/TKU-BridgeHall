@@ -18,7 +18,7 @@ const modes = ['light', 'dark'] as const
 
 const pages = [
   { name: 'home', path: '/' },
-  { name: 'convention', path: '/c/jacoby-2nt' },
+  { name: 'convention', path: '/c/fixture-alpha' },
   { name: 'book', path: '/book' },
   { name: 'settings', path: '/settings' },
   { name: 'forum', path: '/forum' },
@@ -52,7 +52,7 @@ for (const { name, path } of pages)
 for (const style of styles.filter((s) => s !== 'general')) {
   for (const mode of modes)
     test(`${style} · convention · desktop · ${mode}`, async ({ page }) => {
-      await view(page, '/c/jacoby-2nt', DESKTOP, { style, theme: mode })
+      await view(page, '/c/fixture-alpha', DESKTOP, { style, theme: mode })
       await shot(page, `${style}-convention-desktop-${mode}`)
     })
 
@@ -74,19 +74,19 @@ test('卡片總覽 · phone', async ({ page }) => {
 
 for (const layout of ['three', 'focus'] as const)
   test(`版面 ${layout} · convention · desktop`, async ({ page }) => {
-    await view(page, '/c/jacoby-2nt', { width: 1000, height: 800 }, { layout, theme: 'light' })
+    await view(page, '/c/fixture-alpha', { width: 1000, height: 800 }, { layout, theme: 'light' })
     await shot(page, `layout-${layout}-convention`)
   })
 
 test('手機工具列 · 目錄抽屜', async ({ page }) => {
-  await view(page, '/c/jacoby-2nt', PHONE, { theme: 'light' })
+  await view(page, '/c/fixture-alpha', PHONE, { theme: 'light' })
   await page.getByRole('navigation', { name: '工具列' }).getByRole('button', { name: '目錄' }).click()
   await expect(page.locator('#catalogue')).toBeVisible()
   await expect(page).toHaveScreenshot('toolbar-catalogue-phone.png')
 })
 
 test('手機工具列 · 閱讀設定', async ({ page }) => {
-  await view(page, '/c/jacoby-2nt', PHONE, { theme: 'light' })
+  await view(page, '/c/fixture-alpha', PHONE, { theme: 'light' })
   await page.getByRole('navigation', { name: '工具列' }).getByRole('button', { name: '閱讀設定' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await expect(page).toHaveScreenshot('toolbar-reading-phone.png')

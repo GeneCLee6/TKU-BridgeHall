@@ -115,8 +115,8 @@ describe('版面', () => {
 
   it('專注單欄 hides the catalogue on a desktop', async () => {
     store({ layout: 'focus' })
-    renderAt('/c/lebensohl')
-    expect(await screen.findByRole('heading', { level: 1, name: /雷本索特約/ }, { timeout: 5000 })).toBeInTheDocument()
+    renderAt('/c/fixture-alpha')
+    expect(await screen.findByRole('heading', { level: 1, name: /測試特約甲（虛構）/ }, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: '特約目錄' })).toBeNull()
   })
 
@@ -130,7 +130,7 @@ describe('版面', () => {
     expect(tabs[0]).toHaveTextContent('全部')
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true')
     const all = within(screen.getByRole('tabpanel')).getAllByRole('button')
-    expect(all.length).toBeGreaterThan(10)
+    expect(all.length).toBe(3)
 
     // A category shows only its own
     await userEvent.click(tabs[1])
@@ -140,11 +140,11 @@ describe('版面', () => {
     await userEvent.click(tabs[0])
     const drawer = within(screen.getByRole('complementary', { name: '預覽' }))
     expect(drawer.getByText(/點選左邊的特約/)).toBeInTheDocument()
-    const tile = screen.getByRole('button', { name: /^雷本索特約/ })
+    const tile = screen.getByRole('button', { name: /^測試特約甲（虛構）/ })
     await userEvent.click(tile)
     expect(tile).toHaveAttribute('aria-pressed', 'true')
-    expect(drawer.getByRole('heading', { level: 2, name: '雷本索特約' })).toBeInTheDocument()
-    expect(drawer.getByRole('link', { name: '打開特約' })).toHaveAttribute('href', '/c/lebensohl')
-    await waitFor(() => expect(drawer.getAllByRole('link').some((l) => l.getAttribute('href')?.startsWith('/c/lebensohl/'))).toBe(true))
+    expect(drawer.getByRole('heading', { level: 2, name: '測試特約甲（虛構）' })).toBeInTheDocument()
+    expect(drawer.getByRole('link', { name: '打開特約' })).toHaveAttribute('href', '/c/fixture-alpha')
+    await waitFor(() => expect(drawer.getAllByRole('link').some((l) => l.getAttribute('href')?.startsWith('/c/fixture-alpha/'))).toBe(true))
   })
 })

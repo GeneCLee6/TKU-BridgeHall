@@ -4,9 +4,10 @@ import * as account from '../../src/lib/account.ts'
 import * as api from '../../src/lib/api.ts'
 import * as ebooks from '../../src/lib/ebooks.ts'
 import * as forum from '../../src/lib/forum.ts'
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import { generateQuizzes } from '../../src/lib/quiz.ts'
 import { bankFile, exportQuizzes } from '../../src/lib/quizExport.ts'
+import type { Convention } from '../../src/types/convention.ts'
 
 /**
  * The constants src/lib/api.ts copies from TKU-BridgeTable shared/protocol.ts (e10-t09). Runs only
@@ -121,8 +122,32 @@ describe.skipIf(!tableDir)('files shared with TKU-BridgeTable', () => {
 describe.skipIf(!tableDir)('the question bank export in the table (e6-t08, AC-6.5)', () => {
   it('passes the table’s own checks of its bidding question bank', async () => {
     const { bankProblems } = await import(/* @vite-ignore */ `${tableDir!.replaceAll('\\', '/')}/eval/quiz.ts`)
-    const { quizzes } = generateQuizzes(conventions, 'club')
-    const { questions } = exportQuizzes(quizzes, new Map(conventions.map((c) => [c.slug, c.nameZh])))
+    // The made-up fixtures, and one made-up worked example the bank can take (the club's own
+    // conventions are in the private content repository)
+    const example: Convention = {
+      slug: 'fixture-examples',
+      nameZh: '測試牌例（虛構）',
+      nameEn: 'Fixture examples (made up for tests)',
+      category: 'system',
+      tags: [],
+      summary: '測試用',
+      source: { title: '測試資料（虛構）' },
+      updated: '2026-10-30',
+      sections: [
+        {
+          id: 'examples',
+          title: '測試牌例',
+          blocks: [
+            { kind: 'paragraph', text: 'EX) 左敵 1♣，同伴 X，右敵 PASS，你？' },
+            { kind: 'hand', label: '叫1H', hand: { spades: 'T42', hearts: 'K9863', diamonds: 'Q76', clubs: '53' } },
+          ],
+        },
+      ],
+    }
+    const bundled = [...conventions, example]
+    const { quizzes } = generateQuizzes(bundled, 'club')
+    const { questions } = exportQuizzes(quizzes, new Map(bundled.map((c) => [c.slug, c.nameZh])))
+    expect(questions.length).toBeGreaterThan(0)
     expect(questions.length).toBeGreaterThan(0)
     expect(bankProblems([bankFile(questions)])).toEqual([])
   })

@@ -82,26 +82,26 @@ describe('入門版／完整版 (e4-t02)', () => {
 
   it('is switched in 閱讀設定 and remembered', async () => {
     store({ newcomerAsked: true })
-    renderAt('/c/lebensohl')
-    await findHeading(/雷本索特約/)
+    renderAt('/c/fixture-beta')
+    await findHeading(/測試特約乙/)
     await userEvent.click(screen.getByText('閱讀設定', { selector: 'button' }))
     const title = await screen.findByText('閱讀設定', { selector: 'h2' }, { timeout: 5000 })
     const panel = within(title.closest<HTMLElement>('[role="dialog"]')!)
     expect(panel.getByRole('button', { name: '完整版' })).toHaveAttribute('aria-pressed', 'true')
     await userEvent.click(panel.getByRole('button', { name: '入門版' }))
     expect(stored().reading).toBe('basic')
-    expect(await screen.findByText(/^入門版：還有 3 段/)).toBeInTheDocument()
+    expect(await screen.findByText(/^入門版：還有 2 段/)).toBeInTheDocument()
   })
 
   it('shows 「還有 n 段」 for what it hides, and the whole page on request', async () => {
     store({ reading: 'basic' })
-    renderAt('/c/lebensohl')
-    await findHeading(/雷本索特約/)
-    // Lebensohl is 進階 and its sections inherit it
-    expect(await screen.findByText(/^入門版：還有 3 段進階或高階內容/, {}, { timeout: 5000 })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^遭自然牌組插叫/ })).toBeNull()
+    renderAt('/c/fixture-beta')
+    await findHeading(/測試特約乙/)
+    // The made-up fixture-beta is 進階 and its sections inherit it
+    expect(await screen.findByText(/^入門版：還有 2 段進階或高階內容/, {}, { timeout: 5000 })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^佔位概要（測試）/ })).toBeNull()
     await userEvent.click(screen.getByRole('button', { name: '這頁顯示全部' }))
-    expect(screen.getByRole('button', { name: /^遭自然牌組插叫/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^佔位概要（測試）/ })).toBeInTheDocument()
     expect(screen.queryByText(/^入門版：還有/)).toBeNull()
     // The setting itself stays 入門版
     expect(stored().reading).toBe('basic')
@@ -109,17 +109,26 @@ describe('入門版／完整版 (e4-t02)', () => {
 
   it('leaves 入門 conventions whole', async () => {
     store({ reading: 'basic' })
-    renderAt('/c/notrump-responses')
-    await findHeading(/1NT的答叫/)
-    await waitFor(() => expect(screen.getAllByRole('button', { name: /^嘗試滿貫/ }).length).toBeGreaterThan(0), { timeout: 5000 })
+    renderAt('/c/fixture-system')
+    await findHeading(/測試制度/)
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /^佔位牌例（測試）/ }).length).toBeGreaterThan(0), { timeout: 5000 })
     expect(screen.queryByText(/^入門版：還有/)).toBeNull()
+  })
+
+  it('hides a 進階 section of an 入門 convention', async () => {
+    store({ reading: 'basic' })
+    renderAt('/c/fixture-alpha')
+    await findHeading(/測試特約甲/)
+    expect(await screen.findByText(/^入門版：還有 1 段/, {}, { timeout: 5000 })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^佔位答叫表（測試）/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^佔位規則（測試）/ })).toBeNull()
   })
 
   it('opens the page in full for a link to a section it would hide', async () => {
     store({ reading: 'basic' })
-    renderAt('/c/lebensohl/artificial')
-    await findHeading(/雷本索特約/)
-    expect(await screen.findByRole('button', { name: /^遭非自然牌組插叫/ }, { timeout: 5000 })).toBeInTheDocument()
+    renderAt('/c/fixture-beta/later')
+    await findHeading(/測試特約乙/)
+    expect(await screen.findByRole('button', { name: /^佔位後續（測試）/ }, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.queryByText(/^入門版：還有/)).toBeNull()
   })
 })
@@ -139,8 +148,8 @@ describe('你是新生嗎？ (e4-t03)', () => {
     await userEvent.click(prompt.getByRole('button', { name: '關閉，不再詢問' }))
     expect(stored()).toMatchObject({ reading: 'full', newcomerAsked: true })
     unmount()
-    renderAt('/c/lebensohl')
-    await findHeading(/雷本索特約/)
+    renderAt('/c/fixture-alpha')
+    await findHeading(/測試特約甲/)
     expect(screen.queryByRole('region', { name: '你是新生嗎？' })).toBeNull()
   })
 

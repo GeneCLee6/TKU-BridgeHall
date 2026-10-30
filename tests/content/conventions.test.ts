@@ -1,11 +1,15 @@
-import { categories, conventions } from '../../src/content/index.ts'
+import { categories, conventions } from '../fixtures/content.ts'
 import { splitCall } from '../../src/lib/calls.ts'
 import { conventionProblems } from '../../src/lib/content.ts'
 import { basicHiddenIds } from '../../src/lib/levels.ts'
 import { pendingNotes, walkSections } from '../../src/lib/sections.ts'
 import { conventionKinds, levels } from '../../src/types/convention.ts'
 
-/** The content schema: what every convention file must satisfy before it ships */
+/**
+ * The content schema: what every convention file must satisfy before it ships. Here on the made-up
+ * fixtures (tests/fixtures); the same file runs on the club's conventions in the private content
+ * repository, and on each day's export there (.github/workflows/content-backup.yml).
+ */
 describe('convention content', () => {
   it('has unique, URL-safe slugs', () => {
     const slugs = conventions.map((c) => c.slug)
@@ -115,27 +119,10 @@ describe('convention content', () => {
 
   it('records the known 待確認 items', () => {
     const count = (slug: string) => pendingNotes(conventions.find((c) => c.slug === slug)!).length
-    expect(count('lebensohl')).toBe(0)
-    expect(count('defense-vs-unusual-2nt')).toBe(3)
-    expect(count('notrump-responses')).toBe(1)
-    expect(count('single-raise-major')).toBe(0)
-    expect(count('jacoby-2nt')).toBe(11)
-    expect(count('bergen-raises')).toBe(5)
-    expect(count('defensive-signals')).toBe(0)
-    expect(count('two-diamond-opening')).toBe(1)
-    expect(count('two-notrump-opening')).toBe(2)
-    expect(count('new-minor-forcing')).toBe(0)
-    expect(count('major-slam-ask-2011')).toBe(4)
-    expect(count('good-bad-2nt')).toBe(3)
-    expect(count('system-overview')).toBe(4)
-    expect(count('system-one-club')).toBe(1)
-    expect(count('system-one-diamond')).toBe(4)
-    expect(count('system-one-major')).toBe(3)
-    expect(count('system-notrump')).toBe(0)
-    expect(count('system-strong-and-preempts')).toBe(2)
-    expect(count('system-doubles')).toBe(1)
-    expect(count('system-competition')).toBe(3)
-    expect(count('system-concepts')).toBe(0)
-    expect(count('responsive-double')).toBe(2)
+    // The made-up fixtures; the club's counts are recorded in the private content repository's copy
+    // of this test (CONTENT_GUIDE.md §0, its PENDING.md lists them)
+    expect(count('fixture-alpha')).toBe(2)
+    expect(count('fixture-beta')).toBe(1)
+    expect(count('fixture-system')).toBe(0)
   })
 })

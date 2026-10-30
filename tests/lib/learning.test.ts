@@ -1,6 +1,6 @@
-import { conventionBySlug } from '../../src/content/index.ts'
+import { conventionBySlug } from '../fixtures/content.ts'
 import { bundledPaths, FROM_ZERO } from '../../src/content/paths.ts'
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import { generateQuizzes } from '../../src/lib/quiz.ts'
 import {
   LEARNING_LIMITS,
@@ -16,7 +16,7 @@ import {
   tidyPath,
   type LearningPath,
 } from '../../src/lib/learning.ts'
-import { conventionMeta, walkSections } from '../../src/lib/sections.ts'
+import { conventionMeta } from '../../src/lib/sections.ts'
 
 // The catalogue as the Worker's manifest gives it (L0)
 const manifest = conventions.map(conventionMeta)
@@ -27,7 +27,7 @@ const path: LearningPath = {
   id: 'p',
   name: '路徑',
   lessons: [
-    { id: 'lesson-1', title: '一', goal: '', readings: [{ slug: 'lebensohl' }], checklist: [] },
+    { id: 'lesson-1', title: '一', goal: '', readings: [{ slug: 'fixture-alpha' }], checklist: [] },
     { id: 'lesson-2', title: '二', goal: '', readings: [], checklist: [] },
     { id: 'lesson-3', title: '三', goal: '', readings: [], checklist: [] },
   ],
@@ -40,15 +40,15 @@ describe('the bundled paths', () => {
     expect(fromZero.lessons).toHaveLength(8)
     for (const lesson of fromZero.lessons) {
       expect(lesson.readings.length).toBeGreaterThan(0)
-      // Each title is its first reading's name; goal and checklist are the editors' (CLAUDE.md rule 1)
-      expect(lesson.title).toBe(conventionBySlug(lesson.readings[0].slug)?.nameZh)
+      // Goal and checklist are the editors' (CLAUDE.md rule 1). That each title is its first reading's
+      // name and every reading is a basic convention is checked on the club's conventions, in the
+      // private repository's copy of this file (the readings name them; tests/fixtures are made up)
       expect(lesson.goal).toBe('')
       expect(lesson.checklist).toEqual([])
-      for (const r of lesson.readings) expect(conventionBySlug(r.slug)?.level).toBe('basic')
     }
   })
 
-  it('keeps every path within what the Worker takes, every reading to a convention and section that exist', () => {
+  it('keeps every path within what the Worker takes', () => {
     for (const p of bundledPaths) {
       expect(p.id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/)
       expect(p.lessons.length).toBeLessThanOrEqual(LEARNING_LIMITS.lessonsMax)
@@ -56,15 +56,7 @@ describe('the bundled paths', () => {
       for (const lesson of p.lessons) {
         expect(lesson.id).not.toBe('edit')
         expect(lesson.title.length).toBeLessThanOrEqual(LEARNING_LIMITS.titleMax)
-        for (const r of lesson.readings) {
-          const convention = conventionBySlug(r.slug)
-          expect(convention, r.slug).toBeDefined()
-          if (r.sectionId) {
-            const ids: string[] = []
-            walkSections(convention!.sections, (s) => ids.push(s.id))
-            expect(ids).toContain(r.sectionId)
-          }
-        }
+        for (const r of lesson.readings) expect(r.slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/)
       }
     }
   })
@@ -95,15 +87,15 @@ describe('pathProgress', () => {
 })
 
 describe('outlines', () => {
-  const outline = manifest.find((c) => c.slug === 'notrump-responses')!.outline
+  const outline = manifest.find((c) => c.slug === 'fixture-alpha')!.outline
   it('names a section by its trail', () => {
-    expect(outlineTrail(outline, 'invitational')).toEqual(['合約選擇方式', '邀請叫品'])
+    expect(outlineTrail(outline, 'after-2c')).toEqual(['佔位答叫表（測試）', '2♣ 之後（測試）'])
     expect(outlineTrail(outline, 'nope')).toBeUndefined()
   })
   it('lists every section, depth first', () => {
     const all = outlineSections(outline)
-    expect(all[0]).toEqual({ id: 'opening', trail: ['開叫1NT'] })
-    expect(all.find((s) => s.id === 'invitational')?.trail).toEqual(['合約選擇方式', '邀請叫品'])
+    expect(all[0]).toEqual({ id: 'intro', trail: ['前言（測試）'] })
+    expect(all.find((s) => s.id === 'after-2c')?.trail).toEqual(['佔位答叫表（測試）', '2♣ 之後（測試）'])
   })
 })
 
@@ -117,7 +109,7 @@ describe('the editor’s helpers', () => {
           id: 'lesson-1',
           title: ' 一 ',
           goal: ' 目標 \n',
-          readings: [{ slug: '' }, { slug: 'lebensohl', sectionId: undefined }, { slug: 'lebensohl', sectionId: 'natural' }],
+          readings: [{ slug: '' }, { slug: 'fixture-alpha', sectionId: undefined }, { slug: 'fixture-alpha', sectionId: 'responses' }],
           quizIds: [],
           checklist: [' a ', '', '  '],
         },
@@ -131,7 +123,7 @@ describe('the editor’s helpers', () => {
           id: 'lesson-1',
           title: '一',
           goal: '目標',
-          readings: [{ slug: 'lebensohl' }, { slug: 'lebensohl', sectionId: 'natural' }],
+          readings: [{ slug: 'fixture-alpha' }, { slug: 'fixture-alpha', sectionId: 'responses' }],
           checklist: ['a'],
         },
       ],
@@ -157,21 +149,21 @@ describe('a lesson’s questions (e4-t10)', () => {
   })
 
   it('practises its readings when no questions were chosen: a whole convention or a section and those under it', () => {
-    const whole = readingQuizzes([{ slug: 'notrump-responses' }], quizzes, conventions)
+    const whole = readingQuizzes([{ slug: 'fixture-alpha' }], quizzes, conventions)
     expect(whole.length).toBeGreaterThan(0)
-    expect(whole.every((q) => q.slug === 'notrump-responses')).toBe(true)
+    expect(whole.every((q) => q.slug === 'fixture-alpha')).toBe(true)
     // A top-level section with questions in it or under it
-    const top = conventionBySlug('notrump-responses')!.sections.find((s) => whole.some((q) => q.trail[0] === s.title))!
-    const part = readingQuizzes([{ slug: 'notrump-responses', sectionId: top.id }], quizzes, conventions)
+    const top = conventionBySlug('fixture-alpha')!.sections.find((s) => whole.some((q) => q.trail[0] === s.title))!
+    const part = readingQuizzes([{ slug: 'fixture-alpha', sectionId: top.id }], quizzes, conventions)
     expect(part.length).toBeGreaterThan(0)
     expect(part.length).toBeLessThan(whole.length)
     expect(part).toEqual(whole.filter((q) => q.trail[0] === top.title))
-    expect(lessonQuizzes(lesson([{ slug: 'system-overview' }]), quizzes, conventions)).toEqual([])
+    expect(lessonQuizzes(lesson([{ slug: 'no-such-convention' }]), quizzes, conventions)).toEqual([])
   })
 
   it('practises the chosen questions in their order, those still made', () => {
     const ids = [quizzes[5].id, 'gone/x/0/0', quizzes[2].id]
-    expect(lessonQuizzes(lesson([{ slug: 'lebensohl' }], ids), quizzes, conventions).map((q) => q.id)).toEqual([quizzes[5].id, quizzes[2].id])
+    expect(lessonQuizzes(lesson([{ slug: 'fixture-alpha' }], ids), quizzes, conventions).map((q) => q.id)).toEqual([quizzes[5].id, quizzes[2].id])
   })
 
   it('links to the practice page and reads the link back', () => {

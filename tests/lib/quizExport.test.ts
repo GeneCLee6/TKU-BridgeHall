@@ -1,5 +1,6 @@
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import { generateQuizzes, type Quiz } from '../../src/lib/quiz.ts'
+import type { Convention } from '../../src/types/convention.ts'
 import {
   BANK_CATEGORY,
   bankCall,
@@ -12,7 +13,30 @@ import {
   spokenAuction,
 } from '../../src/lib/quizExport.ts'
 
-const names = new Map(conventions.map((c) => [c.slug, c.nameZh]))
+/** Made-up worked examples (not the club's): one the bank can take, one with x for small cards */
+const examples: Convention = {
+  slug: 'fixture-examples',
+  nameZh: '測試牌例（虛構）',
+  nameEn: 'Fixture examples (made up for tests)',
+  category: 'system',
+  tags: [],
+  summary: '測試用',
+  source: { title: '測試資料（虛構）' },
+  updated: '2026-10-30',
+  sections: [
+    {
+      id: 'examples',
+      title: '測試牌例',
+      blocks: [
+        { kind: 'paragraph', text: 'EX) 左敵 1♣，同伴 X，右敵 PASS，你？' },
+        { kind: 'hand', label: '叫1H', hand: { spades: 'T42', hearts: 'K9863', diamonds: 'Q76', clubs: '53' } },
+        { kind: 'hand', label: '叫1S', hand: { spades: 'AKXX', hearts: 'XX', diamonds: 'XXX', clubs: 'XXXX' } },
+      ],
+    },
+  ],
+}
+const bundled = [...conventions, examples]
+const names = new Map(bundled.map((c) => [c.slug, c.nameZh]))
 
 describe('the table question bank format (e6-t08, AC-6.1)', () => {
   it('writes a hand S.H.D.C high to low, and only one of 13 cards named by rank', () => {
@@ -45,13 +69,13 @@ describe('the table question bank format (e6-t08, AC-6.1)', () => {
   })
 
   it('reads an example written seat by seat, and nothing else', () => {
-    expect(spokenAuction('[原文已移除]')).toEqual({ calls: ['1D', 'X', 'P'], first: 1 })
+    expect(spokenAuction('EX) 左敵 1♣，同伴 X，右敵 PASS，你？')).toEqual({ calls: ['1C', 'X', 'P'], first: 1 })
     expect(spokenAuction('EX2) 同伴 1♠，右敵 2♥，你？')).toEqual({ calls: ['1S', '2H'], first: 2 })
-    expect(spokenAuction('EX) 同伴開叫3♠')).toBeUndefined()
-    expect(spokenAuction('[原文已移除]')).toBeUndefined()
+    expect(spokenAuction('EX) 同伴開叫3♥')).toBeUndefined()
+    expect(spokenAuction('EX) 1♣ 1♥ 2♣ 2♥ 3♣ ？')).toBeUndefined()
     // Not seat by seat
-    expect(spokenAuction('EX) 左敵 1♦，右敵 PASS，你？')).toBeUndefined()
-    expect(spokenAuction('左敵 1♦，同伴 X，右敵 PASS，你？')).toBeUndefined()
+    expect(spokenAuction('EX) 左敵 1♣，右敵 PASS，你？')).toBeUndefined()
+    expect(spokenAuction('左敵 1♣，同伴 X，右敵 PASS，你？')).toBeUndefined()
   })
 
   it('reads an auction diagram from the dealer to the seat asked', () => {
@@ -65,52 +89,42 @@ describe('the table question bank format (e6-t08, AC-6.1)', () => {
   })
 
   it('makes ids the bank takes', () => {
-    expect(bankId('system-doubles/examples/4/hand')).toBe('book-system-doubles-examples-4-hand')
-    expect(bankId('lebensohl/after-x/m-0abc12de')).toBe('book-lebensohl-after-x-m-0abc12de')
+    expect(bankId('fixture-examples/examples/4/hand')).toBe('book-fixture-examples-examples-4-hand')
+    expect(bankId('fixture-alpha/after-x/m-0abc12de')).toBe('book-fixture-alpha-after-x-m-0abc12de')
   })
 })
 
 describe('exportQuizzes (e6-t08, AC-6.5)', () => {
-  const { quizzes } = generateQuizzes(conventions, 'club')
+  const { quizzes } = generateQuizzes(bundled, 'club')
   const { questions, skipped } = exportQuizzes(quizzes, names)
 
   it('exports the bundled examples whose auction and hand can be read, as pending', () => {
     expect(questions.map((q) => [q.id, q.dealer, q.auction.join(' '), q.answer])).toEqual([
-      ['book-system-doubles-examples-1-hand', 'W', '1D X P', '1H'],
-      ['book-system-doubles-examples-2-hand', 'W', '1D X P', '1H'],
-      ['book-system-doubles-examples-4-hand', 'W', '1S X P', '2C'],
-      ['book-system-doubles-examples-6-hand', 'W', '1D X P', '2H'],
-      ['book-system-doubles-examples-7-hand', 'W', '1D X P', '2D'],
-      ['book-system-doubles-examples-8-hand', 'W', '1D X P', '1N'],
-      ['book-system-doubles-examples-9-hand', 'W', '1D X P', '1N'],
+      ['book-fixture-examples-examples-1-hand', 'W', '1C X P', '1H'],
     ])
     for (const q of questions) {
       expect(q).toMatchObject({ system: 'tku', vul: 'None', reviewer: null, status: 'pending' })
       expect(q.note).toMatch(/身價原文未寫/)
-      expect(q.source).toMatch(/^淡江橋館：賭倍性叫品/)
+      expect(q.source).toMatch(/^淡江橋館：測試牌例（虛構）/)
       // The hand is the example's own
       const made = quizzes.find((x) => bankId(x.id) === q.id)!
       expect(q.hand).toBe(bankHand(made.hand!))
     }
     const reasons = Object.fromEntries(skipped.filter((s) => s.reason !== 'meaning').map((s) => [s.id, s.reason]))
     expect(reasons).toEqual({
-      'system-competition/preempts/5/hand': 'noAuction',
-      'system-competition/preempts/6/hand': 'noAuction',
-      'system-competition/preempts/7/hand': 'noAuction',
-      'system-competition/preempts/8/hand': 'noAuction',
-      'system-competition/preempts/9/hand': 'noAuction',
-      'system-competition/preempts/10/hand': 'noAuction',
-      'system-concepts/fit/18/hand': 'hand',
+      // fixture-alpha's example says 同伴開叫 1NT, not seat by seat
+      'fixture-alpha/rules/3/hand': 'noAuction',
+      'fixture-examples/examples/2/hand': 'hand',
     })
     expect(bankFile(questions)).toMatchObject({ category: BANK_CATEGORY, questions })
   })
 
   it('exports an editor’s call question from its diagram, and leaves out what cannot go', () => {
     const manual: Quiz = {
-      id: 'lebensohl/a/m-0000abcd',
+      id: 'fixture-alpha/a/m-0000abcd',
       kind: 'call',
       profileId: 'club',
-      slug: 'lebensohl',
+      slug: 'fixture-alpha',
       sectionId: 'a',
       auction: { seats: ['西', '北', '東', '南'], calls: ['', '1NT', '2H', '?'] },
       hand: { spades: 'KQ2', hearts: '32', diamonds: 'J9832', clubs: 'Q32' },
@@ -130,7 +144,7 @@ describe('exportQuizzes (e6-t08, AC-6.5)', () => {
     )
     // North dealt; East overcalled; South to call
     expect(out.questions).toEqual([
-      expect.objectContaining({ id: 'book-lebensohl-a-m-0000abcd', dealer: 'N', auction: ['1N', '2H'], answer: '2N', hand: 'KQ2.32.J9832.Q32' }),
+      expect.objectContaining({ id: 'book-fixture-alpha-a-m-0000abcd', dealer: 'N', auction: ['1N', '2H'], answer: '2N', hand: 'KQ2.32.J9832.Q32' }),
     ])
     expect(out.skipped).toEqual([
       { id: 'x/a/m-1', reason: 'disabled' },

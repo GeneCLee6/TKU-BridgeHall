@@ -1,5 +1,5 @@
 // Exports every convention members read from TKU BridgeTable's Worker (L1, e8-t12; CONTENT_GUIDE.md §6.5):
-// the built-in layer with the online versions laid over it, as JSON and as src/content-style `.ts`
+// the built-in layer with the online versions laid over it, as JSON and as `.ts` files laid out like the private content repository
 // files (scripts/export-files.ts). .github/workflows/content-backup.yml runs it every day and pushes
 // the files to the private backup repository; run it by hand for a copy of your own:
 //

@@ -1,27 +1,28 @@
 // What scripts/seed-builtin.ts sends to the Worker, and how it checks what the Worker serves back
-// (L0, e10-t20). Kept apart from the script so tests/content/builtin.test.ts can check both.
-import { conventions } from '../src/content/index.ts'
+// (L0, e10-t20). Kept apart from the script so the tests can check both (tests/content/builtin.test.ts
+// on the made-up conventions; the private repository's tests on the club's). It takes the list: the
+// club's conventions are not in this repository (scripts/content-source.ts).
 import { buildSearchIndex, type SearchIndex } from '../src/lib/search.ts'
 import type { Convention } from '../src/types/convention.ts'
 
 export interface BuiltinPayload {
-  /** In catalogue order: src/content/index.ts's */
+  /** In catalogue order: src/content-private/index.ts's */
   conventions: Convention[]
   searchIndex: SearchIndex
 }
 
-export const builtinPayload = (list: Convention[] = conventions): BuiltinPayload => ({
+export const builtinPayload = (list: Convention[]): BuiltinPayload => ({
   conventions: list,
   searchIndex: buildSearchIndex(list),
 })
 
 /**
- * Where what the Worker serves differs from src/content: `served` is the text of
+ * Where what the Worker serves differs from `list` (the source): `served` is the text of
  * GET /api/book/builtin (the list), `index` of GET /api/book/search-index. Each convention is
  * compared as JSON text, so a changed character, a field gone or added, or another order of
  * fields all show. An empty list means byte-identical.
  */
-export function compareBuiltin(served: string, index: string, list: Convention[] = conventions): string[] {
+export function compareBuiltin(served: string, index: string, list: Convention[]): string[] {
   const problems: string[] = []
   const got = JSON.parse(served) as unknown[]
   const want = builtinPayload(list)

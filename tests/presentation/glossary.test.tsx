@@ -20,7 +20,7 @@ const online: BookGlossary = {
   updatedAt: 1,
   updatedBy: 'amy',
   terms: [
-    { term: 'GF', aliases: [], definition: '測試定義甲', see: 'lebensohl' },
+    { term: '規則一', aliases: [], definition: '測試定義甲', see: 'fixture-alpha' },
     { term: '測試名詞', aliases: ['測試別名'], definition: '測試定義乙' },
   ],
 }
@@ -70,22 +70,22 @@ const renderAt = (path: string) =>
 
 describe('名詞解釋', () => {
   it('marks a term in the text once and explains it in a popover, by keyboard too (e4-t06)', async () => {
-    renderAt('/c/lebensohl/natural-rules')
-    const terms = await screen.findAllByRole('button', { name: 'GF' }, { timeout: 5000 })
+    renderAt('/c/fixture-alpha/rules')
+    const terms = await screen.findAllByRole('button', { name: '規則一' }, { timeout: 5000 })
     const term = terms[0]
     // The words are unchanged: the paragraph still reads as the Word file does
-    expect(term.closest('li')).toHaveTextContent('[原文已移除]')
+    expect(term.closest('li')).toHaveTextContent('測試規則一：粗體與花色')
     expect(term).toHaveAttribute('aria-expanded', 'false')
 
     term.focus()
     await userEvent.keyboard('{Enter}')
-    const dialog = screen.getByRole('dialog', { name: '名詞解釋：GF' })
+    const dialog = screen.getByRole('dialog', { name: '名詞解釋：規則一' })
     expect(dialog).toHaveTextContent('測試定義甲')
-    expect(within(dialog).getByRole('link', { name: /^相關特約/ })).toHaveAttribute('href', '/c/lebensohl')
-    expect(within(dialog).getByRole('link', { name: '看名詞頁' })).toHaveAttribute('href', '/glossary#term-gf')
+    expect(within(dialog).getByRole('link', { name: /^相關特約/ })).toHaveAttribute('href', '/c/fixture-alpha')
+    expect(within(dialog).getByRole('link', { name: '看名詞頁' })).toHaveAttribute('href', `/glossary#term-${encodeURIComponent('規則一').replace(/%/g, '')}`)
 
     await userEvent.keyboard('{Escape}')
-    expect(screen.queryByRole('dialog', { name: '名詞解釋：GF' })).toBeNull()
+    expect(screen.queryByRole('dialog', { name: '名詞解釋：規則一' })).toBeNull()
     expect(term).toHaveFocus()
   })
 
@@ -105,7 +105,7 @@ describe('名詞解釋', () => {
     routes['GET /api/me'] = { body: { user: me } }
     routes['PUT /api/book/glossary'] = { body: { ...online, version: 4 } }
     renderAt('/glossary/edit')
-    const remove = await screen.findByRole('button', { name: '刪除「GF」' }, { timeout: 5000 })
+    const remove = await screen.findByRole('button', { name: '刪除「規則一」' }, { timeout: 5000 })
     await userEvent.click(remove)
     await userEvent.click(screen.getByRole('button', { name: '新增名詞' }))
     const items = screen.getAllByRole('listitem')

@@ -21,7 +21,8 @@ beforeAll(() => {
 })
 beforeAll(() => Promise.all([warmPages(), import('../../src/pages/PendingPage.tsx'), import('../../src/pages/EditorPage.tsx')]), 60_000)
 
-const SLAM_TRY = '[原文已移除]'
+// The made-up fixture-alpha's 待確認 row (tests/fixtures)
+const SLAM_TRY = '測試用的待確認說明：這一列是虛構的。'
 
 beforeEach(() => {
   routes = { 'GET /api/book/manifest': { body: { version: 0, entries: [] } } }
@@ -46,8 +47,8 @@ const signedIn = (permissions: Me['permissions']) => {
 const list = (extra: Partial<PendingList> = {}): PendingList => ({
   open: [
     {
-      slug: 'notrump-responses',
-      sectionId: 'slam-try',
+      slug: 'fixture-alpha',
+      sectionId: 'responses',
       index: 0,
       text: SLAM_TRY,
       status: 'working',
@@ -78,10 +79,11 @@ describe('the 待確認 panel', () => {
     const row = within(card(SLAM_TRY))
     expect(row.getByText('處理中')).toBeInTheDocument()
     expect(row.getByText('下週社課問')).toBeInTheDocument()
-    expect(row.getByRole('link', { name: /嘗試滿貫$/ })).toHaveAttribute('href', '/c/notrump-responses/slam-try?pending=0')
+    expect(row.getByRole('link', { name: /佔位答叫表（測試）$/ })).toHaveAttribute('href', '/c/fixture-alpha/responses?pending=0')
 
     const total = screen.getAllByRole('article').length
-    expect(total).toBeGreaterThan(10)
+    // Every note of the fixtures: a row, a rule and a whole section
+    expect(total).toBe(3)
     await userEvent.click(screen.getByRole('checkbox', { name: '只看指派給我的' }))
     expect(screen.getAllByRole('article')).toHaveLength(1)
     await userEvent.click(screen.getByRole('checkbox', { name: '只看指派給我的' }))
@@ -101,11 +103,11 @@ describe('the 待確認 panel', () => {
   it('saves a note’s status and assignee', async () => {
     signedIn(['bookEdit'])
     routes['GET /api/book/pending'] = { body: list({ open: [] }) }
-    routes['PUT /api/book/pending/notrump-responses/slam-try/0'] = { body: { meta: {} } }
+    routes['PUT /api/book/pending/fixture-alpha/responses/0'] = { body: { meta: {} } }
     renderAt('/pending')
     await screen.findByText(SLAM_TRY, {}, { timeout: 5000 })
     await userEvent.click(within(card(SLAM_TRY)).getByRole('button', { name: /^更新/ }))
-    const form = screen.getByRole('form', { name: '更新：嘗試滿貫' })
+    const form = screen.getByRole('form', { name: '更新：佔位答叫表（測試）' })
     await userEvent.selectOptions(within(form).getByRole('combobox', { name: '狀態' }), 'parked')
     await userEvent.selectOptions(within(form).getByRole('combobox', { name: '負責人' }), 'ben')
     await userEvent.type(within(form).getByRole('textbox', { name: '備註' }), '等比賽後')
@@ -123,12 +125,12 @@ describe('the 待確認 panel', () => {
   it('asks for the grounds before opening the editor at the note’s section (e8-t08)', async () => {
     signedIn(['bookEdit'])
     routes['GET /api/book/pending'] = { body: list({ open: [] }) }
-    routes['PUT /api/book/pending/notrump-responses/slam-try/0'] = { body: { meta: {} } }
-    routes['GET /api/book/conventions/notrump-responses/draft'] = { body: { draft: null } }
+    routes['PUT /api/book/pending/fixture-alpha/responses/0'] = { body: { meta: {} } }
+    routes['GET /api/book/conventions/fixture-alpha/draft'] = { body: { draft: null } }
     renderAt('/pending')
     await screen.findByText(SLAM_TRY, {}, { timeout: 5000 })
     await userEvent.click(within(card(SLAM_TRY)).getByRole('button', { name: /^更新/ }))
-    const form = screen.getByRole('form', { name: '更新：嘗試滿貫' })
+    const form = screen.getByRole('form', { name: '更新：佔位答叫表（測試）' })
     await userEvent.click(within(form).getByRole('button', { name: '寫依據並修改內容' }))
     expect(within(form).getByRole('alert')).toHaveTextContent('請先寫關閉依據。')
     expect(sent.some((s) => s.method === 'PUT')).toBe(false)
@@ -136,8 +138,8 @@ describe('the 待確認 panel', () => {
     await userEvent.type(within(form).getByRole('textbox', { name: /^關閉依據/ }), '社長 10/28 確認')
     await userEvent.click(within(form).getByRole('button', { name: '寫依據並修改內容' }))
     await waitFor(() => expect(sent.find((s) => s.method === 'PUT')?.body).toMatchObject({ status: 'working', resolution: '社長 10/28 確認' }))
-    // The editor opens at 嘗試滿貫
-    expect(await screen.findByRole('textbox', { name: /^段落標題/ }, { timeout: 5000 })).toHaveValue('嘗試滿貫')
+    // The editor opens at the note's section
+    expect(await screen.findByRole('textbox', { name: /^段落標題/ }, { timeout: 5000 })).toHaveValue('佔位答叫表（測試）')
   })
 
   it('lists the notes closed by publishing, with their grounds', async () => {
@@ -146,7 +148,7 @@ describe('the 待確認 panel', () => {
       body: list({
         closed: [
           {
-            slug: 'lebensohl',
+            slug: 'fixture-beta',
             sectionId: 'x',
             index: 0,
             text: '舊的問題',

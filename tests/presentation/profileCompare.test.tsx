@@ -2,7 +2,7 @@ import { configure, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from '../../src/App.tsx'
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import type { ProfileOverride, ProfileSummary, SystemProfile } from '../../src/lib/api.ts'
 import { walkSections } from '../../src/lib/sections.ts'
 import type { ResponseRow } from '../../src/types/convention.ts'
@@ -13,7 +13,7 @@ import type { ResponseRow } from '../../src/types/convention.ts'
  * points at a row that is gone.
  */
 
-const dropped = conventions.find((c) => c.slug === 'bergen-raises')!
+const dropped = conventions.find((c) => c.slug === 'fixture-beta')!
 const target = (() => {
   for (const c of conventions) {
     if (c.slug === dropped.slug) continue

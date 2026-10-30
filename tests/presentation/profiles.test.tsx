@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { searchIndexJson } from '../../scripts/search-index.ts'
 import { App } from '../../src/App.tsx'
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import type { Me, ProfileSummary, SystemProfile } from '../../src/lib/api.ts'
 import { walkSections } from '../../src/lib/sections.ts'
 import { strings } from '../../src/strings.ts'
@@ -14,7 +14,7 @@ import { strings } from '../../src/strings.ts'
  */
 
 // A convention the partnership does not play, and a row of another one it plays its own way
-const dropped = conventions.find((c) => c.slug === 'bergen-raises')!
+const dropped = conventions.find((c) => c.slug === 'fixture-beta')!
 const target = (() => {
   for (const c of conventions) {
     if (c.slug === dropped.slug) continue
@@ -67,7 +67,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   window.localStorage.clear()
-  routes = { 'GET /api/book/search-index': JSON.parse(searchIndexJson()) }
+  routes = { 'GET /api/book/search-index': JSON.parse(searchIndexJson(conventions)) }
   sent = []
   vi.stubGlobal(
     'fetch',
@@ -129,7 +129,7 @@ describe('system profiles on the handbook page', () => {
     await userEvent.type(screen.getByRole('searchbox'), MEANING)
     expect(await screen.findByRole('link', { name: new RegExp(target.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) })).toBeInTheDocument()
     await userEvent.clear(screen.getByRole('searchbox'))
-    await userEvent.type(screen.getByRole('searchbox'), 'Bergen')
+    await userEvent.type(screen.getByRole('searchbox'), 'Fixture Beta')
     await waitFor(() => expect(screen.queryByRole('link', { name: new RegExp(`^${dropped.nameZh}`) })).not.toBeInTheDocument())
   })
 

@@ -58,14 +58,14 @@ beforeEach(() => {
         return json(200, { tableProfileId: 'club', synced })
       }
       if (route === 'POST /api/book/robot-meanings') {
-        // TKB has a rule only for 1NT over 1♠, and reads it 6-10
+        // TKB has a rule only for 3NT over 1NT (the made-up fixture-alpha's), and reads it 12-15
         const items = (body as RobotMeaningsQuery).items.map(({ after, calls }) => ({
           after,
           meanings: Object.fromEntries(
             calls.map((c) => [
               c,
-              after === '1S (P)' && c === '1N'
-                ? { hcp: [6, 10], forcing: 'oneRound', text: '6–10 大牌點，迫叫一圈' }
+              after === '1N (P)' && c === '3N'
+                ? { hcp: [12, 15], text: '12–15 大牌點' }
                 : null,
             ]),
           ),
@@ -100,23 +100,23 @@ describe('the table report', () => {
       ),
     ).toBeInTheDocument()
     const asked = sent.filter((s) => s.path === '/api/book/robot-meanings')
-    expect(asked.length).toBeGreaterThan(1)
+    expect(asked.length).toBeGreaterThan(0)
     expect(asked.every((s) => (s.body as RobotMeaningsQuery).items.length <= 10)).toBe(true)
 
-    // 1NT over 1♠: the handbook's 6-12 against TKB's 6-10
+    // 3NT over 1NT: the fixture's 10-15 against TKB's 12-15
     const differ = screen.getByRole('region', { name: '和牌桌規則不一致的叫品' })
     const row = within(differ)
       .getAllByRole('row')
-      .find((r) => within(r).queryByText('6–10 大牌點，迫叫一圈'))!
+      .find((r) => within(r).queryByText('12–15 大牌點'))!
     expect(row).toBeDefined()
-    expect(within(row).getByText('1♠ （Pass）')).toBeInTheDocument()
+    expect(within(row).getByText('1NT （Pass）')).toBeInTheDocument()
     expect(within(row).getByText('點力')).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: '重新同步到牌桌' }))
     expect(await screen.findByText('已同步到牌桌。')).toBeInTheDocument()
     const put = sent.find((s) => s.method === 'PUT')!
     expect(put.path).toBe('/api/book/system-spec/club')
-    expect((put.body as { spec: SystemSpec }).spec.rules.length).toBeGreaterThan(700)
+    expect((put.body as { spec: SystemSpec }).spec.rules.length).toBe(8)
     expect(screen.getByText(/和現在的內容相同/)).toBeInTheDocument()
   }, 30_000)
 

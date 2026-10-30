@@ -1,4 +1,4 @@
-import { conventions } from '../../src/content/index.ts'
+import { conventions } from '../fixtures/content.ts'
 import {
   cellCall,
   cellText,
@@ -67,7 +67,7 @@ describe('text forms of content', () => {
             expect(textToRules(rulesToText(b.items)), `${c.slug}/${s.id}`).toEqual(b.items)
           }
       })
-    expect(lists).toBeGreaterThan(100)
+    expect(lists).toBeGreaterThan(0)
   })
 
   it('reads lists typed by hand', () => {
@@ -90,21 +90,21 @@ describe('text forms of content', () => {
   })
 
   it('reads auction cells and calls as people type them', () => {
-    expect(cellCall('2c（一門未知牌組）')).toEqual({ call: '2C', note: '一門未知牌組' })
+    expect(cellCall('2c（測試註記）')).toEqual({ call: '2C', note: '測試註記' })
     expect(cellCall('2♦(詢問)')).toEqual({ call: '2D', note: '詢問' })
     expect(cellCall('2C（')).toBe('2C（')
     expect(['1nt', 'pass', 'x', '？', '3♠', '---', ''].map(normaliseCall)).toEqual(['1NT', 'pass', 'x', '?', '3S', '---', ''])
   })
 
   it('reads pasted response lines in the handouts’ styles', () => {
-    const lines = '2H=P/C\n3C --- 6張F\n2nt：詢問\n4♠ － to play\nX – 處罰\n  PASS - 什麼都沒有\n1NT 2D ??'
+    const lines = '2H=P/C\n3C --- 6張F\n2nt：詢問\n4♠ － to play\nX – 處罰\n  PASS - 測試用的意義\n1NT 2D ??'
     expect(parseResponseLines(lines)).toEqual([
       { call: '2H', meaning: 'P/C' },
       { call: '3C', meaning: '6張F' },
       { call: '2NT', meaning: '詢問' },
       { call: '4S', meaning: 'to play' },
       { call: 'X', meaning: '處罰' },
-      { call: 'PASS', meaning: '什麼都沒有' },
+      { call: 'PASS', meaning: '測試用的意義' },
     ])
   })
 

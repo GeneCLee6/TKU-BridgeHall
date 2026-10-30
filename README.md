@@ -88,13 +88,16 @@ npm run dev        # http://localhost:5174
 
 ## 新增一個特約
 
-1. 在 `src/content/conventions/` 新增 `<slug>.ts`，匯出一個符合 `Convention` 型別的物件。
-2. 在 `src/content/index.ts` 的 `conventions` 陣列登記它。
-3. `npm test`：測試會檢查 slug 與段落 id 是否唯一、必填欄位、叫品格式與花色符號。
+平常用網站的「新增特約」或「匯入檔案」就好。要做成**內建特約**：
+
+1. 內建特約的原文在 private repo `GeneCLee6/TKU-BridgeHall-content`（這個 repo 是公開的，原文不放這裡）：有權限的人 `git clone https://github.com/GeneCLee6/TKU-BridgeHall-content.git src/content-private`（已在 `.gitignore`）。
+2. 在 `src/content-private/conventions/` 新增 `<slug>.ts`，匯出一個符合 `Convention` 型別的物件，在 `src/content-private/index.ts` 的 `conventions` 陣列登記它，對那個 repo 發 PR。
+3. `npm test`：有 `src/content-private/` 時多跑真內容的測試（slug 與段落 id 是否唯一、必填欄位、叫品格式與花色符號、待確認數量）。
+4. `npm run seed-builtin`（預演）→ `-- --apply` 寫到牌桌才會上線。
 
 完整步驟、欄位說明與範本見 [`CONTENT_GUIDE.md`](CONTENT_GUIDE.md)。不需要修改任何元件。
 
-`src/content` 是內建特約的**種子與測試資料**：特約的真相在淡江牌桌的 Worker（內建層＋網站上發布的線上版本），寫入用 `npm run seed-builtin`。讀者實際讀到的全部特約每天匯出備份到一個 private repo（`npm run export-content`、workflow「Content backup」，CONTENT_GUIDE.md §6.5）。
+這個 repo 的測試用 `tests/fixtures/` 的**虛構特約**；`src/content-private/` 是內建特約的**種子與真內容測試資料**：特約的真相在淡江牌桌的 Worker（內建層＋網站上發布的線上版本），寫入用 `npm run seed-builtin`。讀者實際讀到的全部特約每天匯出備份到同一個 private repo 的 `content-backup` 分支（`npm run export-content`、workflow「Content backup」，CONTENT_GUIDE.md §6.5）。
 
 ## 手機 App
 

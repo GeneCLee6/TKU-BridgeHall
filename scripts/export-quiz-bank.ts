@@ -6,10 +6,12 @@
 // With no path it prints the file. Online edits and the editors' hand-made questions are not in
 // the bundle; an editor downloads those from 修題 (/practice/fixes) instead.
 import { writeFileSync } from 'node:fs'
-import { conventions } from '../src/content/index.ts'
+import { privateConventionsOrExit } from './content-source.ts'
 import { generateQuizzes } from '../src/lib/quiz.ts'
 import { bankFile, exportQuizzes } from '../src/lib/quizExport.ts'
 
+// The club's conventions, from the private checkout (scripts/content-source.ts)
+const conventions = await privateConventionsOrExit()
 const { quizzes } = generateQuizzes(conventions, 'club')
 const names = new Map(conventions.map((c) => [c.slug, c.nameZh]))
 const { questions, skipped } = exportQuizzes(quizzes, names)
