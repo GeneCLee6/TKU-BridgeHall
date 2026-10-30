@@ -3,10 +3,14 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { App } from './App.tsx'
+import { startAnalytics } from './lib/analytics.ts'
+import { setUpErrorReporting } from './lib/errorReport.ts'
 import { setUpApp } from './lib/pwa.ts'
 import { readStoredPrefs } from './state/PreferencesContext.tsx'
 import { loadStyle } from './styles/tokens.ts'
 
+setUpErrorReporting()
+startAnalytics()
 setUpApp()
 
 const render = () =>

@@ -35,7 +35,7 @@
 - **Radix Accordion 的 `forceMount` 不會隱藏關閉的內容。** 關閉時的隱藏靠 `GlobalStyle` 的 `[data-accordion-content][data-state='closed']`；列印樣式再全部顯示。新增收合元件時記得加 `data-accordion-content`。
 - **測試用 `getByRole('button', { name })` 找觸發器時，用 `^` 錨定開頭**，否則會同時配到「複製連結：…」按鈕。
 - **花色在無障礙名稱中是中文**（`Suit` 的 `aria-label`），例如「開叫1♠時」的名稱是「開叫1黑桃時」。
-- **效能預算在 CI 擋**（`npm run budget`，`scripts/check-budget.mjs`）：首頁 JS gzip ≤ 150 kB（2026-10-29 約 123 kB；字串放各頁自己的 `*Strings.ts`，不要再塞進 `strings.ts`）、`dist/` 不得含任何特約文字。新功能的大頁面或函式庫用 `React.lazy`／動態 `import()`。
+- **效能預算在 CI 擋**（`npm run budget`，`scripts/check-budget.mjs`）：首頁 JS gzip ≤ 150 kB（2026-10-30 約 126 kB；字串放各頁自己的 `*Strings.ts`，不要再塞進 `strings.ts`）、`dist/` 不得含任何特約文字。新功能的大頁面或函式庫用 `React.lazy`／動態 `import()`。
 - **「待確認」數量寫在測試裡**：真特約的在 private repo 的 `tests/content/conventions.test.ts`，虛構特約的在這裡的同名檔；新增或解決時要同步更新。
 - **兩組測試**：`tests/` 用虛構特約（Vitest 專案 `public`）；有 `src/content-private/` 時 `npm test` 多跑專案 `content`（private repo 的 `tests/`，讀真特約，`tests/fixtures/builtin.ts` 依 `BOOK_CONTENT=private` 切換）。CI 用 secret `CONTENT_REPO_KEY` checkout，沒有就跳過並在 log 說明；這個 repo 的 log 是公開的，CI 的真內容步驟只印檔名、測試名稱與數量。
 - **`cfb` 是 CommonJS**：Node 只給 default export，打包工具給具名 export，用 `docText.ts` 開頭的寫法取得。

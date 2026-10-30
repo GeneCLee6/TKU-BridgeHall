@@ -54,6 +54,11 @@ beforeEach(() => {
     // And its drafts and audit log (e8-t02, e8-t09)
     'GET /api/book/reviews': { body: { drafts: [] } },
     'GET /api/book/audit': { body: { entries: [] } },
+    // And the error reports and usage statistics (e10-t06, e10-t07)
+    'GET /api/book/errors': { body: { errors: [] } },
+    'GET /api/book/analytics': {
+      body: { enabled: true, weeks: [], topConventions: [], topSearches: [], profileSwitches: 0, quiz: { answered: 0, correct: 0 } },
+    },
     // And the library's series (e5-t06)
     'GET /api/book/articles': { body: { version: 0, entries: [], files: {}, series: { version: 0, series: [] } } },
   }

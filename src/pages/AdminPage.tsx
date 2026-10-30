@@ -6,6 +6,7 @@ import { ProfilesPanel } from '../components/admin/ProfilesPanel.tsx'
 import { SeriesPanel } from '../components/admin/SeriesPanel.tsx'
 import { AuditPanel, DraftsPanel } from '../components/admin/ReviewPanels.tsx'
 import { TeamsPanel } from '../components/admin/TeamsPanel.tsx'
+import { AnalyticsPanel, ErrorsPanel } from '../components/admin/TelemetryPanels.tsx'
 import { DataTable, TableScroll } from '../components/DataTable.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import {
@@ -33,7 +34,8 @@ import { tableReport } from './tableReportStrings.ts'
  * (ARCHITECTURE.md §4.2, decided 2026-10-25). So the account panels (registrations waiting for
  * approval, members' permissions and passwords, the account limit and invite code) are admins';
  * every other panel (the drafts waiting for review, the handbook's categories, the teams, the system
- * profiles and the audit log) is for editors too. The accounts are TKU BridgeTable's; adding or deleting members, admins and tables stay on
+ * profiles, the audit log, usage statistics and error reports) is for editors too; switching the
+ * club's anonymous analytics on or off is an admin's (e10-t07). The accounts are TKU BridgeTable's; adding or deleting members, admins and tables stay on
  * its admin page.
  */
 export function AdminPage() {
@@ -60,6 +62,8 @@ function AdminOrEditor() {
       <TeamsPanel />
       <ProfilesPanel />
       <AuditPanel />
+      <AnalyticsPanel />
+      <ErrorsPanel />
       <Muted>
         <Link to="/integrations/table">{tableReport.adminLink}</Link>
       </Muted>
