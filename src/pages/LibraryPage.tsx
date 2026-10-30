@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react'
+import { BookOpenText, FilePlus2, FileUp, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
@@ -79,21 +79,25 @@ export function LibraryPage() {
       <PageBar lead={<Lead>{s.title}</Lead>} />
       <Intro>
         <h1>{s.title}</h1>
-        <p>
-          {s.intro} <Link to="/library/book">{s.ebooks}</Link>
-        </p>
-        {can('bookEdit') && (
-          <Row>
+        <p>{s.intro}</p>
+        <Row>
+          {can('bookEdit') && (
             <Button as={Link} to="/library/new" $small $variant="primary">
+              <FilePlus2 size={16} aria-hidden />
               {s.newArticle}
             </Button>
-            {can('bookImport') && (
-              <Button as={Link} to="/import?target=articles" $small>
-                {s.importArticles}
-              </Button>
-            )}
-          </Row>
-        )}
+          )}
+          {can('bookImport') && (
+            <Button as={Link} to="/import?target=articles" $small>
+              <FileUp size={16} aria-hidden />
+              {s.importArticles}
+            </Button>
+          )}
+          <Button as={Link} to="/library/book" $small>
+            <BookOpenText size={16} aria-hidden />
+            {s.ebooks}
+          </Button>
+        </Row>
       </Intro>
 
       {error && (
@@ -260,7 +264,7 @@ const Intro = styled.div`
     color: ${({ theme }) => theme.colors.primaryStrong};
   }
   p {
-    margin: ${({ theme }) => theme.space(1)} 0 0;
+    margin: ${({ theme }) => theme.space(1)} 0 ${({ theme }) => theme.space(4)};
     color: ${({ theme }) => theme.colors.textMuted};
   }
 `

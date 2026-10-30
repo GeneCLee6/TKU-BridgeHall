@@ -8,7 +8,7 @@ export const libraryStrings = {
   title: '叢書',
   intro: '社團的文章：主打、擠牌、防守、叫牌理論與社課講義。',
   /** To the e-books (E5 J5, /library/book) */
-  ebooks: '電子書（PDF）→',
+  ebooks: '電子書（PDF）',
   /** Editors' ways into the article editor (e5-t07) and article import (e5-t08) */
   newArticle: '新增文章',
   importArticles: '匯入文章',

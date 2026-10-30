@@ -226,7 +226,10 @@ export const layout = {
   toolbarHeight: '56px',
   /** In rem so a larger 字級 widens the catalogue instead of wrapping more names */
   sidebarWidth: '19rem',
-  contentMax: '60rem',
+  /** A reading page's column: the text's measure and its 本頁 beside it */
+  contentMax: '70rem',
+  /** Pages of lists, tiles and panels (home, 叢書, account, admin) use more of a wide screen */
+  pageMax: '84rem',
   mobileBreakpoint: '900px',
   /** From this width the convention page shows its 本頁 column (DESIGN-V2.md §4) */
   wideBreakpoint: '1100px',

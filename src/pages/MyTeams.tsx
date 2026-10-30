@@ -1,3 +1,4 @@
+import { Users } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button, ErrorText, Field, Muted, Panel, PanelTitle, Row, Select } from '../components/ui.tsx'
@@ -85,9 +86,12 @@ export function MyTeams({ user }: { user: Me }) {
             ) : (
               <Muted>{t.noMyTeams}</Muted>
             )}
-            <Muted>
-              <Link to="/teams">{t.allTeams}</Link>
-            </Muted>
+            <Row>
+              <Button as={Link} to="/teams" $small>
+                <Users size={16} aria-hidden />
+                {t.allTeams}
+              </Button>
+            </Row>
 
             <h3>{t.myPairs}</h3>
             {pairs.length ? (

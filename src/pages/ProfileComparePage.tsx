@@ -1,3 +1,4 @@
+import { IdCard, Pencil } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
@@ -165,8 +166,16 @@ function Compare() {
         <Muted>{t.intro}</Muted>
         <Muted>{t.linkNote}</Muted>
         <Links>
-          {canEdit && <Link to={`/profiles/${profile.id}/edit`}>{t.edit}</Link>}
-          <Link to={`/cards/${encodeURIComponent(profile.id)}/wbf`}>{t.card}</Link>
+          {canEdit && (
+            <Button as={Link} to={`/profiles/${profile.id}/edit`} $small>
+              <Pencil size={16} aria-hidden />
+              {t.edit}
+            </Button>
+          )}
+          <Button as={Link} to={`/cards/${encodeURIComponent(profile.id)}/wbf`} $small>
+            <IdCard size={16} aria-hidden />
+            {t.card}
+          </Button>
         </Links>
       </Panel>
 

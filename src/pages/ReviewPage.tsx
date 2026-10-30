@@ -1,8 +1,9 @@
+import { Pencil } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { DiffView } from '../components/DiffView.tsx'
-import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row, TextArea } from '../components/ui.tsx'
+import { BackLink, Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row, TextArea } from '../components/ui.tsx'
 import { api, ApiError, errorText, type ArticleDraftSummary, type BookDraft, type BookDraftSummary } from '../lib/api.ts'
 import { articleEditApi } from '../lib/articleEditApi.ts'
 import { conventionProblems } from '../lib/content.ts'
@@ -192,7 +193,7 @@ function ReviewDraft({ slug }: { slug: string }) {
       setNotice(r.rejected)
     })
 
-  const back = <Link to="/review">← {d.backToList}</Link>
+  const back = <BackLink to="/review">{d.backToList}</BackLink>
   if (draft === undefined || (published && !fetched.convention && !fetched.failed && !fetched.missing))
     return (
       <>
@@ -235,7 +236,10 @@ function ReviewDraft({ slug }: { slug: string }) {
           )}
           {stale && <ErrorText>{r.stale(draft.baseVersion, info.version)}</ErrorText>}
           <Row>
-            <Link to={`/edit/${slug}`}>{d.openEditor}</Link>
+            <Button as={Link} to={`/edit/${slug}`} $small>
+              <Pencil size={16} aria-hidden />
+              {d.openEditor}
+            </Button>
           </Row>
         </About>
       </Panel>

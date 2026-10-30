@@ -5,6 +5,7 @@ import styled from 'styled-components'
 import type { Me, Permission } from '../lib/api.ts'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
+import { places } from './SiteNav.tsx'
 
 // The avatar is a small chunk of its own: the first download has a size budget (scripts/check-budget.mjs)
 const Avatar = lazy(() => import('./Avatar.tsx').then((m) => ({ default: m.Avatar })))
@@ -80,6 +81,14 @@ export function AccountMenu({
       </Trigger>
       {open && (
         <Menu role="menu" aria-label={strings.account.menu(name)}>
+          {/* Phones have no room for the header's sections (SiteNav): they are here instead */}
+          {places.map((place) => (
+            <PhoneItem key={place.to} role="menuitem" to={place.to}>
+              <place.icon size={16} aria-hidden />
+              {place.label}
+            </PhoneItem>
+          ))}
+          <PhoneRule aria-hidden />
           {can('bookEdit') && (
             <Item role="menuitem" to="/new">
               {strings.account.newConvention}
@@ -230,6 +239,25 @@ const Item = styled(Link)`
   &:hover {
     background: ${({ theme }) => theme.colors.primarySoft};
     color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+const PhoneItem = styled(Item)`
+  gap: ${({ theme }) => theme.space(2)};
+  display: none;
+  ${mobile} {
+    display: flex;
+  }
+`
+
+const PhoneRule = styled.hr`
+  display: none;
+  ${mobile} {
+    display: block;
+    width: 100%;
+    margin: ${({ theme }) => theme.space(1)} 0;
+    border: 0;
+    border-top: 1px solid ${({ theme }) => theme.colors.border};
   }
 `
 
