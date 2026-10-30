@@ -75,6 +75,10 @@ const ForumBoardPage = lazy(() => forum().then((m) => ({ default: m.BoardPage })
 const PostPage = lazy(() => forum().then((m) => ({ default: m.PostPage })))
 const NewPostPage = lazy(() => forum().then((m) => ({ default: m.NewPostPage })))
 const ForumManagePage = lazy(() => forum().then((m) => ({ default: m.ManagePage })))
+// 搜尋、我的貼文、提到我的 (e11-t18, e11-t10)
+const ForumSearchPage = lazy(() => forum().then((m) => ({ default: m.SearchPage })))
+const ForumMinePage = lazy(() => forum().then((m) => ({ default: m.MinePage })))
+const ForumMentionsPage = lazy(() => forum().then((m) => ({ default: m.MentionsPage })))
 
 // The reading pages read the reader's system profile; the editor and the admin page keep the club's content
 const handbook = (
@@ -187,6 +191,9 @@ export function App() {
                 <Route index element={<FeedPage />} />
                 <Route path="new" element={<NewPostPage />} />
                 <Route path="manage" element={<ForumManagePage />} />
+                <Route path="search" element={<ForumSearchPage />} />
+                <Route path="mine" element={<ForumMinePage />} />
+                <Route path="mentions" element={<ForumMentionsPage />} />
                 <Route path="p/:postId" element={<PostPage />} />
                 <Route path=":boardId" element={<ForumBoardPage />} />
               </Route>

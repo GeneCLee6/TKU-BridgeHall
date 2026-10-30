@@ -16,7 +16,12 @@ import {
   postProblems,
   postSummary,
   recentAuthors,
+  recordIdFrom,
+  recordUrl,
   saveDraft,
+  searchProblem,
+  searchSnippet,
+  searchWords,
   textLength,
   tidyBlocks,
   timeAgo,
@@ -170,5 +175,36 @@ describe('posts in lists (e11-t15, e11-t16)', () => {
     ]
     expect(recentAuthors(posts)).toEqual(['a', 'b', 'c'])
     expect(recentAuthors(posts, 2)).toEqual(['a', 'b'])
+  })
+})
+
+describe('table records (e11-t20)', () => {
+  it('reads a record’s id from its address on BridgeTable, or the id alone', () => {
+    expect(recordIdFrom(' Ab12cd34 ')).toBe('Ab12cd34')
+    expect(recordIdFrom('https://tku-bridge-table.genelee-pro.workers.dev/history/Ab12cd34')).toBe('Ab12cd34')
+    expect(recordIdFrom('http://localhost:5173/history/x-1/vs/y-2?from=match#top')).toBe('x-1')
+    for (const bad of ['', 'https://example.com/', '/history/', 'two words', '/history/%E0%A4%A', '/history/a.b'])
+      expect(recordIdFrom(bad), bad).toBeNull()
+    expect(recordUrl('https://table', 'x-1')).toBe('https://table/history/x-1')
+  })
+})
+
+describe('search (e11-t10, e11-t18)', () => {
+  it('splits words as the Worker does and catches what it would refuse', () => {
+    expect(searchWords('  1NT  開叫 1NT ')).toEqual(['1NT', '開叫'])
+    expect(searchProblem('  ')).toBe('empty')
+    expect(searchProblem('a b c d e f')).toBe('tooManyWords')
+    expect(searchProblem('字'.repeat(FORUM_LIMITS.searchMax + 1))).toBe('tooLong')
+    expect(searchProblem('Stayman 問題')).toBeNull()
+  })
+
+  it('shows the words around the first one found', () => {
+    const post = { blocks: [{ kind: 'paragraph' as const, text: `${'前面的字'.repeat(20)}這裡講 Stayman 的用法${'後面'.repeat(30)}` }] }
+    const snippet = searchSnippet(post, 'stayman', 40)
+    expect(snippet.startsWith('…')).toBe(true)
+    expect(snippet.endsWith('…')).toBe(true)
+    expect(snippet).toContain('Stayman')
+    expect([...snippet].length).toBe(42)
+    expect(searchSnippet({ blocks: [{ kind: 'paragraph', text: '短短一句' }] }, '標題才有')).toBe('短短一句')
   })
 })

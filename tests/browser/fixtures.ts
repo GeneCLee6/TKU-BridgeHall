@@ -62,6 +62,8 @@ const FORUM: Record<string, unknown> = {
   '/api/club/members': { members: MEMBERS },
   '/api/forum/latest': { news: POSTS.filter((p) => p.boardId === 'news'), discussions: POSTS.filter((p) => p.boardId !== 'news') },
   '/api/forum/feed': { posts: POSTS, page: 1, pages: 1 },
+  // The forum's search page (e11-t18): whatever is asked, the posts with 1NT
+  '/api/forum/search': { posts: POSTS.filter((p) => p.id === 'p2'), page: 1, pages: 1, query: '1NT', total: 1 },
 }
 
 async function serve(page: Page, signedOut: boolean) {

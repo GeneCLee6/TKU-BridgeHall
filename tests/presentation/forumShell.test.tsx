@@ -103,7 +103,15 @@ describe('the forum’s frame and board pages (e11-t15)', () => {
     expect(await screen.findByRole('heading', { name: '討論區', level: 1 })).toBeInTheDocument()
     const boards = screen.getByRole('navigation', { name: '板面' })
     expect(within(boards).getByRole('link', { name: '全部動態' })).toHaveAttribute('aria-current', 'page')
-    expect(within(boards).getAllByRole('link').map((a) => a.textContent)).toEqual(['全部動態', '社團公告', '牌局討論', '制度問答', '閒聊'])
+    expect(within(boards).getAllByRole('link').map((a) => a.textContent)).toEqual([
+      '全部動態',
+      '社團公告',
+      '牌局討論',
+      '制度問答',
+      '閒聊',
+      '我的貼文',
+      '提到我的',
+    ])
     const feed = await screen.findByRole('region', { name: '貼文' })
     expect(await within(feed).findByText('週末去打牌嗎')).toBeInTheDocument()
     expect(within(feed).getByText('這副 4♠ 怎麼做？')).toBeInTheDocument()
@@ -149,6 +157,45 @@ describe('the forum’s frame and board pages (e11-t15)', () => {
     open('/forum')
     const news = await screen.findByRole('region', { name: '社團新聞' })
     expect(await within(news).findByRole('link', { name: '發公告' })).toHaveAttribute('href', '/forum/new?board=news')
+  })
+})
+
+describe('search, my posts and mentions (e11-t18, e11-t10, AC-11.9)', () => {
+  it('searches from the left column and lists the posts found, a page at a time', async () => {
+    const titled = post('s1', 'systems', '開叫 1NT 以後，同伴叫 2♣ 是 Stayman', { title: '1NT 的問題', commentCount: 2 })
+    routes['GET /api/forum/search?q=Stayman&page=1'] = { posts: [titled], page: 1, pages: 2, query: 'Stayman', total: 2 }
+    routes['GET /api/forum/search?q=Stayman&page=2'] = { posts: [post('s2', 'chat', 'Stayman 好用')], page: 2, pages: 2, query: 'Stayman', total: 2 }
+    open('/forum')
+    fireEvent.change(await screen.findByRole('searchbox', { name: '搜尋討論區' }), { target: { value: ' Stayman ' } })
+    fireEvent.submit(screen.getByRole('searchbox', { name: '搜尋討論區' }).closest('form')!)
+    expect(await screen.findByRole('heading', { name: '搜尋討論', level: 1 })).toBeInTheDocument()
+    const results = await screen.findByRole('region', { name: '搜尋結果' })
+    expect(await within(results).findByText('「Stayman」找到 2 則貼文')).toBeInTheDocument()
+    expect(within(results).getByRole('link', { name: '1NT 的問題' })).toHaveAttribute('href', '/forum/p/s1')
+    expect(within(results).getByText(/同伴叫 2♣ 是 Stayman/)).toBeInTheDocument()
+    expect(within(results).getByText(/制度問答 · 陳小柏 · .* · 2 則留言/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '載入更多' }))
+    expect(await within(results).findByRole('link', { name: 'Stayman 好用' })).toHaveAttribute('href', '/forum/p/s2')
+  })
+
+  it('says when nothing is found, and checks the search before asking', async () => {
+    routes['GET /api/forum/search?q=%E6%B2%92%E6%9C%89&page=1'] = { posts: [], page: 1, pages: 1, query: '沒有', total: 0 }
+    open('/forum/search?q=沒有')
+    expect(await screen.findByText('沒有貼文的標題或內文有「沒有」。')).toBeInTheDocument()
+    open('/forum/search?q=a b c d e f')
+    expect(await screen.findByText('最多 5 個詞。')).toBeInTheDocument()
+    expect(calls.some((c) => c.includes('q=a+b'))).toBe(false)
+  })
+
+  it('lists my posts and the posts mentioning me', async () => {
+    routes['GET /api/forum/feed?page=1&author=u1'] = { posts: [post('m1', 'chat', '我發的貼文', { authorId: 'u1' })], page: 1, pages: 1 }
+    routes['GET /api/forum/feed?page=1&mentions=u1'] = { posts: [], page: 1, pages: 1 }
+    open('/forum/mine')
+    expect(await screen.findByRole('heading', { name: '我的貼文', level: 1 })).toBeInTheDocument()
+    expect(await screen.findByText('我發的貼文')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /想分享什麼牌/ })).toBeNull()
+    fireEvent.click(screen.getByRole('link', { name: '提到我的' }))
+    expect(await screen.findByText('還沒有人在貼文或留言裡提到你。')).toBeInTheDocument()
   })
 })
 
