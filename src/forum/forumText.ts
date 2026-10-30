@@ -1,3 +1,4 @@
+import type { Me } from '../lib/api.ts'
 import type { Board } from '../lib/forum.ts'
 import type { PostProblem } from '../lib/forumPosts.ts'
 import { formatDateTime } from '../lib/format.ts'
@@ -7,7 +8,16 @@ import { forumStrings as t } from './forumStrings.ts'
 /** A post's own page */
 export const postPath = (postId: string) => `/forum/p/${encodeURIComponent(postId)}`
 
-/** The boards a member may start a post on: every member's, and the officers' for an officer (admins until e11-t09) */
+/** A comment's place on its post's page: the club's notifications open `/forum/p/<id>#comment-<id>` (e11-t08) */
+export const commentAnchor = (commentId: string) => `comment-${commentId}`
+
+/**
+ * The forum's officers (幹部, e11-t09): members with `forumModerate`, and admins. They post news, pin,
+ * lock and delete anyone's posts and comments, and handle reports (TKU-BridgeTable worker/roles.ts)
+ */
+export const isOfficer = (user: Me | null | undefined) => !!user && (user.admin || user.permissions.includes('forumModerate'))
+
+/** The boards a member may start a post on: every member's, and the officers' for an officer */
 export const postableBoards = (boards: readonly Board[], officer: boolean) =>
   [...boards].sort((a, b) => a.order - b.order).filter((b) => b.postPolicy === 'all' || officer)
 

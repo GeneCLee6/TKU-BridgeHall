@@ -91,6 +91,10 @@ function targetLink(entry: AuditEntry) {
   // A convention card version (e3-t09): `<profile>/<template>`, the version's number
   if (entry.action === 'card:publish' && entry.version) return `/cards/${entry.target}/v/${entry.version}`
   if (entry.action === 'card:delete') return null
+  // The forum (e11-t09): a post, unless it was the one deleted; a board, unless deleted
+  if (entry.action === 'forum:removePost' || entry.action === 'forum:boardDelete') return null
+  if (entry.action === 'forum:board') return `/forum/${encodeURIComponent(entry.target)}`
+  if (entry.action.startsWith('forum:')) return `/forum/p/${encodeURIComponent(entry.target)}`
   return entry.revisionId ? `/edit/${entry.target}?rev=${encodeURIComponent(entry.revisionId)}` : `/edit/${entry.target}`
 }
 

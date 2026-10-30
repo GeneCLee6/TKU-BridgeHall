@@ -10,7 +10,7 @@ import { forumApi } from '../lib/forumApi.ts'
 import { memberLabel, postHas, postSummary } from '../lib/forumPosts.ts'
 import { today } from '../lib/format.ts'
 import { forumStrings as t } from '../forum/forumStrings.ts'
-import { boardPath, postPath } from '../forum/forumText.ts'
+import { boardPath, isOfficer, postPath } from '../forum/forumText.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { BlockTitle } from './HomeBlocks.tsx'
 
@@ -95,7 +95,7 @@ function ClubNews() {
       )}
       <More>
         <Link to={boardPath(NEWS_BOARD_ID)}>{t.allNews} →</Link>
-        {user?.admin && (
+        {isOfficer(user) && (
           <Link to={`/forum/new?board=${NEWS_BOARD_ID}`}>
             <Plus size={14} aria-hidden />
             {t.postNews}
