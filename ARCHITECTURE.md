@@ -332,6 +332,7 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - `AuthContext` 把最後一次登入的 `Me` 存在 localStorage `tku-bridgebook:me`：開頁面時先用它畫（不必等 `/api/me`），`/api/me` 回 401 才算登出；連不到牌桌（離線、5xx）時沿用它，所以 PWA 離線照樣能讀。登出時清掉。頁面回到前景（`visibilitychange`）會重抓 `/api/me`，內容相同時保留同一個物件，不會重畫。
 - 牌桌那邊（牌桌 PR，2026-10-29）：橋館的讀取 API（manifest、content、分類、名詞、修題、學習路徑、文章、電子書、制度集）都要登入；只剩健康檢查、錯誤回報、登入／註冊／登出／忘記密碼、簽名網址的檔案、分享中的制度卡版本不用登入。
 - **內容保護**（L0，2026-10-29，使用者決定「大改就大改」）：repo 是公開的（2026-10-29 曾改 private，2026-10-30 使用者改回公開；同一天特約原文搬到 private 內容 repo，§4.0，舊的歷史要另外改寫）；內建特約搬到牌桌（§4），靜態檔與 `dist/` 不含任何特約文字（CI 的 `npm run budget` 擋），manifest、內容與搜尋索引都要登入。登出（或 `/api/me` 回 401）時 `lib/memberCache.ts` 清掉 service worker 快取的 `/api/` 回應與 localStorage 的 manifest。**仍擋不住的**：登入的社員當然拿得到全部內容；舊版網站留在別人裝置快取裡的特約 chunk（L0 之前看過的）不會被遠端刪掉；牌桌 repo 是公開的，所以內容永遠不要放進牌桌。
+- **社團**（N1，`e10-t10` `e10-t11`，2026-10-30；牌桌 `e12-t02`）：牌桌每個社團一個 Durable Object（使用者決定，牌桌 ARCHITECTURE.md §1），淡江是 `tku`，沿用原本的物件，資料與 key 都沒變。`Me.clubId` 是帳號所屬的社團；`AuthContext` 的 `keep`／`kept` 把它交給 `lib/club.ts`，之後每個 `/api` 呼叫都帶 `X-Club-Id`（`request`、制度卡 PDF、搜尋索引），header 帶不了或會多一次 CORS 預檢的地方改用 `?club=`（`lib/beacon.ts` 的 `sendBeacon`、直接打牌桌的匯入與電子書上傳）。未登入時不帶，牌桌當作淡江，所以和多社團之前完全一樣。`<img>` 的頭像與圖片網址不帶（目前只有淡江；第二個社團開放前要處理，牌桌 `e12-t04`）。測試：`tests/lib/club.test.ts`。
 - 已經沒有作用、但還留著的未登入分支（無害，之後整理）：首頁社團預設制度卡的登入提示、學習路徑「登入後可以記錄」、練習「成績只存在這台裝置」、制度卡頁與版本頁的登入提示、手機工具列「我的」未登入時連到登入頁。「你是新生嗎？」（e4-t03）改成問這台裝置第一次來的社員。
 
 **角色**（使用者決定，2026-10-25；名稱暫時沿用）：**管理員**什麼都能管，包括使用者帳號；**編輯者**（有 `bookEdit`）能管帳號以外的所有東西，**但發布特約要審核者**（有 `bookReview`，E8 e8-t01，2026-10-28 起）。

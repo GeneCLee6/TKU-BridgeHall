@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { api, ApiError, type Me, type Permission, type RegisterResult } from '../lib/api.ts'
+import { setClubId } from '../lib/club.ts'
 import { forgetMemberData } from '../lib/memberCache.ts'
 
 /**
@@ -26,6 +27,7 @@ const AuthContext = createContext<Auth | null>(null)
  */
 const ME_KEY = 'tku-bridgebook:me'
 function keep(user: Me | null) {
+  setClubId(user?.clubId)
   // Signed out: what only members read goes too (the cached manifest and API answers, L0)
   if (!user) void forgetMemberData()
   try {
@@ -38,7 +40,9 @@ function keep(user: Me | null) {
 }
 function kept(): Me | null {
   try {
-    return JSON.parse(localStorage.getItem(ME_KEY) ?? 'null') as Me | null
+    const user = JSON.parse(localStorage.getItem(ME_KEY) ?? 'null') as Me | null
+    setClubId(user?.clubId)
+    return user
   } catch {
     return null
   }

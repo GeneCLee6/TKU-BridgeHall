@@ -83,7 +83,7 @@ describe('uploading a picture (e11-t02)', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string, init: RequestInit) => {
-        const type = (init.headers as Record<string, string> | undefined)?.['Content-Type']
+        const type = new Headers(init.headers).get('Content-Type') ?? undefined
         calls.push({ method: init.method ?? 'GET', path, body: typeof init.body === 'string' ? JSON.parse(init.body) : init.body, type })
         if (path === '/api/files/ticket')
           return Response.json({ key: 'post/a.webp', uploadUrl: '/api/files/upload/t', thumbUrl: '/api/files/upload/t?part=thumb', expires: 1 })

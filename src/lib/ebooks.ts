@@ -1,5 +1,6 @@
 import { ApiError, request, send, TABLE_SITE } from './api.ts'
 import type { FileTicket, UploadedFile } from './account.ts'
+import { withClub } from './club.ts'
 
 /**
  * 電子書（E5 e5-t09～e5-t11、e5-t15）: the calls and types only the e-book pages use, kept out of
@@ -122,7 +123,8 @@ export async function uploadPdf(file: Blob, onProgress: (share: number) => void 
   const ticket = await ebookApi.ticket(file.size)
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    xhr.open('PUT', workerUrl(ticket.uploadUrl))
+    // The club in the address, not a header the Worker's CORS answer does not allow (e10-t11)
+    xhr.open('PUT', withClub(workerUrl(ticket.uploadUrl)))
     xhr.setRequestHeader('Content-Type', EBOOK_TYPE)
     xhr.upload.onprogress = (event) => event.lengthComputable && onProgress(event.loaded / event.total)
     xhr.onload = () => {

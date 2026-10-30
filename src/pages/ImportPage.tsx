@@ -5,6 +5,7 @@ import styled from 'styled-components'
 import { AutoTextArea } from '../components/editor/fields.tsx'
 import { Button, ErrorText, Field, Muted, Notice, PageTitle, Panel, PanelTitle, Row, Select } from '../components/ui.tsx'
 import { api, ApiError, errorText, type ArticleList, type ImportDraftSummary } from '../lib/api.ts'
+import { withClub } from '../lib/club.ts'
 import { DocTextError, docToText, docxToText } from '../lib/docText.ts'
 import { formatDateTime, today } from '../lib/format.ts'
 import {
@@ -204,7 +205,8 @@ function ImportBody() {
       if (source.kind === 'pdf') form.set('file', source.file, source.name)
       else form.set('text', source.text)
       // Straight to the Worker: the site's /api proxy gives up after two minutes
-      const response = await fetch(url, { method: 'POST', body: form, signal: controller.signal })
+      // The club in the address, not a header the Worker's CORS answer does not allow (e10-t11)
+      const response = await fetch(withClub(url), { method: 'POST', body: form, signal: controller.signal })
       if (!response.ok || !response.body) {
         const data = await response.json().catch(() => ({}))
         throw new ApiError(data.error ?? `伺服器回應 ${response.status}`, response.status, data.code)
