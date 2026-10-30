@@ -119,6 +119,33 @@ export const forumStrings = {
   mentionList: '提到社員',
   mentionHint: '上下鍵選擇，Enter 確定，Esc 關閉',
 
+  // ── 討論區殼與板面頁 (e11-t15) ──
+  boards: '板面',
+  allBoards: '全部動態',
+  allBoardsIntro: '所有板面的最新貼文',
+  boardTabs: '討論區板面',
+  boardGone: '找不到這個板面，可能已經改名或刪除了。',
+  noPosts: '這裡還沒有貼文，來發第一則吧。',
+  pinnedPosts: '置頂',
+  more: '載入更多',
+  loadingMore: '載入中…',
+  feedLabel: '貼文',
+  news: '社團新聞',
+  noNews: '還沒有公告。',
+  allNews: '看全部公告',
+  postNews: '發公告',
+  active: '活躍的人',
+  activeHint: '最近發文的社員',
+  backToBoard: (name: string) => `回到「${name}」`,
+
+  // ── 首頁 (e11-t16) ──
+  latest: '最新討論',
+  noDiscussions: '還沒有人發文。',
+  toForum: '去討論區',
+  has: { deal: '牌例', auction: '叫牌', hand: '單手牌' },
+  untitled: '（沒有文字）',
+  homeFailed: '討論暫時載入不了。',
+
   // 時間
   justNow: '剛剛',
   minutesAgo: (n: number) => `${n} 分鐘前`,

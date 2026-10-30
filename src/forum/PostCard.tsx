@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
-import { Tag } from '../components/Tag.tsx'
+import { Tag, TagList } from '../components/Tag.tsx'
 import { ErrorText } from '../components/ui.tsx'
 import { errorText, type ClubMember } from '../lib/api.ts'
 import { NEWS_BOARD_ID, type Board, type Post, type ReactionEmoji, type Reactions } from '../lib/forum.ts'
@@ -151,7 +151,11 @@ export function PostCard({
       <Head>
         <Author id={post.authorId} members={members} size={32} />
         <Meta>
-          {board && <Tag label={board.name} />}
+          {board && (
+            <TagList>
+              <Tag label={board.name} />
+            </TagList>
+          )}
           <When at={post.createdAt} edited={post.editedAt} />
           {post.pinned && (
             <Mark>

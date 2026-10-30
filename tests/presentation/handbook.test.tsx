@@ -59,7 +59,7 @@ describe('home page', () => {
     expect(lessons[3]).toHaveTextContent('看「從零開始」全部 8 課')
 
     // Newest first; nothing was edited online, so all show their bundled date
-    const recent = within(screen.getByRole('region', { name: '最近更新' })).getAllByRole('listitem')
+    const recent = within(await screen.findByRole('region', { name: '最近更新' })).getAllByRole('listitem')
     expect(recent).toHaveLength(5)
     expect(recent[0]).toHaveTextContent('內建版本')
 

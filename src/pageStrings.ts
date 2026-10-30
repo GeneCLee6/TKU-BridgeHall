@@ -35,6 +35,7 @@ export const pageStrings = {
     read: '讀制度',
     practice: '練習叫牌',
     library: '叢書',
+    forum: '討論區',
     firstTime: '第一次來？從這裡開始',
     lesson: (n: number) => `第 ${n} 課`,
     wholePath: (name: string, n: number) => `看「${name}」全部 ${n} 課`,
@@ -53,6 +54,7 @@ export const pageStrings = {
     search: '搜尋',
     reading: '閱讀設定',
     mine: '我的',
+    forum: '討論',
     closeOnThisPage: '關閉本頁清單',
   },
   /** 入門版／完整版 (e4-t02) */
