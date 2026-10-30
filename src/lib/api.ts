@@ -24,8 +24,8 @@ export const LIMITS = { usernameMin: 2, usernameMax: 16, passwordMin: 6, noteMax
  * back, hiding, going back to the bundled one. A reviewer is always an editor too (the Worker adds
  * `bookEdit` when it stores `bookReview`).
  */
-export type Permission = 'bookEdit' | 'bookReview' | 'bookImport'
-export const PERMISSIONS: Permission[] = ['bookEdit', 'bookReview', 'bookImport']
+export type Permission = 'bookEdit' | 'bookReview' | 'bookImport' | 'forumModerate'
+export const PERMISSIONS: Permission[] = ['bookEdit', 'bookReview', 'bookImport', 'forumModerate']
 
 export interface Me {
   id: string
@@ -159,6 +159,16 @@ export type AuditAction =
   | 'card:delete'
   | 'path:save'
   | 'path:reset'
+  /** The forum's officers (e11-t09): `target` is the post's id, or the board's */
+  | 'forum:pin'
+  | 'forum:unpin'
+  | 'forum:lock'
+  | 'forum:unlock'
+  | 'forum:removePost'
+  | 'forum:removeComment'
+  | 'forum:dismiss'
+  | 'forum:board'
+  | 'forum:boardDelete'
 
 export interface AuditEntry {
   id: string

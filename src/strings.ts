@@ -140,7 +140,7 @@ export const strings = {
     toTable: '到淡江牌桌打牌',
   },
 
-  permission: { bookEdit: '線上編輯', bookReview: '審核發布', bookImport: '匯入檔案' },
+  permission: { bookEdit: '線上編輯', bookReview: '審核發布', bookImport: '匯入檔案', forumModerate: '討論區幹部' },
 
   // 社團管理
   admin: {

@@ -9,11 +9,12 @@ import { forumApi } from '../lib/forumApi.ts'
 import { commentProblems, newBlock, tidyBlocks } from '../lib/forumPosts.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { forumStrings as t } from './forumStrings.ts'
-import { problemText } from './forumText.ts'
+import { commentAnchor, isOfficer, problemText } from './forumText.ts'
 import { MentionTextArea } from './MentionTextArea.tsx'
 import { PostBody } from './PostBlocks.tsx'
 import { ActionMenu, Author, MenuItem, useReact, When } from './PostCard.tsx'
 import { ReactionBar } from './ReactionBar.tsx'
+import { ReportForm } from './ReportForm.tsx'
 
 /**
  * A comment's text, with an auction or a hand attached when the member wants (e11-t14, AC-11.4).
@@ -124,8 +125,11 @@ function CommentItem({
   const { user } = useAuth()
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState('')
+  const [reporting, setReporting] = useState(false)
+  const [reported, setReported] = useState(false)
   const react = useReact('comment', comment.id, comment.reactions, (reactions) => onChange({ ...comment, reactions }))
   const mine = !!user && user.id === comment.authorId
+  const officer = isOfficer(user)
 
   const remove = async (hasReplies: boolean) => {
     if (!window.confirm(hasReplies ? t.deleteRepliesConfirm : t.deleteCommentConfirm)) return
@@ -138,25 +142,43 @@ function CommentItem({
   }
 
   return (
-    <Item aria-label={t.comment}>
+    <Item id={commentAnchor(comment.id)} aria-label={t.comment}>
       <ItemHead>
         <Author id={comment.authorId} members={members} size={24} />
         <Small>
           <When at={comment.createdAt} edited={comment.editedAt} />
         </Small>
-        {(mine || user?.admin) && (
+        {user && (
           <ActionMenu label={t.commentActions}>
             {mine && (
               <MenuItem type="button" onClick={() => setEditing(true)}>
                 {t.edit}
               </MenuItem>
             )}
-            <MenuItem type="button" $danger onClick={() => void remove(!reply)}>
-              {t.delete}
-            </MenuItem>
+            {!mine && (
+              <MenuItem type="button" onClick={() => setReporting(true)}>
+                {t.report}
+              </MenuItem>
+            )}
+            {(mine || officer) && (
+              <MenuItem type="button" $danger onClick={() => void remove(!reply)}>
+                {t.delete}
+              </MenuItem>
+            )}
           </ActionMenu>
         )}
       </ItemHead>
+      {reporting && (
+        <ReportForm
+          target="comment"
+          targetId={comment.id}
+          onDone={(sent) => {
+            setReporting(false)
+            setReported(sent)
+          }}
+        />
+      )}
+      {reported && <Muted role="status">{t.reported}</Muted>}
       {editing ? (
         <CommentForm
           members={members}
@@ -206,7 +228,7 @@ export function CommentSection({
   const { user } = useAuth()
   const [replyTo, setReplyTo] = useState<{ parentId: string; mention: string } | null>(null)
   const tops = comments.filter((c) => !c.parentId)
-  const open = !post.locked || !!user?.admin
+  const open = !post.locked || isOfficer(user)
 
   const set = (list: Comment[]) => onComments(list, list.length)
   const change = (comment: Comment) => set(comments.map((c) => (c.id === comment.id ? comment : c)))
