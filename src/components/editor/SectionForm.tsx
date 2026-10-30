@@ -7,11 +7,12 @@ import { strings } from '../../strings.ts'
 import { levels, type Block, type Level, type Section } from '../../types/convention.ts'
 import { Button, Field, Input, Row, Select } from '../ui.tsx'
 import { BlockEditor, blockName, PendingField } from './BlockEditor.tsx'
-import { AutoTextArea, MiniButton } from './fields.tsx'
+import { AutoTextArea, MiniButton } from './fields.tsx'
+import { editorStrings } from './editorStrings.ts'
 
 export type SectionAction = 'up' | 'down' | 'indent' | 'outdent' | 'addAfter' | 'addChild' | 'delete'
 
-const t = strings.editor
+const t = editorStrings
 const KINDS: Block['kind'][] = ['paragraph', 'responses', 'rules', 'note', 'hand', 'intro']
 
 /** The fields and content blocks of one section, with the buttons that move it in the tree */

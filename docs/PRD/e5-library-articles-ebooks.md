@@ -1,7 +1,7 @@
 ---
 title: E5 — 橋藝叢書
 date: 2026-10-24
-status: in progress
+status: done
 epic: E5
 owner: GeneCLee6
 milestones: [M2]
@@ -59,8 +59,8 @@ depends_on: [E1, E9, E10]
 ## 驗收條件
 
 - [x] AC-5.1 — `Article` 型別與新區塊；`tests/content` 驗證；文章頁渲染全部區塊種類。
-- [ ] AC-5.2 — 文章線上編輯（新增、改、版本、送審走 E8）；AI 匯入可產文章草稿。
-- [ ] AC-5.3 — `deal` 與 `play` 區塊：四家牌輸入與顯示（與牌桌共用元件）、出牌序列逐墩顯示。
+- [x] AC-5.2 — 文章線上編輯（新增、改、版本、送審走 E8）；AI 匯入可產文章草稿。
+- [x] AC-5.3 — `deal` 與 `play` 區塊：四家牌輸入與顯示（與牌桌共用元件）、出牌序列逐墩顯示。
 - [x] AC-5.4 — 電子書上傳到 R2（憑證直傳、50 MB、必填授權）；封面、作者、年代。
 - [x] AC-5.5 — 站內 PDF 閱讀器（lazy 載入）、頁碼、全螢幕、手機可用。
 - [x] AC-5.6 — 授權與可見：`members-only` 未登入看不到連結也打不開檔案（Worker 簽名 URL 短效）。
@@ -77,8 +77,8 @@ depends_on: [E1, E9, E10]
 - [x] `e5-t04` Worker：`article:` 儲存、版本、API（與 `BookEntry` 同法）；R2 bucket 與簽名 URL 沿用 E11 `e11-t02` · AC-5.2、AC-5.6 · M · ← e11-t02
 - [x] `e5-t05` 文章頁 `/library/:slug` 與叢書頁 `/library`（書架版面、系列、篩選）· AC-5.7 · M · ← e5-t01, e9-t09
 - [x] `e5-t06` 系列資料模型與線上管理 · AC-5.7 · S · ← e5-t04
-- [ ] `e5-t07` 文章編輯器：沿用 `components/editor/`，新區塊表單；四家牌輸入元件 · AC-5.2 · M · ← e5-t01, e5-t02
-- [ ] `e5-t08` AI 匯入支援文章（擴充 `worker/importer.ts` schema、`importResult.ts`）· AC-5.2 · M · ← e5-t07
+- [x] `e5-t07` 文章編輯器：沿用 `components/editor/`，新區塊表單；四家牌輸入元件 · AC-5.2 · M · ← e5-t01, e5-t02
+- [x] `e5-t08` AI 匯入支援文章（擴充 `worker/importer.ts` schema、`importResult.ts`）· AC-5.2 · M · ← e5-t07
 - [x] `e5-t09` 電子書上傳（憑證直傳、授權必填、封面、大小限制）與書頁 · AC-5.4 · M · ← e5-t04
 - [x] `e5-t10` PDF 閱讀器（`pdf.js` lazy chunk、頁碼、全螢幕、手機）· AC-5.5 · M · ← e5-t09
 - [x] `e5-t11` 可見範圍：`members-only` 的列表過濾與檔案保護 · AC-5.6 · S · ← e5-t09

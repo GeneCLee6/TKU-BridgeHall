@@ -17,11 +17,11 @@ import {
   type Seat,
   type Strain,
 } from '../../lib/board.ts'
-import { strings } from '../../strings.ts'
 import { mobile } from '../../styles/tokens.ts'
 import { AuctionTable } from '../AuctionTable.tsx'
 import { Suit } from '../Suit.tsx'
-import { Button, Field, Input, Row, Select } from '../ui.tsx'
+import { Button, Field, Input, Row, Select } from '../ui.tsx'
+import { boardStrings } from './boardStrings.ts'
 
 const STRAIN_KEYS: Record<string, Strain> = { c: 'C', d: 'D', h: 'H', s: 'S', n: 'N' }
 
@@ -42,7 +42,7 @@ export function AuctionInput({
   onChange: (auction: TableAuction) => void
   dealerFixed?: boolean
 }) {
-  const b = strings.board
+  const b = boardStrings
   const [level, setLevel] = useState<number | null>(null)
   const [alerting, setAlerting] = useState(false)
   const [alert, setAlert] = useState('')

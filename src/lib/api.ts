@@ -6,7 +6,7 @@
  */
 
 import type { ArticleMeta, ArticleSeries } from '../types/article.ts'
-import type { ConventionMeta, Section } from '../types/convention.ts'
+import type { Convention, ConventionMeta, Section } from '../types/convention.ts'
 import type { Term } from '../types/glossary.ts'
 import type { Profile } from './account.ts'
 import type { SpecShows, SystemSpec } from './systemSpec.ts'
@@ -137,10 +137,16 @@ export type AuditAction =
   | 'book:hide'
   | 'book:reset'
   | 'book:categories'
+  /** The built-in conventions seeded from this repository (L0, e10-t20) */
+  | 'book:builtin'
   | 'book:pending'
   | 'book:glossary'
   | 'article:publish'
   | 'article:hide'
+  | 'article:draft'
+  | 'article:submit'
+  | 'article:reject'
+  | 'article:discard'
   | 'article:series'
   | 'ebook:save'
   | 'ebook:remove'
@@ -237,12 +243,17 @@ export interface BookGlossary {
   updatedBy?: string
 }
 
-/** GET /api/book/manifest: every online entry, without content, and the online categories */
+/**
+ * GET /api/book/manifest: every online entry, without content, the online categories and the
+ * built-in conventions (L0, e10-t20): the catalogue the online entries are laid over, in order
+ */
 export interface BookManifest {
   version: number
   entries: BookEntrySummary[]
   /** Absent from a Worker (or a manifest cached) before categories were data */
   categories?: BookCategory[]
+  /** Absent from a manifest cached before L0 (2026-10-29); the Worker always sends it */
+  builtin?: ConventionMeta[]
 }
 
 export interface BookRevision {
@@ -268,9 +279,37 @@ export interface ArticleEntry {
   updatedAt: number
   updatedBy: string
   status: 'published'
+  /** Who sent the published draft for review (e5-t07); absent when a reviewer published straight away */
+  reviewRequestedBy?: string
+  reviewRequestedAt?: number
   reviewedBy: string
   reviewedAt: number
 }
+
+/**
+ * An article's change that is not published yet (e5-t07; TKU-BridgeTable worker/articles.ts
+ * ArticleDraft), as a convention's BookDraft: one per article, only editors and reviewers see it
+ */
+export interface ArticleDraft {
+  slug: string
+  status: 'draft' | 'in-review'
+  baseVersion: number
+  revision: number
+  article: unknown
+  note: string
+  createdAt: number
+  createdBy: string
+  updatedAt: number
+  updatedBy: string
+  reviewRequestedBy?: string
+  reviewRequestedAt?: number
+  reviewedBy?: string
+  reviewedAt?: number
+  reviewNote?: string
+}
+
+/** GET /api/book/reviews `articles`: every article draft without its content, plus its title */
+export type ArticleDraftSummary = Omit<ArticleDraft, 'article'> & { title: string }
 
 export type ArticleEntrySummary = Omit<ArticleEntry, 'article'> & { meta: ArticleMeta | null }
 
@@ -322,7 +361,10 @@ export interface ImportDraftSummary {
   fileName: string
   createdAt: number
   createdBy: string
+  /** How many conventions the AI made (0 for articles) */
   conventions: number
+  /** How many articles, for a file imported as articles (e5-t08) */
+  articles?: number
 }
 
 export interface ImportDraft extends ImportDraftSummary {
@@ -740,6 +782,8 @@ export const api = {
 
   book: {
     manifest: () => request<BookManifest>('/api/book/manifest'),
+    /** A built-in convention (L0, e10-t20): members only, as everything else; 404 when there is none */
+    builtin: (slug: string) => request<{ convention: Convention }>(`/api/book/builtin/${slug}`).then((r) => r.convention),
     /** One convention's online entry; 404 when it was never changed online */
     entry: (slug: string) => request<{ entry: BookEntry }>(`/api/book/content/${slug}`).then((r) => r.entry),
     /**
@@ -812,7 +856,7 @@ export const api = {
      */
     articles: () => request<ArticleList>('/api/book/articles'),
     article: (slug: string) => request<ArticleResponse>(`/api/book/articles/${slug}`),
-    saveArticle: (slug: string, body: { article: unknown; baseVersion: number; note?: string }) =>
+    saveArticle: (slug: string, body: { article: unknown; baseVersion: number; draftRevision?: number; note?: string }) =>
       send<{ entry: ArticleEntry }>('PUT', `/api/book/articles/${slug}`, body).then((r) => r.entry),
     hideArticle: (slug: string, baseVersion: number, note?: string) =>
       post<{ entry: ArticleEntry }>(`/api/book/articles/${slug}/hide`, { baseVersion, note }).then((r) => r.entry),

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { KindLevel } from '../components/KindLevel.tsx'
-import { Button, Select } from '../components/ui.tsx'
+import { Button, Row, Select } from '../components/ui.tsx'
 import { libraryStrings } from '../libraryStrings.ts'
 import { errorText, type ArticleList, type ArticleSeries } from '../lib/api.ts'
 import { libraryApi } from '../lib/libraryApi.ts'
@@ -34,7 +34,7 @@ export function Library() {
  * frame (App.tsx).
  */
 export function LibraryPage() {
-  const { user } = useAuth()
+  const { user, can } = useAuth()
   const [list, setList] = useState<ArticleList>()
   const [error, setError] = useState('')
   const [params, setParams] = useSearchParams()
@@ -82,6 +82,18 @@ export function LibraryPage() {
         <p>
           {s.intro} <Link to="/library/book">{s.ebooks}</Link>
         </p>
+        {can('bookEdit') && (
+          <Row>
+            <Button as={Link} to="/library/new" $small $variant="primary">
+              {s.newArticle}
+            </Button>
+            {can('bookImport') && (
+              <Button as={Link} to="/import?target=articles" $small>
+                {s.importArticles}
+              </Button>
+            )}
+          </Row>
+        )}
       </Intro>
 
       {error && (

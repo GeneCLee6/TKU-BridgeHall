@@ -1,5 +1,4 @@
 import { conventionBySlug } from '../../src/content/index.ts'
-import { manifest } from '../../src/content/manifest.ts'
 import { bundledPaths, FROM_ZERO } from '../../src/content/paths.ts'
 import { conventions } from '../../src/content/index.ts'
 import { generateQuizzes } from '../../src/lib/quiz.ts'
@@ -17,7 +16,10 @@ import {
   tidyPath,
   type LearningPath,
 } from '../../src/lib/learning.ts'
-import { walkSections } from '../../src/lib/sections.ts'
+import { conventionMeta, walkSections } from '../../src/lib/sections.ts'
+
+// The catalogue as the Worker's manifest gives it (L0)
+const manifest = conventions.map(conventionMeta)
 
 /** 學習路徑 (e4-t08, e4-t11): the bundled path and the helpers */
 

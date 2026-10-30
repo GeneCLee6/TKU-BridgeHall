@@ -2,9 +2,9 @@ import { useId, useRef, useState, type KeyboardEvent } from 'react'
 import styled from 'styled-components'
 import { SUIT_NAME } from '../../lib/calls.ts'
 import { bySuit, RANKS, rankLabel, SUITS, type Card } from '../../lib/board.ts'
-import { strings } from '../../strings.ts'
 import { mobile } from '../../styles/tokens.ts'
-import { Suit } from '../Suit.tsx'
+import { Suit } from '../Suit.tsx'
+import { boardStrings } from './boardStrings.ts'
 
 /** One hand as four suits, ♠ ♥ ♦ ♣; a void shows a dash */
 export function HandSuits({ cards, inline = false }: { cards: readonly Card[]; inline?: boolean }) {
@@ -17,7 +17,7 @@ export function HandSuits({ cards, inline = false }: { cards: readonly Card[]; i
           <span>
             {suits[suit].length
               ? suits[suit].map((card) => rankLabel(card[1])).join(' ')
-              : strings.board.void}
+              : boardStrings.void}
           </span>
         </li>
       ))}
@@ -84,9 +84,9 @@ export function CardPanel({ keyOf, onToggle }: { keyOf: (card: Card) => CardKey;
   }
 
   return (
-    <Panel role="group" aria-label={strings.board.cardPanel} aria-describedby={hintId}>
+    <Panel role="group" aria-label={boardStrings.cardPanel} aria-describedby={hintId}>
       <span id={hintId} className="visually-hidden">
-        {strings.board.cardPanelHint}
+        {boardStrings.cardPanelHint}
       </span>
       {SUITS.map((suit, row) => (
         <SuitRow key={suit} role="group" aria-label={SUIT_NAME[suit]}>
@@ -97,7 +97,7 @@ export function CardPanel({ keyOf, onToggle }: { keyOf: (card: Card) => CardKey;
             const index = row * 13 + col
             const card = CARDS[index]
             const key = keyOf(card)
-            const name = strings.board.cardName(SUIT_NAME[suit], rankLabel(rank))
+            const name = boardStrings.cardName(SUIT_NAME[suit], rankLabel(rank))
             return (
               <Key
                 key={card}
@@ -108,7 +108,7 @@ export function CardPanel({ keyOf, onToggle }: { keyOf: (card: Card) => CardKey;
                 tabIndex={index === focus ? 0 : -1}
                 aria-pressed={key.pressed}
                 aria-disabled={key.disabled || undefined}
-                aria-label={key.owner ? strings.board.heldBy(name, key.owner) : name}
+                aria-label={key.owner ? boardStrings.heldBy(name, key.owner) : name}
                 $pressed={key.pressed}
                 $held={!!key.owner && !key.pressed}
                 onFocus={() => setFocus(index)}

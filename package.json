@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "lint": "oxlint",
-    "manifest": "node scripts/build-manifest.ts",
+    "seed-builtin": "node scripts/seed-builtin.ts",
     "preview": "vite preview",
     "budget": "node scripts/check-budget.mjs",
     "parity": "node scripts/check-table-parity.mjs",

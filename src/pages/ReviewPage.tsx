@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { DiffView } from '../components/DiffView.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row, TextArea } from '../components/ui.tsx'
-import { api, ApiError, errorText, type BookDraft, type BookDraftSummary } from '../lib/api.ts'
+import { api, ApiError, errorText, type ArticleDraftSummary, type BookDraft, type BookDraftSummary } from '../lib/api.ts'
+import { articleEditApi } from '../lib/articleEditApi.ts'
 import { conventionProblems } from '../lib/content.ts'
 import { changedSectionIds, diffConventions } from '../lib/diff.ts'
 import { formatDateTime } from '../lib/format.ts'
@@ -14,6 +15,7 @@ import { useContent, useConvention } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
 import type { Convention } from '../types/convention.ts'
 import { Frame, Gate } from './Frame.tsx'
+import { articleEditStrings as a } from './articleEditStrings.ts'
 import { diffText as d, review as r } from './reviewStrings.ts'
 
 /**
@@ -21,6 +23,8 @@ import { diffText as d, review as r } from './reviewStrings.ts'
  * review first; /review/:slug shows one against what readers see now, paragraph by paragraph,
  * with the editor's note. Editors may look; reviewers (`bookReview`) publish it or send it back
  * with why. One column, so it works on a phone. Reads the club's content, not a reader's profile.
+ * Articles' drafts (e5-t07) are listed too, marked 文章; they open in the article editor, where
+ * reviewers publish them or send them back.
  */
 export function ReviewPage() {
   return (
@@ -37,16 +41,24 @@ function Review() {
   return slug ? <ReviewDraft key={slug} slug={slug} /> : <ReviewList />
 }
 
+/** A convention's or an article's draft in the list, with where it opens */
+type ListedDraft = (BookDraftSummary | ArticleDraftSummary) & { title: string; to: string; article: boolean }
+
 function ReviewList() {
   usePageTitle(d.reviewTitle)
   const location = useLocation()
   const notice = (location.state as { notice?: string } | null)?.notice
-  const [drafts, setDrafts] = useState<BookDraftSummary[] | null>(null)
+  const [drafts, setDrafts] = useState<ListedDraft[] | null>(null)
   const [error, setError] = useState('')
   useEffect(() => {
     let current = true
-    reviewApi.drafts().then(
-      (list) => current && setDrafts(list),
+    articleEditApi.reviews().then(
+      (list) =>
+        current &&
+        setDrafts([
+          ...list.drafts.map((x) => ({ ...x, title: x.nameZh || x.slug, to: `/review/${x.slug}`, article: false })),
+          ...(list.articles ?? []).map((x) => ({ ...x, title: x.title || x.slug, to: `/library/${x.slug}/edit`, article: true })),
+        ]),
       (e) => current && setError(errorText(e)),
     )
     return () => {
@@ -75,8 +87,11 @@ function ReviewList() {
               </PanelTitle>
               <Cards>
                 {group.list.map((x) => (
-                  <li key={x.slug}>
-                    <Link to={`/review/${x.slug}`}>{x.nameZh || x.slug}</Link>
+                  <li key={x.to}>
+                    <span>
+                      {x.article && <Muted as="span">{a.reviewArticles}・</Muted>}
+                      <Link to={x.to}>{x.title}</Link>
+                    </span>
                     <Muted>
                       {x.status === 'in-review'
                         ? d.submittedBy(x.reviewRequestedBy ?? x.updatedBy, formatDateTime(x.reviewRequestedAt ?? x.updatedAt))
