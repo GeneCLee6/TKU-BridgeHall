@@ -94,6 +94,8 @@ npm run dev        # http://localhost:5174
 
 完整步驟、欄位說明與範本見 [`CONTENT_GUIDE.md`](CONTENT_GUIDE.md)。不需要修改任何元件。
 
+`src/content` 是內建特約的**種子與測試資料**：特約的真相在淡江牌桌的 Worker（內建層＋網站上發布的線上版本），寫入用 `npm run seed-builtin`。讀者實際讀到的全部特約每天匯出備份到一個 private repo（`npm run export-content`、workflow「Content backup」，CONTENT_GUIDE.md §6.5）。
+
 ## 手機 App
 
 網站可以安裝成手機 App（PWA），之後從主畫面圖示全螢幕開啟，沒有網路也能看已讀過的內容：

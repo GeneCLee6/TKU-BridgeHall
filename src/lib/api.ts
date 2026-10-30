@@ -256,6 +256,9 @@ export interface BookManifest {
   builtin?: ConventionMeta[]
 }
 
+// GET /api/book/export (L1, e8-t12): in lib/bookExport.ts, which the scripts can import without this file
+export type { BookExport, ExportedConvention, ExportedOnline } from './bookExport.ts'
+
 export interface BookRevision {
   id: string
   slug: string
