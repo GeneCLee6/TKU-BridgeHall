@@ -20,7 +20,7 @@
 ## 硬性規則
 
 1. **內容正確性第一。** 特約內容逐字轉錄自社團的 Word 檔。不得依一般橋牌知識補充、刪減或修正叫品意義、點力範圍或例子。有疑義時保留原文、加 `pending`（網站顯示「待確認」），並更新 `CONTENT_GUIDE.md` 的清單。
-2. **原始 Word 檔與轉檔輸出不得 commit。**（`.gitignore` 已排除 `*.doc`、`*.docx`、`*.htm`、`tmp/`。）原檔只存在本機 `C:淡江橋藝社制度原檔`；repo 2026-10-29 起是 private，但舊歷史裡的 .doc 已清掉，仍不要再放回來。
+2. **原始 Word 檔與轉檔輸出不得 commit。**（`.gitignore` 已排除 `*.doc`、`*.docx`、`*.htm`、`tmp/`。）原檔只存在本機 `C:淡江橋藝社制度原檔`；repo 是公開的（2026-10-29 曾改 private，2026-10-30 使用者改回公開），舊歷史裡的 .doc 已清掉，仍不要再放回來。
 3. **特約內容不進網站的靜態檔**（L0，2026-10-29）：內建特約存在淡江牌桌的 Worker，只給登入的社員；`npm run budget` 擋 `dist/` 裡的特約文字。新增特約：幹部用線上編輯器或 AI 匯入（成為線上版本）；要加成內建特約，新增 `src/content/conventions/<slug>.ts`（檔名＝slug）、在 `src/content/index.ts` 登記，再 `npm run seed-builtin`（預演）→ `-- --apply`（寫入並逐字比對）。不改元件。網站程式不要 import `content/index.ts` 或 `content/conventions/*`（只給測試與腳本用，見 ARCHITECTURE.md §4）；牌桌 repo 是公開的，內容也不放那裡。
 4. **顏色只來自 `styles/tokens.ts`**，介面文字只來自 `strings.ts`。
 5. **牌桌是真相、線上版本優先**：改了 `.ts` 檔要 `npm run seed-builtin -- --apply` 才會上線；網站上改過的特約，連 seed 之後也不會顯示（線上版本蓋過內建，ARCHITECTURE.md §4.1）。改內容前先確認那個特約沒有線上版本，或在編輯器還原為內建版本。
