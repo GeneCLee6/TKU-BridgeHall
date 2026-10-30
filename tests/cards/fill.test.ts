@@ -26,7 +26,7 @@ const profile = (p: Partial<SystemProfile> & Pick<SystemProfile, 'id' | 'scope'>
 const club = (content: Convention[] = bundled, profiles: SystemProfile[] = []) => resolveProfile(profiles, 'club', content)
 
 // A small card: a two-line text block, a one-line table and a check, 100 pt wide at 10 pt
-// (so 20 half-width characters a line)
+// (so 18 half-width characters a line: 8.5 pt goes to the cell's padding)
 const mini: CardTemplate = {
   id: 'wbf',
   name: 'Mini',
@@ -225,10 +225,10 @@ describe('fillCard', () => {
 
   it('moves what does not fit to a numbered note with the full text', () => {
     const card = fillCard(mini, club([sample(['wbf.box <- top#0', 'wbf.box <- top', 'wbf.t.r.x <- top#1'])]))
-    // Box: 2 lines of 20; "短" fits, the whole section does not
+    // Box: 2 lines of 18; "短" fits, the whole section does not
     expect(card.cells['wbf.box']!.text).toBe('短\nSample [Note 1]')
     expect(card.cells['wbf.box']!.notes).toEqual([1])
-    // The table cell is 10 characters wide: even "Sample [Note 2]" is too long, so the name goes
+    // The table cell is 8 characters wide: even "Sample [Note 2]" is too long, so the name goes
     expect(card.cells['wbf.t.r.x']!.text).toBe('[Note 2]')
     expect(card.notes).toEqual([
       {
@@ -250,6 +250,17 @@ describe('fillCard', () => {
         pending: true,
       },
     ])
+  })
+
+  it('runs the entries of a multi-line cell on when one a line does not fit, even as notes', () => {
+    const card = fillCard(mini, club([sample(['wbf.box = A', 'wbf.box <- top', 'wbf.box = C'])]))
+    // One a line would take 3 lines of the box's 2
+    expect(card.cells['wbf.box']!.text).toBe('A; Sample [Note 1]; C')
+    expect(card.cells['wbf.box']!.overflow).toBeUndefined()
+    expect(card.notes.map((n) => n.n)).toEqual([1])
+    // Too much even run on: flagged
+    const full = fillCard(mini, club([sample(['wbf.box = AAAAAAAAAAAAAAAAAAAA', 'wbf.box = BBBBBBBBBBBBBBBBBBBB'])]))
+    expect(full.cells['wbf.box']).toMatchObject({ text: 'AAAAAAAAAAAAAAAAAAAA; BBBBBBBBBBBBBBBBBBBB', overflow: true })
   })
 
   it('ticks checks, picks choices and writes fixed values', () => {
@@ -360,9 +371,9 @@ describe('slot space', () => {
 
   it('measures the WBF cells from the 2.19 widths at 7 pt', () => {
     const spaces = slotSpaces(wbf)
-    // 268.35 pt / 3.5 pt
-    expect(spaces.get('wbf.defence.overcalls')).toEqual({ lines: 6, chars: 76, label: 0 })
-    // 241.7 pt / 3.5 pt
-    expect(spaces.get('wbf.openings.1NT.responses')!.chars).toBe(69)
+    // (268.35 pt - 8.5 pt padding) / 3.5 pt
+    expect(spaces.get('wbf.defence.overcalls')).toEqual({ lines: 6, chars: 74, label: 0 })
+    // (241.7 pt - 8.5 pt) / 3.5 pt
+    expect(spaces.get('wbf.openings.1NT.responses')!.chars).toBe(66)
   })
 })

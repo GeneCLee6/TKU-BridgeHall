@@ -14,7 +14,9 @@
 // "; " on a one-line cell and one entry per line on a multi-line one. What does not fit (judged
 // from the cell's width in points and the card's font size) is replaced, longest first, by
 // "<convention name> [Note n]", and the full text goes to the supplementary pages (`notes`),
-// numbered in print order.
+// numbered in print order. A multi-line cell whose entries still take more lines than it has runs
+// them on with "; ". The sheet never grows (CardSheet.tsx `Boxed`), so what still does not fit is
+// clipped there and flagged here (`overflow`).
 
 import type { Origin, ProfileResolution, ResolvedConvention } from '../lib/profiles.ts'
 import {
@@ -119,10 +121,14 @@ export interface SlotSpace {
   label: number
 }
 
+/** A cell's padding in points, left and right (CardSheet.tsx `slotText`: 1.5pt and 7pt for the 「§」 link) */
+const SLOT_PADDING = 8.5
+
 /** Every slot's space, from the template's widths, print width and font size */
 export function slotSpaces(template: CardTemplate): Map<string, SlotSpace> {
-  const perPercent = template.printWidth / 100 / (template.fontSize / 2)
-  const chars = (percent: number) => Math.max(1, Math.floor(percent * perPercent))
+  // A half-width character is half the font size; the cell's padding (CardSheet.tsx `slotText`) is not for text
+  const chars = (percent: number) =>
+    Math.max(1, Math.floor(((percent / 100) * template.printWidth - SLOT_PADDING) / (template.fontSize / 2)))
   const spaces = new Map<string, SlotSpace>()
   const visit = (blocks: CardBlock[], width: number) => {
     for (const block of blocks) {
@@ -196,9 +202,9 @@ interface Contribution {
   source?: SourceText
 }
 
-/** Lines a set of pieces takes in a slot */
-function linesNeeded(pieces: string[], space: SlotSpace): number {
-  if (space.lines > 1) {
+/** Lines a set of pieces takes in a slot, one per line or (`packed`, and always on one line) run together */
+function linesNeeded(pieces: string[], space: SlotSpace, packed = false): number {
+  if (space.lines > 1 && !packed) {
     return pieces.reduce((sum, text, i) => sum + Math.ceil((textWidth(text) + (i === 0 ? space.label : 0)) / space.chars), 0)
   }
   const total = space.label + textWidth(pieces.join('; '))
@@ -323,11 +329,13 @@ export function fillCard(template: CardTemplate, resolution: ProfileResolution, 
   }
 
   // 4. Fit the text, moving the longest pieces to notes until it fits; when even the labels are
-  //    too long, the notes go without the convention's name
+  //    too long, the pieces of a multi-line cell run on with "; " instead of one per line, then the
+  //    notes go without the convention's name
   const bare = new Set<string>()
+  const packed = new Set<string>()
   for (const [slot, list] of pieces) {
     const space = spaces.get(slot)!
-    const fits = () => linesNeeded(list.map((p) => shownText(p, bare.has(slot))), space) <= space.lines
+    const fits = () => linesNeeded(list.map((p) => shownText(p, bare.has(slot))), space, packed.has(slot)) <= space.lines
     for (;;) {
       if (fits()) break
       const candidates = list.filter((p): p is SourcePiece => p.kind === 'source' && !p.note)
@@ -335,6 +343,7 @@ export function fillCard(template: CardTemplate, resolution: ProfileResolution, 
       const longest = candidates.reduce((a, b) => (textWidth(b.text) > textWidth(a.text) ? b : a))
       longest.note = true
     }
+    if (!fits() && space.lines > 1) packed.add(slot)
     if (!fits() && list.some((p) => p.kind === 'source' && p.note)) bare.add(slot)
     if (!fits()) cells.get(slot)!.overflow = true
   }
@@ -362,7 +371,7 @@ export function fillCard(template: CardTemplate, resolution: ProfileResolution, 
       })
       return noteLabel(p.name, n, bare.has(id))
     })
-    cell.text = texts.join(spaces.get(id)!.lines > 1 ? '\n' : '; ')
+    cell.text = texts.join(spaces.get(id)!.lines > 1 && !packed.has(id) ? '\n' : '; ')
     if (numbers.length) cell.notes = numbers
   }
 
