@@ -21,7 +21,7 @@ import { useAuth } from '../state/AuthContext.tsx'
 import { useContent } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
 import { cardColors, layout, mobile } from '../styles/tokens.ts'
-import { CardTabs, CardVersions, WordDownload } from './CardOutputs.tsx'
+import { CardTabs, CardVersions, PdfDownload, WordDownload } from './CardOutputs.tsx'
 import { CTCBA_CARDS_URL, cardStrings as t } from './cardStrings.ts'
 import { Frame } from './Frame.tsx'
 
@@ -32,8 +32,9 @@ import { Frame } from './Frame.tsx'
  * on hover, and selecting it shows the help, where the text comes from with links to the handbook,
  * and, for someone who may edit the profile, the hand edit: text, tick or option, a flag for the
  * partnership, and 重設. Edits are saved with the profile as `cardEdits`, the whole profile with
- * its `baseVersion` like the profile editor (409: reload). Printing (and 下載 PDF, which is the
- * browser's print to PDF) prints the sheets alone, black on white, on A4 at the form's size.
+ * its `baseVersion` like the profile editor (409: reload). Printing prints the sheets alone, black
+ * on white, on A4 at the form's size; 下載 PDF has the Worker print that layout (e3-t13,
+ * cards/pdf.ts) and falls back to the print dialog.
  *
  * Read the way the profile is readable: signed out, the club's only. When the Worker cannot be
  * reached the club's card is filled from the handbook's own content.
@@ -249,9 +250,7 @@ function Card({ profileId, template, form }: { profileId: string; template: Card
               {t.print}
             </Button>
             <WordDownload template={template} card={card} profileName={form === undefined ? profile.name : `${profile.name}-${form}`} />
-            <Button type="button" $variant="primary" onClick={() => window.print()} aria-describedby="card-pdf-hint">
-              {t.pdf}
-            </Button>
+            <PdfDownload template={template} profileName={form === undefined ? profile.name : `${profile.name}-${form}`} />
           </Row>
         </Controls>
         {formOf ? (

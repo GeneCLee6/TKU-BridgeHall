@@ -548,6 +548,29 @@ export interface CardSnapshotInput {
   docx?: string
 }
 
+// Convention card PDFs (E3 e3-t13): mirrors CARD_PDF_LIMITS, CardPdfPaper and CardPdfRequest in
+// TKU-BridgeTable shared/protocol.ts (worker/card-pdf.ts)
+
+/** The HTML stays under the API's 2 MB body; per member and per day limits are the Worker's */
+export const CARD_PDF_LIMITS = {
+  htmlBytesMax: 1_900_000,
+  perMemberBurst: 5,
+  perMemberEveryMs: 120_000,
+  dailyBrowserMs: 8 * 60_000,
+  cacheMs: 60 * 60_000,
+  cacheEntries: 20,
+} as const
+
+export type CardPdfPaper = 'A4-landscape' | 'A4-portrait'
+
+/** POST /api/book/card-pdf's body; the answer is the PDF (application/pdf) */
+export interface CardPdfRequest {
+  html: string
+  paper: CardPdfPaper
+  /** The file's name without `.pdf`; ASCII letters, digits and - only (anything else is dropped) */
+  name?: string
+}
+
 // Teams and partnerships (E2 e2-t01): mirrors the "Teams and partnerships" part of TKU-BridgeTable
 // shared/protocol.ts, field for field (parity/table-types.ts). The team type is ClubTeam there
 // because Team is a team match's side; the same name here keeps the two easy to compare.
