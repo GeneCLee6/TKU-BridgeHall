@@ -73,6 +73,8 @@ test.describe('axe', () => {
       await open(page, '/practice?c=fixture-alpha', size, { theme: 'light' })
       await page.getByRole('button', { name: '開始練習' }).waitFor()
       await audit(page)
+      // fixture-alpha also has a call question, answered on a bidding box: ask meanings only
+      await page.getByRole('combobox', { name: /^題型/ }).selectOption('meaning')
       await page.getByRole('button', { name: '開始練習' }).click()
       await page.getByRole('list', { name: '選項' }).getByRole('button').first().click()
       await page.getByRole('link', { name: '去讀原文' }).waitFor()

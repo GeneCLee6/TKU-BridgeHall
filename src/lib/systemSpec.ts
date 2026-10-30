@@ -131,7 +131,7 @@ export type UnresolvedReason =
   | 'alternatives'
   /**
    * Words in brackets say something about the hand (a length, points, a shape, 或): they may
-   * change what the words before them say ("3張♥，6-9(4張♥的4333，6-9)")
+   * change what the words before them say ("3張♠，8-10(4張♠的4333，8-10)")
    */
   | 'bracketed'
   /** The patterns found no high cards, lengths or shape in the meaning */
