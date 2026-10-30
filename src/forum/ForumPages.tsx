@@ -2,11 +2,11 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
-import { Button, ErrorText, Muted, PageTitle } from '../components/ui.tsx'
+import { Button, ErrorText, Input, Muted, PageTitle } from '../components/ui.tsx'
 import { api, ApiError, errorText, type ClubMember } from '../lib/api.ts'
-import { NEWS_BOARD_ID, type Board, type Comment, type ForumFeed, type Post } from '../lib/forum.ts'
-import { forumApi } from '../lib/forumApi.ts'
-import { memberLabel, postSummary, recentAuthors } from '../lib/forumPosts.ts'
+import { FORUM_LIMITS, NEWS_BOARD_ID, type Board, type Comment, type ForumFeed, type ForumSearch, type Post } from '../lib/forum.ts'
+import { forumApi, type FeedFilter } from '../lib/forumApi.ts'
+import { memberLabel, postSummary, recentAuthors, searchProblem, searchSnippet } from '../lib/forumPosts.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { Frame, Gate } from '../pages/Frame.tsx'
@@ -214,7 +214,7 @@ export function ForumShell() {
       </Gate>
       {isMobile && (
         <Suspense fallback={null}>
-          <MobileToolbar search={false} />
+          <MobileToolbar search="/forum/search" />
         </Suspense>
       )}
     </Frame>
@@ -279,6 +279,19 @@ function ForumFrame() {
             </li>
           )}
         </ul>
+        <h2>{t.personal}</h2>
+        <ul>
+          <li>
+            <NavLink to="/forum/mine">{t.mine}</NavLink>
+          </li>
+          <li>
+            <NavLink to="/forum/mentions">{t.mentions}</NavLink>
+          </li>
+          <li className="search-tab">
+            <NavLink to="/forum/search">{t.search}</NavLink>
+          </li>
+        </ul>
+        <NavSearch />
       </BoardNav>
       <Main id="main" tabIndex={-1}>
         <Suspense fallback={<Muted role="status">{t.loading}</Muted>}>
@@ -390,11 +403,174 @@ export function BoardPage() {
   )
 }
 
+/** 我的貼文 `/forum/mine` and 提到我的 `/forum/mentions` (e11-t10): the member's own posts, or those mentioning them */
+export function MinePage({ mentions = false }: { mentions?: boolean }) {
+  const { user } = useAuth()
+  const title = mentions ? t.mentions : t.mine
+  usePageTitle(title)
+  const me = user?.id ?? ''
+  return (
+    <Column>
+      <Heading>
+        <PageTitle>{title}</PageTitle>
+        <Muted>{mentions ? t.mentionsIntro : t.mineIntro}</Muted>
+      </Heading>
+      <Posts
+        key={`${mentions ? 'mentions' : 'mine'}:${me}`}
+        filter={mentions ? { mentions: me } : { author: me }}
+        empty={mentions ? t.noMentions : t.noMine}
+      />
+    </Column>
+  )
+}
+
+export const MentionsPage = () => <MinePage mentions />
+
+/** The left column's search box (e11-t18): it opens the search page */
+function NavSearch() {
+  const navigate = useNavigate()
+  const [query, setQuery] = useState('')
+  return (
+    <SearchForm
+      role="search"
+      className="nav-search"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (query.trim()) navigate(`/forum/search?${new URLSearchParams({ q: query.trim() })}`)
+      }}
+    >
+      <Input
+        type="search"
+        aria-label={t.searchLabel}
+        placeholder={t.searchPlaceholder}
+        value={query}
+        maxLength={FORUM_LIMITS.searchMax}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+    </SearchForm>
+  )
+}
+
+/** 搜尋討論 `/forum/search?q=` (e11-t18, AC-11.9): titles and text blocks, newest first, a page at a time */
+export function SearchPage() {
+  usePageTitle(t.searchTitle)
+  const [params, setParams] = useSearchParams()
+  const query = params.get('q') ?? ''
+  const problem = query.trim() ? searchProblem(query) : null
+  return (
+    <Column>
+      <Heading>
+        <PageTitle>{t.searchTitle}</PageTitle>
+        <Muted>{t.searchIntro}</Muted>
+      </Heading>
+      <SearchBox key={query} query={query} onSearch={(q) => setParams(q ? { q } : {})} />
+      {problem ? (
+        <ErrorText role="alert">
+          {problem === 'empty'
+            ? t.searchProblems.empty
+            : problem === 'tooLong'
+              ? t.searchProblems.tooLong(FORUM_LIMITS.searchMax)
+              : t.searchProblems.tooManyWords(FORUM_LIMITS.searchWordsMax)}
+        </ErrorText>
+      ) : (
+        query.trim() && <SearchResults key={query} query={query.trim()} />
+      )}
+    </Column>
+  )
+}
+
+/** The search page's box; keyed by the search, so it starts from what was searched */
+function SearchBox({ query, onSearch }: { query: string; onSearch: (query: string) => void }) {
+  const [text, setText] = useState(query)
+  return (
+    <SearchForm
+      role="search"
+      $flush
+      onSubmit={(e) => {
+        e.preventDefault()
+        onSearch(text.trim())
+      }}
+    >
+      <Input
+        type="search"
+        aria-label={t.searchLabel}
+        placeholder={t.searchPlaceholder}
+        value={text}
+        maxLength={FORUM_LIMITS.searchMax}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <Button type="submit">{t.search}</Button>
+    </SearchForm>
+  )
+}
+
+/** A post without a title is listed by its first words; show where the words were found when that is further on */
+const snippetMoves = (post: Post, query: string) => searchSnippet(post, query).startsWith('…')
+
+function SearchResults({ query }: { query: string }) {
+  const { club } = useForum()
+  const [found, setFound] = useState<ForumSearch>()
+  const [busy, setBusy] = useState(true)
+  const [error, setError] = useState('')
+
+  const load = (at: number) => {
+    setBusy(true)
+    setError('')
+    forumApi.search(query, at).then(
+      (r) => {
+        setFound((now) =>
+          at === 1 || !now ? r : { ...r, posts: [...now.posts, ...r.posts.filter((p) => !now.posts.some((q) => q.id === p.id))] },
+        )
+        setBusy(false)
+      },
+      (e) => {
+        setError(errorText(e))
+        setBusy(false)
+      },
+    )
+  }
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- once; the list is keyed by the query
+  useEffect(() => load(1), [])
+
+  const boardName = (id: string) => club.boards.find((b) => b.id === id)?.name ?? id
+  return (
+    <>
+      {error && <Failed text={error} retry={() => load(found ? found.page + 1 : 1)} />}
+      {found ? (
+        <section aria-label={t.searchResults}>
+          <Muted role="status">{found.total ? t.searchCount(found.total, found.query) : t.searchNone(found.query)}</Muted>
+          <Hits>
+            {found.posts.map((post) => (
+              <li key={post.id}>
+                <Link to={postPath(post.id)}>{postSummary(post) || t.untitled}</Link>
+                {(post.title || snippetMoves(post, query)) && <span>{searchSnippet(post, query)}</span>}
+                <small>
+                  {boardName(post.boardId)} · {memberLabel(club.members, post.authorId) ?? t.someone} · {ago(post.createdAt)}
+                  {post.commentCount > 0 && ` · ${t.comments(post.commentCount)}`}
+                </small>
+              </li>
+            ))}
+          </Hits>
+        </section>
+      ) : (
+        !error && <Muted role="status">{t.loading}</Muted>
+      )}
+      {found && found.page < found.pages && (
+        <div>
+          <Button type="button" disabled={busy} onClick={() => load(found.page + 1)}>
+            {busy ? t.loadingMore : t.more}
+          </Button>
+        </div>
+      )}
+    </>
+  )
+}
+
 /**
  * The compose box and a list of posts, a page at a time: one board's (its pinned posts first), or
  * every board's, starting from the frame's first page (`first`)
  */
-function Posts({ board, first }: { board?: Board; first?: ForumFeed }) {
+function Posts({ board, first, filter, empty }: { board?: Board; first?: ForumFeed; filter?: FeedFilter; empty?: string }) {
   const { club, refresh } = useForum()
   const [pinned, setPinned] = useState<Post[]>([])
   const [posts, setPosts] = useState<Post[]>()
@@ -407,7 +583,7 @@ function Posts({ board, first }: { board?: Board; first?: ForumFeed }) {
     setError('')
     const call: Promise<{ pinned: Post[]; posts: Post[]; page: number; pages: number }> = board
       ? forumApi.boardPage(board.id, at)
-      : forumApi.feed(at).then((r) => ({ ...r, pinned: [] }))
+      : forumApi.feed(at, filter).then((r) => ({ ...r, pinned: [] }))
     call.then(
       (r) => {
         if (at === 1) setPinned(r.pinned)
@@ -425,12 +601,12 @@ function Posts({ board, first }: { board?: Board; first?: ForumFeed }) {
 
   // A board loads its own first page (the list is keyed by the board); the front page takes the frame's
   // oxlint-disable-next-line react-hooks/exhaustive-deps -- once, when the list mounts
-  useEffect(() => void (board && load(1)), [])
+  useEffect(() => void ((board || filter) && load(1)), [])
   useEffect(() => {
-    if (board || !first || page.at > 1) return
+    if (board || filter || !first || page.at > 1) return
     setPosts(first.posts)
     setPage({ at: first.page, of: first.pages })
-  }, [board, first, page.at])
+  }, [board, filter, first, page.at])
 
   const change = (post: Post) => {
     const swap = (list: Post[]) => list.map((p) => (p.id === post.id ? post : p))
@@ -461,13 +637,13 @@ function Posts({ board, first }: { board?: Board; first?: ForumFeed }) {
 
   return (
     <>
-      <PostComposer boards={club.boards} members={club.members} boardId={board?.id} onDone={added} />
+      {!filter && <PostComposer boards={club.boards} members={club.members} boardId={board?.id} onDone={added} />}
       {error && <Failed text={error} retry={() => load(posts ? page.at + 1 : 1)} />}
       {posts ? (
         <Feed aria-label={board ? board.name : t.feedLabel}>
           {pinned.map(card)}
           {posts.map(card)}
-          {!pinned.length && !posts.length && <Muted>{t.noPosts}</Muted>}
+          {!pinned.length && !posts.length && <Muted>{empty ?? t.noPosts}</Muted>}
         </Feed>
       ) : (
         !error && <Muted role="status">{t.loading}</Muted>
@@ -543,8 +719,22 @@ const BoardNav = styled.nav`
     font-weight: 600;
     box-shadow: inset 3px 0 0 ${({ theme }) => theme.colors.primary};
   }
+  ul + h2 {
+    margin-top: ${({ theme }) => theme.space(6)};
+  }
+  /* Wide screens have the search box; phones a 搜尋 tab */
+  .search-tab {
+    display: none;
+  }
 
   ${mobile} {
+    display: flex;
+    .search-tab {
+      display: block;
+    }
+    .nav-search {
+      display: none;
+    }
     position: relative;
     top: 0;
     margin: 0 -${({ theme }) => theme.space(4)};
@@ -649,6 +839,42 @@ const People = styled.ul`
   }
   a:hover span {
     color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+const SearchForm = styled.form<{ $flush?: boolean }>`
+  display: flex;
+  gap: ${({ theme }) => theme.space(2)};
+  margin-top: ${({ $flush, theme }) => ($flush ? 0 : theme.space(4))};
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+`
+
+const Hits = styled.ul`
+  display: grid;
+  margin: ${({ theme }) => theme.space(2)} 0 0;
+  padding: 0;
+  list-style: none;
+  li {
+    display: grid;
+    gap: 2px;
+    padding: ${({ theme }) => theme.space(3)} 0;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  }
+  a {
+    color: ${({ theme }) => theme.colors.text};
+    font-weight: 600;
+  }
+  span {
+    color: ${({ theme }) => theme.colors.textMuted};
+    font-size: 0.9375rem;
+    overflow-wrap: anywhere;
+  }
+  small {
+    font-size: 0.8125rem;
+    color: ${({ theme }) => theme.colors.textMuted};
   }
 `
 

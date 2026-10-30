@@ -88,3 +88,18 @@ describe('forum API (e11-t06, e11-t07)', () => {
     await expect(forumApi.createPost('deals', { blocks: post.blocks })).rejects.toEqual(new ApiError('太快了', 429, 'slowDown'))
   })
 })
+
+describe('forum search and filters (e11-t10)', () => {
+  it('searches and lists one member’s posts or the posts mentioning them', async () => {
+    answer.body = { posts: [post], page: 1, pages: 1, query: '1NT 開叫', total: 1 }
+    expect((await forumApi.search('1NT 開叫&x', 2)).total).toBe(1)
+    answer.body = { posts: [], page: 1, pages: 1 }
+    await forumApi.feed(1, { author: 'u1' })
+    await forumApi.feed(2, { mentions: 'u 2' })
+    expect(sent.map((s) => s.path)).toEqual([
+      '/api/forum/search?q=1NT+%E9%96%8B%E5%8F%AB%26x&page=2',
+      '/api/forum/feed?page=1&author=u1',
+      '/api/forum/feed?page=2&mentions=u+2',
+    ])
+  })
+})

@@ -11,8 +11,8 @@ const t = pageStrings.toolbar
  * The phone's bottom toolbar (e9-t09, DESIGN-V2 §7): 目錄 (the catalogue, which slides up as a
  * drawer), 本頁 on a convention page or 我的 elsewhere, 搜尋 (the header's search box) and
  * 閱讀設定, with 討論 (the forum, e11-t15) after the second. Loaded only below the phone breakpoint.
- * The forum's pages have no catalogue drawer nor search box: there 目錄 goes to the whole book and
- * 搜尋 is left out (`onCatalogue` and `search` not given).
+ * The forum's pages have no catalogue drawer nor header search box: there 目錄 goes to the whole book and
+ * 搜尋 opens the forum's search page (`onCatalogue` not given, `search` a path).
  */
 export function MobileToolbar({
   catalogueOpen = false,
@@ -21,7 +21,8 @@ export function MobileToolbar({
 }: {
   catalogueOpen?: boolean
   onCatalogue?: (open: boolean) => void
-  search?: boolean
+  /** The header's search box; a path (the forum's search page, e11-t18) links there instead */
+  search?: boolean | string
 }) {
   const { user } = useAuth()
   const onConvention = useMatch('/c/:slug/*')
@@ -72,7 +73,12 @@ export function MobileToolbar({
         <MessagesSquare aria-hidden />
         {t.forum}
       </Item>
-      {withSearch && (
+      {typeof withSearch === 'string' ? (
+        <Item as={Link} to={withSearch} onClick={close}>
+          <Search aria-hidden />
+          {t.search}
+        </Item>
+      ) : withSearch && (
         <Item type="button" onClick={search}>
           <Search aria-hidden />
           {t.search}

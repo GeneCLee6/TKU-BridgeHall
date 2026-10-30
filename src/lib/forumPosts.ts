@@ -323,3 +323,56 @@ export function recentAuthors(posts: readonly Pick<Post, 'authorId' | 'createdAt
   }
   return [...seen]
 }
+
+// ── Table records (e11-t20) ──────────────────────────────────────────────────────────────────
+
+const RECORD_ID = /^[\w-]{1,64}$/
+
+/**
+ * The record a member points at: a TKU-BridgeTable record page's address (`…/history/<id>`, also
+ * `…/history/<id>/vs/<other>`, which takes the first) or the id alone; null when it is neither
+ */
+export function recordIdFrom(input: string): string | null {
+  const text = input.trim()
+  if (RECORD_ID.test(text)) return text
+  const match = text.match(/\/history\/([^/?#\s]+)/)
+  if (!match) return null
+  let id: string
+  try {
+    id = decodeURIComponent(match[1])
+  } catch {
+    return null
+  }
+  return RECORD_ID.test(id) ? id : null
+}
+
+/** A record's page on TKU-BridgeTable, from its site's address */
+export const recordUrl = (site: string, id: string) => `${site}/history/${encodeURIComponent(id)}`
+
+// ── Search (e11-t10, e11-t18) ────────────────────────────────────────────────────────────────
+
+/** A search's words as the Worker reads them: split at spaces, each once */
+export const searchWords = (query: string) => [...new Set(query.trim().split(/\s+/).filter(Boolean))]
+
+/** Why the Worker would refuse this search, or null when it will run */
+export function searchProblem(query: string): 'empty' | 'tooLong' | 'tooManyWords' | null {
+  const words = searchWords(query)
+  if (!words.length) return 'empty'
+  if (words.length > FORUM_LIMITS.searchWordsMax) return 'tooManyWords'
+  return [...words.join(' ')].length > FORUM_LIMITS.searchMax ? 'tooLong' : null
+}
+
+/**
+ * A search result's line of text: the post's words around the first word searched for (from the
+ * start when it is only in the title), cut to about `max` characters with `…` where cut
+ */
+export function searchSnippet(post: Pick<Post, 'blocks'>, query: string, max = 80): string {
+  const text = post.blocks.flatMap(blockWords).join(' ').replace(/\s+/g, ' ').trim()
+  const lower = text.toLowerCase()
+  const at = Math.min(...searchWords(query).map((w) => lower.indexOf(w.toLowerCase())).filter((i) => i >= 0), Infinity)
+  const chars = [...text]
+  // Counted in characters, not UTF-16 units, so a word with emoji or rare characters is not split
+  const start = at === Infinity ? 0 : Math.max(0, [...text.slice(0, at)].length - Math.floor(max / 4))
+  const end = Math.min(chars.length, start + max)
+  return `${start > 0 ? '…' : ''}${chars.slice(start, end).join('')}${end < chars.length ? '…' : ''}`
+}

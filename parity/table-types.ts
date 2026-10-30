@@ -269,6 +269,8 @@ export type Checks = [
   Check<Same<Forum.BoardPage, TableForum.BoardPage>>,
   Check<Same<Forum.PostThread, TableForum.PostThread>>,
   Check<Same<Forum.ForumLatest, TableForum.ForumLatest>>,
+  Check<Same<Forum.ForumFeed, TableForum.ForumFeed>>,
+  Check<Same<Forum.ForumSearch, TableForum.ForumSearch>>,
   // Reports (e11-t09)
   Check<Same<Forum.ReportInput, TableForum.ReportInput>>,
   Check<Same<Forum.ReportDecision, TableForum.ReportDecision>>,

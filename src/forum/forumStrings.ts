@@ -24,6 +24,7 @@ export const forumStrings = {
     auction: '叫牌過程',
     hand: '單手牌',
     ref: '引用特約',
+    record: '牌桌紀錄',
   },
   blockNames: {
     paragraph: '文字',
@@ -95,6 +96,11 @@ export const forumStrings = {
   refMissing: (slug: string) => `找不到特約「${slug}」`,
   refLoading: '載入特約中…',
   record: (id: string) => `牌桌紀錄 ${id}`,
+  // 牌桌紀錄引用 (e11-t20)
+  recordInput: '淡江牌桌紀錄的網址或代號',
+  recordHint: '在淡江牌桌的「紀錄」打開那副牌，複製網址貼到這裡。',
+  recordBad: '看不出是哪一筆紀錄：請貼淡江牌桌紀錄頁的網址（…/history/…）。',
+  recordOpen: '到淡江牌桌看這副牌',
 
   // 反應
   reactions: '反應',
@@ -137,6 +143,34 @@ export const forumStrings = {
   active: '活躍的人',
   activeHint: '最近發文的社員',
   backToBoard: (name: string) => `回到「${name}」`,
+
+  // ── 搜尋、我的貼文、提到我的 (e11-t18, e11-t10) ──
+  mine: '我的貼文',
+  mineIntro: '你發的貼文，新的在上。',
+  noMine: '你還沒有發過貼文。',
+  mentions: '提到我的',
+  mentionsIntro: '貼文或留言裡 @ 到你的貼文，新的在上。',
+  noMentions: '還沒有人在貼文或留言裡提到你。',
+  personal: '我的討論',
+  search: '搜尋',
+  searchTitle: '搜尋討論',
+  searchLabel: '搜尋討論區',
+  searchPlaceholder: '搜尋貼文的標題與內文',
+  searchIntro: '找標題與文字裡有這些字的貼文（留言不算）；用空白分開的詞要全部出現。',
+  searchCount: (n: number, query: string) => `「${query}」找到 ${n} 則貼文`,
+  searchNone: (query: string) => `沒有貼文的標題或內文有「${query}」。`,
+  searchResults: '搜尋結果',
+  searchProblems: {
+    empty: '請輸入要找的字。',
+    tooLong: (max: number) => `最多 ${max} 個字。`,
+    tooManyWords: (max: number) => `最多 ${max} 個詞。`,
+  },
+  // 頁首搜尋的「討論」分組 (e11-t18)
+  headerGroup: '討論',
+  headerSearching: '搜尋討論中…',
+  headerNone: '討論區沒有符合的貼文',
+  headerAll: (n: number) => `在討論區看全部 ${n} 則`,
+  headerFailed: '討論區暫時搜尋不了',
 
   // ── 首頁 (e11-t16) ──
   latest: '最新討論',

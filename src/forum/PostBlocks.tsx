@@ -5,10 +5,10 @@ import { AuctionTable } from '../components/AuctionTable.tsx'
 import { DealDiagram } from '../components/board/DealDiagram.tsx'
 import { HandSuits } from '../components/board/parts.tsx'
 import { accountApi } from '../lib/account.ts'
-import type { ClubMember } from '../lib/api.ts'
+import { TABLE_SITE, type ClubMember } from '../lib/api.ts'
 import { toBookAuction } from '../lib/board.ts'
 import type { ForumRuleItem, PostBlock } from '../lib/forum.ts'
-import { mentionParts } from '../lib/forumPosts.ts'
+import { mentionParts, recordUrl } from '../lib/forumPosts.ts'
 import { blockText, conventionPath, findSectionPath, sectionPath } from '../lib/sections.ts'
 import { useContent, useConvention } from '../state/ContentContext.tsx'
 import type { Section } from '../types/convention.ts'
@@ -153,7 +153,15 @@ export function PostBlockView({ block, members, files }: { block: PostBlock; mem
     case 'ref':
       return <RefBlock slug={block.slug} sectionId={block.sectionId} />
     case 'record':
-      return <Paragraph>{t.record(block.tableRecordId)}</Paragraph>
+      // M1 keeps the id and a link (e11-t20); the deal and its replay come with TKU-BridgeTable e13-t07
+      return (
+        <Quote>
+          <span>{t.record(block.tableRecordId)}</span>
+          <a href={recordUrl(TABLE_SITE, block.tableRecordId)} target="_blank" rel="noreferrer">
+            {t.recordOpen}
+          </a>
+        </Quote>
+      )
   }
 }
 
