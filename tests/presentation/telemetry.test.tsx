@@ -173,7 +173,7 @@ describe('傳送匿名使用統計 in 個人設定 (e10-t07)', () => {
     renderAt('/settings')
     const box = await screen.findByRole('checkbox', { name: '傳送匿名使用統計' }, { timeout: 5000 })
     expect(box).toBeChecked()
-    expect(prefs().analytics).toBeNull()
+    expect(prefs()).not.toHaveProperty('analytics')
     await userEvent.click(box)
     expect(box).not.toBeChecked()
     expect(prefs().analytics).toBe(false)

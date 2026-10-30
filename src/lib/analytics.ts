@@ -44,7 +44,7 @@ export const privacySignal = () => {
 }
 
 /** The reader's choice (個人設定), or before they choose, on unless the browser asks not to track */
-export const analyticsOn = (choice: boolean | null) => choice ?? !privacySignal()
+export const analyticsOn = (choice: boolean | undefined) => choice ?? !privacySignal()
 
 /** Whether to send; turning it off drops what is waiting */
 export function setAnalyticsConsent(on: boolean) {

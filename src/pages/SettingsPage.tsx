@@ -40,7 +40,7 @@ function Privacy() {
       </label>
       <Muted id="analytics-hint">
         {t.analyticsHint}
-        {prefs.analytics === null && privacySignal() && ` ${t.analyticsSignal}`} {t.analyticsClub}
+        {prefs.analytics === undefined && privacySignal() && ` ${t.analyticsSignal}`} {t.analyticsClub}
       </Muted>
       <Muted>{t.errors}</Muted>
     </Panel>

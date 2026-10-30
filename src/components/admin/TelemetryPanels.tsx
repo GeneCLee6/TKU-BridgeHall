@@ -17,6 +17,8 @@ import { telemetryStrings as t } from './telemetryStrings.ts'
  */
 export function ErrorsPanel() {
   const [errors, setErrors] = useState<BookClientError[] | null>(null)
+  // Loading failed: said quietly, as a panel among many; a failed action is an alert
+  const [loadError, setLoadError] = useState('')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [confirming, setConfirming] = useState(false)
@@ -25,7 +27,7 @@ export function ErrorsPanel() {
     () =>
       telemetryApi.errors().then(
         (list) => setErrors(list),
-        (e) => setError(errorText(e)),
+        (e) => setLoadError(errorText(e)),
       ),
     [],
   )
@@ -49,9 +51,10 @@ export function ErrorsPanel() {
     <Panel aria-labelledby="admin-errors">
       <PanelTitle id="admin-errors">{t.errorsTitle}</PanelTitle>
       <Muted>{t.errorsIntro}</Muted>
+      {loadError && <ErrorText>{loadError}</ErrorText>}
       {error && <ErrorText role="alert">{error}</ErrorText>}
       {notice && <Notice role="status">{notice}</Notice>}
-      {!errors && !error && <Muted role="status">{strings.loading}</Muted>}
+      {!errors && !loadError && <Muted role="status">{strings.loading}</Muted>}
       {errors && !errors.length && <Muted>{t.noErrors}</Muted>}
       {errors && errors.length > 0 && (
         <>
@@ -128,11 +131,12 @@ export function AnalyticsPanel() {
   const { user } = useAuth()
   const { conventions } = useContent()
   const [view, setView] = useState<BookAnalyticsView | null>(null)
+  const [loadError, setLoadError] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    telemetryApi.analytics().then(setView, (e) => setError(errorText(e)))
+    telemetryApi.analytics().then(setView, (e) => setLoadError(errorText(e)))
   }, [])
 
   const toggle = async (enabled: boolean) => {
@@ -153,8 +157,9 @@ export function AnalyticsPanel() {
     <Panel aria-labelledby="admin-analytics">
       <PanelTitle id="admin-analytics">{t.analyticsTitle}</PanelTitle>
       <Muted>{t.analyticsIntro}</Muted>
+      {loadError && <ErrorText>{loadError}</ErrorText>}
       {error && <ErrorText role="alert">{error}</ErrorText>}
-      {!view && !error && <Muted role="status">{strings.loading}</Muted>}
+      {!view && !loadError && <Muted role="status">{strings.loading}</Muted>}
       {view && (
         <>
           {user?.admin && (

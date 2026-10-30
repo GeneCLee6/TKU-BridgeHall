@@ -189,14 +189,14 @@ describe('anonymous usage (e10-t07)', () => {
   })
 
   it('is on by default unless the browser sends Global Privacy Control or Do Not Track', () => {
-    expect(analyticsOn(null)).toBe(true)
+    expect(analyticsOn(undefined)).toBe(true)
     vi.stubGlobal('navigator', { ...navigator, globalPrivacyControl: true })
-    expect(analyticsOn(null)).toBe(false)
+    expect(analyticsOn(undefined)).toBe(false)
     expect(analyticsOn(true)).toBe(true)
     vi.stubGlobal('navigator', { ...navigator, globalPrivacyControl: false, doNotTrack: '1' })
-    expect(analyticsOn(null)).toBe(false)
+    expect(analyticsOn(undefined)).toBe(false)
     vi.stubGlobal('navigator', { ...navigator, doNotTrack: '0' })
-    expect(analyticsOn(null)).toBe(true)
+    expect(analyticsOn(undefined)).toBe(true)
     expect(analyticsOn(false)).toBe(false)
   })
 })

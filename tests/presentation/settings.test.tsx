@@ -40,7 +40,6 @@ describe('stored preferences (e9-t15)', () => {
       density: 'comfortable',
       reading: 'full',
       newcomerAsked: false,
-      analytics: null,
     })
   })
 
@@ -62,7 +61,6 @@ describe('stored preferences (e9-t15)', () => {
       density: 'compact',
       reading: 'basic',
       newcomerAsked: false,
-      analytics: null,
     })
     window.localStorage.setItem(KEY, 'not json')
     expect(readStoredPrefs()).toEqual(defaultPrefs)
@@ -101,7 +99,6 @@ describe('個人設定 page', () => {
       density: 'compact',
       reading: 'full',
       newcomerAsked: false,
-      analytics: null,
     })
 
     await userEvent.click(screen.getByRole('button', { name: '全部恢復預設' }))
