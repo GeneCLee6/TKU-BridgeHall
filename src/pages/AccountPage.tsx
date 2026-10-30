@@ -79,6 +79,7 @@ function AccountBody() {
       <ProfilePanel user={user} />
       <AvatarPanel user={user} />
       <MyTeams user={user} />
+      <NoticesPanel user={user} />
       <ContinueReading />
       <MyPathProgress />
       {/* 我的帳號 › 顯示 (e9-t15): the same choices as the 個人設定 page */}
@@ -115,6 +116,52 @@ function AccountBody() {
         </Form>
       </Panel>
     </>
+  )
+}
+
+/**
+ * 通知 (F4 靜音): whether 淡江牌桌's bell says a convention the member's team or partnership plays
+ * was published. Saved at once; on unless turned off
+ */
+function NoticesPanel({ user }: { user: Me }) {
+  const { refresh } = useAuth()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const muted = user.bookAdoptedNotice === false
+
+  const change = async (mute: boolean) => {
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      await api.setPreferences({ bookAdoptedNotice: !mute })
+      await refresh()
+      setNotice(accountStrings.noticesSaved)
+    } catch (e) {
+      setError(errorText(e))
+    }
+    setBusy(false)
+  }
+
+  return (
+    <Panel aria-labelledby="account-notices">
+      <PanelTitle id="account-notices">{accountStrings.notices}</PanelTitle>
+      <Muted>{accountStrings.noticesHint}</Muted>
+      <Check>
+        <input
+          type="checkbox"
+          checked={muted}
+          disabled={busy}
+          onChange={(e) => void change(e.target.checked)}
+          aria-describedby="account-mute-adopted-hint"
+        />
+        {accountStrings.muteAdopted}
+      </Check>
+      <Muted id="account-mute-adopted-hint">{accountStrings.muteAdoptedHint}</Muted>
+      {error && <ErrorText role="alert">{error}</ErrorText>}
+      {notice && <Notice role="status">{notice}</Notice>}
+    </Panel>
   )
 }
 
@@ -283,6 +330,15 @@ const AvatarRow = styled.div`
   align-items: center;
   gap: ${({ theme }) => theme.space(3)};
   margin-top: ${({ theme }) => theme.space(3)};
+`
+
+const Check = styled.label`
+  display: flex;
+  gap: ${({ theme }) => theme.space(2)};
+  align-items: center;
+  margin-top: ${({ theme }) => theme.space(3)};
+  font-size: 0.875rem;
+  font-weight: 600;
 `
 
 const Form = styled.form`
