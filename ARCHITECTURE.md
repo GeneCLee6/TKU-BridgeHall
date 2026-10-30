@@ -297,7 +297,19 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - 線上改過的特約，打開時抓 `GET /api/book/content/:slug`（`ETag`；沒有線上版本回 404），用 `onlineConvention`（`conventionProblems`）檢查形狀，壞掉的略過並列入提示，不會讓頁面掛掉。載入的內容以 `slug@版本` 存在 `ContentContext`，線上版本更新後自然換新。
 - 舊的 `GET /api/book/content`（整本一次）牌桌仍保留給舊版前端，這裡已不使用。Service worker 對這兩支 API 與 `/api/book/builtin/:slug`、`/api/book/search-index` 走「先網路、離線用快取」，其他 `/api` 一律不快取；登出時這些快取與 localStorage 的 manifest 一起清掉（`lib/memberCache.ts`，L0）。
 - 這兩支 API 的型別在 `lib/api.ts`（`BookManifest`、`BookEntrySummary`），對應牌桌 `worker/book.ts`；`pending` 的走訪順序必須和 `lib/sections.ts` 的 `pendingNotes` 一致。
-- **線上版本優先**：某個特約在網站上改過之後，再改它的 `.ts` 檔並 `seed-builtin` 也不會顯示出來（換的是下面那層內建），要在編輯器的版本紀錄按「還原為網站內建的版本」，或把線上內容寫回 `.ts` 檔、`seed-builtin -- --apply` 後再還原。`BookEntry.bundledUpdated` 記著第一次線上修改時內建版本的 `updated` 日期。
+- **線上版本優先**：某個特約在網站上改過之後，再改它的 `.ts` 檔並 `seed-builtin` 也不會顯示出來（換的是下面那層內建），要在編輯器的版本紀錄按「還原為網站內建的版本」，或把線上內容寫回 `.ts` 檔、`seed-builtin -- --apply` 後再還原（CONTENT_GUIDE.md §6.5「收回內建層」）。`BookEntry.bundledUpdated` 記著第一次線上修改時內建版本的 `updated` 日期。
+
+#### 4.1.1 匯出備份（L1，`e8-t12`～`e8-t14`；`scripts/export-content.ts`、`scripts/export-files.ts`）
+
+- L0 之後牌桌是唯一真相，「寫回 Git」改成**匯出**：牌桌 `GET /api/book/export`（`BookExport`，型別在 `lib/api.ts`，對拍在 `parity/table-types.ts`）由牌桌合併好兩層，這裡不再合併。權限只有管理員或唯讀的 `BOOK_EXPORT_TOKEN`（和寫入用的 `BOOK_SEED_TOKEN` 分開，外洩也改不了內容）。
+- `export-files.ts` 是純函式（`tests/content/export.test.ts`）：把匯出轉成和 `src/content` 同格式的 `.ts`（`JSON.stringify` 出來的物件字面值，逐字；測試把產生的檔案 import 回來比對），加 `export.json` 與 `README.md`。檔案裡沒有匯出時間，內容沒變就不會有 diff。
+- `.github/workflows/content-backup.yml` 每天匯出、蓋進 `src/content` 跑內容測試、對 private 備份 repo 的 `content-backup` 分支開 PR（綠燈自動合併）。這個 repo 公開，所以 log 只有數量與測試名稱、不上傳 artifact。設定與失敗通知見 CONTENT_GUIDE.md §6.5。
+- **評估：把發布過的線上版本自動併回內建層**（ROADMAP L1，只評估、不實作，2026-10-30）。結論：**現在不做自動合併，維持手動「收回內建層」**（CONTENT_GUIDE.md §6.5）。理由：
+  1. 兩層都在牌桌，讀者看到的已經是線上版本；併回內建只是換一層存，對讀者沒有差別。
+  2. 內建層的來源是 `src/content` 的 `.ts`（`seed-builtin` 會逐字比對、整份取代）。只在牌桌裡把線上版本搬進 `book:builtin:` 而不改 `.ts`，下次 `seed-builtin` 就會蓋回舊文字；要一致就得同時改這個 repo，等於自動寫 PR 到 `main`——又回到 L0 前「寫回 Git」的複雜度。
+  3. 線上版本有版本紀錄、審核者與 `bundledUpdated`；併回內建後「還原為內建版本」的意義會變，版本紀錄和內建層也對不起來。
+  4. 手寫的 `.ts` 有出處註解、共用的 `seats` 等常數；產生的檔案是扁平 JSON，自動蓋回會讓檔案失去這些（所以「收回」時要人保留檔頭）。
+  - 什麼時候值得做：線上版本多到「內建層」大多是過時的、或要讓沒有網路的流程（例如牌桌的離線機器人）只讀內建層時。做法會是牌桌加一支「把某個線上版本設為內建」的管理 API（`book:builtin:` 換成線上內容、移除線上版本、記稽核），同時由匯出備份產生一個對 `main` 的 PR 改 `.ts`，兩邊一起合併。
 
 ### 4.2 帳號與權限（`AuthContext`、`lib/api.ts`）
 
@@ -497,5 +509,6 @@ push / PR ──► GitHub Actions「CI」：lint → typecheck → test → bui
   2. 跑 `tests/lib/tableParity.test.ts`，比對共用的常數（`LIMITS`、`PERMISSIONS`、制度集常數）；平常的 `npm test` 沒有 `TABLE_DIR` 時整組略過。
   - 牌桌 repo 原本是 private（2026-10-29 起是公開的，token 可能已經不需要），要在橋譜 repo 設 secret **`TABLE_REPO_TOKEN`**（fine-grained token，只給 `GeneCLee6/TKU-BridgeTable` 的 Contents: Read）；沒設時 job 以 notice 略過，不會失敗。本機：`npm run parity` 依序找 `$TABLE_DIR`、`.table/`、`../TKU-BridgeTable`，都沒有就略過。
   - 兩邊一起改的 PR：牌桌先合併，橋譜的 parity 才會綠；也可以 Actions → Table type parity → Run workflow，填牌桌的分支。lib/api.ts 新增對應牌桌的型別時，在 `parity/table-types.ts` 加一行。
+- **匯出備份**（L1）：workflow「Content backup」（`.github/workflows/content-backup.yml`，每天台灣 03:30，也可以手動）把牌桌 `GET /api/book/export` 的全部特約存成 `.ts`、跑內容測試、開 PR 到 private 備份 repo 的 `content-backup` 分支（§4.1.1，CONTENT_GUIDE.md §6.5）。沒設定 `CONTENT_BACKUP_REPO`、`BOOK_EXPORT_TOKEN`、`CONTENT_BACKUP_TOKEN` 時以 notice 略過。
 - **備份**：牌桌 Worker 每天把橋譜的線上內容（`book*`、`profile*`、`article*`）備份到 R2、保留 30 天（e10-t08）；啟用、還原步驟與演練見牌桌的 [`DEPLOY.md` §4.3](https://github.com/GeneCLee6/TKU-BridgeTable/blob/main/DEPLOY.md#43-每日備份與還原淡江橋譜-e10-t08)。
 - 限制：私有 repo 在 GitHub 免費方案無法設定 branch protection，所以 CI 失敗不會擋住合併；請以「開 PR → CI 綠燈 → 看預覽站 → 合併 → 手動部署」的流程更新內容。

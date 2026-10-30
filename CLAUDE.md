@@ -23,7 +23,7 @@
 2. **原始 Word 檔與轉檔輸出不得 commit。**（`.gitignore` 已排除 `*.doc`、`*.docx`、`*.htm`、`tmp/`。）原檔只存在本機 `C:淡江橋藝社制度原檔`；repo 是公開的（2026-10-29 曾改 private，2026-10-30 使用者改回公開），舊歷史裡的 .doc 已清掉，仍不要再放回來。
 3. **特約內容不進網站的靜態檔**（L0，2026-10-29）：內建特約存在淡江牌桌的 Worker，只給登入的社員；`npm run budget` 擋 `dist/` 裡的特約文字。新增特約：幹部用線上編輯器或 AI 匯入（成為線上版本）；要加成內建特約，新增 `src/content/conventions/<slug>.ts`（檔名＝slug）、在 `src/content/index.ts` 登記，再 `npm run seed-builtin`（預演）→ `-- --apply`（寫入並逐字比對）。不改元件。網站程式不要 import `content/index.ts` 或 `content/conventions/*`（只給測試與腳本用，見 ARCHITECTURE.md §4）；牌桌 repo 是公開的，內容也不放那裡。
 4. **顏色只來自 `styles/tokens.ts`**，介面文字只來自 `strings.ts`。
-5. **牌桌是真相、線上版本優先**：改了 `.ts` 檔要 `npm run seed-builtin -- --apply` 才會上線；網站上改過的特約，連 seed 之後也不會顯示（線上版本蓋過內建，ARCHITECTURE.md §4.1）。改內容前先確認那個特約沒有線上版本，或在編輯器還原為內建版本。
+5. **牌桌是真相、線上版本優先**：改了 `.ts` 檔要 `npm run seed-builtin -- --apply` 才會上線；網站上改過的特約，連 seed 之後也不會顯示（線上版本蓋過內建，ARCHITECTURE.md §4.1）。改內容前先確認那個特約沒有線上版本，或在編輯器還原為內建版本。線上的內容每天由 workflow「Content backup」匯出到 private 備份 repo（`npm run export-content`，CONTENT_GUIDE.md §6.5）；匯出的檔案不要 commit 到這個公開 repo。
 6. **只用於樣式的 prop 加 `$` 前綴。**
 7. **不要直接推送到 `main`，也不要 force-push。** 功能走分支＋PR。合併一律用 `gh pr merge <號> --squash --delete-branch`，遠端與本地分支一起刪；分支在 worktree 裡的話先 `git worktree remove` 再刪分支。GitHub 已開「合併後自動刪除分支」，但關掉不合併的 PR 不會自動刪，要手動 `git push origin --delete <分支>`。
 8. **合併到 `main` 就會自動上線**（Vercel 部署橋譜；牌桌 `main` 也會自動部署 Worker）。所以 PR 要 CI 全綠、看過預覽站才合併；牽涉牌桌 API 的變更，牌桌 PR 先合併並部署完成，再合併橋譜（ARCHITECTURE.md §7）。不要另外手動部署，除非使用者要求。
@@ -51,6 +51,7 @@ npm run build      # tsc -b + vite build
 npm run lint       # oxlint
 npm test           # vitest run
 npm run seed-builtin  # 內建特約寫到牌桌：預設預演；-- --apply 寫入並比對；-- --verify 只比對（權杖在 .env.seed）
+npm run export-content  # 牌桌上讀者讀到的全部特約匯出到 tmp/content-export/（唯讀權杖 BOOK_EXPORT_TOKEN，在 .env.seed）
 npm run test:browser  # Playwright：截圖比對＋axe＋鍵盤（本機可加 PW_CHANNEL=msedge 用已安裝的 Edge）
 npm run preview    # http://localhost:4173
 ```

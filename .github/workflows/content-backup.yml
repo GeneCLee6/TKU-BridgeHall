@@ -1,0 +1,157 @@
+name: Content backup
+
+# L1 (e8-t12, e8-t13; CONTENT_GUIDE.md §6.5): every day, export every convention members read from
+# TKU BridgeTable's Worker (GET /api/book/export: the built-in layer with the online versions laid
+# over it), run the content tests on it, and open a PR with it on the `content-backup` branch of a
+# PRIVATE repository, merged straight away when the tests pass.
+#
+# This repository is public, and so are this workflow's logs: nothing here may print convention
+# text or upload it as an artifact. The scripts print counts only, and the tests report test names.
+#
+# Needs (Settings -> Secrets and variables -> Actions); without them the job is skipped, with a notice:
+#   variable CONTENT_BACKUP_REPO   owner/name of the private backup repository (it needs one commit)
+#   secret   BOOK_EXPORT_TOKEN     the Worker's read-only export token (TKU-BridgeTable DEPLOY.md §4.10)
+#   secret   CONTENT_BACKUP_TOKEN  a fine-grained token for that repository only: Contents, Pull
+#                                  requests and Issues read and write
+# A failed run opens an issue in the backup repository (and GitHub e-mails the workflow's owner).
+on:
+  schedule:
+    - cron: '30 19 * * *' # 03:30 in Taipei
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: content-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BACKUP_REPO: ${{ vars.CONTENT_BACKUP_REPO }}
+      BACKUP_BRANCH: content-backup
+      HAS_EXPORT_TOKEN: ${{ secrets.BOOK_EXPORT_TOKEN != '' }}
+      HAS_BACKUP_TOKEN: ${{ secrets.CONTENT_BACKUP_TOKEN != '' }}
+    steps:
+      - name: Check the configuration
+        id: config
+        run: |
+          missing=""
+          [ -n "$BACKUP_REPO" ] || missing="$missing variable CONTENT_BACKUP_REPO,"
+          [ "$HAS_EXPORT_TOKEN" = "true" ] || missing="$missing secret BOOK_EXPORT_TOKEN,"
+          [ "$HAS_BACKUP_TOKEN" = "true" ] || missing="$missing secret CONTENT_BACKUP_TOKEN,"
+          if [ -n "$missing" ]; then
+            echo "::notice title=Content backup skipped::Not configured yet, missing:${missing%,}. See the comment at the top of .github/workflows/content-backup.yml and CONTENT_GUIDE.md §6.5."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.config.outputs.ready == 'true'
+
+      - uses: actions/setup-node@v7
+        if: steps.config.outputs.ready == 'true'
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.config.outputs.ready == 'true'
+        run: npm ci
+
+      - name: Export from the Worker
+        if: steps.config.outputs.ready == 'true'
+        env:
+          BOOK_EXPORT_TOKEN: ${{ secrets.BOOK_EXPORT_TOKEN }}
+        run: npm run --silent export-content -- --out "$RUNNER_TEMP/export"
+
+      # The export replaces this checkout's src/content (conventions and registry; the categories only
+      # when they were edited online). The 待確認 counts are left out: resolving one online is normal.
+      - name: Run the content tests on the export
+        id: tests
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          rm -rf src/content/conventions
+          cp -r "$RUNNER_TEMP/export/src/content/." src/content/
+          set +e
+          npx vitest run tests/content/conventions.test.ts -t '^(?!.*records the known)' \
+            --silent --reporter=json --outputFile="$RUNNER_TEMP/content-tests.json" > /dev/null 2>&1
+          code=$?
+          set -e
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))
+            console.log(`Content tests: ${r.numPassedTests} passed, ${r.numFailedTests} failed`)
+            for (const f of r.testResults) for (const t of f.assertionResults) if (t.status === "failed") console.log(`  failed: ${t.fullName}`)
+          ' "$RUNNER_TEMP/content-tests.json" || echo "Content tests did not report (exit $code)"
+          if [ "$code" = "0" ]; then echo "passed=true" >> "$GITHUB_OUTPUT"; else echo "passed=false" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v7
+        if: steps.config.outputs.ready == 'true'
+        with:
+          repository: ${{ vars.CONTENT_BACKUP_REPO }}
+          token: ${{ secrets.CONTENT_BACKUP_TOKEN }}
+          path: backup
+          fetch-depth: 0
+
+      - name: Open the backup PR
+        id: pr
+        if: steps.config.outputs.ready == 'true'
+        working-directory: backup
+        env:
+          GH_TOKEN: ${{ secrets.CONTENT_BACKUP_TOKEN }}
+          TESTS_PASSED: ${{ steps.tests.outputs.passed }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898732+github-actions[bot]@users.noreply.github.com'
+          # The backup branch starts from the repository's default branch the first time
+          if git ls-remote --exit-code --heads origin "$BACKUP_BRANCH" > /dev/null; then
+            git checkout -q -B "$BACKUP_BRANCH" "origin/$BACKUP_BRANCH"
+          else
+            git checkout -q -B "$BACKUP_BRANCH"
+            git push -q origin "$BACKUP_BRANCH"
+          fi
+          rm -rf src/content/conventions
+          cp -r "$RUNNER_TEMP/export/." .
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes since the last backup."
+            exit 0
+          fi
+          stamp=$(date -u +%Y-%m-%d)
+          branch="export/$stamp-$GITHUB_RUN_ID"
+          git checkout -q -b "$branch"
+          git commit -q -m "Content export $stamp"
+          git push -q origin "$branch"
+          {
+            echo "Exported by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID."
+            echo
+            if [ "$TESTS_PASSED" = "true" ]; then echo "Content tests passed: merged straight away."; else echo "**Content tests failed**: not merged. See the run for which tests."; fi
+            echo
+            git diff --stat "$BACKUP_BRANCH" HEAD | tail -n 30
+          } > "$RUNNER_TEMP/pr-body.md"
+          url=$(gh pr create --repo "$BACKUP_REPO" --base "$BACKUP_BRANCH" --head "$branch" --title "Content export $stamp" --body-file "$RUNNER_TEMP/pr-body.md")
+          echo "Opened the backup PR in $BACKUP_REPO"
+          if [ "$TESTS_PASSED" = "true" ]; then
+            gh pr merge "$url" --repo "$BACKUP_REPO" --squash --delete-branch
+            echo "Merged into $BACKUP_BRANCH."
+          fi
+
+      - name: Fail when the content tests failed
+        if: steps.config.outputs.ready == 'true' && steps.tests.outputs.passed != 'true'
+        run: |
+          echo "::error::The content tests failed on the export; the backup PR was left open in the backup repository."
+          exit 1
+
+      - name: Report the failure
+        if: failure() && steps.config.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CONTENT_BACKUP_TOKEN }}
+        run: |
+          gh issue create --repo "$BACKUP_REPO" \
+            --title "Content backup failed $(date -u +%Y-%m-%d)" \
+            --body "The scheduled content backup failed: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            || echo "::warning::Could not open an issue in the backup repository."
