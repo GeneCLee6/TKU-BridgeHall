@@ -5,9 +5,10 @@ import { api, errorText, TEAM_LIMITS, type ClubMember, type ClubTeam, type Partn
 import { formatDateTime } from '../../lib/format.ts'
 import { strings } from '../../strings.ts'
 import { mobile } from '../../styles/tokens.ts'
-import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PanelTitle, Row, Select } from '../ui.tsx'
+import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PanelTitle, Row, Select } from '../ui.tsx'
+import { teamsStrings } from './teamsStrings.ts'
 
-const t = strings.teams
+const t = teamsStrings
 
 /**
  * 隊伍 on the admin page (e2-t07, e2-t10): every team with its captain, members and partnerships,

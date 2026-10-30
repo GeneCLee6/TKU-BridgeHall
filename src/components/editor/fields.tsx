@@ -1,8 +1,8 @@
 import type { TextareaHTMLAttributes } from 'react'
 import styled from 'styled-components'
-import { strings } from '../../strings.ts'
 import { mobile } from '../../styles/tokens.ts'
-import { TextArea } from '../ui.tsx'
+import { TextArea } from '../ui.tsx'
+import { editorStrings } from './editorStrings.ts'
 
 /** A textarea that grows with its text (rows by line count; field-sizing where supported) */
 export function AutoTextArea({ minRows = 2, value, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement> & { minRows?: number; value: string }) {
@@ -35,8 +35,8 @@ export function SuitPalette() {
     el.dispatchEvent(new Event('input', { bubbles: true }))
   }
   return (
-    <Palette role="group" aria-label={strings.editor.suitInsert}>
-      <span>{strings.editor.suitInsert}</span>
+    <Palette role="group" aria-label={editorStrings.suitInsert}>
+      <span>{editorStrings.suitInsert}</span>
       {SUITS.map((s) => (
         <SuitKey
           key={s}
@@ -44,7 +44,7 @@ export function SuitPalette() {
           $red={s === '♥' || s === '♦'}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => insert(s)}
-          aria-label={`${strings.editor.suitInsert} ${s}`}
+          aria-label={`${editorStrings.suitInsert} ${s}`}
         >
           {s}
         </SuitKey>

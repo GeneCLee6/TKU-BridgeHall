@@ -67,7 +67,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   window.localStorage.clear()
-  routes = { 'GET /search-index.json': JSON.parse(searchIndexJson()) }
+  routes = { 'GET /api/book/search-index': JSON.parse(searchIndexJson()) }
   sent = []
   vi.stubGlobal(
     'fetch',

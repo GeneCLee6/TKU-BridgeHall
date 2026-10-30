@@ -60,6 +60,8 @@ const AccountPage = lazy(() => import('./pages/AccountPage.tsx').then((m) => ({ 
 const SettingsPage = lazy(() => import('./pages/SettingsPage.tsx').then((m) => ({ default: m.SettingsPage })))
 const EbooksPage = lazy(() => import('./pages/EbookPages.tsx').then((m) => ({ default: m.EbooksPage })))
 const EbookPage = lazy(() => import('./pages/EbookPages.tsx').then((m) => ({ default: m.EbookPage })))
+// 文章編輯器 (e5-t07)
+const ArticleEditorPage = lazy(() => import('./pages/ArticleEditorPage.tsx').then((m) => ({ default: m.ArticleEditorPage })))
 // 名詞解釋 (e4-t05, e4-t07)
 const GlossaryPage = lazy(() => import('./glossary/GlossaryPage.tsx').then((m) => ({ default: m.GlossaryPage })))
 const GlossaryEditorPage = lazy(() =>
@@ -178,6 +180,8 @@ export function App() {
               <Route path="/u/:id" element={<MemberPage />} />
               <Route path="/library/book" element={<EbooksPage />} />
               <Route path="/library/book/:id" element={<EbookPage />} />
+              <Route path="/library/new" element={<ArticleEditorPage />} />
+              <Route path="/library/:slug/edit" element={<ArticleEditorPage />} />
               <Route path="/forum" element={<ForumShell />}>
                 <Route index element={<FeedPage />} />
                 <Route path="new" element={<NewPostPage />} />

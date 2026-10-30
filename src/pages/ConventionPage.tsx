@@ -61,7 +61,7 @@ const tabletQuery = `(min-width: calc(${layout.mobileBreakpoint} + 1px))`
  * open, the deeper ones closed. Loaded lazily, so the home page carries none of this code.
  */
 export function ConventionPage() {
-  const { bySlug, categories, conventions } = useContent()
+  const { bySlug, categories, conventions, status } = useContent()
   const { can } = useAuth()
   const { activeId } = useProfiles()
   const { slug = '', sectionId } = useParams()
@@ -159,6 +159,8 @@ export function ConventionPage() {
     return () => window.cancelAnimationFrame(frame)
   }, [sectionId, pendingIndex, convention, ready])
 
+  // The catalogue comes from the Worker (L0): on a first visit it is not here yet, which is not 找不到
+  if (!convention && status === 'loading' && !conventions.length) return <Loading role="status">{strings.loading}</Loading>
   if (!convention) return <HomePage notFound />
 
   const keys = allKeys(convention)

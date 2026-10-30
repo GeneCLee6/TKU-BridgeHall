@@ -23,13 +23,13 @@ import { twoDiamondOpening } from './conventions/two-diamond-opening.ts'
 import { twoNotrumpOpening } from './conventions/two-notrump-opening.ts'
 
 /**
- * The registry: every bundled convention, in catalogue order. To add one: create
+ * The registry: every built-in convention, in catalogue order. To add one: create
  * src/content/conventions/<slug>.ts exporting a Convention, import it here, add it to this list
- * and run `npm run manifest` (see CONTENT_GUIDE.md).
+ * and seed it into TKU BridgeTable's Worker with `npm run seed-builtin` (CONTENT_GUIDE.md §4).
  *
- * Only the tests and scripts/build-manifest.ts import this module. The site works from
- * manifest.ts and loads each convention's content with loaders.ts, so the page does not download
- * any content up front (ARCHITECTURE.md §4).
+ * Only the tests and scripts import this module (seed-builtin, search-index, check-budget). The
+ * site has no content of its own since L0 (2026-10-29): members read the built-in conventions from
+ * the Worker, and `npm run budget` fails if any of their text is in dist (ARCHITECTURE.md §4).
  */
 export const conventions: Convention[] = [
   notrumpResponses,

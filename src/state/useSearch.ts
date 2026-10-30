@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { SearchFn, SearchIndex, SearchRecord } from '../lib/search.ts'
 import { useContent } from './ContentContext.tsx'
 
-export const SEARCH_INDEX_URL = '/search-index.json'
+// The built-in conventions' records, built in this repository and seeded with them (L0, e10-t20); members only
+export const SEARCH_INDEX_URL = '/api/book/search-index'
 
 /**
  * The search box's search. Nothing is downloaded until `prepare` (the box is focused): then the
- * search code (Fuse) and the index built with the site, plus the content of the conventions
+ * search code (Fuse) and the built-in conventions' index from the Worker, plus the content of the conventions
  * changed online or by the reader's profile, whose records replace the index's (lib/search.ts
  * `mergeIndex`), and the library's articles, which live only online (e5-t13). Until the index arrives, and if it cannot be fetched at all, the search falls back to what is loaded here:
  * section titles at first, and every convention's content once `loadAll` brings it.

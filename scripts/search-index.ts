@@ -1,9 +1,7 @@
-// The search index (/search-index.json) from the bundled conventions (ARCHITECTURE.md §5).
-// vite.config.ts writes it into dist at build time and serves it in development, so it is never
-// out of date and never committed.
+// The search index of the built-in conventions (ARCHITECTURE.md §4). It is not in the site any more
+// (L0, e10-t20): scripts/seed-builtin.ts sends it to the Worker with the conventions, and the
+// search box fetches it from GET /api/book/search-index, members only.
 import { conventions } from '../src/content/index.ts'
 import { buildSearchIndex } from '../src/lib/search.ts'
-
-export const SEARCH_INDEX_FILE = 'search-index.json'
 
 export const searchIndexJson = () => JSON.stringify(buildSearchIndex(conventions))

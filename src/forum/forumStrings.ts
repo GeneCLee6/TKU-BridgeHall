@@ -1,7 +1,7 @@
 /**
  * 討論區的文字（E11 `e11-t13`、`e11-t14`）: only the forum's lazy pages use them, so they stay out
  * of `strings.ts` and the home page's JavaScript. The deal, hand and auction inputs keep theirs in
- * `strings.board`, which the handbook's article blocks share.
+ * `boardStrings`, which the handbook's article blocks share.
  */
 export const forumStrings = {
   title: '討論區',

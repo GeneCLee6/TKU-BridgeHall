@@ -40,7 +40,7 @@ M0 把 22 個特約全部打包進一個 bundle、整本放在一頁（3.2 萬�
 
 ### 非功能
 
-- 首頁 JS gzip ≤ 150 kB；特約頁額外 ≤ 30 kB；搜尋索引 ≤ 300 kB（gzip）。
+- 首頁 JS gzip ≤ 150 kB；特約頁額外 ≤ 30 kB；搜尋索引 ≤ 300 kB（gzip）。2026-10-29（L0）起 `dist/` 不得含特約內容，搜尋索引改由牌桌給（不在靜態檔裡）。
 - 分片後 `tests/content` 仍能一次驗證全部特約（測試直接 import 全部）。
 
 ## 設計方向
@@ -56,6 +56,7 @@ M0 把 22 個特約全部打包進一個 bundle、整本放在一頁（3.2 萬�
 - [ ] AC-10.4 — 錯誤回報與匿名分析進管理頁；不含個資；可關閉。
 - [ ] AC-10.5 — 每日備份到 R2、保留 30 天、可還原（文件化步驟並演練一次）。（e10-t08 已完成程式與文件；建立 R2 bucket、部署後的還原演練還沒做）
 - [ ] AC-10.6 — `clubId` 進 key 與 API；單社團行為不變；測試覆蓋。
+- [x] AC-10.7 — 內建特約只給社員（使用者 2026-10-29 決定）：網站的靜態檔（`dist/`）不含任何特約內容（CI 擋）；manifest、內容與搜尋索引都由牌桌 Worker 給登入的社員；寫入牌桌的內容與 `src/content` 逐字相同（`seed-builtin --verify`）；離線快取在登出時清掉；首頁 JS 至少留 10 kB 餘裕。
 
 ## Task 拆分
 
@@ -66,6 +67,12 @@ M0 把 22 個特約全部打包進一個 bundle、整本放在一頁（3.2 萬�
 - [x] `e10-t03` 效能預算檢查進 CI（bundle size、Lighthouse 特約頁）· AC-10.1 · #8
 - [x] `e10-t04` 搜尋索引建置腳本與前端載入；線上內容增量合併；既有搜尋測試遷移 · AC-10.2 · M · ← e10-t01 · #11
 - [x] `e10-t05` service worker 策略 v2（manifest／索引預載、按需快取、制度集與制度卡、更新提示）· AC-10.3 · M · ← e10-t04 · #11
+
+**M1 · 內容保護（L0，使用者 2026-10-29 決定）**
+
+- [x] `e10-t12` 內建特約搬到牌桌 Worker：`book:builtin:*` 存放、manifest 帶 `builtin`、`GET /api/book/builtin/:slug` 與搜尋索引 API、`PUT /api/book/builtin`（預設預演、不動線上版本、種子權杖）；橋館改讀 API，`npm run seed-builtin`（預演／`--apply`／`--verify` 逐字比對）；`npm run budget` 擋 `dist/` 裡的特約內容；拿掉內建 manifest、特約 chunk 與 `/search-index.json` · AC-10.7 · L · #44（牌桌 #194）
+- [x] `e10-t13` 離線與登出：service worker 對 `/api/book/builtin/*`、`/api/book/search-index` 網路優先、離線用快取；登出（或 `/api/me` 回 401）清掉快取的 API 回應與 localStorage 的 manifest · AC-10.3、AC-10.7 · S · ← e10-t12 · #44
+- [x] `e10-t14` 首頁 JS 瘦身：目錄（含 Radix accordion）lazy 載入、跟頁面一起開始下載；`strings.ts` 拆出編輯器、匯入、分類、隊伍、牌例盒的文字（各自的 `*Strings.ts`）· AC-10.1、AC-10.7 · S · #44
 
 **M2 · 維運**
 
@@ -83,6 +90,8 @@ M0 把 22 個特約全部打包進一個 bundle、整本放在一頁（3.2 萬�
 
 - **分片後「全部展開」與「印整本」變慢**：`/book` 印整本時才載全部，顯示進度；平常不提供整本展開。
 - **索引與線上內容不同步**：索引只含內建內容，線上差異在前端增量合併；M2 若線上內容多再搬到 Worker 端搜尋。
+- **內建內容與索引不同步**（L0）：兩者由同一次 `seed-builtin` 一起寫入，`--verify` 兩樣都比對。
+- **還原舊備份清掉內建特約**（L0）：備份範圍含 `book`，還原 2026-10-29 前的備份後要重跑 `npm run seed-builtin -- --apply`（牌桌 DEPLOY.md §4.9）。
 
 ## 未決問題
 

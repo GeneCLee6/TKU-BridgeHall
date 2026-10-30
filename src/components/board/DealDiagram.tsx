@@ -1,8 +1,8 @@
 import styled from 'styled-components'
 import { isVulnerable, SEATS, type Deal, type Seat } from '../../lib/board.ts'
-import { strings } from '../../strings.ts'
 import { mobile } from '../../styles/tokens.ts'
-import { HandSuits } from './parts.tsx'
+import { HandSuits } from './parts.tsx'
+import { boardStrings } from './boardStrings.ts'
 
 /**
  * Four hands in the usual cross (North on top, West left), the dealer and vulnerability in the
@@ -11,7 +11,7 @@ import { HandSuits } from './parts.tsx'
  * A seat with no cards shows only its name: an article's deal often leaves the defenders out.
  */
 export function DealDiagram({ deal, label }: { deal: Deal; label?: string }) {
-  const b = strings.board
+  const b = boardStrings
   return (
     <Figure role="group" aria-label={label ?? b.deal} data-print="keep">
       {SEATS.map((seat) => (
