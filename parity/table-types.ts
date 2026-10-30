@@ -179,6 +179,9 @@ export type Checks = [
   Check<Same<Book.CardSnapshot, Protocol.CardSnapshot>>,
   Check<Same<Book.CardSnapshotInput, Protocol.CardSnapshotInput>>,
   Check<Same<typeof Book.CARD_SNAPSHOT_LIMITS, typeof Protocol.CARD_SNAPSHOT_LIMITS>>,
+  Check<Same<typeof Book.CARD_PDF_LIMITS, typeof Protocol.CARD_PDF_LIMITS>>,
+  Check<Same<Book.CardPdfPaper, Protocol.CardPdfPaper>>,
+  Check<Same<Book.CardPdfRequest, Protocol.CardPdfRequest>>,
 
   // ── Teams and partnerships (shared/protocol.ts, E2) ──────────────────────────────────────────
   Check<Same<Book.ClubTeam, Protocol.ClubTeam>>,

@@ -116,7 +116,7 @@ depends_on: [E1, E2]
 
 **M2 · 選項**
 
-- [ ] `e3-t13` Worker 端產 PDF（評估 Cloudflare Browser Rendering 免費額度；不夠就維持瀏覽器列印）· AC-3.4 · M
+- [x] `e3-t13` Worker 端產 PDF（評估 Cloudflare Browser Rendering 免費額度；不夠就維持瀏覽器列印）· AC-3.4 · M · L4（**評估**：Browser Run（原名 Browser Rendering）Workers 免費方案可用、不用到 Dashboard 開通，每天 10 分鐘、同時 3 個瀏覽器；`quickAction('pdf')` 不用 puppeteer 套件；一張卡 1–5 秒，社團的量夠用；牌桌 PR 預覽部署帶綁定成功，證實不會讓部署失敗。**做法**：卡頁與版本頁「下載 PDF」送列印版面給牌桌 `POST /api/book/card-pdf`，失敗或額度用完退回瀏覽器列印；`cards/pdf.ts`、牌桌 `worker/card-pdf.ts`、`tests/cards/pdf.test.tsx`。**AC-3.4 仍未勾**：三瀏覽器列印與實際印紙對官方檔的格線還要人看，Browser Run 印出的 PDF 也要人對一次）
 
 ## 風險與對策
 

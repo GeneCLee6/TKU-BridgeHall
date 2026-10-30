@@ -16,7 +16,7 @@ import { usePageTitle } from '../lib/usePageTitle.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent } from '../state/ContentContext.tsx'
 import { mobile } from '../styles/tokens.ts'
-import { WordDownload } from './CardOutputs.tsx'
+import { PdfDownload, WordDownload } from './CardOutputs.tsx'
 import { cardStrings as t } from './cardStrings.ts'
 import { Frame } from './Frame.tsx'
 
@@ -139,14 +139,7 @@ function Snapshot({
           <Button type="button" onClick={() => window.print()}>
             {t.print}
           </Button>
-          <Button
-            type="button"
-            $variant="primary"
-            onClick={() => window.print()}
-            aria-describedby="card-pdf-hint"
-          >
-            {t.pdf}
-          </Button>
+          <PdfDownload template={template} profileName={snapshot.profileName} version={snapshot.n} />
           {snapshot.docx && (
             <a
               href={`${cardSnapshotPath(snapshot.profileId, snapshot.templateId, snapshot.n)}/docx`}
