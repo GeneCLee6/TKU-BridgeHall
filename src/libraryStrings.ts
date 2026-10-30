@@ -9,6 +9,10 @@ export const libraryStrings = {
   intro: '社團的文章：主打、擠牌、防守、叫牌理論與社課講義。',
   /** To the e-books (E5 J5, /library/book) */
   ebooks: '電子書（PDF）→',
+  /** Editors' ways into the article editor (e5-t07) and article import (e5-t08) */
+  newArticle: '新增文章',
+  importArticles: '匯入文章',
+  editArticle: '編輯這篇',
   loading: '載入叢書中…',
   failed: '叢書暫時載入不了，請稍後再試。',
   retry: '再試一次',

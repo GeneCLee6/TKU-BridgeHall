@@ -1,4 +1,8 @@
+import type { Article, ArticleBlock } from '../types/article.ts'
 import type { Block, CategoryId, Convention, RuleItem, Section } from '../types/convention.ts'
+import { blankArticle, contractFromText, handFromSuits, RESERVED_ARTICLE_SLUGS, trickFromText } from './articleEdit.ts'
+import { articleProblems } from './articles.ts'
+import { isSeat, VULNERABILITIES, type Deal, type Vulnerability } from './board.ts'
 import { conventionProblems, SECTION_ID_PATTERN, SLUG_PATTERN } from './content.ts'
 import { normaliseCall } from './editing.ts'
 
@@ -6,7 +10,7 @@ import { normaliseCall } from './editing.ts'
  * AI import's reply, and the drafts made from it. Claude answers in the flat shape of
  * TKU-BridgeTable's worker/importer.ts (structured outputs cannot describe a tree): sections
  * point to their parent with `parentId`, list items carry a `level`. This turns that back into
- * conventions. The two files change together.
+ * conventions. The two files change together. Articles (e5-t08) are at the end.
  */
 
 interface FlatBlockBase {
@@ -221,3 +225,141 @@ export function importedItems(stored: unknown): ImportResult {
 
 /** What a draft is saved as: the server wants the list under `conventions` */
 export const draftBody = (result: ImportResult) => ({ conventions: result.items, reviewNotes: result.reviewNotes })
+
+// ── Articles (e5-t08) ──────────────────────────────────────────────────────────────────────────
+// The same upload can make articles for the library: TKU-BridgeTable worker/importer.ts
+// articleImportSchema. The shared blocks are the conventions' above; an article adds a heading, a
+// quote, a deal and a play. What the AI wrote is kept as written: cards it got wrong become cards
+// the article's check names, never cards dropped.
+
+interface FlatSuits {
+  spades: string
+  hearts: string
+  diamonds: string
+  clubs: string
+}
+interface FlatHeading {
+  kind: 'heading'
+  level: number
+  text: string
+}
+interface FlatQuote {
+  kind: 'quote'
+  text: string
+  cite: string
+}
+interface FlatDeal {
+  kind: 'deal'
+  caption: string
+  dealer: string
+  vul: string
+  north: FlatSuits
+  east: FlatSuits
+  south: FlatSuits
+  west: FlatSuits
+}
+interface FlatPlay {
+  kind: 'play'
+  caption: string
+  contract: string
+  declarer: string
+  tricks: string[]
+}
+type FlatArticleBlock = FlatBlock | FlatHeading | FlatQuote | FlatDeal | FlatPlay
+
+export interface FlatArticle {
+  action: 'new' | 'update'
+  replaces: string
+  slug: string
+  title: string
+  authors: string[]
+  series: string
+  summary: string
+  blocks: FlatArticleBlock[]
+}
+
+/** One article the AI made from a file, ready for the article editor */
+export interface ImportedArticle {
+  /** The existing article it updates, if any */
+  replaces: string
+  article: Article
+  problems: string[]
+}
+
+export interface ArticleImportResult {
+  items: ImportedArticle[]
+  reviewNotes: string
+}
+
+const suitsOf = (value: unknown): FlatSuits => {
+  const v = (value ?? {}) as Partial<FlatSuits>
+  return { spades: str(v.spades), hearts: str(v.hearts), diamonds: str(v.diamonds), clubs: str(v.clubs) }
+}
+
+function articleBlockFrom(flat: FlatArticleBlock): ArticleBlock | null {
+  switch (flat.kind) {
+    case 'heading':
+      return { kind: 'heading', level: Number(flat.level) === 3 ? 3 : 2, text: str(flat.text) }
+    case 'quote':
+      return { kind: 'quote', text: str(flat.text), ...(opt(flat.cite) && { cite: opt(flat.cite) }) }
+    case 'deal': {
+      const deal: Deal = {
+        hands: {
+          N: handFromSuits(suitsOf(flat.north)),
+          E: handFromSuits(suitsOf(flat.east)),
+          S: handFromSuits(suitsOf(flat.south)),
+          W: handFromSuits(suitsOf(flat.west)),
+        },
+        dealer: isSeat(flat.dealer) ? flat.dealer : 'N',
+        vul: VULNERABILITIES.includes(flat.vul as Vulnerability) ? (flat.vul as Vulnerability) : 'None',
+      }
+      return { kind: 'deal', deal, ...(opt(flat.caption) && { caption: opt(flat.caption) }) }
+    }
+    case 'play':
+      return {
+        kind: 'play',
+        contract: contractFromText(str(flat.contract)),
+        declarer: isSeat(flat.declarer) ? flat.declarer : 'S',
+        tricks: arr<string>(flat.tricks)
+          .map((t) => trickFromText(str(t)))
+          .filter((t) => t.length > 0),
+        ...(opt(flat.caption) && { caption: opt(flat.caption) }),
+      }
+    default:
+      return blockFrom(flat)
+  }
+}
+
+/** Articles from the AI's reply (already parsed from JSON); `series` are the allowed series ids */
+export function fromArticleReply(reply: unknown, series: string[], date: string): ArticleImportResult {
+  const value = (reply ?? {}) as { articles?: unknown; reviewNotes?: unknown }
+  const items = arr<FlatArticle>(value.articles).map((flat, i): ImportedArticle => {
+    const replaces = flat.action === 'update' && SLUG_PATTERN.test(str(flat.replaces)) ? str(flat.replaces) : ''
+    let slug = replaces || slugify(str(flat.slug), `imported-article-${i + 1}`)
+    if (!replaces && RESERVED_ARTICLE_SLUGS.includes(slug)) slug = `${slug}-article`
+    const article: Article = {
+      ...blankArticle(series.includes(str(flat.series)) ? str(flat.series) : series[0], date),
+      slug,
+      title: str(flat.title),
+      authors: arr<string>(flat.authors).map(str).filter((a) => a.trim()),
+      summary: str(flat.summary),
+      blocks: arr<FlatArticleBlock>(flat.blocks)
+        .map(articleBlockFrom)
+        .filter((b): b is ArticleBlock => b !== null),
+    }
+    return { replaces, article, problems: articleProblems(article) }
+  })
+  return { items, reviewNotes: str(value.reviewNotes) }
+}
+
+/** The articles kept in a saved import draft; none when the draft holds conventions */
+export function importedArticles(stored: unknown): ArticleImportResult {
+  const value = (stored ?? {}) as { articles?: unknown; reviewNotes?: unknown }
+  const items = arr<ImportedArticle>(value.articles).filter(
+    (item) => item && typeof item === 'object' && item.article && typeof item.article === 'object',
+  )
+  return { items, reviewNotes: str(value.reviewNotes) }
+}
+
+/** What an article import's draft is saved as: the server wants the list under `articles` */
+export const articleDraftBody = (result: ArticleImportResult) => ({ articles: result.items, reviewNotes: result.reviewNotes })

@@ -103,6 +103,10 @@ export type Checks = [
   Check<Reads<Book.ArticleEntry, TableArticles.ArticleEntry>>,
   Check<Same<Omit<Book.ArticleEntry, 'article'>, Omit<TableArticles.ArticleEntry, 'article'>>>,
   Check<Same<Book.ArticleEntrySummary, TableArticles.ArticleEntrySummary>>,
+  // Article drafts and review (e5-t07)
+  Check<Reads<Book.ArticleDraft, TableArticles.ArticleDraft>>,
+  Check<Same<Omit<Book.ArticleDraft, 'article'>, Omit<TableArticles.ArticleDraft, 'article'>>>,
+  Check<Same<Book.ArticleDraftSummary, TableArticles.ArticleDraftSummary>>,
   Check<Same<Book.ArticleFiles, TableArticles.ArticleList['files']>>,
   Check<Same<Book.ArticleList, TableArticles.ArticleList>>,
   Check<Reads<Book.ArticleResponse, TableArticles.ArticleResponse>>,

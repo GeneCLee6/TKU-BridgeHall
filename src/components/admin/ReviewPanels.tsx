@@ -85,6 +85,8 @@ function targetLink(entry: AuditEntry) {
   // A 待確認 note (e8-t06): `<slug>/<sectionId>/<n>`
   if (entry.action === 'book:pending') return '/pending'
   if (entry.action === 'article:series') return '/library'
+  // An article's draft opens in its editor (e5-t07)
+  if (['article:draft', 'article:submit', 'article:reject'].includes(entry.action)) return `/library/${entry.target}/edit`
   if (entry.action.startsWith('article:')) return `/library/${entry.target}`
   // A convention card version (e3-t09): `<profile>/<template>`, the version's number
   if (entry.action === 'card:publish' && entry.version) return `/cards/${entry.target}/v/${entry.version}`
