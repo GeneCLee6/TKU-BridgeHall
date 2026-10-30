@@ -126,7 +126,7 @@ describe('the path and lesson pages (e4-t09)', () => {
     expect(readings[0]).toHaveTextContent('測試特約甲（虛構） › 佔位答叫表（測試） › 2♣ 之後（測試）')
     expect(readings[1]).toHaveAttribute('href', '/c/fixture-alpha')
     expect(screen.getByText('（找不到這一段，連到整個特約）')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '回到「新生課」' })).toHaveAttribute('href', '/learn/from-zero')
+    expect(screen.getByRole('link', { name: /回到路徑.*新生課/ })).toHaveAttribute('href', '/learn/from-zero')
   })
 
   it('says so for a path or lesson that is not there', async () => {

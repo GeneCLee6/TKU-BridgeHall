@@ -1,8 +1,7 @@
 import { Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Row, Select, TextArea } from '../components/ui.tsx'
+import { BackLink, Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Row, Select, TextArea } from '../components/ui.tsx'
 import { glossary as bundled } from '../content/glossary.ts'
 import { api, ApiError, errorText, type BookGlossary } from '../lib/api.ts'
 import { formatDateTime } from '../lib/format.ts'
@@ -74,12 +73,12 @@ function GlossaryEditor() {
 
   return (
     <>
+      <BackLink to="/glossary">{t.back}</BackLink>
       <Muted>{t.editIntro}</Muted>
       <Muted>
         {server.version > 0 && server.updatedBy && server.updatedAt
           ? t.updated(server.updatedBy, formatDateTime(server.updatedAt))
-          : t.bundled}{' '}
-        <Link to="/glossary">{t.back}</Link>
+          : t.bundled}
       </Muted>
       {error && (
         <ErrorText role="alert">

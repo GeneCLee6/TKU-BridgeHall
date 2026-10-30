@@ -18,6 +18,10 @@ export const teamsStrings = {
   archive: '封存',
   unarchive: '取消封存',
   archived: '已封存',
+  unsaved: '還沒儲存。',
+  confirmRemove: (name: string, team: string) => `確定把 ${name} 移出「${team}」？`,
+  confirmArchive: (team: string) => `確定封存「${team}」？封存後不能再改隊員與隊長。`,
+  confirmUnarchive: (team: string) => `確定取消封存「${team}」？`,
   pairs: (team: string) => `${team} 的搭檔`,
   noPairs: '這一隊還沒有搭檔',
 } as const

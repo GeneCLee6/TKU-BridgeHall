@@ -11,7 +11,7 @@ import type { CardTemplate } from '../cards/types.ts'
 import { fetchCard, type LoadedCard as Loaded } from '../cards/load.ts'
 import { PrintStyle } from '../cards/PrintStyle.tsx'
 import { OriginMark } from '../components/ProfileMarks.tsx'
-import { Button, ErrorText, Field, Muted, Row, Select, TextArea } from '../components/ui.tsx'
+import { BackLink, Button, ErrorText, Field, Muted, Row, Select, TextArea } from '../components/ui.tsx'
 import { ApiError, api, CLUB_PROFILE_ID, errorText, type ProfileCardEdit } from '../lib/api.ts'
 import { toInput } from '../lib/profileEdit.ts'
 import { resolveProfile } from '../lib/profiles.ts'
@@ -215,15 +215,10 @@ function Card({ profileId, template, form }: { profileId: string; template: Card
           <h1>
             {t.title} · {profile.name}
           </h1>
-          <Muted>
-            {strings.profiles.scopes[profile.scope]}
-            {profile.id !== CLUB_PROFILE_ID && (
-              <>
-                {' · '}
-                <Link to={`/profiles/${encodeURIComponent(profile.id)}/compare`}>{t.back}</Link>
-              </>
-            )}
-          </Muted>
+          {profile.id !== CLUB_PROFILE_ID && (
+            <BackLink to={`/profiles/${encodeURIComponent(profile.id)}/compare`}>{t.back}</BackLink>
+          )}
+          <Muted>{strings.profiles.scopes[profile.scope]}</Muted>
         </Head>
         <Controls>
           {tabs}

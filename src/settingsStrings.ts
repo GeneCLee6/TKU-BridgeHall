@@ -5,13 +5,16 @@
  */
 export const settingsStrings = {
   title: '個人設定',
-  intro: '風格、版面與文字都可以照自己的習慣調，只改變你看到的樣子，不影響別人。設定存在這台裝置的瀏覽器。',
+  intro: '風格、版面與文字都可以照自己的習慣調，只改變你看到的樣子，不影響別人。選了會先預覽，按「儲存」才會保留；設定存在這台裝置的瀏覽器。',
   display: '顯示',
   displayIntro: '風格、版面、字體、字級、花色顏色與密度。',
   toSettings: '打開個人設定',
   phoneNote: '手機一律單欄＋底部工具列，版面在電腦與平板生效。',
   reset: '全部恢復預設',
-  resetDone: '已恢復預設',
+  resetPreview: '已換成預設值，按「儲存」才會套用。',
+  discard: '取消變更',
+  unsavedPlain: '還沒儲存。',
+  unsaved: '預覽中：還沒儲存，離開這頁會恢復原本的設定。',
   groups: {
     style: '風格',
     layout: '版面',

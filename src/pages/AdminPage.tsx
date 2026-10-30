@@ -147,21 +147,40 @@ function AccountPanels() {
     }
   }
 
+  // Permission changes wait in a draft until 儲存 (2026-10-30): the table shows the draft
+  const [permDraft, setPermDraft] = useState<Record<string, Permission[]>>({})
+  const permsOf = (u: AdminUser) => permDraft[u.id] ?? u.permissions
+  const changedUsers = users.filter(
+    (u) =>
+      permDraft[u.id] &&
+      (permDraft[u.id].length !== u.permissions.length || permDraft[u.id].some((p) => !u.permissions.includes(p))),
+  )
+
   // A reviewer is always an editor (e8-t01): reviewing brings editing, and no editing means no
   // reviewing. The table's own permissions (featuring boards, the club's robot) are not shown here
   // and stay as they are
-  const toggle = (u: AdminUser, permission: Permission, on: boolean) =>
-    void run(() =>
-      api.admin.setPermissions(u.id, [
+  const toggle = (u: AdminUser, permission: Permission, on: boolean) => {
+    const now = permsOf(u)
+    setNotice('')
+    setPermDraft((d) => ({
+      ...d,
+      [u.id]: [
         ...PERMISSIONS.filter((p) => {
           if (p === permission) return on
           if (p === 'bookEdit' && permission === 'bookReview' && on) return true
           if (p === 'bookReview' && permission === 'bookEdit' && !on) return false
-          return u.permissions.includes(p)
+          return now.includes(p)
         }),
-        ...u.permissions.filter((p) => !PERMISSIONS.includes(p)),
-      ]),
-    )
+        ...now.filter((p) => !PERMISSIONS.includes(p)),
+      ],
+    }))
+  }
+
+  const savePermissions = () =>
+    void run(async () => {
+      for (const u of changedUsers) await api.admin.setPermissions(u.id, permDraft[u.id])
+      setPermDraft({})
+    })
 
   const saveSettings = (event: FormEvent) => {
     event.preventDefault()
@@ -262,7 +281,7 @@ function AccountPanels() {
                       <Check key={p}>
                         <input
                           type="checkbox"
-                          checked={u.permissions.includes(p)}
+                          checked={permsOf(u).includes(p)}
                           disabled={u.admin}
                           onChange={(e) => toggle(u, p, e.target.checked)}
                           aria-label={`${u.username}：${strings.permission[p]}`}
@@ -302,6 +321,15 @@ function AccountPanels() {
             </tbody>
           </DataTable>
         </TableScroll>
+        <Row>
+          <Button type="button" $variant="primary" disabled={!changedUsers.length} onClick={savePermissions}>
+            {changedUsers.length ? t.savePermissions(changedUsers.length) : strings.save}
+          </Button>
+          <Button type="button" disabled={!changedUsers.length} onClick={() => setPermDraft({})}>
+            {strings.cancel}
+          </Button>
+          {changedUsers.length > 0 && <Small role="status">{t.permissionsUnsaved}</Small>}
+        </Row>
       </Panel>
 
       <Panel aria-labelledby="settings">

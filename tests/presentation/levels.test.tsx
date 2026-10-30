@@ -89,6 +89,7 @@ describe('入門版／完整版 (e4-t02)', () => {
     const panel = within(title.closest<HTMLElement>('[role="dialog"]')!)
     expect(panel.getByRole('button', { name: '完整版' })).toHaveAttribute('aria-pressed', 'true')
     await userEvent.click(panel.getByRole('button', { name: '入門版' }))
+    await userEvent.click(panel.getByRole('button', { name: '儲存' }))
     expect(stored().reading).toBe('basic')
     expect(await screen.findByText(/^入門版：還有 2 段/)).toBeInTheDocument()
   })

@@ -7,6 +7,7 @@ import type { FilledCard } from '../cards/fill.ts'
 import { PrintStyle } from '../cards/PrintStyle.tsx'
 import { slotSpaces } from '../cards/fill.ts'
 import { cardTemplates } from '../cards/templates/index.ts'
+import { FileDown, IdCard, LogIn } from 'lucide-react'
 import { Button, ErrorText, Muted, Row } from '../components/ui.tsx'
 import { ApiError, type CardSnapshot, errorText } from '../lib/api.ts'
 import { cardApi, cardSnapshotPath } from '../lib/cardApi.ts'
@@ -112,7 +113,14 @@ function Snapshot({
                   ? loaded.error
                   : ''}
         </ErrorText>
-        {!user && (status === 401 || status === 403) && <Link to="/login">{t.edit.signIn}</Link>}
+        {!user && (status === 401 || status === 403) && (
+          <div>
+            <Button as={Link} to="/login" $small>
+              <LogIn size={16} aria-hidden />
+              {t.edit.signIn}
+            </Button>
+          </div>
+        )}
       </Head>
     )
   }
@@ -141,12 +149,14 @@ function Snapshot({
           </Button>
           <PdfDownload template={template} profileName={snapshot.profileName} version={snapshot.n} />
           {snapshot.docx && (
-            <a
+            <Button
+              as="a"
               href={`${cardSnapshotPath(snapshot.profileId, snapshot.templateId, snapshot.n)}/docx`}
               download
             >
+              <FileDown size={16} aria-hidden />
               {t.snapshot.storedWord}
-            </a>
+            </Button>
           )}
           <WordDownload
             template={template}
@@ -155,9 +165,10 @@ function Snapshot({
             version={snapshot.n}
           />
           {user && (
-            <Link to={`/cards/${encodeURIComponent(snapshot.profileId)}/${template.id}`}>
+            <Button as={Link} to={`/cards/${encodeURIComponent(snapshot.profileId)}/${template.id}`}>
+              <IdCard size={16} aria-hidden />
               {t.snapshot.current}
-            </Link>
+            </Button>
           )}
         </Row>
         <Muted id="card-pdf-hint">{t.pdfHint(template.paper)}</Muted>

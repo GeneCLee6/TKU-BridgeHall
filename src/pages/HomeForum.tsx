@@ -1,4 +1,4 @@
-import { ArrowRight, MessagesSquare, Plus } from 'lucide-react'
+import { ArrowRight, MessagesSquare } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
@@ -6,13 +6,12 @@ import { Avatar } from '../components/Avatar.tsx'
 import { Tag, TagList } from '../components/Tag.tsx'
 import { Button } from '../components/ui.tsx'
 import { api, type ClubMember } from '../lib/api.ts'
-import { NEWS_BOARD_ID, type Board, type ForumLatest } from '../lib/forum.ts'
+import type { Board, ForumLatest } from '../lib/forum.ts'
 import { forumApi } from '../lib/forumApi.ts'
 import { memberLabel, postHas, postSummary } from '../lib/forumPosts.ts'
-import { today } from '../lib/format.ts'
 import { forumStrings as t } from '../forum/forumStrings.ts'
-import { boardPath, isOfficer, postPath } from '../forum/forumText.ts'
-import { useAuth } from '../state/AuthContext.tsx'
+import { NewsList } from '../forum/NewsList.tsx'
+import { postPath } from '../forum/forumText.ts'
 import { BlockTitle } from './HomeBlocks.tsx'
 
 /**
@@ -61,51 +60,17 @@ function useHomeForum() {
   return state
 }
 
-const date = (ms: number) => today(new Date(ms)).slice(5).replace('-', '/')
-
 export default function HomeForum({ part }: { part: 'news' | 'discussions' }) {
   return part === 'news' ? <ClubNews /> : <LatestDiscussions />
 }
 
-/** 社團新聞 (the right column); officers get 發公告 */
+/** 社團新聞 (the right column); officers get 發公告. The list is the forum's too (NewsList) */
 function ClubNews() {
   const { data, failed } = useHomeForum()
-  const { user } = useAuth()
-  const news = data?.latest.news
   return (
     <section aria-labelledby="home-news">
       <BlockTitle id="home-news">{t.news}</BlockTitle>
-      {failed ? (
-        <Note>{t.homeFailed}</Note>
-      ) : !news ? (
-        <Note role="status">{t.loading}</Note>
-      ) : news.length ? (
-        <List>
-          {news.map((post) => (
-            <li key={post.id}>
-              <time dateTime={new Date(post.createdAt).toISOString()}>{date(post.createdAt)}</time>
-              <Link to={postPath(post.id)}>
-                {post.pinned && <span aria-label={t.pinned}>📌 </span>}
-                {postSummary(post) || t.untitled}
-              </Link>
-            </li>
-          ))}
-        </List>
-      ) : (
-        <Note>{t.noNews}</Note>
-      )}
-      <More>
-        <Button as={Link} to={boardPath(NEWS_BOARD_ID)} $small>
-          {t.allNews}
-          <ArrowRight size={14} aria-hidden />
-        </Button>
-        {isOfficer(user) && (
-          <Button as={Link} to={`/forum/new?board=${NEWS_BOARD_ID}`} $small $variant="ghost">
-            <Plus size={14} aria-hidden />
-            {t.postNews}
-          </Button>
-        )}
-      </More>
+      <NewsList news={data?.latest.news} failed={failed} />
     </section>
   )
 }
@@ -167,32 +132,6 @@ const Note = styled.p`
   margin: 0;
   font-size: 0.875rem;
   color: ${({ theme }) => theme.colors.textMuted};
-`
-
-const List = styled.ul`
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-
-  li {
-    display: flex;
-    align-items: baseline;
-    gap: ${({ theme }) => theme.space(2)};
-    padding: ${({ theme }) => theme.space(2)} 0;
-    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  }
-  time {
-    flex: none;
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-    color: ${({ theme }) => theme.colors.textMuted};
-  }
-  a {
-    min-width: 0;
-    color: ${({ theme }) => theme.colors.text};
-    font-weight: 500;
-  }
 `
 
 const Cards = styled.ul`

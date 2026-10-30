@@ -2,7 +2,6 @@ import { useEffect, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AccountMenu } from '../components/AccountMenu.tsx'
 import { AppHeader } from '../components/AppHeader.tsx'
-import { ReadingSettingsButton } from '../components/ReadingSettingsButton.tsx'
 import { ErrorText, Muted, PageMain } from '../components/ui.tsx'
 import type { Permission } from '../lib/api.ts'
 import { useAuth } from '../state/AuthContext.tsx'
@@ -35,7 +34,7 @@ export function Frame({
   usePageTitle(title)
   return (
     <>
-      <AppHeader actions={<ReadingSettingsButton toolbar={toolbar} />} account={<AccountCorner />} />
+      <AppHeader toolbar={toolbar} account={<AccountCorner />} />
       {wide ? children : <PageMain id="main">{children}</PageMain>}
     </>
   )

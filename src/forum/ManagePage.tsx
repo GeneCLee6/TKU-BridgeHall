@@ -1,9 +1,9 @@
-import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, MessageSquare, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import styled from 'styled-components'
 import { Tag, TagList } from '../components/Tag.tsx'
-import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PanelTitle, Row, Select } from '../components/ui.tsx'
+import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row, Select } from '../components/ui.tsx'
 import { errorText, type ClubMember } from '../lib/api.ts'
 import { BOARD_POST_POLICIES, BUILTIN_BOARDS, FORUM_LIMITS, type Board, type BoardPostPolicy, type ReportItem } from '../lib/forum.ts'
 import { forumApi } from '../lib/forumApi.ts'
@@ -33,7 +33,7 @@ export function ManagePage() {
   if (!isOfficer(user)) return <Muted>{t.officersOnlyPage}</Muted>
   return (
     <Page>
-      <h1>{t.manage}</h1>
+      <PageTitle>{t.manage}</PageTitle>
       <Muted>{t.manageIntro}</Muted>
       <ReportsPanel members={forum.club.members} onRemoved={forum.refresh} />
       {user?.admin ? <BoardsPanel boards={forum.club.boards} onSaved={forum.reloadClub} /> : <Muted>{t.boardsAdminOnly}</Muted>}
@@ -100,7 +100,12 @@ function ReportsPanel({ members, onRemoved }: { members: readonly ClubMember[]; 
                 <Small>{t.reportBy(name(report.reporterId), formatDateTime(report.createdAt))}</Small>
                 {report.handledBy && report.handledAt && <Small>{t.reportHandled(name(report.handledBy), formatDateTime(report.handledAt))}</Small>}
                 <Row>
-                  {link && <Link to={link}>{t.openPost}</Link>}
+                  {link && (
+                    <Button as={Link} to={link} $small>
+                      <MessageSquare size={16} aria-hidden />
+                      {t.openPost}
+                    </Button>
+                  )}
                   {report.status === 'open' && (
                     <>
                       <Button type="button" $small disabled={busy === report.id} onClick={() => void decide(item, 'dismiss')}>
@@ -275,12 +280,6 @@ function BoardsPanel({ boards, onSaved }: { boards: readonly Board[]; onSaved: (
 const Page = styled.div`
   display: grid;
   gap: ${({ theme }) => theme.space(4)};
-
-  h1 {
-    margin: 0;
-    font-size: 1.375rem;
-    color: ${({ theme }) => theme.colors.primaryStrong};
-  }
 `
 
 const List = styled.ul`

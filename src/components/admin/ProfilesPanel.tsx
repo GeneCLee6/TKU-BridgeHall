@@ -4,7 +4,8 @@ import { api, errorText, type ProfileSummary } from '../../lib/api.ts'
 import { profileEdit as t } from '../../pages/profileEditStrings.ts'
 import { strings } from '../../strings.ts'
 import { DataTable, TableScroll } from '../DataTable.tsx'
-import { ErrorText, Muted, Panel, PanelTitle, Row } from '../ui.tsx'
+import { GitCompare, Pencil } from 'lucide-react'
+import { Button, ErrorText, Muted, Panel, PanelTitle, Row } from '../ui.tsx'
 
 /**
  * 制度集 on the admin page (e1-t14): every profile the editor may read, with links to edit it and
@@ -49,12 +50,14 @@ export function ProfilesPanel() {
                     <td>{strings.profiles.scopes[p.scope]}</td>
                     <td>
                       <Row>
-                        <Link to={`/profiles/${encodeURIComponent(p.id)}/edit`} aria-label={`${t.edit}：${p.name}`}>
+                        <Button as={Link} to={`/profiles/${encodeURIComponent(p.id)}/edit`} aria-label={`${t.edit}：${p.name}`} $small $variant="ghost">
+                          <Pencil size={16} aria-hidden />
                           {t.edit}
-                        </Link>
-                        <Link to={`/profiles/${encodeURIComponent(p.id)}/compare`} aria-label={`${t.compare}：${p.name}`}>
+                        </Button>
+                        <Button as={Link} to={`/profiles/${encodeURIComponent(p.id)}/compare`} aria-label={`${t.compare}：${p.name}`} $small $variant="ghost">
+                          <GitCompare size={16} aria-hidden />
                           {t.compare}
-                        </Link>
+                        </Button>
                       </Row>
                     </td>
                   </tr>

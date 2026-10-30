@@ -3,9 +3,9 @@ import { Outlet, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 import { AppHeader } from '../components/AppHeader.tsx'
 import { ProfilePill } from '../components/ProfilePill.tsx'
-import { ReadingSettingsButton, type ReadingActions } from '../components/ReadingSettingsButton.tsx'
 import { references } from '../content/references.ts'
 import { formatDateTime } from '../lib/format.ts'
+import { usePageReadingActions, type ReadingActions } from '../lib/readingActions.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { useContent } from '../state/ContentContext.tsx'
@@ -82,6 +82,7 @@ export function HandbookShell() {
         search={search}
         onSearchFocus={prepareSearch}
         profile={!isMobile && (choosable ? profileSwitch('bar') : <ProfilePill />)}
+        toolbar
         account={<AccountCorner />}
       />
       <Layout>
@@ -131,16 +132,12 @@ export function HandbookShell() {
 }
 
 /**
- * The line at the top of the whole book: where the reader is on the left, the 閱讀設定 button on
- * the right. The convention page has its own (e9-t05), with the button in its 本頁 column.
+ * The line at the top of a handbook page: where the reader is. The page's expand / collapse /
+ * print go to the header's 閱讀設定 (2026-10-30), as on every other page.
  */
 export function PageBar({ lead, ...actions }: ReadingActions & { lead?: ReactNode }) {
-  return (
-    <Bar>
-      <div>{lead}</div>
-      <ReadingSettingsButton toolbar {...actions} />
-    </Bar>
-  )
+  usePageReadingActions(actions)
+  return lead ? <Bar>{lead}</Bar> : null
 }
 
 /** Who changed a convention online and when, for its card; nothing for the bundled version */

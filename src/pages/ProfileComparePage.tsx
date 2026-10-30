@@ -25,6 +25,7 @@ import { useContent } from '../state/ContentContext.tsx'
 import { strings } from '../strings.ts'
 import type { Block } from '../types/convention.ts'
 import { Frame, Gate } from './Frame.tsx'
+import { WithSectionNav } from '../components/SectionNav.tsx'
 import { profileCompare as t } from './profileCompareStrings.ts'
 
 /**
@@ -155,99 +156,101 @@ function Compare() {
 
   return (
     <>
-      <Panel aria-labelledby="profile">
-        <PanelTitle id="profile">{profile.name}</PanelTitle>
-        <Facts>
-          <dt>{t.scope}</dt>
-          <dd>{strings.profiles.scopes[profile.scope]}</dd>
-          <dt>{t.parent}</dt>
-          <dd>{parent ? <Link to={`/profiles/${parent.id}/compare`}>{parent.name}</Link> : t.handbook}</dd>
-        </Facts>
-        <Muted>{t.intro}</Muted>
-        <Muted>{t.linkNote}</Muted>
-        <Links>
-          {canEdit && (
-            <Button as={Link} to={`/profiles/${profile.id}/edit`} $small>
-              <Pencil size={16} aria-hidden />
-              {t.edit}
+      <WithSectionNav>
+        <Panel aria-labelledby="profile">
+          <PanelTitle id="profile">{profile.name}</PanelTitle>
+          <Facts>
+            <dt>{t.scope}</dt>
+            <dd>{strings.profiles.scopes[profile.scope]}</dd>
+            <dt>{t.parent}</dt>
+            <dd>{parent ? <Link to={`/profiles/${parent.id}/compare`}>{parent.name}</Link> : t.handbook}</dd>
+          </Facts>
+          <Muted>{t.intro}</Muted>
+          <Muted>{t.linkNote}</Muted>
+          <Links>
+            {canEdit && (
+              <Button as={Link} to={`/profiles/${profile.id}/edit`} $small>
+                <Pencil size={16} aria-hidden />
+                {t.edit}
+              </Button>
+            )}
+            <Button as={Link} to={`/cards/${encodeURIComponent(profile.id)}/wbf`} $small>
+              <IdCard size={16} aria-hidden />
+              {t.card}
             </Button>
-          )}
-          <Button as={Link} to={`/cards/${encodeURIComponent(profile.id)}/wbf`} $small>
-            <IdCard size={16} aria-hidden />
-            {t.card}
-          </Button>
-        </Links>
-      </Panel>
-
-      {(message || failure) && (
-        <div aria-live="polite">
-          {message && <Notice role="status">{message}</Notice>}
-          {failure && <ErrorText role="alert">{failure}</ErrorText>}
-        </div>
-      )}
-
-      {unifyRef && !message && (
-        <Panel aria-labelledby="unify">
-          <PanelTitle id="unify">{t.unify.title}</PanelTitle>
-          {suggested ? (
-            <>
-              <Muted>{t.unify.intro}</Muted>
-              <ChangeView slug={suggested.slug} change={suggested.change} />
-              {canEdit ? (
-                <Button type="button" $variant="primary" disabled={busy} onClick={revert}>
-                  {t.unify.revert(parent?.name ?? t.handbook)}
-                </Button>
-              ) : (
-                <Muted>{t.unify.readOnly}</Muted>
-              )}
-            </>
-          ) : (
-            <Muted>{t.unify.gone}</Muted>
-          )}
+          </Links>
         </Panel>
-      )}
 
-      {changesNothing(comparison) && <Notice role="status">{t.empty}</Notice>}
+        {(message || failure) && (
+          <div aria-live="polite">
+            {message && <Notice role="status">{message}</Notice>}
+            {failure && <ErrorText role="alert">{failure}</ErrorText>}
+          </div>
+        )}
 
-      {problems.length > 0 && (
-        <Panel aria-labelledby="problems">
-          <PanelTitle id="problems">{t.problemsTitle}</PanelTitle>
-          <Muted>{t.problemsIntro}</Muted>
-          <List>
-            {problems.map((p, i) => (
-              <li key={i}>
-                <ProblemText problem={p} profiles={[profile, ...(parent ? [parent] : [])]} name={name} />
-              </li>
-            ))}
-          </List>
-        </Panel>
-      )}
+        {unifyRef && !message && (
+          <Panel aria-labelledby="unify">
+            <PanelTitle id="unify">{t.unify.title}</PanelTitle>
+            {suggested ? (
+              <>
+                <Muted>{t.unify.intro}</Muted>
+                <ChangeView slug={suggested.slug} change={suggested.change} />
+                {canEdit ? (
+                  <Button type="button" $variant="primary" disabled={busy} onClick={revert}>
+                    {t.unify.revert(parent?.name ?? t.handbook)}
+                  </Button>
+                ) : (
+                  <Muted>{t.unify.readOnly}</Muted>
+                )}
+              </>
+            ) : (
+              <Muted>{t.unify.gone}</Muted>
+            )}
+          </Panel>
+        )}
 
-      {adoptions.length > 0 && (
-        <Panel aria-labelledby="adoptions">
-          <PanelTitle id="adoptions">{t.adoptionsTitle}</PanelTitle>
-          <Adoptions title={t.off} list={off} />
-          <Adoptions title={t.on} list={on} />
-        </Panel>
-      )}
+        {changesNothing(comparison) && <Notice role="status">{t.empty}</Notice>}
 
-      {conventions.length > 0 && (
-        <Panel aria-labelledby="overrides">
-          <PanelTitle id="overrides">{t.overridesTitle}</PanelTitle>
-          {suggest && <Muted>{t.unify.captainIntro}</Muted>}
-          {conventions.map((c) => (
-            <section key={c.slug} aria-labelledby={`compare-${c.slug}`}>
-              <SubTitle id={`compare-${c.slug}`}>
-                <Link to={conventionPath(c.slug)}>{c.name}</Link>
-              </SubTitle>
-              {!c.played && <Muted>{t.notPlayed}</Muted>}
-              {c.changes.map((change, i) => (
-                <ChangeView key={i} slug={c.slug} change={change} suggest={suggest ? () => suggest(change) : undefined} busy={busy} />
+        {problems.length > 0 && (
+          <Panel aria-labelledby="problems">
+            <PanelTitle id="problems">{t.problemsTitle}</PanelTitle>
+            <Muted>{t.problemsIntro}</Muted>
+            <List>
+              {problems.map((p, i) => (
+                <li key={i}>
+                  <ProblemText problem={p} profiles={[profile, ...(parent ? [parent] : [])]} name={name} />
+                </li>
               ))}
-            </section>
-          ))}
-        </Panel>
-      )}
+            </List>
+          </Panel>
+        )}
+
+        {adoptions.length > 0 && (
+          <Panel aria-labelledby="adoptions">
+            <PanelTitle id="adoptions">{t.adoptionsTitle}</PanelTitle>
+            <Adoptions title={t.off} list={off} />
+            <Adoptions title={t.on} list={on} />
+          </Panel>
+        )}
+
+        {conventions.length > 0 && (
+          <Panel aria-labelledby="overrides">
+            <PanelTitle id="overrides">{t.overridesTitle}</PanelTitle>
+            {suggest && <Muted>{t.unify.captainIntro}</Muted>}
+            {conventions.map((c) => (
+              <section key={c.slug} aria-labelledby={`compare-${c.slug}`}>
+                <SubTitle id={`compare-${c.slug}`}>
+                  <Link to={conventionPath(c.slug)}>{c.name}</Link>
+                </SubTitle>
+                {!c.played && <Muted>{t.notPlayed}</Muted>}
+                {c.changes.map((change, i) => (
+                  <ChangeView key={i} slug={c.slug} change={change} suggest={suggest ? () => suggest(change) : undefined} busy={busy} />
+                ))}
+              </section>
+            ))}
+          </Panel>
+        )}
+      </WithSectionNav>
     </>
   )
 }

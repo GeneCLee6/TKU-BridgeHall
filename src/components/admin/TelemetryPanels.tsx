@@ -134,16 +134,24 @@ export function AnalyticsPanel() {
   const [loadError, setLoadError] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  // The club's switch waits for 儲存 (2026-10-30)
+  const [enabled, setEnabled] = useState<boolean>()
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     telemetryApi.analytics().then(setView, (e) => setLoadError(errorText(e)))
   }, [])
 
-  const toggle = async (enabled: boolean) => {
+  const switchOn = enabled ?? view?.enabled ?? false
+  const dirty = !!view && switchOn !== view.enabled
+
+  const save = async () => {
     setError('')
     setBusy(true)
     try {
-      setView(await telemetryApi.setAnalytics(enabled))
+      setView(await telemetryApi.setAnalytics(switchOn))
+      setEnabled(undefined)
+      setSaved(true)
     } catch (e) {
       setError(errorText(e))
     } finally {
@@ -165,10 +173,27 @@ export function AnalyticsPanel() {
           {user?.admin && (
             <div>
               <label>
-                <input type="checkbox" checked={view.enabled} disabled={busy} onChange={(e) => void toggle(e.target.checked)} />{' '}
+                <input
+                  type="checkbox"
+                  checked={switchOn}
+                  disabled={busy}
+                  onChange={(e) => {
+                    setEnabled(e.target.checked)
+                    setSaved(false)
+                  }}
+                />{' '}
                 {t.clubSwitch}
               </label>
               <Muted>{t.clubSwitchHint}</Muted>
+              <Row>
+                <Button type="button" $small $variant="primary" disabled={busy || !dirty} onClick={() => void save()}>
+                  {strings.save}
+                </Button>
+                <Button type="button" $small disabled={busy || !dirty} onClick={() => setEnabled(undefined)}>
+                  {strings.cancel}
+                </Button>
+                {saved && !dirty && <Notice role="status">{strings.saved}</Notice>}
+              </Row>
             </div>
           )}
           {!view.enabled && <Notice>{t.analyticsOff}</Notice>}

@@ -79,6 +79,13 @@ export const defaultPrefs: DisplayPrefs = {
 }
 
 interface Preferences extends DisplayPrefs {
+  /**
+   * What is stored: the settings forms start from these. The fields above are what the page shows,
+   * which a form's unsaved `preview` may change
+   */
+  saved: DisplayPrefs
+  /** Shows changes without storing them (a settings form before 儲存); `null` drops them */
+  preview: (changes: Partial<DisplayPrefs> | null) => void
   /** The mode in effect */
   mode: ThemeMode
   themeChoice: ThemeChoice
@@ -170,7 +177,9 @@ function useSystemMode(): ThemeMode {
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
-  const [prefs, setPrefs] = useState<DisplayPrefs>(readStoredPrefs)
+  const [saved, setPrefs] = useState<DisplayPrefs>(readStoredPrefs)
+  const [previewed, setPreview] = useState<Partial<DisplayPrefs> | null>(null)
+  const prefs = useMemo(() => (previewed ? { ...saved, ...previewed } : saved), [saved, previewed])
   // Bumped when a style's tokens arrive, so the theme is made again with them
   const [, setStyleArrived] = useState(0)
   const system = useSystemMode()
@@ -178,11 +187,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(saved))
     } catch {
       // Private mode or blocked storage: the preference simply is not remembered.
     }
-  }, [prefs])
+  }, [saved])
 
   useEffect(() => {
     if (isStyleLoaded(style)) return
@@ -212,6 +221,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     const update = (changes: Partial<DisplayPrefs>) => setPrefs((now) => ({ ...now, ...changes }))
     return {
       ...prefs,
+      saved,
+      preview: setPreview,
       mode: theme.mode,
       themeChoice: prefs.theme,
       setThemeChoice: (theme) => update({ theme }),
@@ -220,7 +231,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       update,
       reset: () => setPrefs((now) => ({ ...defaultPrefs, newcomerAsked: now.newcomerAsked, analytics: now.analytics })),
     }
-  }, [prefs, theme.mode])
+  }, [prefs, saved, theme.mode])
 
   return (
     <PreferencesContext.Provider value={value}>

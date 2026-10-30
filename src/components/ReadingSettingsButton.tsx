@@ -1,6 +1,7 @@
 import { SlidersHorizontal } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from 'react'
 import styled from 'styled-components'
+import { useReadingActions } from '../lib/readingActions.ts'
 import { toolbarEvents } from '../lib/toolbar.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { strings } from '../strings.ts'
@@ -11,22 +12,17 @@ const ReadingSettings = lazy(() =>
   import('./ReadingSettings.tsx').then((m) => ({ default: m.ReadingSettings })),
 )
 
-/** What a page lets the 閱讀設定 panel do to it; the ones left out do not show */
-export interface ReadingActions {
-  onExpandAll?: () => void
-  onCollapseAll?: () => void
-  onPrint?: () => void
-  /** 列印本頁 by default; the whole book says 印整本 */
-  printLabel?: string
-}
+export type { ReadingActions } from '../lib/readingActions.ts'
 
 /**
- * The 閱讀設定 button and its panel (e9-t03). The panel's code loads on first open. Esc, × or a
+ * The 閱讀設定 button and its panel (e9-t03), in the header of every page (2026-10-30); the page's
+ * own expand / collapse / print come from `usePageReadingActions`. The panel's code loads on first open. Esc, × or a
  * click outside closes it; Esc and × put the focus back on the button. On the handbook's pages
  * (`toolbar`) phones use the bottom toolbar's button instead (e9-t09), which toggles the panel with
  * a window event.
  */
-export function ReadingSettingsButton({ toolbar = false, ...actions }: ReadingActions & { toolbar?: boolean }) {
+export function ReadingSettingsButton({ toolbar = false }: { toolbar?: boolean }) {
+  const actions = useReadingActions()
   const [open, setOpen] = useState(false)
   const wrap = useRef<HTMLDivElement>(null)
   const button = useRef<HTMLButtonElement>(null)

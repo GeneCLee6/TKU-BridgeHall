@@ -1,7 +1,8 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useId, useState, type FormEvent, type ReactNode } from 'react'
 import styled from 'styled-components'
 import { settingsStrings as text } from '../settingsStrings.ts'
-import { layoutNames, themeChoices, usePreferences, type DisplayPrefs } from '../state/PreferencesContext.tsx'
+import { defaultPrefs, layoutNames, themeChoices, type DisplayPrefs } from '../state/PreferencesContext.tsx'
+import { useDisplayDraft } from '../state/useDisplayDraft.ts'
 import { strings } from '../strings.ts'
 import { densities, fontChoices, styleNames, suitColorChoices, textSizes, type TextSize } from '../styles/tokens.ts'
 import { Button, Muted, Notice } from './ui.tsx'
@@ -11,19 +12,28 @@ type Labels<T extends string> = Record<T, string | readonly [string, string]>
 const sizes = Object.keys(textSizes) as TextSize[]
 
 /**
- * 個人設定's display choices (e9-t15, DESIGN-V2.md §10.5): one group of radio buttons per setting,
- * applied as soon as they change. Used by the settings page and by 我的帳號 › 顯示.
+ * 個人設定's display choices (e9-t15, DESIGN-V2.md §10.5): one group of radio buttons per setting.
+ * A choice shows at once as a preview; 儲存 keeps it, 取消變更 (or leaving) puts back what was
+ * stored (2026-10-30). Used by the settings page and by 我的帳號 › 顯示.
  */
 export function DisplaySettings() {
-  const prefs = usePreferences()
+  const draft = useDisplayDraft()
+  const prefs = draft.value
   const [notice, setNotice] = useState('')
   const set = (changes: Partial<DisplayPrefs>) => {
     setNotice('')
-    prefs.update(changes)
+    draft.set(changes)
   }
 
   return (
-    <Groups>
+    <Groups
+      as="form"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault()
+        draft.save()
+        setNotice(strings.saved)
+      }}
+    >
       <Choices name="style" values={styleNames} labels={text.styles} value={prefs.style} onChange={(style) => set({ style })} />
       <Choices name="layout" values={layoutNames} labels={text.layouts} value={prefs.layout} onChange={(layout) => set({ layout })}>
         <Muted>{text.phoneNote}</Muted>
@@ -33,18 +43,37 @@ export function DisplaySettings() {
       <Choices name="textSize" values={sizes} labels={strings.textSizeNames} value={prefs.textSize} onChange={(textSize) => set({ textSize })} />
       <Choices name="suitColors" values={suitColorChoices} labels={text.suitColors} value={prefs.suitColors} onChange={(suitColors) => set({ suitColors })} />
       <Choices name="density" values={densities} labels={text.densities} value={prefs.density} onChange={(density) => set({ density })} />
-      <div>
+      <SaveBar>
+        <Button type="submit" $variant="primary" disabled={!draft.dirty}>
+          {strings.save}
+        </Button>
         <Button
           type="button"
+          disabled={!draft.dirty}
           onClick={() => {
-            prefs.reset()
-            setNotice(text.resetDone)
+            draft.cancel()
+            setNotice('')
+          }}
+        >
+          {text.discard}
+        </Button>
+        <Button
+          type="button"
+          $variant="ghost"
+          onClick={() => {
+            const { newcomerAsked: _asked, analytics: _analytics, ...display } = defaultPrefs
+            set(display)
+            setNotice(text.resetPreview)
           }}
         >
           {text.reset}
         </Button>
-        {notice && <Notice role="status">{notice}</Notice>}
-      </div>
+        {draft.dirty ? (
+          <Muted role="status">{notice || text.unsaved}</Muted>
+        ) : (
+          notice && <Notice role="status">{notice}</Notice>
+        )}
+      </SaveBar>
     </Groups>
   )
 }
@@ -92,6 +121,24 @@ function Choices<T extends string>({
 const Groups = styled.div`
   display: grid;
   gap: ${({ theme }) => theme.space(5)};
+`
+
+/** Stays in view at the bottom while the reader scrolls the choices */
+const SaveBar = styled.div`
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(2)};
+  padding: ${({ theme }) => theme.space(3)} 0;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+
+  p {
+    margin: 0;
+  }
 `
 
 const Group = styled.fieldset`

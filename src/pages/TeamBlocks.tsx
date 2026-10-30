@@ -1,3 +1,4 @@
+import { GitCompare, IdCard, Pencil } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
@@ -31,17 +32,20 @@ export function ProfileEntries({ profileId, name, access }: { profileId: string;
         >
           {t.read}
         </Button>
-        <Link to={`/profiles/${id}/compare`} aria-label={`${t.compare}：${name}`}>
+        <Button as={Link} to={`/profiles/${id}/compare`} aria-label={`${t.compare}：${name}`} $small>
+          <GitCompare size={16} aria-hidden />
           {t.compare}
-        </Link>
+        </Button>
         {access?.edit && (
-          <Link to={`/profiles/${id}/edit`} aria-label={`${t.edit}：${name}`}>
+          <Button as={Link} to={`/profiles/${id}/edit`} aria-label={`${t.edit}：${name}`} $small>
+            <Pencil size={16} aria-hidden />
             {t.edit}
-          </Link>
+          </Button>
         )}
-        <Link to={`/cards/${id}`} aria-label={`${t.card}：${name}`}>
+        <Button as={Link} to={`/cards/${id}`} aria-label={`${t.card}：${name}`} $small>
+          <IdCard size={16} aria-hidden />
           {t.card}
-        </Link>
+        </Button>
       </Row>
       {access && !access.edit && <Muted>{t.readOnly}</Muted>}
     </>

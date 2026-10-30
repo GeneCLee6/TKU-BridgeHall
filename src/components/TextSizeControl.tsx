@@ -5,9 +5,14 @@ import type { TextSize } from '../styles/tokens.ts'
 
 const SIZES: TextSize[] = ['small', 'medium', 'large', 'xlarge']
 
-/** 字級 小／中／大／特大: four buttons that resize all text, remembered on this device */
-export function TextSizeControl() {
-  const { textSize, setTextSize } = usePreferences()
+/**
+ * 字級 小／中／大／特大: four buttons that resize all text, remembered on this device. A settings
+ * form passes its own `value` and `onChange` (閱讀設定 keeps it on 儲存)
+ */
+export function TextSizeControl({ value, onChange }: { value?: TextSize; onChange?: (size: TextSize) => void }) {
+  const prefs = usePreferences()
+  const textSize = value ?? prefs.textSize
+  const setTextSize = onChange ?? prefs.setTextSize
   return (
     <Group role="group" aria-label={strings.textSize} title={strings.textSize}>
       {SIZES.map((size) => (

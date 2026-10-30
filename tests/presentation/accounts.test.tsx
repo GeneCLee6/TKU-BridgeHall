@@ -242,7 +242,11 @@ describe('the avatar on my account (e11-t03)', () => {
       return { body: { user: { id: 'u1', username: 'amy', admin: false, permissions: [] } } }
     }
     const again = renderAt('/account')
+    // Asks first: the uploaded picture is deleted
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
     await userEvent.click(await screen.findByRole('button', { name: '改回預設頭像' }))
+    expect(confirm).toHaveBeenCalled()
+    confirm.mockRestore()
     expect(again.container.querySelector('[data-avatar] img')).toBeNull()
     expect(await screen.findByRole('status')).toHaveTextContent('已改回預設頭像')
     expect(sent.some((r) => r.method === 'DELETE' && r.path === '/api/account/avatar')).toBe(true)
@@ -275,6 +279,9 @@ describe('the admin page', () => {
     expect(await screen.findByText('資工二')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: '核准' }))
     await userEvent.click(await screen.findByRole('checkbox', { name: 'cat：匯入檔案' }))
+    // Nothing is sent before 儲存 (2026-10-30)
+    expect(sent.some((s) => s.path === '/api/admin/users/u2/permissions')).toBe(false)
+    await userEvent.click(screen.getByRole('button', { name: /^儲存權限變更/ }))
     await waitFor(() => expect(sent.some((s) => s.path === '/api/admin/users/u2/permissions')).toBe(true))
     expect(sent.find((s) => s.path === '/api/admin/users/u2/permissions')!.body).toEqual({ permissions: ['bookImport'] })
     expect(sent.some((s) => s.method === 'POST' && s.path === '/api/admin/applications/a1/approve')).toBe(true)
@@ -296,9 +303,12 @@ describe('the admin page', () => {
     routes['POST /api/admin/users/u3/permissions'] = { body: { ok: true } }
     renderAt('/admin')
     await userEvent.click(await screen.findByRole('checkbox', { name: 'cat：審核發布' }))
+    expect(screen.getByRole('checkbox', { name: 'cat：線上編輯' })).toBeChecked()
+    await userEvent.click(screen.getByRole('button', { name: '儲存權限變更（1 人）' }))
     await waitFor(() => expect(sent.some((s) => s.path === '/api/admin/users/u2/permissions')).toBe(true))
     expect(sent.find((s) => s.path === '/api/admin/users/u2/permissions')!.body).toEqual({ permissions: ['bookEdit', 'bookReview'] })
     await userEvent.click(await screen.findByRole('checkbox', { name: 'dan：線上編輯' }))
+    await userEvent.click(screen.getByRole('button', { name: /^儲存權限變更/ }))
     await waitFor(() => expect(sent.some((s) => s.path === '/api/admin/users/u3/permissions')).toBe(true))
     expect(sent.find((s) => s.path === '/api/admin/users/u3/permissions')!.body).toEqual({ permissions: [] })
   })
@@ -720,6 +730,8 @@ describe('teams on the admin page (e2-t07, e2-t10)', () => {
     expect(within(list).getByRole('combobox', { name: 'A 隊 的隊長' })).toHaveValue('u1')
 
     await user.click(within(list).getByRole('checkbox', { name: '隊員可編輯制度集' }))
+    expect(sent.some((s) => s.method === 'PATCH')).toBe(false)
+    await user.click(within(list).getByRole('button', { name: '儲存' }))
     await waitFor(() => expect(sent.find((s) => s.method === 'PATCH')?.body).toEqual({ membersEdit: true }))
 
     await user.selectOptions(within(list).getByRole('combobox', { name: '加入 A 隊 的社員' }), 'u3')

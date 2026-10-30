@@ -22,6 +22,7 @@ export const strings = {
     printPage: '列印本頁',
     printBook: '印整本',
     more: '更多顯示設定',
+    unsaved: '預覽中，按儲存才保留',
   },
   /** The pages split out of the one-page handbook (e9-t04) */
   pages: {
@@ -180,6 +181,8 @@ export const strings = {
     lastLogin: '最後登入',
     actions: '操作',
     resetPassword: '重設密碼',
+    savePermissions: (n: number) => `儲存權限變更（${n} 人）`,
+    permissionsUnsaved: '權限還沒儲存。',
     newPasswordFor: (name: string) => `${name} 的新密碼`,
     selfReset: (time: string) => `自行重設密碼：${time}`,
     settings: '社團設定',

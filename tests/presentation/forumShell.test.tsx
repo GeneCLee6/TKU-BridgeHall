@@ -117,7 +117,7 @@ describe('the forum’s frame and board pages (e11-t15)', () => {
     expect(within(feed).getByText('這副 4♠ 怎麼做？')).toBeInTheDocument()
 
     const news = screen.getByRole('region', { name: '社團新聞' })
-    expect(await within(news).findByRole('link', { name: '大專盃報名' })).toHaveAttribute('href', '/forum/p/n1')
+    expect(await within(news).findByRole('link', { name: /大專盃報名$/ })).toHaveAttribute('href', '/forum/p/n1')
     expect(within(news).getByRole('link', { name: '看全部公告' })).toHaveAttribute('href', '/forum/news')
     expect(within(news).queryByRole('link', { name: '發公告' })).toBeNull()
     const active = screen.getByRole('region', { name: '活躍的人' })
