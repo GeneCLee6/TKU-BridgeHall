@@ -1,4 +1,4 @@
-import { calls, fontStacks, type StyleTokens } from '../tokens.ts'
+import { calls, fontStacks, suitPalette, type StyleTokens } from '../tokens.ts'
 
 /** 圓潤: lake teal, mango and cream; large corners, no frames, raised panels */
 const soft: StyleTokens = {
@@ -56,10 +56,7 @@ const soft: StyleTokens = {
       ...calls.dark,
     },
   },
-  suits: {
-    light: { S: '#1e2a28', H: '#d93a40', D: '#c96a12', C: '#2a8a56' },
-    dark: { S: '#e6f0ee', H: '#ff7b80', D: '#ffa65a', C: '#5fd27a' },
-  },
+  suits: suitPalette,
   fonts: { body: fontStacks.sans, heading: fontStacks.sans, mono: fontStacks.mono },
   headingWeight: 700,
   lineHeight: 1.7,

@@ -1,6 +1,6 @@
-import { calls, fontStacks, type StyleTokens } from '../tokens.ts'
+import { calls, fontStacks, suitPalette, type StyleTokens } from '../tokens.ts'
 
-/** 極簡: black, white and grey; square corners, thin lines, smaller text and tighter lines; red-black suits */
+/** 極簡: black, white and grey; square corners, thin lines, smaller text and tighter lines */
 const plain: StyleTokens = {
   colors: {
     light: {
@@ -56,10 +56,7 @@ const plain: StyleTokens = {
       ...calls.dark,
     },
   },
-  suits: {
-    light: { S: '#111111', H: '#c62828', D: '#c62828', C: '#111111' },
-    dark: { S: '#ededed', H: '#ff7b7b', D: '#ff7b7b', C: '#ededed' },
-  },
+  suits: suitPalette,
   fonts: { body: fontStacks.sans, heading: fontStacks.sans, mono: fontStacks.mono },
   headingWeight: 600,
   lineHeight: 1.55,

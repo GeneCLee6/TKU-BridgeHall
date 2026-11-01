@@ -1,4 +1,4 @@
-import { calls, fontStacks, type StyleTokens } from '../tokens.ts'
+import { calls, fontStacks, suitPaletteOnTint, type StyleTokens } from '../tokens.ts'
 
 /** 中國風: rice paper, ink, vermilion, blue-and-white and gold; double-line frames, serif headings */
 const chinese: StyleTokens = {
@@ -56,10 +56,7 @@ const chinese: StyleTokens = {
       ...calls.dark,
     },
   },
-  suits: {
-    light: { S: '#241e19', H: '#c8102e', D: '#b34700', C: '#1b6b3a' },
-    dark: { S: '#efe3c9', H: '#ff6b6b', D: '#ffa04d', C: '#5fd27a' },
-  },
+  suits: suitPaletteOnTint,
   fonts: { body: fontStacks.sans, heading: fontStacks.serif, mono: fontStacks.mono },
   headingWeight: 600,
   lineHeight: 1.7,
