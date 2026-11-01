@@ -269,7 +269,7 @@ describe('the admin page', () => {
     routes['GET /api/admin/applications'] = { body: { applications: [{ id: 'a1', username: 'ben', note: '資工二', site: 'book', createdAt: 1 }] } }
     routes['GET /api/admin/users'] = {
       body: {
-        users: [{ id: 'u2', username: 'cat', admin: false, createdAt: 1, lastLoginAt: null, boards: 0, online: false, permissions: [], passwordResetAt: null }],
+        users: [{ id: 'u2', username: 'cat', admin: false, createdAt: 1, lastLoginAt: null, boards: 0, online: false, permissions: [], passwordResetAt: null, passwordReset: null }],
       },
     }
     routes['GET /api/admin/settings'] = { body: { settings: { maxUsers: 10, inviteCode: 'tku' } } }
@@ -294,8 +294,8 @@ describe('the admin page', () => {
     signedIn({ admin: true, permissions: ['bookEdit', 'bookReview', 'bookImport'] })
     routes['GET /api/admin/applications'] = { body: { applications: [] } }
     const users = [
-      { id: 'u2', username: 'cat', admin: false, createdAt: 1, lastLoginAt: null, boards: 0, online: false, permissions: [], passwordResetAt: null },
-      { id: 'u3', username: 'dan', admin: false, createdAt: 1, lastLoginAt: null, boards: 0, online: false, permissions: ['bookEdit', 'bookReview'], passwordResetAt: null },
+      { id: 'u2', username: 'cat', admin: false, createdAt: 1, lastLoginAt: null, boards: 0, online: false, permissions: [], passwordResetAt: null, passwordReset: null },
+      { id: 'u3', username: 'dan', admin: false, createdAt: 1, lastLoginAt: null, boards: 0, online: false, permissions: ['bookEdit', 'bookReview'], passwordResetAt: null, passwordReset: null },
     ]
     routes['GET /api/admin/users'] = { body: { users } }
     routes['GET /api/admin/settings'] = { body: { settings: { maxUsers: 10, inviteCode: 'tku' } } }
