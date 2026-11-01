@@ -79,11 +79,30 @@ export interface Palette {
   onCall: string
 }
 
-type Suits = Record<'S' | 'H' | 'D' | 'C', string>
+export type Suits = Record<'S' | 'H' | 'D' | 'C', string>
+
+/**
+ * 淡江牌桌's one suit palette (its `suitColours`; DESIGN.md §2.2), the same in every style (T2):
+ * `light` for light surfaces, `dark` the same hues made lighter for dark ones. Four-colour: ♠ black,
+ * ♥ red (350°), ♦ orange (26°), ♣ green (134°); 雙色 gives ♦ ♥'s colour and ♣ ♠'s.
+ */
+export const suitPalette = {
+  light: { S: '#111111', H: '#c8102e', D: '#a64700', C: '#15702a' },
+  dark: { S: '#e6ebf3', H: '#f57a8e', D: '#ff8a33', C: '#4cc96a' },
+} as const satisfies Record<ThemeMode, Suits>
+
+/**
+ * The same palette on a tinted light paper (中國風's rice paper, 夜讀's graphite): ♥ and ♦ one step
+ * darker, hue unchanged, so they keep 4.5:1 on the darker grounds (`surfaceAlt`, `primarySoft`)
+ */
+export const suitPaletteOnTint: Record<ThemeMode, Suits> = {
+  light: { ...suitPalette.light, H: '#c3102d', D: '#a34600' },
+  dark: suitPalette.dark,
+}
 
 export interface StyleTokens {
   colors: Record<ThemeMode, Palette>
-  /** Four-colour deck: ♠ dark, ♥ red, ♦ orange, ♣ green */
+  /** `suitPalette` in every style, or `suitPaletteOnTint` where the light paper is tinted */
   suits: Record<ThemeMode, Suits>
   fonts: { body: string; heading: string; mono: string }
   headingWeight: number
@@ -176,10 +195,7 @@ const general: StyleTokens = {
       ...calls.dark,
     },
   },
-  suits: {
-    light: { S: '#1a2233', H: '#c8102e', D: '#b34700', C: '#1b7a33' },
-    dark: { S: '#e6ebf3', H: '#ff6b6b', D: '#ffa04d', C: '#5fd27a' },
-  },
+  suits: suitPalette,
   fonts: { body: fontStacks.sans, heading: fontStacks.sans, mono: fontStacks.mono },
   headingWeight: 700,
   lineHeight: 1.7,

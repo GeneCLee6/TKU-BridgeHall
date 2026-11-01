@@ -3,6 +3,7 @@ import {
   isStyleLoaded,
   loadStyle,
   styleNames,
+  suitPalette,
   textSizes,
   usesSerif,
   type ThemeMode,
@@ -12,6 +13,25 @@ import {
 expect(isStyleLoaded('general')).toBe(true)
 expect(createTheme('light', 'medium', 'soft').style).toBe('general')
 await Promise.all(styleNames.map(loadStyle))
+
+/**
+ * 淡江牌桌's suit palette (its src/styles/tokens.ts `suitPalette`, DESIGN.md §2.3 there), which every
+ * style uses (T2). Written out here so a change on either site shows up as a failing test
+ */
+const bridgeTable = {
+  light: { S: '#111111', H: '#c8102e', D: '#a64700', C: '#15702a' },
+  dark: { S: '#e6ebf3', H: '#f57a8e', D: '#ff8a33', C: '#4cc96a' },
+}
+
+/** The hue of a #rrggbb colour, in degrees */
+function hue(hex: string) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+  const max = Math.max(r, g, b)
+  const d = max - Math.min(r, g, b)
+  if (d === 0) return 0
+  const h = max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+  return h * 60
+}
 
 /** The tokens before styles existed: 「一般」 must keep every one of them (DESIGN-V2.md §10.5) */
 const before = {
@@ -37,7 +57,6 @@ const before = {
       warningBorder: '#d9534f',
       overlay: 'rgba(10, 20, 40, 0.45)',
     },
-    suits: { S: '#1a2233', H: '#c8102e', D: '#b34700', C: '#1b7a33' },
     shadow: '0 1px 2px rgba(15, 40, 80, 0.06), 0 2px 8px rgba(15, 40, 80, 0.06)',
   },
   dark: {
@@ -62,7 +81,6 @@ const before = {
       warningBorder: '#e57373',
       overlay: 'rgba(0, 0, 0, 0.6)',
     },
-    suits: { S: '#e6ebf3', H: '#ff6b6b', D: '#ffa04d', C: '#5fd27a' },
     shadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
   },
 }
@@ -88,7 +106,7 @@ describe('style tokens', () => {
     const theme = createTheme(mode)
     expect(theme.style).toBe('general')
     expect(theme.colors).toMatchObject(before[mode].colors)
-    expect(theme.suits).toEqual(before[mode].suits)
+    expect(theme.suits).toEqual(bridgeTable[mode])
     expect(theme.shadows.panel).toBe(before[mode].shadow)
     // The old radius.sm / md / lg / pill (removed in e9-t14) are control / popover / panel / tag
     expect(theme.shape).toEqual({ control: '6px', panel: '14px', popover: '10px', tag: '999px', badge: '999px', note: '6px' })
@@ -108,6 +126,23 @@ describe('style tokens', () => {
       '#ffffff',
     ])
   })
+
+  it('uses 淡江牌桌’s suit palette', () => {
+    expect(suitPalette).toEqual(bridgeTable)
+  })
+
+  it.each(styleNames.flatMap((style) => modes.map((mode) => [style, mode] as const)))(
+    'gives %s, %s 淡江牌桌’s suit hues (only the lightness may differ)',
+    (style, mode) => {
+      const { suits } = createTheme(mode, 'medium', style)
+      for (const suit of ['H', 'D', 'C'] as const) {
+        expect(Math.abs(hue(suits[suit]) - hue(bridgeTable[mode][suit]))).toBeLessThan(1)
+      }
+      expect(suits.S).toBe(bridgeTable[mode].S)
+      // Only a tinted light paper needs the darker ♥ ♦; everything else is the palette as it is
+      if (!(mode === 'light' && (style === 'chinese' || style === 'night'))) expect(suits).toEqual(bridgeTable[mode])
+    },
+  )
 
   it('gives 中國風 serif headings, square corners and a turned seal', () => {
     const theme = createTheme('light', 'medium', 'chinese')
@@ -170,6 +205,25 @@ describe('style tokens', () => {
         expect(contrast(colors.pendingText, pendingGround)).toBeGreaterThanOrEqual(4.5)
         const tagGround = colors.tagBg.startsWith('#') ? colors.tagBg : colors.surface
         expect(contrast(colors.tagText, tagGround)).toBeGreaterThanOrEqual(4.5)
+      })
+
+      it.each(['four', 'two'] as const)('has suits that read on every ground (WCAG AA, %s colours)', (suitColors) => {
+        const { suits } = createTheme(mode, 'medium', style, { suitColors })
+        // Suits sit on the page, panels, table heads, the selected entry, notes and tags
+        const grounds = [
+          colors.bg,
+          colors.surface,
+          colors.surfaceAlt,
+          colors.primarySoft,
+          colors.pendingBg,
+          colors.warningBg,
+          colors.tagBg,
+        ].filter((ground) => ground.startsWith('#'))
+        for (const ground of grounds) {
+          for (const colour of Object.values(suits)) {
+            expect(contrast(colour, ground), `${colour} on ${ground}`).toBeGreaterThanOrEqual(4.5)
+          }
+        }
       })
 
       it('has bidding box keys that read and stand out', () => {

@@ -1,4 +1,4 @@
-import { calls, fontStacks, type StyleTokens } from '../tokens.ts'
+import { calls, fontStacks, suitPaletteOnTint, type StyleTokens } from '../tokens.ts'
 
 /**
  * 夜讀: graphite and amber, dark first (跟隨系統 opens it dark); the light version is graphite
@@ -61,10 +61,7 @@ const night: StyleTokens = {
       ...calls.dark,
     },
   },
-  suits: {
-    light: { S: '#15171c', H: '#d62839', D: '#c4650f', C: '#2e8b57' },
-    dark: { S: '#e8e6e1', H: '#ff6b6b', D: '#ffa04d', C: '#5fd27a' },
-  },
+  suits: suitPaletteOnTint,
   fonts: { body: fontStacks.sans, heading: fontStacks.sans, mono: fontStacks.mono },
   headingWeight: 700,
   lineHeight: 1.7,
