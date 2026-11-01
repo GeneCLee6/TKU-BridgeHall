@@ -75,6 +75,11 @@ export interface AdminUser {
   online: boolean
   permissions: Permission[]
   passwordResetAt: number | null
+  /**
+   * Forgotten password (e1-t36): `requested` when they asked and no admin answered yet, `approved`
+   * while a code an admin gave them still works (until `until`), null otherwise
+   */
+  passwordReset: { state: 'requested'; at: number } | { state: 'approved'; at: number; until: number } | null
 }
 
 export interface ClubSettings {
