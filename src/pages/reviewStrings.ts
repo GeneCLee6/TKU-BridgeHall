@@ -95,6 +95,8 @@ export const review = {
     'forum:unpin': '取消置頂',
     'forum:lock': '鎖定貼文',
     'forum:unlock': '解除鎖定',
+    'forum:hide': '隱藏貼文',
+    'forum:unhide': '取消隱藏',
     'forum:removePost': '刪除別人的貼文',
     'forum:removeComment': '刪除別人的留言',
     'forum:dismiss': '駁回檢舉',

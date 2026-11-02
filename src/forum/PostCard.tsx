@@ -1,4 +1,4 @@
-import { Lock, MoreHorizontal, Pin } from 'lucide-react'
+import { EyeOff, Hash, Lock, MoreHorizontal, Pin } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
@@ -183,6 +183,12 @@ export function PostCard({
               {t.locked}
             </Mark>
           )}
+          {post.hidden && (
+            <Mark title={t.hiddenHint}>
+              <EyeOff size={14} aria-hidden />
+              {t.hidden}
+            </Mark>
+          )}
         </Meta>
         <ActionMenu label={t.actions}>
           <MenuItem type="button" onClick={() => void copy()}>
@@ -233,7 +239,9 @@ export function PostCard({
       <Title id={`post-${post.id}`} className={post.title ? undefined : 'visually-hidden'}>
         {full ? post.title || t.title : <Link to={postPath(post.id)}>{post.title || t.readMore}</Link>}
       </Title>
+      {full && post.hidden && <Hint>{t.hiddenHint}</Hint>}
       <PostBody blocks={post.blocks} members={members} files={files} />
+      <PostTags tags={post.tags} />
 
       <Foot>
         <ReactionBar reactions={post.reactions} userId={react.userId} onPick={react.pick} />
@@ -307,6 +315,63 @@ const Mark = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 2px;
+`
+
+const Hint = styled.p`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.875rem;
+`
+
+/** Where a tag leads: every board's posts with it (the table's AC-13.7) */
+// oxlint-disable-next-line react/only-export-components -- the forum pages link tags the same way
+export const tagPath = (tag: string, boardId?: string) =>
+  `${boardId ? `/forum/${encodeURIComponent(boardId)}` : '/forum'}?tag=${encodeURIComponent(tag)}`
+
+/** A post's tags, each a link to the posts with it */
+function PostTags({ tags }: { tags?: readonly string[] }) {
+  if (!tags?.length) return null
+  return (
+    <TagLinks aria-label={t.tags}>
+      {tags.map((tag) => (
+        <li key={tag}>
+          <TagLink to={tagPath(tag)} aria-label={t.tagLink(tag)}>
+            <Hash size={12} aria-hidden />
+            {tag}
+          </TagLink>
+        </li>
+      ))}
+    </TagLinks>
+  )
+}
+
+// oxlint-disable-next-line react/only-export-components -- the tag list on the forum pages uses it too
+export const TagLinks = styled.ul`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.space(1.5)};
+  margin: 0;
+  padding: 0;
+  list-style: none;
+`
+
+// oxlint-disable-next-line react/only-export-components -- the tag list on the forum pages uses it too
+export const TagLink = styled(Link)<{ $active?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 ${({ theme }) => theme.space(2.5)};
+  border: 1px solid ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.tagBorder)};
+  border-radius: ${({ theme }) => theme.shape.tag};
+  background: ${({ theme }) => theme.colors.tagBg};
+  color: ${({ theme, $active }) => ($active ? theme.colors.primaryStrong : theme.colors.tagText)};
+  font-size: 0.8125rem;
+  line-height: 1.75rem;
+  text-decoration: none;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
 `
 
 const Foot = styled.div`

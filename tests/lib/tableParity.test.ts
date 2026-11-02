@@ -98,6 +98,13 @@ describe.skipIf(!tableDir)('profile, avatar and file constants shared with TKU-B
     ] as const)
       expect(forum[name], name).toEqual(table[name])
   })
+
+  it('normalizes and splits tags as the table does (AC-13.7)', async () => {
+    const table = await shared('forum')
+    for (const value of ['  #２/１  GF ', '##首攻', 'a	b', '#', 'Squeeze', '防禦；擠牌'])
+      expect(forum.normalizeTag(value), value).toBe(table.normalizeTag(value))
+    expect(forum.splitTags('2/1, 首攻、防禦；首攻,, #Squeeze')).toEqual(table.splitTags('2/1, 首攻、防禦；首攻,, #Squeeze'))
+  })
 })
 
 describe.skipIf(!tableDir)('files shared with TKU-BridgeTable', () => {

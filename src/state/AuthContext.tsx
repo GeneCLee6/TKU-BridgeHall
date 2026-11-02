@@ -11,7 +11,8 @@ import { forgetMemberData } from '../lib/memberCache.ts'
 interface Auth {
   user: Me | null | undefined
   can: (permission: Permission) => boolean
-  login: (username: string, password: string) => Promise<void>
+  /** `code`: 兩步驟登入's, once the Worker asked for it (`twoFactorNeeded`) */
+  login: (username: string, password: string, code?: string) => Promise<void>
   /** Signs in the club's very first account; every later registration waits for an admin */
   register: (username: string, password: string, inviteCode: string, note: string) => Promise<RegisterResult>
   logout: () => Promise<void>
@@ -72,8 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('visibilitychange', onShow)
   }, [refresh])
 
-  const login = useCallback(async (username: string, password: string) => {
-    setUser(keep((await api.login(username, password)).user))
+  const login = useCallback(async (username: string, password: string, code?: string) => {
+    setUser(keep((await api.login(username, password, code)).user))
   }, [])
 
   const register = useCallback(async (username: string, password: string, inviteCode: string, note: string) => {

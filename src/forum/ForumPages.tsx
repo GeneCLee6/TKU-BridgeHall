@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { Avatar } from '../components/Avatar.tsx'
 import { BackLink, Button, ErrorText, Input, Muted, PageTitle } from '../components/ui.tsx'
 import { api, ApiError, errorText, type ClubMember } from '../lib/api.ts'
-import { FORUM_LIMITS, type Board, type Comment, type ForumFeed, type ForumSearch, type Post } from '../lib/forum.ts'
+import { FORUM_LIMITS, normalizeTag, type Board, type Comment, type ForumFeed, type ForumSearch, type ForumTags, type Post } from '../lib/forum.ts'
 import { forumApi, type FeedFilter } from '../lib/forumApi.ts'
 import { memberLabel, postSummary, recentAuthors, searchProblem, searchSnippet } from '../lib/forumPosts.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
@@ -15,7 +15,7 @@ import { mobile, mobileQuery } from '../styles/tokens.ts'
 import { CommentSection } from './Comments.tsx'
 import { forumStrings as t } from './forumStrings.ts'
 import { ago, boardPath, isOfficer, postPath } from './forumText.ts'
-import { PostCard } from './PostCard.tsx'
+import { PostCard, TagLink, TagLinks, tagPath } from './PostCard.tsx'
 import { NewsList } from './NewsList.tsx'
 import { PostComposer } from './PostComposer.tsx'
 
@@ -231,6 +231,7 @@ function ForumFrame() {
   const officer = isOfficer(useAuth().user)
   const [front, setFront] = useState<ForumFeed>()
   const [news, setNews] = useState<Post[]>()
+  const [tags, setTags] = useState<ForumTags['tags']>([])
   const [round, setRound] = useState(0)
 
   useEffect(() => {
@@ -242,6 +243,11 @@ function ForumFrame() {
     forumApi.latest().then(
       (latest) => current && setNews(latest.news),
       () => current && setNews([]),
+    )
+    // The tags in use (the table's AC-13.7); none until the table has them
+    forumApi.tags().then(
+      (found) => current && setTags(found),
+      () => current && setTags([]),
     )
     return () => {
       current = false
@@ -306,6 +312,7 @@ function ForumFrame() {
       {!manage && (
         <Aside>
           <NewsBox news={news} />
+          <TagsBox tags={tags} />
           <ActivePeople posts={front?.posts} members={club.members} />
         </Aside>
       )}
@@ -319,6 +326,26 @@ function NewsBox({ news }: { news?: Post[] }) {
     <Box aria-labelledby="forum-news">
       <h2 id="forum-news">{t.news}</h2>
       <NewsList news={news} />
+    </Box>
+  )
+}
+
+/** 常用標籤 (the table's AC-13.7): the tags in use, most posts first, each a link to the posts with it */
+function TagsBox({ tags }: { tags: ForumTags['tags'] }) {
+  const current = normalizeTag(useSearchParams()[0].get('tag') ?? '')
+  if (!tags.length) return null
+  return (
+    <Box aria-labelledby="forum-tags">
+      <h2 id="forum-tags">{t.popularTags}</h2>
+      <TagLinks>
+        {tags.map(({ tag, count }) => (
+          <li key={tag}>
+            <TagLink to={tag === current ? '/forum' : tagPath(tag)} $active={tag === current} aria-label={t.tagLink(tag)}>
+              {tag} · {count}
+            </TagLink>
+          </li>
+        ))}
+      </TagLinks>
     </Box>
   )
 }
@@ -348,17 +375,33 @@ function ActivePeople({ posts, members }: { posts?: Post[]; members: readonly Cl
   )
 }
 
-/** The front page `/forum`: every board's posts newest first */
+/** The tag in `?tag=` (the table's AC-13.7), normalized as the Worker keeps tags */
+const useTag = () => normalizeTag(useSearchParams()[0].get('tag') ?? '')
+
+/** The tag a list is narrowed to, and the way back to the whole list */
+function TagFilter({ tag, clear }: { tag: string; clear: string }) {
+  return (
+    <div role="status">
+      <TagLink to={clear} $active aria-label={t.clearTag} title={t.clearTag}>
+        {t.tagFilter(tag)} ×
+      </TagLink>
+    </div>
+  )
+}
+
+/** The front page `/forum`: every board's posts newest first; `?tag=` only those with the tag */
 export function FeedPage() {
   usePageTitle(t.title)
   const { front } = useForum()
+  const tag = useTag()
   return (
     <Column>
       <Heading>
         <PageTitle>{t.title}</PageTitle>
         <Muted>{t.allBoardsIntro}</Muted>
       </Heading>
-      <Posts key="all" first={front} />
+      {tag && <TagFilter tag={tag} clear="/forum" />}
+      {tag ? <Posts key={`tag:${tag}`} tag={tag} empty={t.noTagged(tag)} /> : <Posts key="all" first={front} />}
     </Column>
   )
 }
@@ -368,6 +411,7 @@ export function BoardPage() {
   const { boardId = '' } = useParams()
   const { club } = useForum()
   const board = club.boards.find((b) => b.id === boardId)
+  const tag = useTag()
   usePageTitle(board?.name ?? t.title)
   if (!board)
     return (
@@ -382,7 +426,8 @@ export function BoardPage() {
         <PageTitle>{board.name}</PageTitle>
         {board.description && <Muted>{board.description}</Muted>}
       </Heading>
-      <Posts key={board.id} board={board} />
+      {tag && <TagFilter tag={tag} clear={boardPath(board.id)} />}
+      <Posts key={`${board.id}:${tag}`} board={board} tag={tag || undefined} empty={tag ? t.noTagged(tag) : undefined} />
     </Column>
   )
 }
@@ -552,9 +597,9 @@ function SearchResults({ query }: { query: string }) {
 
 /**
  * The compose box and a list of posts, a page at a time: one board's (its pinned posts first), or
- * every board's, starting from the frame's first page (`first`)
+ * every board's, starting from the frame's first page (`first`); `tag`: only the posts with it
  */
-function Posts({ board, first, filter, empty }: { board?: Board; first?: ForumFeed; filter?: FeedFilter; empty?: string }) {
+function Posts({ board, first, filter, tag, empty }: { board?: Board; first?: ForumFeed; filter?: FeedFilter; tag?: string; empty?: string }) {
   const { club, refresh } = useForum()
   const [pinned, setPinned] = useState<Post[]>([])
   const [posts, setPosts] = useState<Post[]>()
@@ -566,8 +611,8 @@ function Posts({ board, first, filter, empty }: { board?: Board; first?: ForumFe
     setBusy(true)
     setError('')
     const call: Promise<{ pinned: Post[]; posts: Post[]; page: number; pages: number }> = board
-      ? forumApi.boardPage(board.id, at)
-      : forumApi.feed(at, filter).then((r) => ({ ...r, pinned: [] }))
+      ? forumApi.boardPage(board.id, at, tag)
+      : forumApi.feed(at, { ...filter, ...(tag && { tag }) }).then((r) => ({ ...r, pinned: [] }))
     call.then(
       (r) => {
         if (at === 1) setPinned(r.pinned)
@@ -585,12 +630,12 @@ function Posts({ board, first, filter, empty }: { board?: Board; first?: ForumFe
 
   // A board loads its own first page (the list is keyed by the board); the front page takes the frame's
   // oxlint-disable-next-line react-hooks/exhaustive-deps -- once, when the list mounts
-  useEffect(() => void ((board || filter) && load(1)), [])
+  useEffect(() => void ((board || filter || tag) && load(1)), [])
   useEffect(() => {
-    if (board || filter || !first || page.at > 1) return
+    if (board || filter || tag || !first || page.at > 1) return
     setPosts(first.posts)
     setPage({ at: first.page, of: first.pages })
-  }, [board, filter, first, page.at])
+  }, [board, filter, tag, first, page.at])
 
   const change = (post: Post) => {
     const swap = (list: Post[]) => list.map((p) => (p.id === post.id ? post : p))
@@ -621,7 +666,7 @@ function Posts({ board, first, filter, empty }: { board?: Board; first?: ForumFe
 
   return (
     <>
-      {!filter && <PostComposer boards={club.boards} members={club.members} boardId={board?.id} onDone={added} />}
+      {!filter && !tag && <PostComposer boards={club.boards} members={club.members} boardId={board?.id} onDone={added} />}
       {error && <Failed text={error} retry={() => load(posts ? page.at + 1 : 1)} />}
       {posts ? (
         <Feed aria-label={board ? board.name : t.feedLabel}>

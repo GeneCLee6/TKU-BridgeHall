@@ -106,6 +106,36 @@ describe('signing in and registering', () => {
     expect(sent.find((s) => s.path === '/api/login')!.body).toEqual({ username: 'amy', password: 'secret1' })
   })
 
+  it('asks for the 兩步驟登入 code after the right password and sends it with the same name and password (table e11-t31)', async () => {
+    const answers = [
+      { status: 401, body: { error: '這個帳號開了兩步驟登入', code: 'twoFactorNeeded' } },
+      { status: 401, body: { error: '驗證碼不正確或已經用過，請輸入 App 上現在的驗證碼', code: 'twoFactorWrong' } },
+      { body: { user: { id: 'u1', username: 'amy', admin: true, permissions: [], twoFactor: { enabled: true, recoveryLeft: 10 } } } },
+    ]
+    routes['POST /api/login'] = () => answers.shift()!
+    renderAt('/login?next=/c/fixture-alpha')
+    await userEvent.type(await screen.findByLabelText(/^帳號/), 'amy')
+    await userEvent.type(screen.getByLabelText(/^密碼/), 'club-secret-1')
+    expect(screen.queryByLabelText(/^驗證碼/)).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: '登入' }))
+    const code = await screen.findByLabelText(/^驗證碼/)
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByText(/輸入驗證 App 上的 6 位數驗證碼/)).toBeInTheDocument()
+    await userEvent.type(code, '000000')
+    await userEvent.click(screen.getByRole('button', { name: '登入' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('驗證碼不正確')
+    await userEvent.clear(code)
+    await userEvent.type(code, '123456')
+    await userEvent.click(screen.getByRole('button', { name: '登入' }))
+    expect(await screen.findByRole('heading', { level: 1, name: '測試特約甲（虛構）' }, { timeout: 5000 })).toBeInTheDocument()
+    const logins = sent.filter((s) => s.path === '/api/login').map((s) => s.body)
+    expect(logins).toEqual([
+      { username: 'amy', password: 'club-secret-1' },
+      { username: 'amy', password: 'club-secret-1', code: '000000' },
+      { username: 'amy', password: 'club-secret-1', code: '123456' },
+    ])
+  })
+
   it('keeps theme and 字級 in 閱讀設定, not in the header (e9-t11)', async () => {
     renderAt('/login')
     await screen.findByLabelText(/^密碼/)
@@ -338,6 +368,18 @@ describe('the admin page', () => {
     expect(within(audit).getByRole('link', { name: 'fixture-alpha' })).toHaveAttribute('href', '/edit/fixture-alpha?rev=00000000000002-abc')
     expect(within(audit).getByText('第 3 版')).toBeInTheDocument()
     expect(within(audit).getByText('改分類')).toBeInTheDocument()
+  })
+
+  it('sends an admin without 兩步驟登入 to set it up on 淡江牌桌, and asks the server for nothing (table, 社長 2026-11-02)', async () => {
+    signedIn({ admin: true, permissions: [], twoFactor: { enabled: false, recoveryLeft: 0, required: true } })
+    renderAt('/admin')
+    // The member kept from the test before shows first, until /api/me answers
+    const alert = (await screen.findByText('管理員要先在淡江牌桌開啟兩步驟登入，才能使用管理與編輯功能。', {}, { timeout: 5000 })).closest('[role="alert"]') as HTMLElement
+    expect(within(alert).getByRole('link', { name: /到淡江牌桌的「我的帳號」設定/ })).toHaveAttribute(
+      'href',
+      'https://tku-bridge-table.genelee-pro.workers.dev/account#two-factor',
+    )
+    expect(sent.some((s) => s.path.startsWith('/api/admin/') || s.path === '/api/book/reviews')).toBe(false)
   })
 
   it('stays closed to members without the editing permission', async () => {

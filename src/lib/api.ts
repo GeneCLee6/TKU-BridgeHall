@@ -9,6 +9,7 @@ import type { ArticleMeta, ArticleSeries } from '../types/article.ts'
 import type { Convention, ConventionMeta, Section } from '../types/convention.ts'
 import type { Term } from '../types/glossary.ts'
 import type { Profile } from './account.ts'
+import { strings } from '../strings.ts'
 import { clubHeaders } from './club.ts'
 import type { SpecShows, SystemSpec } from './systemSpec.ts'
 
@@ -18,7 +19,7 @@ export type { ArticleSeries }
 export const TABLE_SITE = 'https://tku-bridge-table.genelee-pro.workers.dev'
 
 /** Limits the Worker checks too (TKU-BridgeTable shared/protocol.ts LIMITS) */
-export const LIMITS = { usernameMin: 2, usernameMax: 16, passwordMin: 6, noteMax: 60 }
+export const LIMITS = { usernameMin: 2, usernameMax: 16, passwordMin: 12, noteMax: 60 }
 
 /**
  * `bookEdit`: drafts and sending them for review; `bookReview` (e8-t01): publishing, sending drafts
@@ -53,6 +54,19 @@ export interface Me {
   avatar?: number
   /** Their own profile (e11-t01), the same on both sites; empty until they fill it in */
   profile?: Profile
+  /**
+   * 兩步驟登入 (TKU-BridgeTable e11-t31), set up on 淡江牌桌's 我的帳號: sent to admins and to anyone
+   * who has it on. `required`: an admin who has not turned it on yet, refused every admin action
+   * (`adminTwoFactorRequired`) until they do (社長 2026-11-02)
+   */
+  twoFactor?: AccountTwoFactor
+}
+
+/** `Me.twoFactor` (TKU-BridgeTable shared/protocol.ts AccountTwoFactor) */
+export interface AccountTwoFactor {
+  enabled: boolean
+  recoveryLeft: number
+  required?: boolean
 }
 
 export type RegisterResult = { user: Me } | { pending: true; username: string }
@@ -80,6 +94,8 @@ export interface AdminUser {
    * while a code an admin gave them still works (until `until`), null otherwise
    */
   passwordReset: { state: 'requested'; at: number } | { state: 'approved'; at: number; until: number } | null
+  /** Whether they turned 兩步驟登入 on (TKU-BridgeTable e11-t31) */
+  twoFactor?: boolean
 }
 
 export interface ClubSettings {
@@ -181,6 +197,8 @@ export type AuditAction =
   | 'forum:unpin'
   | 'forum:lock'
   | 'forum:unlock'
+  | 'forum:hide'
+  | 'forum:unhide'
   | 'forum:removePost'
   | 'forum:removeComment'
   | 'forum:dismiss'
@@ -805,10 +823,15 @@ export class ApiError extends Error {
   }
 }
 
-/** The text to show for anything a call threw */
+/**
+ * The text to show for anything a call threw. An admin without 兩步驟登入 is told to set it up on
+ * 淡江牌桌 (the server's text says 我的帳號, which here would mean this site's page)
+ */
 export const errorText = (error: unknown) =>
   error instanceof ApiError
-    ? error.message
+    ? error.code === 'adminTwoFactorRequired'
+      ? strings.auth.adminTwoFactorRequired
+      : error.message
     : '連不上伺服器，請確認網路後再試一次'
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -835,7 +858,12 @@ const post = <T>(path: string, body?: unknown) => send<T>('POST', path, body)
 
 export const api = {
   me: () => request<{ user: Me }>('/api/me'),
-  login: (username: string, password: string) => post<{ user: Me }>('/api/login', { username, password }),
+  /**
+   * `code` is 兩步驟登入's (TKU-BridgeTable e11-t31): sent only after the Worker answered 401
+   * `twoFactorNeeded` to the name and password alone; the same name and password go again with it
+   */
+  login: (username: string, password: string, code?: string) =>
+    post<{ user: Me }>('/api/login', code ? { username, password, code } : { username, password }),
   register: (username: string, password: string, inviteCode: string, note: string) =>
     post<RegisterResult>('/api/register', { username, password, inviteCode, note, site: 'book' }),
   logout: () => post<{ ok: true }>('/api/logout'),

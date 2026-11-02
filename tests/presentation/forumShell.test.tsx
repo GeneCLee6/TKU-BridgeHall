@@ -97,6 +97,32 @@ const open = (path: string) =>
     </MemoryRouter>,
   )
 
+describe('tags (the table’s AC-13.7)', () => {
+  it('lists the tags in use and narrows the feed and a board to one', async () => {
+    routes['GET /api/forum/tags'] = { tags: [{ tag: '首攻', count: 2 }, { tag: '2/1', count: 1 }] }
+    routes[`GET /api/forum/feed?page=1&tag=${encodeURIComponent('首攻')}`] = { posts: [DEAL], page: 1, pages: 1 }
+    open(`/forum?tag=${encodeURIComponent('首攻')}`)
+    const box = await screen.findByRole('region', { name: '常用標籤' })
+    expect(within(box).getByRole('link', { name: '看標籤「2/1」的貼文' })).toHaveAttribute('href', `/forum?tag=${encodeURIComponent('2/1')}`)
+    // The tag shown leads back to every post
+    expect(within(box).getByRole('link', { name: '看標籤「首攻」的貼文' })).toHaveAttribute('href', '/forum')
+    expect(await screen.findByRole('link', { name: '清除標籤篩選' })).toHaveAttribute('href', '/forum')
+    const feed = await screen.findByRole('region', { name: '貼文' })
+    expect(await within(feed).findByText('這副 4♠ 怎麼做？')).toBeInTheDocument()
+    expect(within(feed).queryByText('週末去打牌嗎')).toBeNull()
+    // No compose box on a list narrowed to a tag
+    expect(screen.queryByRole('button', { name: '想分享什麼牌？' })).toBeNull()
+  })
+
+  it('narrows a board to a tag', async () => {
+    routes[`GET /api/forum/boards/deals/posts?page=1&tag=${encodeURIComponent('首攻')}`] = boardPage('deals', [])
+    open(`/forum/deals?tag=${encodeURIComponent('首攻')}`)
+    expect(await screen.findByText('還沒有標籤「首攻」的貼文。')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '清除標籤篩選' })).toHaveAttribute('href', '/forum/deals')
+    expect(calls).toContain(`GET /api/forum/boards/deals/posts?page=1&tag=${encodeURIComponent('首攻')}`)
+  })
+})
+
 describe('the forum’s frame and board pages (e11-t15)', () => {
   it('shows every board’s posts on /forum, the boards, the news and who is active', async () => {
     open('/forum')
