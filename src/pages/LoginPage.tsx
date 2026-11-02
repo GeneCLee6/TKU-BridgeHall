@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
+import { GoogleButton, GoogleCodeStep } from '../components/GoogleSignIn.tsx'
 import { LogoMark } from '../components/Logo.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PasswordInput } from '../components/ui.tsx'
 import { api, ApiError, errorText, LIMITS } from '../lib/api.ts'
@@ -22,7 +23,9 @@ const safeNext = (next: string | null) => (next && next.startsWith('/') && !next
 export function LoginPage() {
   const { login, register } = useAuth()
   const navigate = useNavigate()
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
+  /** Back from Google for an account with 兩步驟登入 (TKU-BridgeTable e1-t31): only the code is asked */
+  const googleCode = params.get('google') === 'code'
   const [mode, setMode] = useState<Mode>('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -86,7 +89,9 @@ export function LoginPage() {
           <h1>{title}</h1>
           <Muted>{mode === 'reset' ? t.resetIntro : t.intro}</Muted>
         </Brand>
-        {done && mode === 'register' ? (
+        {googleCode ? (
+          <GoogleCodeStep onCancel={() => setParams(params.get('next') ? { next: params.get('next')! } : {}, { replace: true })} />
+        ) : done && mode === 'register' ? (
           <>
             <Notice role="status">{done}</Notice>
             <Button type="button" $variant="primary" onClick={() => switchTo('login')}>
@@ -164,6 +169,7 @@ export function LoginPage() {
             )}
           </Form>
         )}
+        {mode === 'login' && !googleCode && <GoogleButton next={safeNext(params.get('next'))} />}
         <Switch>
           {mode === 'reset' ? (
             <Button type="button" $variant="ghost" $small onClick={() => switchTo('login')}>

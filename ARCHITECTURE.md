@@ -332,6 +332,12 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 - **沒開的管理員**：`Me.twoFactor.required` 為 true、`Me.permissions` 只剩自己被勾的權限，牌桌對所有管理與編輯的 API 回 403 `adminTwoFactorRequired`。`Gate`（`pages/Frame.tsx`）遇到這樣的管理員，不說「沒有權限」，改顯示 `TwoFactorRequired`：到淡江牌桌「我的帳號」設定的連結（`TABLE_SITE/account#two-factor`，開新分頁）；`errorText` 把 `adminTwoFactorRequired` 換成指向淡江牌桌的文字（牌桌的原文說「我的帳號」，在橋館會被當成這裡的頁面）。
 - 型別：`Me.twoFactor`（`AccountTwoFactor`）、`AdminUser.twoFactor`，與牌桌對拍。`LIMITS.passwordMin` 是 12（牌桌 `e11-t29`）。
 
+**用 Google 登入**（牌桌 `e1-t31`，社長 2026-11-02；`components/GoogleSignIn.tsx`，字串在 `components/googleStrings.ts`）：Google 是綁在既有帳號上的另一種登入方式，**綁定、解除與用 Google 申請都只在淡江牌桌**（「我的帳號」與牌桌的申請表），橋館只有登入按鈕。
+- 牌桌 `GET /api/auth/google` 回 `{ enabled }`（兩個 secret 都設才開），開了才顯示「用 Google 登入」。按下去 `POST /api/auth/google/start { origin, returnTo }`（`origin` 是 `location.origin`，牌桌只接受正式的橋館網址 `BOOK_SITE` 與牌桌自己的，Vercel 預覽會被回 `googleOff`；`returnTo` 是 `?next=`），再 `location.assign` 到 Google。Google 把瀏覽器送回**這個網站**的 `/api/auth/google/callback`（Vercel 轉給牌桌），所以 session cookie 跟密碼登入一樣留在橋館的網域；牌桌用相對路徑轉回 `next`。
+- **兩步驟登入**：開了的帳號（管理員一定有）回到 `/login?google=code`，`LoginPage` 只顯示驗證碼（`GoogleCodeStep`），`POST /api/auth/google/code { code }`，對了 `refresh()` 後回到牌桌記住的 `returnTo`；過期（5 分鐘）回登入表單。
+- 錯誤用 `/login?google=error&code=<代碼>` 帶回來，`googleStrings.errors` 翻成中文；沒綁帳號的 Google 是 `googleNotLinked`（請到牌桌綁定或申請）。
+- 型別：牌桌的 `Me.google` 橋館沒用到（`Reads` 允許牌桌多欄位），所以 `lib/api.ts` 不用改。
+
 **全站要登入**（使用者決定，2026-10-29）：
 - `App.tsx` 的 `SignedIn` 是所有路由（`/login` 除外）的版面路由：未登入就 `<Navigate>` 到 `/login?next=<原網址>`（`/` 不帶 `next`），登入後 `LoginPage` 依 `next` 回去（只收站內路徑）。`ContentProvider`、`ProfileProvider`、`ExpansionProvider` 在 `SignedIn` 裡面，所以未登入時不會向牌桌抓任何內容；登出時它們卸載，狀態一起清掉。
 - `AuthContext` 把最後一次登入的 `Me` 存在 localStorage `tku-bridgebook:me`：開頁面時先用它畫（不必等 `/api/me`），`/api/me` 回 401 才算登出；連不到牌桌（離線、5xx）時沿用它，所以 PWA 離線照樣能讀。登出時清掉。頁面回到前景（`visibilitychange`）會重抓 `/api/me`，內容相同時保留同一個物件，不會重畫。
