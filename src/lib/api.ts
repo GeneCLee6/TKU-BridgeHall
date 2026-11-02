@@ -867,8 +867,22 @@ export const api = {
   register: (username: string, password: string, inviteCode: string, note: string) =>
     post<RegisterResult>('/api/register', { username, password, inviteCode, note, site: 'book' }),
   logout: () => post<{ ok: true }>('/api/logout'),
-  resetPassword: (username: string, inviteCode: string, password: string) =>
-    post<{ ok: true }>('/api/password/reset', { username, inviteCode, password }),
+  /**
+   * 忘記密碼 (TKU-BridgeTable e1-t36), step 1: asks the admins, with the club's invite code. Not for
+   * admin accounts (403 adminNoSelfReset); an admin confirms who asked and hands over a one-time code
+   */
+  requestPasswordReset: (username: string, inviteCode: string) =>
+    post<{ ok: true }>('/api/password/reset/request', { username, inviteCode }),
+  /** 忘記密碼, step 2: the one-time code an admin handed over sets the new password (signed out everywhere) */
+  resetPassword: (username: string, code: string, password: string) =>
+    post<{ ok: true }>('/api/password/reset', { username, code, password }),
+  /** Whether the club sends mail (TKU-BridgeTable e1-t29): only then does the login page offer the email reset */
+  emailStatus: () => request<{ enabled: boolean }>('/api/email'),
+  /**
+   * 忘記密碼 by email (e1-t30): `account` is the username or the verified address. The answer is the
+   * same whether or not the account has one; the link in the mail opens on 淡江牌桌
+   */
+  requestEmailReset: (account: string, lang = 'zh') => post<{ ok: true }>('/api/email/reset/request', { account, lang }),
   changePassword: (current: string, next: string) =>
     post<{ ok: true }>('/api/account/password', { current, next }),
   /** Keeps the member's system profile with the account; '' for the club's (e1-t16) */

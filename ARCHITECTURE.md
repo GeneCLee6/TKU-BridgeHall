@@ -325,12 +325,18 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 
 ### 4.2 帳號與權限（`AuthContext`、`lib/api.ts`）
 
-帳號在淡江牌桌（`TKU-BridgeTable` ARCHITECTURE.md §5.2）：註冊送出申請、管理員核准；忘記密碼用帳號＋邀請碼重設（管理員除外）；管理員要開兩步驟登入（見下）。`Me.permissions`：`bookEdit`（線上編輯：草稿、送審）、`bookReview`（審核發布，e8-t01）、`bookImport`（匯入檔案）、`forumModerate`（討論區幹部，e11-t09），管理員全部都有。審核者一定也是編輯者：牌桌存權限時自動補上 `bookEdit`，管理頁勾「審核發布」會一起勾「線上編輯」、取消「線上編輯」會一起取消「審核發布」。`api.ts` 的型別要和牌桌的 `shared/protocol.ts`、`worker/book.ts` 一致。
+帳號在淡江牌桌（`TKU-BridgeTable` ARCHITECTURE.md §5.2）：註冊送出申請、管理員核准；忘記密碼和牌桌的登入頁一樣（見下「忘記密碼」）；管理員要開兩步驟登入（見下）。`Me.permissions`：`bookEdit`（線上編輯：草稿、送審）、`bookReview`（審核發布，e8-t01）、`bookImport`（匯入檔案）、`forumModerate`（討論區幹部，e11-t09），管理員全部都有。審核者一定也是編輯者：牌桌存權限時自動補上 `bookEdit`，管理頁勾「審核發布」會一起勾「線上編輯」、取消「線上編輯」會一起取消「審核發布」。`api.ts` 的型別要和牌桌的 `shared/protocol.ts`、`worker/book.ts` 一致。
 
 **兩步驟登入**（牌桌 `e11-t31`；社長 2026-11-02 決定管理員一定要開）：設定只在淡江牌桌的「我的帳號」（TOTP＋備用碼，牌桌 ARCHITECTURE.md §5.2），橋館不做設定頁。
 - **登入**：`LoginPage` 先只送帳號密碼；牌桌在密碼對了、帳號又開了兩步驟登入時回 401 `twoFactorNeeded`，頁面不顯示錯誤，多一格「驗證碼」（`autocomplete="one-time-code"`，6 位數或備用碼），之後用**同一組帳號密碼加 `code`** 再送（`api.login(username, password, code)`；沒有 `code` 時請求和以前一樣）。錯了是 `twoFactorWrong`，照一般錯誤顯示。
 - **沒開的管理員**：`Me.twoFactor.required` 為 true、`Me.permissions` 只剩自己被勾的權限，牌桌對所有管理與編輯的 API 回 403 `adminTwoFactorRequired`。`Gate`（`pages/Frame.tsx`）遇到這樣的管理員，不說「沒有權限」，改顯示 `TwoFactorRequired`：到淡江牌桌「我的帳號」設定的連結（`TABLE_SITE/account#two-factor`，開新分頁）；`errorText` 把 `adminTwoFactorRequired` 換成指向淡江牌桌的文字（牌桌的原文說「我的帳號」，在橋館會被當成這裡的頁面）。
 - 型別：`Me.twoFactor`（`AccountTwoFactor`）、`AdminUser.twoFactor`，與牌桌對拍。`LIMITS.passwordMin` 是 12（牌桌 `e11-t29`）。
+
+**忘記密碼**（牌桌 `e1-t36`、`e1-t29` `e1-t30`；社長 2026-11-02 決定橋館跟上牌桌）：`LoginPage` 的模式 `reset`／`resetCode`／`emailReset`，流程、文字和牌桌的登入頁相同。舊的「帳號＋邀請碼＋新密碼」直接重設已經不存在（牌桌的 `POST /api/password/reset` 現在要管理員給的代碼）。
+- **請管理員核准**（`reset`）：帳號＋邀請碼 → `api.requestPasswordReset`（`POST /api/password/reset/request`）。管理員確認是本人後在**淡江牌桌的管理頁**核准，拿到一組一次性的重設代碼（3 天內有效），當面或私訊交給社員；橋館的管理頁只在帳號旁顯示「申請重設密碼：時間（到淡江牌桌管理頁核准）」（`AdminUser.passwordReset`），不做核准。管理員帳號不能用（403 `adminNoSelfReset`，牌桌 DEPLOY.md「管理員忘記密碼」：用 Email 重設或請另一位管理員重設）；還沒核准的註冊申請是 `resetApplication`。
+- **輸入重設代碼**（`resetCode`）：帳號＋代碼＋新密碼（兩次）→ `api.resetPassword(username, code, password)`（`POST /api/password/reset`）。新密碼至少 `LIMITS.passwordMin`（12）字，其他規則（不能含帳號、不能是常見密碼）由牌桌檢查。成功後回到登入、顯示「密碼已重設」；牌桌把這個帳號在所有裝置登出。代碼錯或過期是 `resetCodeWrong`，錯的次數算進登入失敗的限制。
+- **用 Email 重設**（`emailReset`）：開登入頁時抓 `api.emailStatus()`（`GET /api/email` 的 `{ enabled }`，牌桌設了 `RESEND_API_KEY` 與 `MAIL_FROM` 才是 true；抓不到當作 false）。開著時「忘記密碼？」先到 Email 重設，可以切到「請管理員核准」，反過來也有「用 Email 重設」。帳號或驗證過的 Email → `api.requestEmailReset(account)`（`POST /api/email/reset/request`，`lang: 'zh'`）；不論帳號有沒有驗證過的 Email，回答都一樣。信裡的連結開在**淡江牌桌**的 `/email/reset`（牌桌用請求的 origin 組連結，經 Vercel 轉過去的請求 origin 是牌桌），所以橋館不做那一頁。綁定 Email 也只在牌桌的「我的帳號」。
+- 錯誤照 `errorText` 顯示牌桌回的文字（`ApiError.message`）。測試：`tests/presentation/accounts.test.tsx` 的「忘記密碼」。
 
 **全站要登入**（使用者決定，2026-10-29）：
 - `App.tsx` 的 `SignedIn` 是所有路由（`/login` 除外）的版面路由：未登入就 `<Navigate>` 到 `/login?next=<原網址>`（`/` 不帶 `next`），登入後 `LoginPage` 依 `next` 回去（只收站內路徑）。`ContentProvider`、`ProfileProvider`、`ExpansionProvider` 在 `SignedIn` 裡面，所以未登入時不會向牌桌抓任何內容；登出時它們卸載，狀態一起清掉。

@@ -274,6 +274,7 @@ function AccountPanels() {
                   <td>
                     {u.username}
                     {u.passwordResetAt && <Small>{t.selfReset(formatDateTime(u.passwordResetAt))}</Small>}
+                    {u.passwordReset?.state === 'requested' && <Small>{t.resetRequestedAt(formatDateTime(u.passwordReset.at))}</Small>}
                   </td>
                   <NoWrap>{u.admin ? t.adminRole : t.memberRole}</NoWrap>
                   <td title={u.admin ? t.adminHasAll : undefined}>
