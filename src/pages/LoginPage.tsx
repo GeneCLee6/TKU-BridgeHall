@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
-import { GoogleButton, GoogleCodeStep } from '../components/GoogleSignIn.tsx'
+import { OAuthButtons, OAuthCodeStep } from '../components/OAuthSignIn.tsx'
 import { LogoMark } from '../components/Logo.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PasswordInput } from '../components/ui.tsx'
 import { api, ApiError, errorText, LIMITS } from '../lib/api.ts'
+import { providerBack } from '../lib/oauth.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { strings } from '../strings.ts'
 import { Frame } from './Frame.tsx'
@@ -31,8 +32,9 @@ export function LoginPage() {
   const { login, register } = useAuth()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
-  /** Back from Google for an account with 兩步驟登入 (TKU-BridgeTable e1-t31): only the code is asked */
-  const googleCode = params.get('google') === 'code'
+  /** Back from Google or LINE for an account with 兩步驟登入 (TKU-BridgeTable e1-t31, e1-t32): only the code is asked */
+  const back = providerBack(params)
+  const oauthCode = back && params.get(back) === 'code' ? back : undefined
   const [mode, setMode] = useState<Mode>('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -126,8 +128,8 @@ export function LoginPage() {
           <h1>{title}</h1>
           <Muted>{intro}</Muted>
         </Brand>
-        {googleCode ? (
-          <GoogleCodeStep onCancel={() => setParams(params.get('next') ? { next: params.get('next')! } : {}, { replace: true })} />
+        {oauthCode ? (
+          <OAuthCodeStep provider={oauthCode} onCancel={() => setParams(params.get('next') ? { next: params.get('next')! } : {}, { replace: true })} />
         ) : done && mode === 'register' ? (
           <>
             <Notice role="status">{done}</Notice>
@@ -221,7 +223,7 @@ export function LoginPage() {
             )}
           </Form>
         )}
-        {mode === 'login' && !googleCode && <GoogleButton next={safeNext(params.get('next'))} />}
+        {mode === 'login' && !oauthCode && <OAuthButtons next={safeNext(params.get('next'))} />}
         <Switch>
           {resetting || withCode || emailing ? (
             <ResetLinks>
