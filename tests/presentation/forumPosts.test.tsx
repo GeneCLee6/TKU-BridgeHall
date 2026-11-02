@@ -197,9 +197,11 @@ describe('the post page (e11-t14)', () => {
     fireEvent.change(title, { target: { value: '改過的標題' } })
     fireEvent.click(screen.getByRole('button', { name: '儲存' }))
     expect(await screen.findByRole('heading', { name: '改過的標題', level: 1 })).toBeInTheDocument()
-    const body = sent('PATCH', '/api/forum/posts/p1')[0].body as { title: string; blocks: unknown[] }
+    const body = sent('PATCH', '/api/forum/posts/p1')[0].body as { title: string; blocks: unknown[]; tags: string[] }
     expect(body.title).toBe('改過的標題')
     expect(body.blocks).toHaveLength(POST.blocks.length)
+    // An edit always sends the tags, so taking the last one off takes it off
+    expect(body.tags).toEqual([])
   })
 
   it('lets the author delete the post, but not someone else', async () => {
@@ -271,6 +273,38 @@ describe('the compose box (e11-t13)', () => {
       ],
     })
     expect(window.localStorage.getItem(DRAFT_KEY)).toBeNull()
+  })
+
+  it('adds tags typed, pasted or picked from the ones in use, and sends them (the table’s AC-13.7)', async () => {
+    routes['GET /api/forum/tags'] = { tags: [{ tag: '首攻', count: 3 }] }
+    open('/forum/new?board=systems')
+    const box = await screen.findByRole('textbox', { name: /^標籤（可不填）/ })
+    fireEvent.change(box, { target: { value: '#Squeeze' } })
+    fireEvent.keyDown(box, { key: 'Enter' })
+    fireEvent.change(box, { target: { value: '防禦，squeeze,' } })
+    fireEvent.click(await screen.findByRole('button', { name: '#首攻' }))
+    const chosen = screen.getByRole('list', { name: '標籤' })
+    expect(within(chosen).getAllByRole('button').map((b) => b.textContent)).toEqual(['#squeeze', '#防禦', '#首攻'])
+    fireEvent.click(screen.getByRole('button', { name: '拿掉標籤「防禦」' }))
+    fireEvent.change(screen.getByRole('combobox', { name: '文字' }), { target: { value: '新的內容' } })
+    fireEvent.click(screen.getByRole('button', { name: '發布' }))
+    await waitFor(() => expect(sent('POST', '/api/forum/boards/systems/posts')).toHaveLength(1))
+    expect(sent('POST', '/api/forum/boards/systems/posts')[0].body).toEqual({
+      blocks: [{ kind: 'paragraph', text: '新的內容' }],
+      tags: ['squeeze', '首攻'],
+    })
+  })
+
+  it('shows a post’s tags as links, and a hidden post as hidden', async () => {
+    routes['GET /api/forum/posts/p1'] = { post: { ...POST, tags: ['首攻', '2/1'], hidden: true }, comments: [] }
+    open('/forum/p/p1')
+    const tags = await screen.findByRole('list', { name: '標籤' })
+    expect(within(tags).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
+      `/forum?tag=${encodeURIComponent('首攻')}`,
+      `/forum?tag=${encodeURIComponent('2/1')}`,
+    ])
+    expect(screen.getByText('已隱藏')).toBeInTheDocument()
+    expect(screen.getByText('這則貼文已被幹部隱藏，只有作者與幹部看得到。')).toBeInTheDocument()
   })
 
   it('brings back the draft and refuses an empty post', async () => {

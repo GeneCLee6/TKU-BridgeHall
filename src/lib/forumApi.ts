@@ -9,6 +9,7 @@ import type {
   ForumFeed,
   ForumLatest,
   ForumSearch,
+  ForumTags,
   Post,
   PostInput,
   PostThread,
@@ -37,6 +38,8 @@ type Target = 'post' | 'comment'
 export interface FeedFilter {
   author?: string
   mentions?: string
+  /** Only posts with this tag (the table's AC-13.7) */
+  tag?: string
 }
 const targetPath = (target: Target, targetId: string) => `/api/forum/${target === 'post' ? 'posts' : 'comments'}/${id(targetId)}`
 
@@ -49,8 +52,9 @@ export const forumApi = {
   /** A built-in board, or one with posts, cannot be deleted (409) */
   deleteBoard: (boardId: string) => send<{ ok: true }>('DELETE', `/api/forum/boards/${id(boardId)}`),
 
-  /** Pinned posts on page 1, then newest first, FORUM_LIMITS.pageSize a page */
-  boardPage: (boardId: string, page = 1) => request<BoardPage>(`/api/forum/boards/${id(boardId)}/posts?page=${page}`),
+  /** Pinned posts on page 1, then newest first, FORUM_LIMITS.pageSize a page; `tag`: only posts with it, pinned ones too */
+  boardPage: (boardId: string, page = 1, tag?: string) =>
+    request<BoardPage>(`/api/forum/boards/${id(boardId)}/posts?page=${page}${tag ? `&tag=${id(tag)}` : ''}`),
   /**
    * Every board's posts newest first: the forum's front page (e11-t15); `author` only that member's
    * (我的貼文), `mentions` only those mentioning that member (我提到的, e11-t10)
@@ -59,11 +63,17 @@ export const forumApi = {
     const query = new URLSearchParams({ page: String(page) })
     if (filter.author) query.set('author', filter.author)
     if (filter.mentions) query.set('mentions', filter.mentions)
+    if (filter.tag) query.set('tag', filter.tag)
     return request<ForumFeed>(`/api/forum/feed?${query}`)
   },
-  /** Posts whose title or text blocks hold every word of `query`, newest first (e11-t10); 400 when empty or too long */
-  search: (query: string, page = 1) =>
-    request<ForumSearch>(`/api/forum/search?${new URLSearchParams({ q: query, page: String(page) })}`),
+  /**
+   * Posts whose title or text blocks hold every word of `query`, newest first (e11-t10); 400 when
+   * too long, or empty without a tag. `tag`: only posts with it, and then `query` may be empty (AC-13.7)
+   */
+  search: (query: string, page = 1, tag?: string) =>
+    request<ForumSearch>(`/api/forum/search?${new URLSearchParams({ q: query, page: String(page), ...(tag ? { tag } : {}) })}`),
+  /** The tags in use, most posts first (the table's AC-13.7): the compose box's suggestions and the tag list */
+  tags: () => request<ForumTags>('/api/forum/tags').then((r) => r.tags),
   /** The home page's 社團新聞 and 最新討論 */
   latest: () => request<ForumLatest>('/api/forum/latest'),
 

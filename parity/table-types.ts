@@ -283,4 +283,8 @@ export type Checks = [
   Check<Same<Forum.ReportInput, TableForum.ReportInput>>,
   Check<Same<Forum.ReportDecision, TableForum.ReportDecision>>,
   Check<Same<Forum.ReportItem, TableForum.ReportItem>>,
+  // Tags (the table's AC-13.7, 2026-11-02): the answer of GET /api/forum/tags and the shared helpers
+  Check<Same<Forum.ForumTags, TableForum.ForumTags>>,
+  Check<Same<typeof Forum.normalizeTag, typeof TableForum.normalizeTag>>,
+  Check<Same<typeof Forum.splitTags, typeof TableForum.splitTags>>,
 ]

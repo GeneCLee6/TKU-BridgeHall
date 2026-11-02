@@ -181,6 +181,8 @@ export type AuditAction =
   | 'forum:unpin'
   | 'forum:lock'
   | 'forum:unlock'
+  | 'forum:hide'
+  | 'forum:unhide'
   | 'forum:removePost'
   | 'forum:removeComment'
   | 'forum:dismiss'

@@ -147,6 +147,8 @@ export interface PostDraft {
   boardId: string
   title: string
   blocks: PostBlock[]
+  /** Its tags (the table's AC-13.7); drafts from before tags have none */
+  tags?: string[]
 }
 
 const isDraft = (value: unknown): value is PostDraft =>
@@ -154,7 +156,9 @@ const isDraft = (value: unknown): value is PostDraft =>
   value !== null &&
   typeof (value as PostDraft).boardId === 'string' &&
   typeof (value as PostDraft).title === 'string' &&
-  Array.isArray((value as PostDraft).blocks)
+  Array.isArray((value as PostDraft).blocks) &&
+  ((value as PostDraft).tags === undefined ||
+    (Array.isArray((value as PostDraft).tags) && (value as PostDraft).tags!.every((tag) => typeof tag === 'string')))
 
 /** The new post the member was writing, if any (storage may be blocked or hold anything) */
 export function loadDraft(): PostDraft | null {

@@ -8,7 +8,7 @@ import { HandInput } from '../components/board/HandInput.tsx'
 import { Button, ErrorText, Field, Input, Muted, Row, Select } from '../components/ui.tsx'
 import { errorText, type ClubMember } from '../lib/api.ts'
 import type { Seat } from '../lib/board.ts'
-import type { Board, Post, PostBlock } from '../lib/forum.ts'
+import { splitTags, type Board, type Post, type PostBlock } from '../lib/forum.ts'
 import { forumApi } from '../lib/forumApi.ts'
 import {
   clearDraft,
@@ -69,6 +69,8 @@ export function PostComposer({
   const [open, setOpen] = useState(startOpen || !!post || !!draft)
   const [boardId, setBoardId] = useState(post?.boardId ?? draft?.boardId ?? preferredBoard ?? '')
   const [title, setTitle] = useState(post?.title ?? draft?.title ?? '')
+  const [tags, setTags] = useState<string[]>(post?.tags ?? draft?.tags ?? [])
+  const [suggestions, setSuggestions] = useState<string[]>([])
   const [items, setItems] = useState<Item[]>(() => (post?.blocks ?? draft?.blocks ?? [newBlock('paragraph')]).map(item))
   const [uploaded, setUploaded] = useState<PostFiles>({})
   const [uploading, setUploading] = useState(false)
@@ -84,8 +86,20 @@ export function PostComposer({
   const blocks = items.map((i) => i.block)
 
   useEffect(() => {
-    if (!post && open) saveDraft({ boardId: board, title, blocks: items.map((i) => i.block) })
-  }, [post, open, board, title, items])
+    if (!post && open) saveDraft({ boardId: board, title, blocks: items.map((i) => i.block), ...(tags.length ? { tags } : {}) })
+  }, [post, open, board, title, items, tags])
+  // The tags in use, offered under the tag box (the table's AC-13.7); none when they cannot be read
+  useEffect(() => {
+    if (!open) return
+    let current = true
+    forumApi.tags().then(
+      (found) => current && setSuggestions(found.map((x) => x.tag)),
+      () => current && setSuggestions([]),
+    )
+    return () => {
+      current = false
+    }
+  }, [open])
 
   if (!user) return null
   const name = user.profile?.displayName || user.username
@@ -141,7 +155,8 @@ export function PostComposer({
     if (problems.length) return setError(problems.map((p) => problemText(p)).join('\n'))
     setBusy(true)
     try {
-      const input = { ...(title.trim() && { title: title.trim() }), blocks: tidyBlocks(blocks) }
+      // An edit always sends its tags ([] takes them off); a new post only when it has some
+      const input = { ...(title.trim() && { title: title.trim() }), blocks: tidyBlocks(blocks), ...((post || tags.length) && { tags }) }
       const saved = post ? await forumApi.updatePost(post.id, input) : await forumApi.createPost(board, input)
       if (!post) clearDraft()
       onDone(saved)
@@ -156,6 +171,7 @@ export function PostComposer({
     if (!window.confirm(t.discardConfirm)) return
     clearDraft()
     setTitle('')
+    setTags([])
     setItems([item(newBlock('paragraph'))])
     if (onCancel) onCancel()
     else if (!startOpen) setOpen(false)
@@ -176,6 +192,7 @@ export function PostComposer({
         {t.titleLabel}
         <Input value={title} maxLength={FORUM_LIMITS.titleMax} onChange={(e) => setTitle(e.target.value)} />
       </Field>
+      <TagsField tags={tags} onChange={setTags} suggestions={suggestions} />
 
       <Blocks>
         {items.map(({ id, block }, index) => (
@@ -400,6 +417,84 @@ function RecordEditor({ id, onChange }: { id: string; onChange: (id: string) => 
     </>
   )
 }
+
+/**
+ * A post's tags (the table's AC-13.7): typed and added with Enter, a comma or leaving the box,
+ * normalized as the Worker keeps them, at most FORUM_LIMITS.tagsMax of FORUM_LIMITS.tagMax
+ * characters; the tags in use are offered underneath
+ */
+function TagsField({ tags, onChange, suggestions }: { tags: string[]; onChange: (tags: string[]) => void; suggestions: readonly string[] }) {
+  const [text, setText] = useState('')
+  const hintId = useId()
+  const full = tags.length >= FORUM_LIMITS.tagsMax
+  const add = (value: string) => {
+    const next = [...tags]
+    for (const tag of splitTags(value))
+      if (!next.includes(tag) && next.length < FORUM_LIMITS.tagsMax && [...tag].length <= FORUM_LIMITS.tagMax) next.push(tag)
+    if (next.length !== tags.length) onChange(next)
+    setText('')
+  }
+  const offered = suggestions.filter((tag) => !tags.includes(tag)).slice(0, 12)
+  return (
+    <TagBox>
+      <Field>
+        {t.tagsLabel}
+        <Input
+          aria-describedby={hintId}
+          placeholder={full ? '' : t.tagsPlaceholder}
+          disabled={full}
+          maxLength={FORUM_LIMITS.tagMax}
+          value={text}
+          onChange={(e) => (/[,，、;；]/.test(e.target.value) ? add(e.target.value) : setText(e.target.value))}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter' || e.nativeEvent.isComposing) return
+            e.preventDefault()
+            add(text)
+          }}
+          onBlur={() => text.trim() && add(text)}
+        />
+        <small id={hintId}>{t.tagsHint(FORUM_LIMITS.tagsMax, FORUM_LIMITS.tagMax)}</small>
+      </Field>
+      {tags.length > 0 && (
+        <ul aria-label={t.tags}>
+          {tags.map((tag) => (
+            <li key={tag}>
+              <Button type="button" $small onClick={() => onChange(tags.filter((x) => x !== tag))} aria-label={t.removeTag(tag)} title={t.removeTag(tag)}>
+                #{tag}
+                <X size={14} aria-hidden />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!full && offered.length > 0 && (
+        <ul aria-label={t.suggestedTags}>
+          {offered.map((tag) => (
+            <li key={tag}>
+              <Button type="button" $small $variant="ghost" onClick={() => add(tag)}>
+                #{tag}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </TagBox>
+  )
+}
+
+const TagBox = styled.div`
+  display: grid;
+  gap: ${({ theme }) => theme.space(2)};
+
+  & > ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: ${({ theme }) => theme.space(1.5)};
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+`
 
 const Box = styled.section`
   display: grid;

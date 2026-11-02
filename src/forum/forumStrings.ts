@@ -227,6 +227,21 @@ export const forumStrings = {
   deleteBoardConfirm: (name: string) => `確定刪除板面「${name}」？`,
   builtIn: '內建',
 
+  // ── 隱藏與標籤（牌桌的 e13-t10、AC-13.7，2026-11-02）──
+  hidden: '已隱藏',
+  hiddenHint: '這則貼文已被幹部隱藏，只有作者與幹部看得到。',
+  tags: '標籤',
+  tagLink: (tag: string) => `看標籤「${tag}」的貼文`,
+  tagFilter: (tag: string) => `標籤：${tag}`,
+  clearTag: '清除標籤篩選',
+  popularTags: '常用標籤',
+  tagsLabel: '標籤（可不填）',
+  tagsHint: (max: number, chars: number) => `最多 ${max} 個、每個 ${chars} 字以內；按 Enter 或逗號加入。英文不分大小寫。`,
+  tagsPlaceholder: '例如：2/1、首攻、防禦',
+  removeTag: (tag: string) => `拿掉標籤「${tag}」`,
+  suggestedTags: '常用標籤',
+  noTagged: (tag: string) => `還沒有標籤「${tag}」的貼文。`,
+
   // 時間
   justNow: '剛剛',
   minutesAgo: (n: number) => `${n} 分鐘前`,
