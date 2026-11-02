@@ -158,21 +158,86 @@ describe('signing in and registering', () => {
     expect(sent.find((s) => s.path === '/api/register')!.body).toMatchObject({ note: '王小美', site: 'book' })
   })
 
-  it('resets a forgotten password once both entries match', async () => {
+})
+
+describe('忘記密碼, as on 淡江牌桌 (table e1-t36, e1-t30)', () => {
+  it('asks the admins with the invite code, then sets the password with the code they hand over', async () => {
+    routes['POST /api/password/reset/request'] = { body: { ok: true } }
     routes['POST /api/password/reset'] = { body: { ok: true } }
     renderAt('/login')
     await userEvent.click(await screen.findByRole('button', { name: '忘記密碼？' }))
+    expect(screen.getByRole('heading', { level: 1, name: '重設密碼' })).toBeInTheDocument()
+    // Asking types no password; without mail there is no email reset to offer
+    expect(screen.queryByLabelText(/^新?密碼/)).toBeNull()
+    expect(screen.queryByRole('button', { name: '用 Email 重設' })).toBeNull()
     await userEvent.type(screen.getByLabelText(/^帳號/), 'amy')
-    await userEvent.type(screen.getByLabelText(/^新密碼/), 'newpass1')
-    await userEvent.type(screen.getByLabelText(/^再輸入一次/), 'nope')
     await userEvent.type(screen.getByLabelText(/^邀請碼/), 'tku')
-    await userEvent.click(screen.getByRole('button', { name: '重設密碼' }))
+    await userEvent.click(screen.getByRole('button', { name: '送出申請' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('管理員核准後會當面或私訊給你一組重設代碼')
+    expect(sent.find((s) => s.path === '/api/password/reset/request')!.body).toEqual({ username: 'amy', inviteCode: 'tku' })
+
+    await userEvent.click(screen.getByRole('button', { name: '輸入重設代碼' }))
+    expect(screen.getByRole('heading', { level: 1, name: '輸入重設代碼' })).toBeInTheDocument()
+    expect(screen.queryByLabelText(/^邀請碼/)).toBeNull()
+    const password = screen.getByLabelText(/^新密碼/)
+    expect(password).toHaveAttribute('minLength', '12')
+    await userEvent.clear(screen.getByLabelText(/^帳號/))
+    await userEvent.type(screen.getByLabelText(/^帳號/), 'amy')
+    await userEvent.type(screen.getByLabelText(/^重設代碼/), 'ABCDE-FGH23')
+    await userEvent.type(password, 'new-club-pass-1')
+    await userEvent.type(screen.getByLabelText(/^再輸入一次/), 'nope')
+    await userEvent.click(screen.getByRole('button', { name: '輸入重設代碼' }))
     expect(screen.getByRole('alert')).toHaveTextContent('不一樣')
+    expect(sent.some((s) => s.path === '/api/password/reset')).toBe(false)
     await userEvent.clear(screen.getByLabelText(/^再輸入一次/))
-    await userEvent.type(screen.getByLabelText(/^再輸入一次/), 'newpass1')
-    await userEvent.click(screen.getByRole('button', { name: '重設密碼' }))
+    await userEvent.type(screen.getByLabelText(/^再輸入一次/), 'new-club-pass-1')
+    await userEvent.click(screen.getByRole('button', { name: '輸入重設代碼' }))
     expect(await screen.findByRole('status')).toHaveTextContent('密碼已重設')
-    expect(sent.find((s) => s.path === '/api/password/reset')!.body).toEqual({ username: 'amy', inviteCode: 'tku', password: 'newpass1' })
+    expect(screen.getByRole('heading', { level: 1, name: '登入' })).toBeInTheDocument()
+    expect(sent.find((s) => s.path === '/api/password/reset')!.body).toEqual({
+      username: 'amy',
+      code: 'ABCDE-FGH23',
+      password: 'new-club-pass-1',
+    })
+  })
+
+  it('shows the server’s reason, such as an admin account or a wrong code', async () => {
+    routes['POST /api/password/reset/request'] = {
+      status: 403,
+      body: { error: '管理員帳號不能用「忘記密碼」重設，請其他管理員在管理頁幫你重設', code: 'adminNoSelfReset' },
+    }
+    routes['POST /api/password/reset'] = { status: 403, body: { error: '重設代碼不正確或已過期，請向管理員確認', code: 'resetCodeWrong' } }
+    renderAt('/login')
+    await userEvent.click(await screen.findByRole('button', { name: '忘記密碼？' }))
+    await userEvent.type(screen.getByLabelText(/^帳號/), 'boss')
+    await userEvent.click(screen.getByRole('button', { name: '送出申請' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('管理員帳號不能用「忘記密碼」重設')
+    await userEvent.click(screen.getByRole('button', { name: '輸入重設代碼' }))
+    await userEvent.type(screen.getByLabelText(/^帳號/), 'amy')
+    await userEvent.type(screen.getByLabelText(/^重設代碼/), 'WRONG')
+    await userEvent.type(screen.getByLabelText(/^新密碼/), 'new-club-pass-1')
+    await userEvent.type(screen.getByLabelText(/^再輸入一次/), 'new-club-pass-1')
+    await userEvent.click(screen.getByRole('button', { name: '輸入重設代碼' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('重設代碼不正確或已過期')
+  })
+
+  it('mails a reset link when the club sends mail, and still offers the admins', async () => {
+    routes['GET /api/email'] = { body: { enabled: true } }
+    routes['POST /api/email/reset/request'] = { body: { ok: true } }
+    renderAt('/login')
+    await screen.findByLabelText(/^密碼/)
+    await waitFor(() => expect(sent.some((s) => s.path === '/api/email')).toBe(true))
+    await userEvent.click(screen.getByRole('button', { name: '忘記密碼？' }))
+    expect(await screen.findByRole('heading', { level: 1, name: '用 Email 重設密碼' })).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText(/^帳號或 Email/), 'amy@example.com')
+    await userEvent.click(screen.getByRole('button', { name: '寄重設連結' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('如果這個帳號有驗證過的 Email，重設連結已經寄出')
+    expect(sent.find((s) => s.path === '/api/email/reset/request')!.body).toEqual({ account: 'amy@example.com', lang: 'zh' })
+    await userEvent.click(screen.getByRole('button', { name: '請管理員核准' }))
+    expect(screen.getByRole('heading', { level: 1, name: '重設密碼' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/^邀請碼/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '用 Email 重設' }))
+    expect(screen.getByRole('heading', { level: 1, name: '用 Email 重設密碼' })).toBeInTheDocument()
   })
 })
 
@@ -299,7 +364,21 @@ describe('the admin page', () => {
     routes['GET /api/admin/applications'] = { body: { applications: [{ id: 'a1', username: 'ben', note: '資工二', site: 'book', createdAt: 1 }] } }
     routes['GET /api/admin/users'] = {
       body: {
-        users: [{ id: 'u2', username: 'cat', admin: false, createdAt: 1, lastLoginAt: null, boards: 0, online: false, permissions: [], passwordResetAt: null, passwordReset: null }],
+        users: [
+          {
+            id: 'u2',
+            username: 'cat',
+            admin: false,
+            createdAt: 1,
+            lastLoginAt: null,
+            boards: 0,
+            online: false,
+            permissions: [],
+            passwordResetAt: null,
+            // 忘記密碼 (table e1-t36): approved on 淡江牌桌's admin page
+            passwordReset: { state: 'requested', at: 1 },
+          },
+        ],
       },
     }
     routes['GET /api/admin/settings'] = { body: { settings: { maxUsers: 10, inviteCode: 'tku' } } }
@@ -318,6 +397,7 @@ describe('the admin page', () => {
     // Admins have the editors' panels too
     expect(screen.getByRole('heading', { name: '分類' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '社團設定' })).toBeInTheDocument()
+    expect(screen.getByText(/^申請重設密碼：.*到淡江牌桌管理頁核准/)).toBeInTheDocument()
   })
 
   it('grants reviewing with editing, and takes reviewing away with editing (e8-t01)', async () => {

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { GoogleButton, GoogleCodeStep } from '../components/GoogleSignIn.tsx'
@@ -9,7 +9,12 @@ import { useAuth } from '../state/AuthContext.tsx'
 import { strings } from '../strings.ts'
 import { Frame } from './Frame.tsx'
 
-type Mode = 'login' | 'register' | 'reset'
+/**
+ * 忘記密碼 as on 淡江牌桌: `reset` asks the admins with the invite code, `resetCode` sets the password
+ * with the one-time code an admin handed over (TKU-BridgeTable e1-t36); `emailReset` mails a link to
+ * the account's verified address (e1-t30), offered only when the club sends mail
+ */
+type Mode = 'login' | 'register' | 'reset' | 'resetCode' | 'emailReset'
 
 /** Only paths on this site, so ?next= cannot send anyone elsewhere */
 const safeNext = (next: string | null) => (next && next.startsWith('/') && !next.startsWith('//') ? next : '/')
@@ -18,7 +23,9 @@ const safeNext = (next: string | null) => (next && next.startsWith('/') && !next
  * 登入、註冊、忘記密碼, with TKU BridgeTable's accounts. A registration waits for an admin to
  * approve it (only the club's first account signs in at once). An account with 兩步驟登入
  * (TKU-BridgeTable e11-t31) gets 401 `twoFactorNeeded` after the right password: the form then
- * shows a 驗證碼 field and sends the same name and password again with the code.
+ * shows a 驗證碼 field and sends the same name and password again with the code. 忘記密碼 follows
+ * the table's login page: by email when `GET /api/email` says the club sends mail, otherwise (and
+ * for accounts without a verified address) a request to the admins, then the code they hand over.
  */
 export function LoginPage() {
   const { login, register } = useAuth()
@@ -31,6 +38,8 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [repeat, setRepeat] = useState('')
   const [inviteCode, setInviteCode] = useState('')
+  /** The one-time reset code an admin handed over (mode resetCode) */
+  const [resetCode, setResetCode] = useState('')
   const [note, setNote] = useState('')
   /** 兩步驟登入: the Worker asked for a code after the right password */
   const [needCode, setNeedCode] = useState(false)
@@ -38,8 +47,29 @@ export function LoginPage() {
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
   const [busy, setBusy] = useState(false)
+  /** Whether the club sends mail (TKU-BridgeTable e1-t29): only then is there 忘記密碼 by email */
+  const [emailOn, setEmailOn] = useState(false)
+  useEffect(() => {
+    let live = true
+    api
+      .emailStatus()
+      .then(({ enabled }) => live && setEmailOn(enabled === true))
+      .catch(() => undefined)
+    return () => {
+      live = false
+    }
+  }, [])
   const t = strings.auth
-  const title = mode === 'register' ? t.register : mode === 'reset' ? t.reset : t.login
+  const resetting = mode === 'reset'
+  const withCode = mode === 'resetCode'
+  const emailing = mode === 'emailReset'
+  const title =
+    mode === 'register' ? t.register : resetting ? t.reset : withCode ? t.enterResetCode : emailing ? t.emailResetTitle : t.login
+  const intro = resetting ? t.resetIntro : withCode ? t.resetCodeIntro : emailing ? t.emailResetIntro : t.intro
+  const submitLabel = resetting ? t.resetRequestButton : emailing ? t.sendLink : title
+  /** Asking for a reset types no password; signing in, registering and the reset code do */
+  const needsPassword = !resetting && !emailing
+  const newPassword = mode === 'register' || withCode
 
   const switchTo = (next: Mode) => {
     setMode(next)
@@ -54,16 +84,23 @@ export function LoginPage() {
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     setError('')
-    if (mode === 'reset' && password !== repeat) return setError(t.passwordMismatch)
+    if (withCode && password !== repeat) return setError(t.passwordMismatch)
     setBusy(true)
     try {
       if (mode === 'register') {
         const result = await register(username, password, inviteCode, note)
         if ('pending' in result) setDone(t.applicationSent(result.username))
         else navigate(safeNext(params.get('next')), { replace: true })
-      } else if (mode === 'reset') {
-        await api.resetPassword(username, inviteCode, password)
+      } else if (resetting) {
+        await api.requestPasswordReset(username, inviteCode)
+        setDone(t.resetRequested)
+      } else if (emailing) {
+        await api.requestEmailReset(username)
+        setDone(t.linkSent)
+      } else if (withCode) {
+        await api.resetPassword(username, resetCode, password)
         switchTo('login')
+        setResetCode('')
         setDone(t.resetDone)
       } else {
         await login(username, password, needCode ? code : undefined)
@@ -87,7 +124,7 @@ export function LoginPage() {
         <Brand>
           <LogoMark size={56} />
           <h1>{title}</h1>
-          <Muted>{mode === 'reset' ? t.resetIntro : t.intro}</Muted>
+          <Muted>{intro}</Muted>
         </Brand>
         {googleCode ? (
           <GoogleCodeStep onCancel={() => setParams(params.get('next') ? { next: params.get('next')! } : {}, { replace: true })} />
@@ -102,28 +139,43 @@ export function LoginPage() {
           <Form onSubmit={submit} aria-label={title}>
             {done && <Notice role="status">{done}</Notice>}
             <Field>
-              {t.username}
+              {emailing ? t.emailAccount : t.username}
               <Input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
+                autoComplete={emailing ? 'email' : 'username'}
                 required
-                minLength={LIMITS.usernameMin}
-                maxLength={LIMITS.usernameMax}
+                minLength={emailing ? undefined : LIMITS.usernameMin}
+                maxLength={emailing ? 254 : LIMITS.usernameMax}
               />
               {mode === 'register' && <small>{t.usernameHint(LIMITS.usernameMin, LIMITS.usernameMax)}</small>}
             </Field>
-            <Field>
-              {mode === 'reset' ? t.newPassword : t.password}
-              <PasswordInput
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                required
-                minLength={mode === 'login' ? undefined : LIMITS.passwordMin}
-              />
-              {mode !== 'login' && <small>{t.passwordHint(LIMITS.passwordMin)}</small>}
-            </Field>
+            {withCode && (
+              <Field>
+                {t.resetCode}
+                <Input
+                  value={resetCode}
+                  onChange={(e) => setResetCode(e.target.value)}
+                  autoComplete="one-time-code"
+                  required
+                  maxLength={20}
+                />
+                <small>{t.resetCodeHint}</small>
+              </Field>
+            )}
+            {needsPassword && (
+              <Field>
+                {withCode ? t.newPassword : t.password}
+                <PasswordInput
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={newPassword ? 'new-password' : 'current-password'}
+                  required
+                  minLength={newPassword ? LIMITS.passwordMin : undefined}
+                />
+                {newPassword && <small>{t.passwordHint(LIMITS.passwordMin)}</small>}
+              </Field>
+            )}
             {mode === 'login' && needCode && (
               <Field>
                 {t.code}
@@ -138,13 +190,13 @@ export function LoginPage() {
                 <small>{t.codeHint}</small>
               </Field>
             )}
-            {mode === 'reset' && (
+            {withCode && (
               <Field>
                 {t.confirmPassword}
                 <PasswordInput value={repeat} onChange={(e) => setRepeat(e.target.value)} autoComplete="new-password" required />
               </Field>
             )}
-            {mode !== 'login' && (
+            {(mode === 'register' || resetting) && (
               <Field>
                 {t.inviteCode}
                 <Input value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} autoComplete="off" />
@@ -160,10 +212,10 @@ export function LoginPage() {
             )}
             {error && <ErrorText role="alert">{error}</ErrorText>}
             <Button type="submit" $variant="primary" disabled={busy}>
-              {title}
+              {submitLabel}
             </Button>
             {mode === 'login' && (
-              <Button type="button" $variant="ghost" $small onClick={() => switchTo('reset')}>
+              <Button type="button" $variant="ghost" $small onClick={() => switchTo(emailOn ? 'emailReset' : 'reset')}>
                 {t.forgot}
               </Button>
             )}
@@ -171,10 +223,33 @@ export function LoginPage() {
         )}
         {mode === 'login' && !googleCode && <GoogleButton next={safeNext(params.get('next'))} />}
         <Switch>
-          {mode === 'reset' ? (
-            <Button type="button" $variant="ghost" $small onClick={() => switchTo('login')}>
-              {t.backToLogin}
-            </Button>
+          {resetting || withCode || emailing ? (
+            <ResetLinks>
+              {emailing && (
+                <Button type="button" $variant="ghost" $small onClick={() => switchTo('reset')}>
+                  {t.byAdmin}
+                </Button>
+              )}
+              {resetting && emailOn && (
+                <span>
+                  {t.haveEmail}
+                  <Button type="button" $variant="ghost" $small onClick={() => switchTo('emailReset')}>
+                    {t.resetByEmail}
+                  </Button>
+                </span>
+              )}
+              {resetting && (
+                <span>
+                  {t.haveResetCode}
+                  <Button type="button" $variant="ghost" $small onClick={() => switchTo('resetCode')}>
+                    {t.enterResetCode}
+                  </Button>
+                </span>
+              )}
+              <Button type="button" $variant="ghost" $small onClick={() => switchTo('login')}>
+                {t.backToLogin}
+              </Button>
+            </ResetLinks>
           ) : (
             <>
               {mode === 'register' ? t.haveAccount : t.noAccount}
@@ -222,6 +297,21 @@ const Switch = styled.p`
   gap: ${({ theme }) => theme.space(1)};
   margin: 0;
   font-size: 0.875rem;
+`
+
+/** 忘記密碼's other ways and 回到登入, wrapping on narrow screens */
+const ResetLinks = styled.span`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(3)};
+
+  & > span {
+    display: inline-flex;
+    align-items: center;
+    gap: ${({ theme }) => theme.space(1)};
+  }
 `
 
 const Footnote = styled(Muted)`
