@@ -325,7 +325,12 @@ interface Article { slug; title; authors: string[]; series; level?; summary; cov
 
 ### 4.2 帳號與權限（`AuthContext`、`lib/api.ts`）
 
-帳號在淡江牌桌（`TKU-BridgeTable` ARCHITECTURE.md §5.2）：註冊送出申請、管理員核准；忘記密碼用帳號＋邀請碼重設（管理員除外）。`Me.permissions`：`bookEdit`（線上編輯：草稿、送審）、`bookReview`（審核發布，e8-t01）、`bookImport`（匯入檔案）、`forumModerate`（討論區幹部，e11-t09），管理員全部都有。審核者一定也是編輯者：牌桌存權限時自動補上 `bookEdit`，管理頁勾「審核發布」會一起勾「線上編輯」、取消「線上編輯」會一起取消「審核發布」。`api.ts` 的型別要和牌桌的 `shared/protocol.ts`、`worker/book.ts` 一致。
+帳號在淡江牌桌（`TKU-BridgeTable` ARCHITECTURE.md §5.2）：註冊送出申請、管理員核准；忘記密碼用帳號＋邀請碼重設（管理員除外）；管理員要開兩步驟登入（見下）。`Me.permissions`：`bookEdit`（線上編輯：草稿、送審）、`bookReview`（審核發布，e8-t01）、`bookImport`（匯入檔案）、`forumModerate`（討論區幹部，e11-t09），管理員全部都有。審核者一定也是編輯者：牌桌存權限時自動補上 `bookEdit`，管理頁勾「審核發布」會一起勾「線上編輯」、取消「線上編輯」會一起取消「審核發布」。`api.ts` 的型別要和牌桌的 `shared/protocol.ts`、`worker/book.ts` 一致。
+
+**兩步驟登入**（牌桌 `e11-t31`；社長 2026-11-02 決定管理員一定要開）：設定只在淡江牌桌的「我的帳號」（TOTP＋備用碼，牌桌 ARCHITECTURE.md §5.2），橋館不做設定頁。
+- **登入**：`LoginPage` 先只送帳號密碼；牌桌在密碼對了、帳號又開了兩步驟登入時回 401 `twoFactorNeeded`，頁面不顯示錯誤，多一格「驗證碼」（`autocomplete="one-time-code"`，6 位數或備用碼），之後用**同一組帳號密碼加 `code`** 再送（`api.login(username, password, code)`；沒有 `code` 時請求和以前一樣）。錯了是 `twoFactorWrong`，照一般錯誤顯示。
+- **沒開的管理員**：`Me.twoFactor.required` 為 true、`Me.permissions` 只剩自己被勾的權限，牌桌對所有管理與編輯的 API 回 403 `adminTwoFactorRequired`。`Gate`（`pages/Frame.tsx`）遇到這樣的管理員，不說「沒有權限」，改顯示 `TwoFactorRequired`：到淡江牌桌「我的帳號」設定的連結（`TABLE_SITE/account#two-factor`，開新分頁）；`errorText` 把 `adminTwoFactorRequired` 換成指向淡江牌桌的文字（牌桌的原文說「我的帳號」，在橋館會被當成這裡的頁面）。
+- 型別：`Me.twoFactor`（`AccountTwoFactor`）、`AdminUser.twoFactor`，與牌桌對拍。`LIMITS.passwordMin` 是 12（牌桌 `e11-t29`）。
 
 **全站要登入**（使用者決定，2026-10-29）：
 - `App.tsx` 的 `SignedIn` 是所有路由（`/login` 除外）的版面路由：未登入就 `<Navigate>` 到 `/login?next=<原網址>`（`/` 不帶 `next`），登入後 `LoginPage` 依 `next` 回去（只收站內路徑）。`ContentProvider`、`ProfileProvider`、`ExpansionProvider` 在 `SignedIn` 裡面，所以未登入時不會向牌桌抓任何內容；登出時它們卸載，狀態一起清掉。

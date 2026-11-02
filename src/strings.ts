@@ -142,6 +142,11 @@ export const strings = {
     resetDone: '密碼已重設，請用新密碼登入。',
     signInFirst: '請先登入。',
     noPermission: '你的帳號還沒有這項權限，請管理員在「社團管理」開給你。',
+    // 兩步驟登入 (TKU-BridgeTable e11-t31): set up on 淡江牌桌
+    code: '驗證碼',
+    codeHint: '這個帳號開了兩步驟登入：輸入驗證 App 上的 6 位數驗證碼；手機不見的話，輸入一組備用碼。',
+    adminTwoFactorRequired: '管理員要先在淡江牌桌開啟兩步驟登入，才能使用管理與編輯功能。',
+    adminTwoFactorSetup: '到淡江牌桌的「我的帳號」設定',
   },
 
   // 我的帳號
