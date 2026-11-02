@@ -287,6 +287,29 @@ export interface ThemeOptions {
 }
 
 /**
+ * The sign-in buttons of other sites (TKU-BridgeTable e1-t31 Google, e1-t32 LINE; DESIGN.md §7),
+ * in the colours their brand guidelines ask for, the same in every style and nowhere else.
+ * Google's follows light or dark (`hover` and `pressed` are its text colour at 8% and 12%) and its
+ * "G" keeps its four colours; LINE's is LINE green with white text and logo in both
+ */
+const brandButtons = {
+  light: {
+    google: { bg: '#ffffff', border: '#747775', text: '#1f1f1f', hover: 'rgba(31, 31, 31, 0.08)', pressed: 'rgba(31, 31, 31, 0.12)' },
+  },
+  dark: {
+    google: { bg: '#131314', border: '#8e918f', text: '#e3e3e3', hover: 'rgba(227, 227, 227, 0.08)', pressed: 'rgba(227, 227, 227, 0.12)' },
+  },
+} as const
+const googleLogo = { blue: '#4285f4', green: '#34a853', yellow: '#fbbc05', red: '#ea4335' } as const
+const lineBrand = {
+  bg: '#06c755',
+  text: '#ffffff',
+  separator: 'rgba(0, 0, 0, 0.08)',
+  hover: 'rgba(0, 0, 0, 0.1)',
+  pressed: 'rgba(0, 0, 0, 0.3)',
+} as const
+
+/**
  * The theme for one set of choices. A style that has not been loaded yet (`loadStyle`) falls back
  * to 「一般」, and `style` then says 'general'. The options default to the style's own look.
  */
@@ -330,6 +353,8 @@ export function createTheme(
     prefersDark: tokens.prefersDark ?? false,
     layout,
     space: compact ? compactSpace : space,
+    /** Google's and LINE's sign-in buttons: their own brand colours */
+    brands: { google: brandButtons[mode].google, googleLogo, line: lineBrand },
   }
 }
 

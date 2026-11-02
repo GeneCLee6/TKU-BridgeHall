@@ -5,9 +5,9 @@ import { App } from '../../src/App.tsx'
 import { warmPages } from './warmPages.ts'
 
 /**
- * 用 Google 登入 (TKU-BridgeTable e1-t31) against a fake Worker: the button only when the table has
- * Google sign-in, the way to Google with this site's origin and ?next=, the code step for 兩步驟登入
- * and the errors the Worker sends the browser back with.
+ * 用 Google 登入 and 用 LINE 登入 (TKU-BridgeTable e1-t31, e1-t32) against a fake Worker: each
+ * branded button only when the table has that provider, the way there with this site's origin and
+ * ?next=, the code step for 兩步驟登入 and the errors the Worker sends the browser back with.
  */
 
 type Answer = { status?: number; body?: unknown } | (() => { status?: number; body?: unknown })
@@ -63,7 +63,7 @@ describe('用 Google 登入 (table e1-t31)', () => {
     renderAt('/login')
     await screen.findByLabelText(/^密碼/)
     await vi.waitFor(() => expect(sent.some((s) => s.path === '/api/auth/google')).toBe(true))
-    expect(screen.queryByRole('button', { name: '用 Google 登入' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '使用 Google 帳戶登入' })).toBeNull()
   })
 
   it('goes to Google with this site’s origin and the page to come back to', async () => {
@@ -71,7 +71,7 @@ describe('用 Google 登入 (table e1-t31)', () => {
     vi.stubGlobal('location', { ...window.location, origin: window.location.origin, assign })
     routes['POST /api/auth/google/start'] = { body: { url: 'https://accounts.google.com/o/oauth2/v2/auth?x=1' } }
     renderAt('/login?next=/c/fixture-alpha')
-    await userEvent.click(await screen.findByRole('button', { name: '用 Google 登入' }))
+    await userEvent.click(await screen.findByRole('button', { name: '使用 Google 帳戶登入' }))
     await vi.waitFor(() => expect(assign).toHaveBeenCalledWith('https://accounts.google.com/o/oauth2/v2/auth?x=1'))
     expect(sent.find((s) => s.path === '/api/auth/google/start')!.body).toEqual({
       origin: window.location.origin,
@@ -111,5 +111,57 @@ describe('用 Google 登入 (table e1-t31)', () => {
     renderAt('/login?google=code')
     await userEvent.click(await screen.findByRole('button', { name: '改用帳號密碼登入' }))
     expect(await screen.findByLabelText(/^密碼/)).toBeInTheDocument()
+  })
+})
+
+describe('用 LINE 登入 (table e1-t32)', () => {
+  beforeEach(() => {
+    routes['GET /api/auth/line'] = { body: { enabled: true } }
+  })
+
+  it('shows Google’s and LINE’s own buttons, each with its inline logo', async () => {
+    renderAt('/login')
+    const google = await screen.findByRole('button', { name: '使用 Google 帳戶登入' })
+    const line = await screen.findByRole('button', { name: '用 LINE 登入' })
+    for (const button of [google, line]) {
+      expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+      expect(button.querySelector('img')).toBeNull()
+    }
+    expect(google.querySelectorAll('svg path')).toHaveLength(4)
+  })
+
+  it('shows only LINE when the table has only LINE', async () => {
+    routes['GET /api/auth/google'] = { body: { enabled: false } }
+    renderAt('/login')
+    await screen.findByRole('button', { name: '用 LINE 登入' })
+    expect(screen.queryByRole('button', { name: '使用 Google 帳戶登入' })).toBeNull()
+  })
+
+  it('goes to LINE with this site’s origin and the page to come back to', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, origin: window.location.origin, assign })
+    routes['POST /api/auth/line/start'] = { body: { url: 'https://access.line.me/oauth2/v2.1/authorize?x=1' } }
+    renderAt('/login?next=/c/fixture-alpha')
+    await userEvent.click(await screen.findByRole('button', { name: '用 LINE 登入' }))
+    await vi.waitFor(() => expect(assign).toHaveBeenCalledWith('https://access.line.me/oauth2/v2.1/authorize?x=1'))
+    expect(sent.find((s) => s.path === '/api/auth/line/start')!.body).toEqual({ origin: window.location.origin, returnTo: '/c/fixture-alpha' })
+  })
+
+  it('says what went wrong at LINE', async () => {
+    renderAt('/login?line=error&code=lineNotLinked')
+    expect(await screen.findByRole('alert')).toHaveTextContent('這個 LINE 帳號還沒有綁定社團帳號')
+  })
+
+  it('asks only for the 兩步驟登入 code after LINE, at LINE’s own route', async () => {
+    routes['POST /api/auth/line/code'] = () => {
+      routes['GET /api/me'] = { body: { user: { id: 'u1', username: 'amy', admin: true, permissions: [] } } }
+      return { body: { user: { id: 'u1', username: 'amy', admin: true, permissions: [] }, returnTo: '/c/fixture-alpha' } }
+    }
+    renderAt('/login?line=code')
+    expect(await screen.findByText(/用 LINE 登入也要輸入/)).toBeInTheDocument()
+    await userEvent.type(await screen.findByLabelText(/^驗證碼/), '123456')
+    await userEvent.click(screen.getByRole('button', { name: '登入' }))
+    expect(await screen.findByRole('heading', { level: 1, name: '測試特約甲（虛構）' }, { timeout: 5000 })).toBeInTheDocument()
+    expect(sent.filter((s) => s.path === '/api/auth/line/code').map((s) => s.body)).toEqual([{ code: '123456' }])
   })
 })
