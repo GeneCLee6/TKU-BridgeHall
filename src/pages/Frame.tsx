@@ -1,12 +1,33 @@
 import { useEffect, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 import { AccountMenu } from '../components/AccountMenu.tsx'
 import { AppHeader } from '../components/AppHeader.tsx'
-import { ErrorText, Muted, PageMain } from '../components/ui.tsx'
-import type { Permission } from '../lib/api.ts'
+import { ExternalLink } from 'lucide-react'
+import { Button, ErrorText, Muted, Notice, PageMain } from '../components/ui.tsx'
+import { TABLE_SITE, type Permission } from '../lib/api.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { usePageTitle } from '../lib/usePageTitle.ts'
 import { strings } from '../strings.ts'
+
+/** An admin who has to turn 兩步驟登入 on, on 淡江牌桌's 我的帳號, before admin features work */
+export function TwoFactorRequired() {
+  return (
+    <Required as="div" role="alert">
+      <span>{strings.auth.adminTwoFactorRequired}</span>
+      <Button as="a" href={`${TABLE_SITE}/account#two-factor`} target="_blank" rel="noopener noreferrer" $variant="primary" $small>
+        <ExternalLink size={16} aria-hidden />
+        {strings.auth.adminTwoFactorSetup}
+      </Button>
+    </Required>
+  )
+}
+
+const Required = styled(Notice)`
+  display: grid;
+  gap: ${({ theme }) => theme.space(2)};
+  justify-items: start;
+`
 
 /** The account corner of the header, wired to the signed-in member */
 export function AccountCorner() {
@@ -54,6 +75,9 @@ export function Gate({ need, children }: { need: Permission | 'admin' | 'member'
       })
   }, [user, navigate])
   if (user === undefined || user === null) return <Muted role="status">{strings.loading}</Muted>
+  // An admin without 兩步驟登入 is refused every admin and editor action (TKU-BridgeTable, 社長
+  // 2026-11-02): say so, with the way to set it up on 淡江牌桌, instead of "no permission"
+  if (need !== 'member' && user.admin && user.twoFactor?.required) return <TwoFactorRequired />
   const allowed = need === 'member' || (need === 'admin' ? user.admin : can(need))
   if (!allowed)
     return <ErrorText role="alert">{need === 'admin' ? strings.admin.adminOnly : strings.auth.noPermission}</ErrorText>

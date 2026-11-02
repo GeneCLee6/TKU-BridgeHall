@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { LogoMark } from '../components/Logo.tsx'
 import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PasswordInput } from '../components/ui.tsx'
-import { api, errorText, LIMITS } from '../lib/api.ts'
+import { api, ApiError, errorText, LIMITS } from '../lib/api.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { strings } from '../strings.ts'
 import { Frame } from './Frame.tsx'
@@ -15,7 +15,9 @@ const safeNext = (next: string | null) => (next && next.startsWith('/') && !next
 
 /**
  * 登入、註冊、忘記密碼, with TKU BridgeTable's accounts. A registration waits for an admin to
- * approve it (only the club's first account signs in at once).
+ * approve it (only the club's first account signs in at once). An account with 兩步驟登入
+ * (TKU-BridgeTable e11-t31) gets 401 `twoFactorNeeded` after the right password: the form then
+ * shows a 驗證碼 field and sends the same name and password again with the code.
  */
 export function LoginPage() {
   const { login, register } = useAuth()
@@ -27,6 +29,9 @@ export function LoginPage() {
   const [repeat, setRepeat] = useState('')
   const [inviteCode, setInviteCode] = useState('')
   const [note, setNote] = useState('')
+  /** 兩步驟登入: the Worker asked for a code after the right password */
+  const [needCode, setNeedCode] = useState(false)
+  const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
   const [busy, setBusy] = useState(false)
@@ -39,6 +44,8 @@ export function LoginPage() {
     setDone('')
     setPassword('')
     setRepeat('')
+    setNeedCode(false)
+    setCode('')
   }
 
   const submit = async (event: FormEvent) => {
@@ -56,10 +63,15 @@ export function LoginPage() {
         switchTo('login')
         setDone(t.resetDone)
       } else {
-        await login(username, password)
+        await login(username, password, needCode ? code : undefined)
         navigate(safeNext(params.get('next')), { replace: true })
       }
     } catch (e) {
+      // The password was right and the account has 兩步驟登入: ask for the code, no error yet
+      if (mode === 'login' && e instanceof ApiError && e.code === 'twoFactorNeeded') {
+        setNeedCode(true)
+        return
+      }
       setError(errorText(e))
     } finally {
       setBusy(false)
@@ -107,6 +119,20 @@ export function LoginPage() {
               />
               {mode !== 'login' && <small>{t.passwordHint(LIMITS.passwordMin)}</small>}
             </Field>
+            {mode === 'login' && needCode && (
+              <Field>
+                {t.code}
+                <Input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  autoComplete="one-time-code"
+                  autoFocus
+                  maxLength={20}
+                  required
+                />
+                <small>{t.codeHint}</small>
+              </Field>
+            )}
             {mode === 'reset' && (
               <Field>
                 {t.confirmPassword}
