@@ -60,7 +60,8 @@ export const avatarUrl = (userId: string, version: number) => `/api/avatar/${enc
 
 // ── Files (TKU-BridgeTable shared/files.ts) ──────────────────────────────────────────────────
 
-export const FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
+/** GIF only for a post's picture, uploaded as it is (the table's e13-t13); this site's uploads redraw to the other three (`REDRAWN_TYPES`) */
+export const FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
 export type FileType = (typeof FILE_TYPES)[number]
 export type FilePurpose = 'post' | 'article'
 
@@ -76,7 +77,7 @@ export const FILE_LIMITS = {
 } as const
 
 /** A stored file's key, `<purpose>/<24 hex>[-thumb].<ext>` (the table's `FILE_KEY`) */
-export const FILE_KEY = /^(post|article)\/[0-9a-f]{24}(-thumb)?\.(jpg|png|webp)$/
+export const FILE_KEY = /^(post|article)\/[0-9a-f]{24}(-thumb)?\.(jpg|png|webp|gif)$/
 
 export interface FileTicketRequest {
   purpose: FilePurpose

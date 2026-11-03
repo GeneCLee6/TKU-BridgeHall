@@ -29,6 +29,9 @@ import type {
  * Errors come back as `ApiError` with the server's message: 404 `forumBoardGone`, `postGone`,
  * `commentGone`, `forumReportGone`; 403 `forumBoardOfficersOnly`, `notYours`; 409 `postLocked`,
  * `forumReportHandled`, `forumReportLimit`; 429 `slowDown`
+ * The table's e13-t12 (drafts and scheduled posts, which this site does not write yet): 409
+ * `postNotPublished`, 403 `forumScheduleOfficersOnly`, 400 `forumScheduleTime`, 409 `forumDraftLimit`;
+ * its e13-t13: 403 `forumImageNotYours` (a post may only add pictures its author uploaded)
  * (FORUM_LIMITS.perMinute posts and comments a minute); 400 `badContent` with the reason.
  */
 

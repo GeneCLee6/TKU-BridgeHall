@@ -16,7 +16,12 @@ export function fitWithin(size: Size, max: number): Size {
   return { width: Math.max(1, Math.round(size.width * scale)), height: Math.max(1, Math.round(size.height * scale)) }
 }
 
-export const isUploadType = (type: string): type is FileType => (FILE_TYPES as readonly string[]).includes(type)
+/**
+ * What this site's composer and article editor take: the table's types but GIF (the table's e13-t13
+ * takes GIF for posts as it is; here every picture is redrawn, which would stop a GIF moving)
+ */
+export const REDRAWN_TYPES = FILE_TYPES.filter((type) => type !== 'image/gif')
+export const isUploadType = (type: string): type is FileType => (REDRAWN_TYPES as readonly string[]).includes(type)
 
 /** The picture redrawn within `max` pixels and `maxBytes`; null when nothing fits */
 async function shrink(image: ImageBitmap, max: number, maxBytes: number): Promise<Blob | null> {

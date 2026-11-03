@@ -20,8 +20,7 @@ import {
   textLength,
   tidyBlocks,
 } from '../lib/forumPosts.ts'
-import { FILE_TYPES } from '../lib/account.ts'
-import { filesOff, isUploadType, uploadImage } from '../lib/imageUpload.ts'
+import { filesOff, isUploadType, REDRAWN_TYPES, uploadImage } from '../lib/imageUpload.ts'
 import { FORUM_LIMITS } from '../lib/forum.ts'
 import { useAuth } from '../state/AuthContext.tsx'
 import { forumStrings as t } from './forumStrings.ts'
@@ -232,7 +231,7 @@ export function PostComposer({
         <input
           ref={fileInput}
           type="file"
-          accept={FILE_TYPES.join(',')}
+          accept={REDRAWN_TYPES.join(',')}
           hidden
           onChange={(e) => {
             const file = e.target.files?.[0]
