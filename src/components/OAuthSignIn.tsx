@@ -4,7 +4,7 @@ import styled, { css } from 'styled-components'
 import { ApiError, errorText, request, send, type Me } from '../lib/api.ts'
 import { PROVIDERS, providerBack, type Provider } from '../lib/oauth.ts'
 import { useAuth } from '../state/AuthContext.tsx'
-import { Button, ErrorText, Field, Input, Muted } from './ui.tsx'
+import { Button, CredentialInput, ErrorText, Field, Muted } from './ui.tsx'
 import { oauthStrings as t } from './oauthStrings.ts'
 
 /**
@@ -112,7 +112,7 @@ export function OAuthCodeStep({ provider, onCancel }: { provider: Provider; onCa
       <Muted>{t[provider].codeIntro}</Muted>
       <Field>
         {t.code}
-        <Input value={code} onChange={(e) => setCode(e.target.value)} autoComplete="one-time-code" autoFocus maxLength={20} required />
+        <CredentialInput value={code} onChange={(e) => setCode(e.target.value)} autoComplete="one-time-code" autoFocus maxLength={20} required />
       </Field>
       {error && <ErrorText role="alert">{error}</ErrorText>}
       <Button type="submit" $variant="primary" disabled={busy}>

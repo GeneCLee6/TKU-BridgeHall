@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from '../../src/App.tsx'
@@ -104,6 +104,30 @@ describe('signing in and registering', () => {
     await userEvent.click(screen.getByRole('button', { name: '登入' }))
     expect(await screen.findByRole('heading', { level: 1, name: '測試特約甲（虛構）' }, { timeout: 5000 })).toBeInTheDocument()
     expect(sent.find((s) => s.path === '/api/login')!.body).toEqual({ username: 'amy', password: 'secret1' })
+  })
+
+  it('keeps the name and password half-width when a full-width input method types them (社長 2026-11-03)', async () => {
+    routes['POST /api/login'] = { body: { user: { id: 'u1', username: 'amy', admin: false, permissions: [] } } }
+    renderAt('/login')
+    const password = await screen.findByLabelText(/^密碼/)
+    const name = screen.getByLabelText(/^帳號/)
+    await userEvent.type(name, 'ａｍｙ')
+    await userEvent.type(password, 'ＡＢＣ１２３ｘｙｚ')
+    expect(name).toHaveValue('amy')
+    expect(password).toHaveValue('ABC123xyz')
+    for (const field of [name, password]) {
+      expect(field).toHaveAttribute('lang', 'en')
+      expect(field).toHaveAttribute('autocapitalize', 'off')
+      expect(field).toHaveAttribute('spellcheck', 'false')
+    }
+    // An input method's composition is left alone until it ends
+    fireEvent.compositionStart(name)
+    fireEvent.change(name, { target: { value: 'ａｍｙ' } })
+    expect(name).toHaveValue('ａｍｙ')
+    fireEvent.compositionEnd(name)
+    expect(name).toHaveValue('amy')
+    await userEvent.click(screen.getByRole('button', { name: '登入' }))
+    await waitFor(() => expect(sent.find((s) => s.path === '/api/login')?.body).toEqual({ username: 'amy', password: 'ABC123xyz' }))
   })
 
   it('asks for the 兩步驟登入 code after the right password and sends it with the same name and password (table e11-t31)', async () => {

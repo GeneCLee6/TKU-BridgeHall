@@ -10,7 +10,7 @@ import { TeamsPanel } from '../components/admin/TeamsPanel.tsx'
 import { AnalyticsPanel, ErrorsPanel } from '../components/admin/TelemetryPanels.tsx'
 import { DataTable, TableScroll } from '../components/DataTable.tsx'
 import { WithSectionNav } from '../components/SectionNav.tsx'
-import { Button, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
+import { Button, CredentialInput, ErrorText, Field, Input, Muted, Notice, PageTitle, Panel, PanelTitle, Row } from '../components/ui.tsx'
 import {
   api,
   errorText,
@@ -371,7 +371,7 @@ const NoWrap = styled.td`
 `
 
 /** As tall as the small buttons beside it */
-const NarrowInput = styled(Input)`
+const NarrowInput = styled(CredentialInput)`
   width: 10rem;
   min-height: 2rem;
   padding-top: 0;

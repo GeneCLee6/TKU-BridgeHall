@@ -204,13 +204,23 @@ export type AuditAction =
   | 'forum:dismiss'
   | 'forum:board'
   | 'forum:boardDelete'
+  /**
+   * The tournament director's tools on the table (TKU-BridgeTable e9-t17; `target` is
+   * `<kind>:<eventId>` or `board:<id>`, `note` the reason): a board's score adjusted, a penalty
+   * given or taken back, the start delayed, a table re-opened
+   */
+  | 'referee:score'
+  | 'referee:penalty'
+  | 'referee:withdraw'
+  | 'referee:delay'
+  | 'referee:restart'
 
 export interface AuditEntry {
   id: string
   at: number
   by: string
   action: AuditAction
-  /** A convention's or an article's slug, a profile's id, `<profile>/<template>` for a card, 'categories' or 'series' */
+  /** A convention's or an article's slug, a profile's id, `<profile>/<template>` for a card, 'categories' or 'series', a forum post's or board's id, a club event (`referee:*`) */
   target: string
   version?: number
   /** The saved version's id (BookRevision.id), for publishing, hiding and resets */

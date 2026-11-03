@@ -100,6 +100,8 @@ function targetLink(entry: AuditEntry) {
   if (entry.action === 'forum:removePost' || entry.action === 'forum:boardDelete') return null
   if (entry.action === 'forum:board') return `/forum/${encodeURIComponent(entry.target)}`
   if (entry.action.startsWith('forum:')) return `/forum/p/${encodeURIComponent(entry.target)}`
+  // The tournament director's tools (the table's e9-t17): the event or board is on the table, not here
+  if (entry.action.startsWith('referee:')) return null
   return entry.revisionId ? `/edit/${entry.target}?rev=${encodeURIComponent(entry.revisionId)}` : `/edit/${entry.target}`
 }
 
