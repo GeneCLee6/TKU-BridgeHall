@@ -127,8 +127,9 @@ export function OAuthCodeStep({ provider, onCancel }: { provider: Provider; onCa
 
 /**
  * A provider's own button, as its brand guidelines ask: Google's white (dark in dark mode) with a
- * gray edge and the four-colour "G"; LINE's green with the white LINE logo behind a thin line. The
- * logos are inline SVG (no images from other sites); the colours are `theme.brands`
+ * gray edge and the four-colour "G"; LINE's green with the white LINE logo. Both centre the logo and
+ * the words together (10 apart) with the same height and radius, so the two look like a matched pair.
+ * The logos are inline SVG (no images from other sites); the colours are `theme.brands`
  */
 function SignInButton({ provider, children, ...rest }: { provider: Provider; children: ReactNode; disabled?: boolean; onClick: () => void }) {
   const Shell = provider === 'google' ? GoogleShell : LineShell
@@ -251,30 +252,17 @@ const GoogleShell = styled.button`
   }
 `
 
-/** LINE: LINE green, the logo at the left behind a thin line, the words centred in the rest */
+/** LINE: LINE green, laid out like Google (logo 10 left of the words, the pair centred) so the two match */
 const LineShell = styled.button`
   ${shell}
-  padding: 0;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 12px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 4px;
   background: ${({ theme }) => theme.brands.line.bg};
   color: ${({ theme }) => theme.brands.line.text};
   font-weight: 700;
-
-  ${Logo} {
-    box-sizing: content-box;
-    align-self: stretch;
-    width: 22px;
-    height: auto;
-    padding: 0 10px;
-    border-right: 1px solid ${({ theme }) => theme.brands.line.separator};
-  }
-
-  ${Label} {
-    flex: 1;
-    padding: 0 12px;
-    text-align: center;
-  }
 
   &:hover:not(:disabled) {
     background-image: linear-gradient(${({ theme }) => theme.brands.line.hover}, ${({ theme }) => theme.brands.line.hover});
