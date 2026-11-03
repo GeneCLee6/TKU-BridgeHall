@@ -107,6 +107,7 @@ export const review = {
     'referee:withdraw': '裁判：撤銷處罰',
     'referee:delay': '裁判：延後開賽',
     'referee:restart': '裁判：重開一桌',
+    'points:recredit': '裁判調整後重算積分',
   } satisfies Record<AuditAction, string>,
   categories: '分類',
   series: '叢書系列',

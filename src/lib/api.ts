@@ -214,6 +214,8 @@ export type AuditAction =
   | 'referee:withdraw'
   | 'referee:delay'
   | 'referee:restart'
+  /** A finished event's club points worked out again after a director's change (TKU-BridgeTable e9-t17 follow-up; `target` is `<kind>:<eventId>`) */
+  | 'points:recredit'
 
 export interface AuditEntry {
   id: string
