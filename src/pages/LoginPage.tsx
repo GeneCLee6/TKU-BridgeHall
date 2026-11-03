@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { OAuthButtons, OAuthCodeStep } from '../components/OAuthSignIn.tsx'
 import { LogoMark } from '../components/Logo.tsx'
-import { Button, ErrorText, Field, Input, Muted, Notice, Panel, PasswordInput } from '../components/ui.tsx'
+import { Button, CredentialInput, ErrorText, Field, Input, Muted, Notice, Panel, PasswordInput } from '../components/ui.tsx'
 import { api, ApiError, errorText, LIMITS } from '../lib/api.ts'
 import { providerBack } from '../lib/oauth.ts'
 import { useAuth } from '../state/AuthContext.tsx'
@@ -142,9 +142,10 @@ export function LoginPage() {
             {done && <Notice role="status">{done}</Notice>}
             <Field>
               {emailing ? t.emailAccount : t.username}
-              <Input
+              <CredentialInput
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                inputMode={emailing ? 'email' : 'text'}
                 autoComplete={emailing ? 'email' : 'username'}
                 required
                 minLength={emailing ? undefined : LIMITS.usernameMin}
@@ -155,7 +156,7 @@ export function LoginPage() {
             {withCode && (
               <Field>
                 {t.resetCode}
-                <Input
+                <CredentialInput
                   value={resetCode}
                   onChange={(e) => setResetCode(e.target.value)}
                   autoComplete="one-time-code"
@@ -181,7 +182,7 @@ export function LoginPage() {
             {mode === 'login' && needCode && (
               <Field>
                 {t.code}
-                <Input
+                <CredentialInput
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   autoComplete="one-time-code"
@@ -201,7 +202,7 @@ export function LoginPage() {
             {(mode === 'register' || resetting) && (
               <Field>
                 {t.inviteCode}
-                <Input value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} autoComplete="off" />
+                <CredentialInput value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} autoComplete="off" />
                 <small>{t.inviteHint}</small>
               </Field>
             )}

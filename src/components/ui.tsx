@@ -2,6 +2,7 @@ import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useState, type InputHTMLAttributes } from 'react'
 import { Link, type LinkProps } from 'react-router-dom'
 import styled, { css } from 'styled-components'
+import { useHalfWidth } from '../lib/useHalfWidth.ts'
 import { strings } from '../strings.ts'
 import { mobile } from '../styles/tokens.ts'
 
@@ -210,13 +211,30 @@ export const Row = styled.div`
   gap: ${({ theme }) => theme.space(2)};
 `
 
-/** A password field with a button that shows or hides what was typed */
-export function PasswordInput(props: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+/**
+ * A text field for a sign-in name, invite code, one-time code or email address: always half-width,
+ * so a full-width input method's ＡＢＣ１２３ lands as ABC123 (`useHalfWidth`). Pass
+ * `inputMode="email"` or `"numeric"` where that fits; the default is text
+ */
+export function CredentialInput({
+  onChange,
+  onCompositionStart,
+  onCompositionEnd,
+  inputMode = 'text',
+  ...props
+}: InputHTMLAttributes<HTMLInputElement>) {
+  const halfWidth = useHalfWidth({ onChange, onCompositionStart, onCompositionEnd })
+  return <Input {...props} {...halfWidth} inputMode={inputMode} />
+}
+
+/** A password field with a button that shows or hides what was typed; always half-width (`useHalfWidth`) */
+export function PasswordInput({ onChange, onCompositionStart, onCompositionEnd, ...props }: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
   const [shown, setShown] = useState(false)
+  const halfWidth = useHalfWidth({ onChange, onCompositionStart, onCompositionEnd })
   const label = shown ? strings.auth.hidePassword : strings.auth.showPassword
   return (
     <PasswordWrap>
-      <Input {...props} type={shown ? 'text' : 'password'} />
+      <Input {...props} {...halfWidth} type={shown ? 'text' : 'password'} />
       <EyeButton type="button" onClick={() => setShown((s) => !s)} aria-label={label} aria-pressed={shown} title={label}>
         {shown ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
       </EyeButton>
@@ -230,6 +248,8 @@ const PasswordWrap = styled.span`
 
   & > input {
     padding-right: 44px;
+    /* Old Firefox and IE only: the input method off. Everyone else gets useHalfWidth */
+    ime-mode: disabled;
   }
 `
 
