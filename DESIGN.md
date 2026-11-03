@@ -140,7 +140,7 @@ e9-t14 移除了舊名：`lantern` → `accent`、`vermilion` → `seal`、`shad
 | MobileToolbar | `components/MobileToolbar.tsx` | 手機（< 900px）底部工具列，lazy：目錄、本頁（特約頁）或我的、搜尋、閱讀設定，都有圖示。「討論」等 G6。 |
 | DisplaySettings、SettingsPage | `components/DisplaySettings.tsx`、`pages/SettingsPage.tsx` | 個人設定（§2.3），也出現在「我的帳號 › 顯示」。 |
 | PrintSheet | `components/PrintSheet.tsx` | 列印用的封面、目錄、頁眉（§7），lazy。 |
-| 登入按鈕（Google、LINE） | `components/OAuthSignIn.tsx` | 登入頁「或」下面，牌桌開了哪個就顯示哪個，滿寬、高 40、一個一列。照兩家的品牌規範，跟淡江牌桌一樣（牌桌 DESIGN.md §7.11），**每種風格都不變**：Google 白底（深色 `#131314`）、1px 灰框（`#747775`／深色 `#8e918f`）、圓角 4、四色「G」20px＋間距 10、字 14 / 500「使用 Google 帳戶登入」，滑過疊字色 8%、按下 12%；LINE 是 LINE 綠 `#06c755`、白色 LINE logo 在左、8% 黑分隔線、白字 14 / 700「用 LINE 登入」置中，滑過疊黑 10%、按下 30%。logo 是行內 SVG（`aria-hidden`），顏色只在 `theme.brands`（`styles/tokens.ts`）。 |
+| 登入按鈕（Google、LINE） | `components/OAuthSignIn.tsx` | 登入頁「或」下面，牌桌開了哪個就顯示哪個，滿寬、高 40、一個一列。照兩家的品牌規範，跟淡江牌桌一樣（牌桌 DESIGN.md §7.11），**每種風格都不變**：Google 白底（深色 `#131314`）、1px 灰框（`#747775`／深色 `#8e918f`）、圓角 4、四色「G」20px＋間距 10、字 14 / 500「使用 Google 帳戶登入」，滑過疊字色 8%、按下 12%；LINE 是 LINE 綠 `#06c755`、白色 LINE logo 20px＋間距 10、白字 14 / 700「用 LINE 登入」，排法跟 Google 一樣整組置中、沒有分隔線，高 40、左右 12、圓角 4 也相同（社長 2026-11-03：兩顆疊在一起要像一對，像蝦皮、KKday、104 那樣），滑過疊黑 10%、按下 30%。logo 是行內 SVG（`aria-hidden`），顏色只在 `theme.brands`（`styles/tokens.ts`）。 |
 | AccountMenu | `components/AccountMenu.tsx` | 未登入是「登入」按鈕；登入後名字＋選單（依權限），待審核申請以 `seal` 數字標示。 |
 | 表單元件 | `components/ui.tsx` | Button（一般／主要／危險／ghost；連結做成按鈕用 `as={Link}`，前面放 16px lucide 圖示）、Input、TextArea、Select、Field、Panel、PasswordInput、ErrorText、Notice。全部讀風格 token：輸入框 `surface` 底、聚焦框 `structure`、危險 `seal`；面板用風格的 `borders`、`shape`、`shadows`。 |
 | DataTable | `components/DataTable.tsx` | 管理頁與牌桌報告的表格，與叫牌表同樣的細線；只在 lazy 頁面用。 |
