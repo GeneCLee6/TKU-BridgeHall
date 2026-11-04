@@ -216,6 +216,11 @@ export type AuditAction =
   | 'referee:restart'
   /** A finished event's club points worked out again after a director's change (TKU-BridgeTable e9-t17 follow-up; `target` is `<kind>:<eventId>`) */
   | 'points:recredit'
+  /** The platform owner's decisions (TKU-BridgeTable e12-t05/t06; `target` is the club id, `note` the reason or the first admin and the application id) */
+  | 'platform:approve'
+  | 'platform:reject'
+  | 'platform:suspend'
+  | 'platform:unsuspend'
 
 export interface AuditEntry {
   id: string
