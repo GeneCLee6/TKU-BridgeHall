@@ -221,6 +221,18 @@ export type AuditAction =
   | 'platform:reject'
   | 'platform:suspend'
   | 'platform:unsuspend'
+  /** The platform owner's notices and forwarded reports, a club's banner, and a club's support reports (TKU-BridgeTable e12-t15, e12-t16) */
+  | 'platform:noticeSave'
+  | 'platform:noticePublish'
+  | 'platform:noticeWithdraw'
+  | 'platform:noticeDelete'
+  | 'platform:supportResolve'
+  | 'platform:supportReopen'
+  | 'club:banner'
+  | 'club:bannerClear'
+  | 'support:resolve'
+  | 'support:reopen'
+  | 'support:forward'
 
 export interface AuditEntry {
   id: string

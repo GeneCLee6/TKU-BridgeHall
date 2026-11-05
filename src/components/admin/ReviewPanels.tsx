@@ -101,7 +101,7 @@ function targetLink(entry: AuditEntry) {
   if (entry.action === 'forum:board') return `/forum/${encodeURIComponent(entry.target)}`
   if (entry.action.startsWith('forum:')) return `/forum/p/${encodeURIComponent(entry.target)}`
   // The tournament director's tools (the table's e9-t17): the event or board is on the table, not here
-  if (entry.action.startsWith('referee:') || entry.action === 'points:recredit' || entry.action.startsWith('platform:')) return null
+  if (entry.action.startsWith('referee:') || entry.action === 'points:recredit' || entry.action.startsWith('platform:') || entry.action.startsWith('club:') || entry.action.startsWith('support:')) return null
   return entry.revisionId ? `/edit/${entry.target}?rev=${encodeURIComponent(entry.revisionId)}` : `/edit/${entry.target}`
 }
 
