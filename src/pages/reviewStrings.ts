@@ -123,6 +123,8 @@ export const review = {
     'support:resolve': '回報：標為已處理',
     'support:reopen': '回報：重新開啟',
     'support:forward': '回報：轉給平台',
+    'puzzle:publish': '謎題：發布',
+    'puzzle:unpublish': '謎題：撤下',
   } satisfies Record<AuditAction, string>,
   categories: '分類',
   series: '叢書系列',

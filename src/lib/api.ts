@@ -233,6 +233,9 @@ export type AuditAction =
   | 'support:resolve'
   | 'support:reopen'
   | 'support:forward'
+  /** A puzzle published or taken back (TKU-BridgeTable e10-t13; `target` is `<id>@<revision>`) */
+  | 'puzzle:publish'
+  | 'puzzle:unpublish'
 
 export interface AuditEntry {
   id: string
