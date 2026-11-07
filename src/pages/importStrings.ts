@@ -22,7 +22,7 @@ export const importStrings = {
   progress: (chars: number, sections: number, seconds: number) =>
     `已收到 ${chars.toLocaleString()} 個字元，約 ${sections} 個段落，經過 ${seconds} 秒`,
   slowHint: '長的文件要幾分鐘，請先不要關閉這個頁面。',
-  notReady: '還沒有設定 AI 匯入：請管理員在淡江牌桌設定 ANTHROPIC_API_KEY（見 DEPLOY.md）。',
+  notReady: '還沒有設定 AI 匯入：請管理員在 Overtrick 設定 ANTHROPIC_API_KEY（見 DEPLOY.md）。',
   tooLong: 'AI 的回覆超過長度上限，請把文件拆成幾份再匯入。',
   refused: 'AI 拒絕處理這份文件。',
   badReply: 'AI 的回覆格式不完整，請再試一次。',

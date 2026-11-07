@@ -22,11 +22,11 @@ export const oauthStrings = {
     googleOff: '社團還沒有開放 Google 登入。',
     googleFailed: 'Google 登入沒有完成，請再試一次。',
     googleNotLinked:
-      '這個 Google 帳號還沒有綁定社團帳號：請用帳號密碼登入，到淡江牌桌的「我的帳號」綁定 Google；新社員請先申請加入。',
+      '這個 Google 帳號還沒有綁定社團帳號：請用帳號密碼登入，到 Overtrick 的「我的帳號」綁定 Google；新社員請先申請加入。',
     googleTaken: '這個 Google 帳號已經綁定在另一個社團帳號。',
     lineOff: '社團還沒有開放 LINE 登入。',
     lineFailed: 'LINE 登入沒有完成，請再試一次。',
-    lineNotLinked: '這個 LINE 帳號還沒有綁定社團帳號：請用帳號密碼登入，到淡江牌桌的「我的帳號」綁定 LINE；新社員請先申請加入。',
+    lineNotLinked: '這個 LINE 帳號還沒有綁定社團帳號：請用帳號密碼登入，到 Overtrick 的「我的帳號」綁定 LINE；新社員請先申請加入。',
     lineTaken: '這個 LINE 帳號已經綁定在另一個社團帳號。',
     awaitingApproval: '你的申請還在等管理員核准。',
     slowDown: '太頻繁了，請稍後再試。',

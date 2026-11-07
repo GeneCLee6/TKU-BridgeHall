@@ -5,7 +5,7 @@
  */
 export const accountStrings = {
   avatar: '頭像',
-  avatarHint: '兩站共用，淡江牌桌的名牌也會顯示。JPG、PNG 或 WebP；裁成正方形後上傳。',
+  avatarHint: '兩站共用，Overtrick 的名牌也會顯示。JPG、PNG 或 WebP；裁成正方形後上傳。',
   avatarChoose: '選擇圖片…',
   avatarRemove: '改回預設頭像',
   avatarRemoveConfirm: '確定改回預設頭像？目前的照片會刪掉。',
@@ -22,7 +22,7 @@ export const accountStrings = {
 
   // 我的帳號 › 個人檔案 (e11-t04)
   profile: '個人檔案',
-  profileHint: '兩站共用：淡江牌桌的名牌、社員分頁和你的檔案頁都會顯示。每一項都可以留空。',
+  profileHint: '兩站共用：Overtrick 的名牌、社員分頁和你的檔案頁都會顯示。每一項都可以留空。',
   displayName: '顯示名稱',
   displayNameHint: (max: number) => `社團怎麼稱呼你，例如真名；登入仍用帳號名稱。最多 ${max} 字`,
   level: '自評程度',
@@ -37,7 +37,7 @@ export const accountStrings = {
 
   // 我的帳號 › 通知 (F4 靜音)
   notices: '通知',
-  noticesHint: '通知在淡江牌桌的鈴鐺裡。',
+  noticesHint: '通知在 Overtrick 的鈴鐺裡。',
   muteAdopted: '不接收採用特約的發布通知',
   muteAdoptedHint:
     '你的隊伍或搭檔制度集採用的特約發布新版本時，預設會通知你。勾選後不再收到這一類；你關注的特約、你送審的特約、改到你們覆寫段落的通知與建議統一照常。',

@@ -131,7 +131,7 @@ export const practiceStrings = {
     madeOthers: '自動產生的其他選項',
     bankTitle: '匯出給牌桌題庫',
     bankIntro: (profile: string) =>
-      `把「${profile}」的叫品題（含修正與手動出的題）存成淡江牌桌叫牌題庫的檔案（tests/bidding-quiz/book.json），讓機器人每次改版都答一遍。只匯出叫牌過程讀得出來的題；原文沒寫身價，一律匯出為無身價；全部標為待審核，由幹部在牌桌題庫確認。`,
+      `把「${profile}」的叫品題（含修正與手動出的題）存成 Overtrick 叫牌題庫的檔案（tests/bidding-quiz/book.json），讓機器人每次改版都答一遍。只匯出叫牌過程讀得出來的題；原文沒寫身價，一律匯出為無身價；全部標為待審核，由幹部在牌桌題庫確認。`,
     bankCount: (n: number, left: number) => `可以匯出 ${n} 題${left ? `；${left} 題叫品題不能匯出：` : '。'}`,
     bankDownload: '下載題庫檔（JSON）',
     bankReasons: {
