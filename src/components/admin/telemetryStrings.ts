@@ -28,7 +28,7 @@ export const telemetryStrings = {
   analyticsIntro: '匿名統計：不含帳號、制度集與隊伍；讀者可以在個人設定關閉，瀏覽器要求不追蹤時預設關閉。',
   analyticsOff: '社團已關閉匿名分析：讀者的瀏覽器不再收集新資料，下面是關閉前的統計。',
   clubSwitch: '社團開啟匿名分析',
-  clubSwitchHint: '只有管理員能切換。關閉後伺服器丟掉所有新的使用事件；錯誤回報不受影響。',
+  clubSwitchHint: '只有管理員能切換。這個開關橋館與牌桌共用：關閉後伺服器丟掉橋館所有新的使用事件，牌桌的使用統計也會停止；錯誤回報不受影響。',
   weekly: '每週',
   visitors: '活躍人數',
   pages: '瀏覽數',
