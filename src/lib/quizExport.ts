@@ -23,7 +23,7 @@ import { labelCall, type Quiz } from './quiz.ts'
 
 export type TableSeat = 'N' | 'E' | 'S' | 'W'
 export type TableVulnerability = 'None' | 'NS' | 'EW' | 'Both'
-export type TableRobotKind = 'tku' | 'gib'
+export type TableRobotKind = 'tku' | 'gib' | 'sayc' | 'precision'
 export type TableQuizStatus = 'pending' | 'reviewed'
 
 export interface TableQuizQuestion {
