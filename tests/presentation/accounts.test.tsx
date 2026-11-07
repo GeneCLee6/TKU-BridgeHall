@@ -178,7 +178,7 @@ describe('signing in and registering', () => {
     await userEvent.type(screen.getByLabelText(/^邀請碼/), 'tku')
     await userEvent.type(screen.getByLabelText(/^自我介紹/), '王小美')
     await userEvent.click(screen.getByRole('button', { name: '註冊' }))
-    expect(await screen.findByRole('status')).toHaveTextContent('管理員核准後，就能用這個帳號登入淡江橋館和淡江牌桌')
+    expect(await screen.findByRole('status')).toHaveTextContent('管理員核准後，就能用這個帳號登入淡江橋館和 Overtrick')
     expect(sent.find((s) => s.path === '/api/register')!.body).toMatchObject({ note: '王小美', site: 'book' })
   })
 
@@ -421,7 +421,7 @@ describe('the admin page', () => {
     // Admins have the editors' panels too
     expect(screen.getByRole('heading', { name: '分類' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '社團設定' })).toBeInTheDocument()
-    expect(screen.getByText(/^申請重設密碼：.*到淡江牌桌管理頁核准/)).toBeInTheDocument()
+    expect(screen.getByText(/^申請重設密碼：.*到 Overtrick 管理頁核准/)).toBeInTheDocument()
   })
 
   it('grants reviewing with editing, and takes reviewing away with editing (e8-t01)', async () => {
@@ -478,8 +478,8 @@ describe('the admin page', () => {
     signedIn({ admin: true, permissions: [], twoFactor: { enabled: false, recoveryLeft: 0, required: true } })
     renderAt('/admin')
     // The member kept from the test before shows first, until /api/me answers
-    const alert = (await screen.findByText('管理員要先在淡江牌桌開啟兩步驟登入，才能使用管理與編輯功能。', {}, { timeout: 5000 })).closest('[role="alert"]') as HTMLElement
-    expect(within(alert).getByRole('link', { name: /到淡江牌桌的「我的帳號」設定/ })).toHaveAttribute(
+    const alert = (await screen.findByText('管理員要先在 Overtrick 開啟兩步驟登入，才能使用管理與編輯功能。', {}, { timeout: 5000 })).closest('[role="alert"]') as HTMLElement
+    expect(within(alert).getByRole('link', { name: /到 Overtrick 的「我的帳號」設定/ })).toHaveAttribute(
       'href',
       'https://tku-bridge-table.genelee-pro.workers.dev/account#two-factor',
     )
@@ -499,7 +499,7 @@ describe('the admin page', () => {
     expect(await screen.findByRole('heading', { name: '分類' }, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.getByText(/帳號、申請與社團設定只有管理員看得到/)).toBeInTheDocument()
     for (const accounts of ['待審核的申請', '社員', '社團設定']) expect(screen.queryByRole('heading', { name: accounts })).toBeNull()
-    expect(screen.queryByRole('link', { name: /淡江牌桌管理頁/ })).toBeNull()
+    expect(screen.queryByRole('link', { name: /Overtrick 管理頁/ })).toBeNull()
     expect(sent.some((s) => s.path.startsWith('/api/admin/'))).toBe(false)
   })
 })

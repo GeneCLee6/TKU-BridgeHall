@@ -332,12 +332,12 @@ describe('the compose box (e11-t13)', () => {
     fireEvent.change(await screen.findByRole('combobox', { name: '文字' }), { target: { value: '這副怎麼打' } })
     fireEvent.click(screen.getByRole('button', { name: '牌桌紀錄' }))
     const record = screen.getByRole('region', { name: '第 2 塊：牌桌紀錄' })
-    const input = within(record).getByRole('textbox', { name: '淡江牌桌紀錄的網址或代號' })
+    const input = within(record).getByRole('textbox', { name: 'Overtrick 紀錄的網址或代號' })
     fireEvent.change(input, { target: { value: 'https://example.com/nothing' } })
     expect(within(record).getByText(/看不出是哪一筆紀錄/)).toBeInTheDocument()
     expect(input).toHaveAttribute('aria-invalid', 'true')
     fireEvent.change(input, { target: { value: 'https://tku-bridge-table.genelee-pro.workers.dev/history/Ab12cd34' } })
-    expect(within(record).getByRole('link', { name: '到淡江牌桌看這副牌' })).toHaveAttribute(
+    expect(within(record).getByRole('link', { name: '到 Overtrick 看這副牌' })).toHaveAttribute(
       'href',
       'https://tku-bridge-table.genelee-pro.workers.dev/history/Ab12cd34',
     )

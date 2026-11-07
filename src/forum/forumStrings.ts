@@ -97,10 +97,10 @@ export const forumStrings = {
   refLoading: '載入特約中…',
   record: (id: string) => `牌桌紀錄 ${id}`,
   // 牌桌紀錄引用 (e11-t20)
-  recordInput: '淡江牌桌紀錄的網址或代號',
-  recordHint: '在淡江牌桌的「紀錄」打開那副牌，複製網址貼到這裡。',
-  recordBad: '看不出是哪一筆紀錄：請貼淡江牌桌紀錄頁的網址（…/history/…）。',
-  recordOpen: '到淡江牌桌看這副牌',
+  recordInput: 'Overtrick 紀錄的網址或代號',
+  recordHint: '在 Overtrick 的「紀錄」打開那副牌，複製網址貼到這裡。',
+  recordBad: '看不出是哪一筆紀錄：請貼 Overtrick 紀錄頁的網址（…/history/…）。',
+  recordOpen: '到 Overtrick 看這副牌',
 
   // 反應
   reactions: '反應',
