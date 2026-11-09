@@ -32,6 +32,9 @@ export function useGlossary() {
   return { terms, server, reload, loading: server === undefined }
 }
 
+/** The glossary in force once, for the header search (AC-4.4); the bundled list when offline */
+export const loadGlossaryTerms = () => fetchOnline().then((server) => resolveGlossary(bundled, server))
+
 /** Tells the next readers of this visit about a save (the editor's) */
 export function rememberGlossary(saved: BookGlossary) {
   latest = saved
