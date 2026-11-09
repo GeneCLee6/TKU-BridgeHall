@@ -5,6 +5,7 @@ import { UpdatePrompt } from './components/UpdatePrompt.tsx'
 import { analyticsOn, setAnalyticsConsent, trackPage } from './lib/analytics.ts'
 import { HandbookShell } from './pages/HandbookShell.tsx'
 import { HomePage } from './pages/HomePage.tsx'
+import { AccountDisplaySync } from './state/AccountDisplaySync.tsx'
 import { AuthProvider, useAuth } from './state/AuthContext.tsx'
 import { ContentProvider } from './state/ContentContext.tsx'
 import { ExpansionProvider } from './state/ExpansionContext.tsx'
@@ -131,6 +132,7 @@ export function App() {
       <UpdatePrompt />
       <Analytics />
       <AuthProvider>
+        <AccountDisplaySync />
         <ErrorBoundary>
           <Suspense fallback={loading}>
             <Routes>

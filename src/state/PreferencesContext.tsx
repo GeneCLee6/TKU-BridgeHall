@@ -121,6 +121,27 @@ const valid: { [K in keyof DisplayPrefs]-?: (value: unknown) => boolean } = {
   analytics: (value) => typeof value === 'boolean',
 }
 
+/**
+ * The settings kept with the account (AC-9.9, state/AccountDisplaySync.tsx): the display ones.
+ * 「你是新生嗎？」 and 匿名使用統計 stay with the device.
+ */
+// oxlint-disable-next-line react/only-export-components
+export const ACCOUNT_DISPLAY_KEYS = ['theme', 'style', 'layout', 'font', 'textSize', 'suitColors', 'density', 'reading'] as const
+type AccountDisplayKey = (typeof ACCOUNT_DISPLAY_KEYS)[number]
+
+/** The settings as the account keeps them */
+// oxlint-disable-next-line react/only-export-components
+export const accountDisplayOf = (prefs: DisplayPrefs): Record<string, string> =>
+  Object.fromEntries(ACCOUNT_DISPLAY_KEYS.map((key) => [key, prefs[key]]))
+
+/** What the account keeps, each checked: one this version does not know is left out */
+// oxlint-disable-next-line react/only-export-components
+export function displayFromAccount(stored: Record<string, unknown>): Partial<Pick<DisplayPrefs, AccountDisplayKey>> {
+  const changes: Record<string, unknown> = {}
+  for (const key of ACCOUNT_DISPLAY_KEYS) if (valid[key](stored[key])) changes[key] = stored[key]
+  return changes as Partial<Pick<DisplayPrefs, AccountDisplayKey>>
+}
+
 /** The stored settings, each checked; `mode` is how light/dark was stored before 跟隨系統 existed */
 // oxlint-disable-next-line react/only-export-components
 export function readStoredPrefs(): DisplayPrefs {

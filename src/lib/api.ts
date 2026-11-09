@@ -50,6 +50,12 @@ export interface Me {
    * and suggestions are told regardless
    */
   bookAdoptedNotice?: boolean
+  /**
+   * Their 個人設定 (AC-9.9: style, layout, font, …, as named in state/PreferencesContext.tsx), kept
+   * with the account so they are the same on every device; absent until first saved. The Worker
+   * only checks their size (TKU-BridgeTable `isBookDisplay`)
+   */
+  bookDisplay?: Record<string, string>
   /** Their uploaded picture's version (`avatarUrl` in lib/account.ts); none means the default avatar (e11-t03) */
   avatar?: number
   /** Their own profile (e11-t01), the same on both sites; empty until they fill it in */
@@ -920,8 +926,15 @@ export const api = {
   requestEmailReset: (account: string, lang = 'zh') => post<{ ok: true }>('/api/email/reset/request', { account, lang }),
   changePassword: (current: string, next: string) =>
     post<{ ok: true }>('/api/account/password', { current, next }),
-  /** Keeps the member's system profile with the account; '' for the club's (e1-t16) */
-  setPreferences: (preferences: { bookProfile?: string; bookAdoptedNotice?: boolean }) =>
+  /**
+   * Keeps the member's system profile with the account ('' for the club's, e1-t16), and their
+   * 個人設定 (`bookDisplay`, AC-9.9: replaced whole, null clears)
+   */
+  setPreferences: (preferences: {
+    bookProfile?: string
+    bookAdoptedNotice?: boolean
+    bookDisplay?: Record<string, string> | null
+  }) =>
     post<{ user: Me }>('/api/account/preferences', preferences),
 
   admin: {
