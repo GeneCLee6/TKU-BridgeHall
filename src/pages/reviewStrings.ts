@@ -120,6 +120,8 @@ export const review = {
     'platform:supportReopen': '平台：重新開啟回報',
     'club:banner': '社團：設定橫幅',
     'club:bannerClear': '社團：清除橫幅',
+    'club:logo': '社團：設定 Logo',
+    'club:logoClear': '社團：清除 Logo',
     'support:resolve': '回報：標為已處理',
     'support:reopen': '回報：重新開啟',
     'support:forward': '回報：轉給平台',

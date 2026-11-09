@@ -230,6 +230,9 @@ export type AuditAction =
   | 'platform:supportReopen'
   | 'club:banner'
   | 'club:bannerClear'
+  /** A club's logo set or cleared on its admin page (TKU-BridgeTable e12-t06; never on 淡江's own log) */
+  | 'club:logo'
+  | 'club:logoClear'
   | 'support:resolve'
   | 'support:reopen'
   | 'support:forward'
