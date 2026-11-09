@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { clubHeaders } from '../lib/club.ts'
 import type { SearchFn, SearchIndex, SearchRecord } from '../lib/search.ts'
+import type { Term } from '../types/glossary.ts'
 import { useContent } from './ContentContext.tsx'
 
 // The built-in conventions' records, built in this repository and seeded with them (L0, e10-t20); members only
@@ -10,7 +11,7 @@ export const SEARCH_INDEX_URL = '/api/book/search-index'
  * The search box's search. Nothing is downloaded until `prepare` (the box is focused): then the
  * search code (Fuse) and the built-in conventions' index from the Worker, plus the content of the conventions
  * changed online or by the reader's profile, whose records replace the index's (lib/search.ts
- * `mergeIndex`), and the library's articles, which live only online (e5-t13). Until the index arrives, and if it cannot be fetched at all, the search falls back to what is loaded here:
+ * `mergeIndex`), the library's articles, which live only online (e5-t13), and the glossary's terms (AC-4.4). Until the index arrives, and if it cannot be fetched at all, the search falls back to what is loaded here:
  * section titles at first, and every convention's content once `loadAll` brings it.
  */
 export function useSearch(): { search: SearchFn; prepare: () => void } {
@@ -19,12 +20,14 @@ export function useSearch(): { search: SearchFn; prepare: () => void } {
   // undefined while not fetched yet, null when fetching failed
   const [index, setIndex] = useState<SearchIndex | null>()
   const [articles, setArticles] = useState<SearchRecord[]>()
+  const [terms, setTerms] = useState<Term[]>()
   const fetching = useRef(false)
 
   const prepare = () => {
     const searchLib = import('../lib/search.ts')
     void searchLib.then(setLib)
     if (!articles) void import('../lib/libraryApi.ts').then((m) => m.loadArticleRecords()).then(setArticles)
+    if (!terms) void import('../glossary/useGlossary.ts').then((m) => m.loadGlossaryTerms()).then(setTerms)
     if (fetching.current || index) return
     fetching.current = true
     Promise.all([fetch(SEARCH_INDEX_URL, { headers: clubHeaders() }).then((r) => (r.ok ? r.json() : null)), searchLib])
@@ -58,10 +61,11 @@ export function useSearch(): { search: SearchFn; prepare: () => void } {
     const records = () => [
       ...(index ? lib.mergeIndex(index, searchable, (slug) => !changedKeyOf(slug)) : lib.buildRecords(searchable)),
       ...(articles ?? []),
+      ...lib.glossaryRecords(terms ?? []),
     ]
     return (query, limit) => (built ??= lib.searchRecords(records()))(query, limit)
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- rebuilt when the catalogue or what is loaded changes
-  }, [lib, index, articles, conventions, changedKey, searchKey])
+  }, [lib, index, articles, terms, conventions, changedKey, searchKey])
 
   return { search, prepare }
 }

@@ -26,7 +26,7 @@ function startWorker(site: Record<string, string>, network: (request: unknown) =
     clients: { claim: vi.fn(async () => {}) },
     location: { origin: 'https://book.test' },
   }
-  const caches = { open: vi.fn(async () => cache), keys: vi.fn(async () => []), delete: vi.fn() }
+  const caches = { open: vi.fn(async () => cache), keys: vi.fn(async () => []), delete: vi.fn(), match: (request: string) => cache.match(request) }
   new Function('self', 'caches', 'fetch', source)(scope, caches, network)
   const dispatch = async (type: string, event: Record<string, unknown> = {}) => {
     let work: Promise<unknown> = Promise.resolve()
@@ -89,10 +89,46 @@ describe('service worker', () => {
         if (responded) answered.push(path)
         else done()
       })
-    for (const path of ['/api/book/manifest', '/api/book/builtin/fixture-alpha', '/api/book/content/fixture-alpha', '/api/book/search-index', '/api/me', '/api/book/profiles'])
+    for (const path of ['/api/book/manifest', '/api/book/builtin/fixture-alpha', '/api/book/content/fixture-alpha', '/api/book/search-index', '/api/me', '/api/club/teams'])
       await fetchEvent(path)
     expect(answered).toEqual(['/api/book/manifest', '/api/book/builtin/fixture-alpha', '/api/book/content/fixture-alpha', '/api/book/search-index'])
     await vi.waitFor(() => expect(cache.put).toHaveBeenCalledTimes(4))
+  })
+
+  it('keeps the profiles and card versions for offline reading, but not their history or Word files (AC-10.3)', async () => {
+    const network = vi.fn(async () => new Response('{}'))
+    const { listeners } = startWorker({ '/': home }, network)
+    const answered: string[] = []
+    const kept = [
+      '/api/book/profiles',
+      '/api/book/profiles/club',
+      '/api/book/profiles/pair-ab12',
+      '/api/book/cards/pair-ab12/wbf/3',
+    ]
+    const passed = [
+      '/api/book/profiles/pair-ab12/revisions',
+      '/api/book/cards/pair-ab12',
+      '/api/book/cards/pair-ab12/wbf/3/docx',
+    ]
+    for (const path of [...kept, ...passed]) {
+      const request = { url: `https://book.test${path}`, method: 'GET', mode: 'cors' }
+      listeners.fetch({ request, respondWith: () => answered.push(path) })
+    }
+    expect(answered).toEqual(kept)
+  })
+
+  it('answers a profile from the cache when offline', async () => {
+    const network = vi.fn(async () => {
+      throw new TypeError('offline')
+    })
+    const { stored, listeners } = startWorker({ '/': home }, network)
+    const request = { url: 'https://book.test/api/book/profiles/club', method: 'GET', mode: 'cors' }
+    // The fake cache looks answers up by what it is given: here the request itself
+    stored.set(request as unknown as string, new Response('{"profile":{"id":"club"}}'))
+    let answer: Promise<Response> | undefined
+    listeners.fetch({ request, respondWith: (p: Promise<Response>) => (answer = p) })
+    expect(answer).toBeDefined()
+    expect(await (await answer!).text()).toBe('{"profile":{"id":"club"}}')
   })
 
   it('carries a build stamp for vite.config.ts to fill in', () => {

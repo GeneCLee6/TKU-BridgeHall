@@ -20,22 +20,22 @@
 
 ## Epic 進度
 
-統計日期 2026-10-29。勾選以各 epic 文件為準，改了勾選順手更新這張表。
+統計日期 2026-11-09。勾選以各 epic 文件為準，改了勾選順手更新這張表。
 
 | Epic | 名稱 | Task 完成 | AC 完成 | 里程碑 | 狀態 |
 | --- | --- | --- | --- | --- | --- |
 | [E1](e1-content-model-system-profiles.md) | 內容模型與制度集 | 16／16 | 7／7 | M1 | done |
-| [E2](e2-teams-partnerships.md) | 隊伍與搭檔 | 10／10 | 6／7 | M1 | in progress |
-| [E3](e3-convention-card-generator.md) | 制度卡產生器 | 12／13 | 6／8 | M1（t13 M2） | in progress |
-| [E4](e4-levels-learning-path.md) | 分級與學習路徑 | 12／12 | 5／6 | M2 | in progress |
+| [E2](e2-teams-partnerships.md) | 隊伍與搭檔 | 10／10 | 7／7 | M1 | done |
+| [E3](e3-convention-card-generator.md) | 制度卡產生器 | 13／13 | 6／8 | M1（t13 M2） | in progress（AC-3.4、3.5 要人實際印紙與用 LibreOffice 開） |
+| [E4](e4-levels-learning-path.md) | 分級與學習路徑 | 12／12 | 5／6 | M2 | in progress（AC-4.4 缺幹部寫的名詞） |
 | [E5](e5-library-articles-ebooks.md) | 橋藝叢書 | 15／15 | 8／8 | M2 | done |
 | [E6](e6-quiz-practice.md) | 練習與測驗 | 9／9 | 6／6 | M2 | done |
 | [E7](e7-bridgetable-integration.md) | 與淡江牌桌整合 | 8／8 | 5／5 | M2 | done |
-| [E8](e8-content-governance.md) | 內容治理 | 11／14 | 5／6 | M1、M2 | in progress |
-| [E9](e9-ui-redesign.md) | 介面重新設計（v2） | 18／18 | 6／10 | M1 | in progress |
-| [E10](e10-platform-performance-ops.md) | 平台、效能與維運 | 10／14 | 3／7 | M1、M2、M3 | in progress |
-| [E11](e11-community-forum.md) | 社群與討論 | 14／21 | 4／9 | M1（t21 M2） | in progress |
-| | **合計** | **135／150** | **61／79** | | |
+| [E8](e8-content-governance.md) | 內容治理 | 14／14 | 6／6 | M1、M2 | done |
+| [E9](e9-ui-redesign.md) | 介面重新設計（v2） | 18／18 | 6／10 | M1 | in progress（4 條 AC 要人看） |
+| [E10](e10-platform-performance-ops.md) | 平台、效能與維運 | 14／14 | 7／7 | M1、M2、M3 | done |
+| [E11](e11-community-forum.md) | 社群與討論 | 20／21 | 9／9 | M1（t21 M2） | in progress（t21 等決定） |
+| | **合計** | **149／150** | **72／79** | | |
 
 里程碑分布：M1 約 90 個 task、M2 約 54 個、M3 2 個（概數，以 ROADMAP 為準）。M0 的功能（F1–F18）在 2026-10-21～23 完成，沒有拆成 task。
 

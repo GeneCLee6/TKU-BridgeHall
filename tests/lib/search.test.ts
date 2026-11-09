@@ -3,6 +3,7 @@ import { conventions } from '../fixtures/content.ts'
 import {
   buildRecords,
   createSearch,
+  glossaryRecords,
   isSearchIndex,
   mergeIndex,
   searchRecords,
@@ -94,5 +95,25 @@ describe('search index', () => {
   it('leaves out conventions no longer in the catalogue (hidden online)', () => {
     const records = mergeIndex(index, manifest.filter((c) => c.slug !== 'fixture-alpha'), () => true)
     expect(records.some((r) => r.slug === 'fixture-alpha')).toBe(false)
+  })
+})
+
+describe('glossary in the search (AC-4.4)', () => {
+  const terms = [
+    { term: '虛構名詞', aliases: ['FT'], definition: '測試用的解釋，提到 2♦。' },
+    { term: 'Another', aliases: [], definition: '另一條' },
+  ]
+
+  it('finds a term by its name, an alias or its explanation, and links to its place on the glossary page', () => {
+    const find = searchRecords(glossaryRecords(terms))
+    expect(find('虛構名詞')[0]).toMatchObject({ label: '名詞解釋 › 虛構名詞', path: '/glossary#term-E8999BE6A78BE5908DE8A99E' })
+    expect(find('FT')[0]?.slug).toBe('glossary/虛構名詞')
+    expect(find('2D')[0]?.slug).toBe('glossary/虛構名詞')
+    expect(find('another')[0]?.path).toBe('/glossary#term-another')
+  })
+
+  it('keeps term results apart from conventions', () => {
+    const find = searchRecords([...buildRecords(conventions), ...glossaryRecords(terms)])
+    expect(find('虛構名詞').every((r) => r.slug.startsWith('glossary/'))).toBe(true)
   })
 })

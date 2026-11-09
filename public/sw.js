@@ -4,7 +4,10 @@
 // conventions are members-only API answers since L0 (e10-t20): the manifest, the built-in ones
 // (/api/book/builtin/:slug), the ones edited online (/api/book/content/:slug) and the search index
 // (/api/book/search-index) are kept the same way as pages, so a member reads offline what they have
-// read before; no other /api call is ever cached. Signing out deletes every cached /api answer
+// read before. So are the system profiles (/api/book/profiles and /api/book/profiles/:id, which a
+// profile's handbook and convention cards are made from) and convention card versions
+// (/api/book/cards/:profileId/:templateId/:n), so the reader's own profile and its cards open offline
+// too (AC-10.3). No other /api call is ever cached. Signing out deletes every cached /api answer
 // (src/lib/memberCache.ts).
 //
 // Installing also stores what the first screen and the search need (the app shell, the home
@@ -16,7 +19,8 @@
 // Build: __BUILD__ (vite.config.ts stamps a hash of the build here, so every build is a new worker)
 
 const CACHE = 'tku-bridge-book-v4'
-const BOOK_CONTENT = /^\/api\/book\/(manifest|search-index|(content|builtin)(\/[a-z0-9-]+)?)$/
+const BOOK_CONTENT =
+  /^\/api\/book\/(manifest|search-index|(content|builtin)(\/[a-z0-9-]+)?|profiles(\/[^/]+)?|cards\/[^/]+\/[^/]+\/\d+)$/
 const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/favicon.svg']
 // Stored when they can be; the worker installs without them
 const PRELOAD = ['/api/book/manifest', '/api/book/search-index']
