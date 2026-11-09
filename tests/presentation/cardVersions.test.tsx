@@ -125,7 +125,7 @@ describe('convention card output', () => {
     await user.type(screen.getByRole('textbox', { name: t.versions.note }), '春季賽')
     await user.click(screen.getByRole('button', { name: t.versions.publish }))
     expect(await screen.findByText(t.versions.published(1), {}, { timeout: 20_000 })).toBeInTheDocument()
-    const post = sent.find((s) => s.method === 'POST')!.body as Record<string, unknown>
+    const post = sent.find((s) => s.method === 'POST' && s.path.startsWith('/api/book/cards/'))!.body as Record<string, unknown>
     expect(post).toMatchObject({ templateId: 'wbf', profileVersion: 4, note: '春季賽' })
     expect(typeof post.docx).toBe('string')
     // A Word file is a zip: base64 of "PK"
