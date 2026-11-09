@@ -25,6 +25,8 @@ export type TableSeat = 'N' | 'E' | 'S' | 'W'
 export type TableVulnerability = 'None' | 'NS' | 'EW' | 'Both'
 export type TableRobotKind = 'tku' | 'gib' | 'sayc' | 'precision'
 export type TableQuizStatus = 'pending' | 'reviewed'
+/** The PRD's nine areas (TKU-BridgeTable E5 AC-5.4, `QUIZ_TOPICS`) */
+export type TableQuizTopic = 'opening' | 'response' | 'opener-rebid' | 'responder-rebid' | 'overcall' | 'advance' | 'double' | 'competition' | 'slam'
 
 export interface TableQuizQuestion {
   id: string
@@ -41,11 +43,8 @@ export interface TableQuizQuestion {
   reviewer: string | null
   status: TableQuizStatus
   note?: string
-  /**
-   * The table's area for the question (its AC-5.4 `QuizTopic`), only where its `topicOf` guesses
-   * wrong; the export never writes it, so the table works it out from the auction
-   */
-  topic?: string
+  /** Set only where the table's `topicOf` would guess the area wrong */
+  topic?: TableQuizTopic
 }
 
 export interface TableQuizFile {
