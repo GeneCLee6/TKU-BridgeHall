@@ -41,6 +41,11 @@ export interface TableQuizQuestion {
   reviewer: string | null
   status: TableQuizStatus
   note?: string
+  /**
+   * The table's area for the question (its AC-5.4 `QuizTopic`), only where its `topicOf` guesses
+   * wrong; the export never writes it, so the table works it out from the auction
+   */
+  topic?: string
 }
 
 export interface TableQuizFile {
