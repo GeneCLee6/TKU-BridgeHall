@@ -1,5 +1,8 @@
 import type { BookGlossary } from '../lib/api.ts'
 import type { Term } from '../types/glossary.ts'
+import { termAnchor } from './anchor.ts'
+
+export { termAnchor }
 
 /**
  * Which glossary applies: the online list once it has been saved (version > 0, even if every term
@@ -64,8 +67,6 @@ export function splitTerms(text: string, glossary: CompiledGlossary, seen: Set<s
   return pieces
 }
 
-/** The glossary page's anchor for a term */
-export const termAnchor = (term: string) => `term-${encodeURIComponent(term.toLowerCase()).replace(/%/g, '')}`
 
 /** Terms whose name, aliases or definition contain `query` (case ignored), for the glossary page's filter */
 export function filterTerms(terms: readonly Term[], query: string): Term[] {

@@ -1,7 +1,10 @@
 import Fuse from 'fuse.js'
+import { termAnchor } from '../glossary/anchor.ts'
+import { glossaryStrings } from '../glossary/strings.ts'
 import { libraryStrings } from '../libraryStrings.ts'
 import type { Convention, ConventionKind, ConventionMeta, Level, Section } from '../types/convention.ts'
 import type { ArticleMeta, ArticleSeries } from '../types/article.ts'
+import type { Term } from '../types/glossary.ts'
 import { formatCall, toAsciiSuits } from './calls.ts'
 import { articlePath, resolveSeries } from './series.ts'
 import { blockText, walkSections } from './sections.ts'
@@ -105,11 +108,28 @@ export function articleRecords(list: {
 }
 
 /**
+ * One record per glossary term (AC-4.4): the term and its aliases, then its explanation. Like the
+ * articles they are not in the built index (the officers write them online); the search box loads
+ * them with glossary/useGlossary.ts `loadGlossaryTerms`. A result opens the glossary page at the
+ * term; slugs are kept apart from the conventions' by the `glossary/` prefix.
+ */
+export const glossaryRecords = (terms: readonly Term[]): SearchRecord[] =>
+  terms.map((term) => ({
+    slug: `glossary/${term.term}`,
+    path: `/glossary#${termAnchor(term.term)}`,
+    label: `${glossaryStrings.title} › ${term.term}`,
+    name: toAsciiSuits([term.term, ...term.aliases].join(' ')),
+    tags: '',
+    bids: '',
+    text: toAsciiSuits(term.definition),
+  }))
+
+/**
  * The search index: the records of every built-in convention, built here (scripts/search-index.ts)
  * and seeded into the Worker with them (GET /api/book/search-index, members only, L0), so readers
  * search without downloading the content. Fuse
  * takes the records as they are; indexing them in the browser takes a few milliseconds.
- * Articles and glossary terms can join as records of their own.
+ * Articles and glossary terms join as records of their own (`articleRecords`, `glossaryRecords`).
  */
 export interface SearchIndex {
   version: typeof SEARCH_INDEX_VERSION
