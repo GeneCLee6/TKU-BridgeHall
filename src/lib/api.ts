@@ -230,6 +230,9 @@ export type AuditAction =
   | 'platform:supportReopen'
   | 'club:banner'
   | 'club:bannerClear'
+  /** The club's logo set or removed (TKU-BridgeTable AC-12.2; `target` is the logo's version) */
+  | 'club:logo'
+  | 'club:logoClear'
   | 'support:resolve'
   | 'support:reopen'
   | 'support:forward'
